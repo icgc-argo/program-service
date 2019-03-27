@@ -1,0 +1,3 @@
+ego:
+  baseUrl: "https://ego.qa.cancercollaboratory.org/api"
+  tokenVerifyPath: "/oauth/token/verify"

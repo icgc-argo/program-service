@@ -1,11 +1,16 @@
-package ca.on.oicr.icgc.argo.program_service;
+package ca.on.oicr.icgc.argo.program_service.grpc;
 
+import ca.on.oicr.icgc.argo.program_service.GreeterGrpc;
+import ca.on.oicr.icgc.argo.program_service.HelloReply;
+import ca.on.oicr.icgc.argo.program_service.HelloRequest;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerInterceptors;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -17,11 +22,18 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
 
   private Server server;
 
+  private final EgoAuthInterceptor egoAuthInterceptor;
+
+  @Autowired
+  public GRpcServerRunner(EgoAuthInterceptor egoAuthInterceptor) {
+    this.egoAuthInterceptor = egoAuthInterceptor;
+  }
+
   @Override
   public void run(String... args) throws Exception {
     int port = 50051;
     server = ServerBuilder.forPort(port)
-            .addService(new GreeterImpl())
+            .addService(ServerInterceptors.intercept(new GreeterImpl(), egoAuthInterceptor))
             .addService(ProtoReflectionService.newInstance())
             .build()
             .start();
@@ -42,6 +54,7 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
     @Override
     public void sayHello(HelloRequest req, StreamObserver<HelloReply> responseObserver) {
       HelloReply reply = HelloReply.newBuilder().setMessage("Hello " + req.getName()).build();
+//      EgoAuthInterceptor.EGO_TOKEN.get();
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -54,3 +67,4 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
     }
   }
 }
+
