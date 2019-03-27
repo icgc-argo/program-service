@@ -103,10 +103,16 @@ public class EgoService {
 @ConfigurationProperties(prefix="ego")
 @Validated
 class EgoProperties {
+  /**
+   * Base url of ego
+   */
   @Setter(AccessLevel.PUBLIC) @Getter(AccessLevel.PUBLIC)
   @NotNull
   private String baseUrl;
 
+  /**
+   * Path to verify the ego token. TODO: verify with public key
+   */
   @Setter(AccessLevel.PUBLIC) @Getter(AccessLevel.PUBLIC)
   @NotNull
   private String tokenVerifyPath;

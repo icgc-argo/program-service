@@ -4,11 +4,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.protobuf.services.ProtoReflectionService;
-import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
-import org.icgc.argo.program_service.GreeterGrpc;
-import org.icgc.argo.program_service.HelloReply;
-import org.icgc.argo.program_service.HelloRequest;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -23,17 +19,20 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   private Server server;
 
   private final EgoAuthInterceptor egoAuthInterceptor;
+  private final ProgramServiceImpl programServiceImpl;
+
 
   @Autowired
-  public GRpcServerRunner(EgoAuthInterceptor egoAuthInterceptor) {
+  public GRpcServerRunner(EgoAuthInterceptor egoAuthInterceptor, ProgramServiceImpl programServiceImpl) {
     this.egoAuthInterceptor = egoAuthInterceptor;
+    this.programServiceImpl = programServiceImpl;
   }
 
   @Override
   public void run(String... args) throws Exception {
     int port = 50051;
     server = ServerBuilder.forPort(port)
-            .addService(ServerInterceptors.intercept(new GreeterImpl(), egoAuthInterceptor))
+            .addService(ServerInterceptors.intercept(programServiceImpl, egoAuthInterceptor))
             .addService(ProtoReflectionService.newInstance())
             .build()
             .start();
@@ -47,24 +46,6 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
     log.info("Shutting down gRPC server ...");
     Optional.ofNullable(server).ifPresent(Server::shutdown);
     log.info("gRPC server stopped.");
-  }
-
-  static class GreeterImpl extends GreeterGrpc.GreeterImplBase {
-
-    @Override
-    public void sayHello(HelloRequest req, StreamObserver<HelloReply> responseObserver) {
-      HelloReply reply = HelloReply.newBuilder().setMessage("Hello " + req.getName()).build();
-      EgoAuthInterceptor.EGO_TOKEN.get();
-      responseObserver.onNext(reply);
-      responseObserver.onCompleted();
-    }
-
-    @Override
-    public void sayHelloAgain(HelloRequest req, StreamObserver<HelloReply> responseObserver) {
-      HelloReply reply = HelloReply.newBuilder().setMessage("Hello again " + req.getName()).build();
-      responseObserver.onNext(reply);
-      responseObserver.onCompleted();
-    }
   }
 }
 
