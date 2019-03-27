@@ -1,8 +1,9 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "ca.on.oicr.icgc.argo.program_service";
+option java_package = "org.icgc.argo.program_service";
 option java_outer_classname = "ProgramServiceProto";
+option objc_class_prefix = "PSP";
 
 package program_service;
 

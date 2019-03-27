@@ -1,14 +1,14 @@
-package ca.on.oicr.icgc.argo.program_service.grpc;
+package org.icgc.argo.program_service.grpc;
 
-import ca.on.oicr.icgc.argo.program_service.GreeterGrpc;
-import ca.on.oicr.icgc.argo.program_service.HelloReply;
-import ca.on.oicr.icgc.argo.program_service.HelloRequest;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
+import org.icgc.argo.program_service.GreeterGrpc;
+import org.icgc.argo.program_service.HelloReply;
+import org.icgc.argo.program_service.HelloRequest;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -54,7 +54,7 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
     @Override
     public void sayHello(HelloRequest req, StreamObserver<HelloReply> responseObserver) {
       HelloReply reply = HelloReply.newBuilder().setMessage("Hello " + req.getName()).build();
-//      EgoAuthInterceptor.EGO_TOKEN.get();
+      EgoAuthInterceptor.EGO_TOKEN.get();
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

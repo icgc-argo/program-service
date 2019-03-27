@@ -1,4 +1,4 @@
-package ca.on.oicr.icgc.argo.program_service.services;
+package org.icgc.argo.program_service.services;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTDecodeException;
@@ -40,6 +40,7 @@ public class EgoService {
     String body;
 
     try {
+      // TODO: Verify token by public key
       val resp = restTemplate.exchange(properties.getBaseUrl() + properties.getTokenVerifyPath(), HttpMethod.GET, entity, String.class);
       body = resp.getBody();
     } catch(HttpClientErrorException.BadRequest e) {

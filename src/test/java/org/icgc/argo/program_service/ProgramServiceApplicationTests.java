@@ -1,4 +1,4 @@
-package ca.on.oicr.icgc.argo.program_service;
+package org.icgc.argo.program_service;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

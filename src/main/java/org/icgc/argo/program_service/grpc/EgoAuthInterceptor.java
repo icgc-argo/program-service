@@ -1,6 +1,6 @@
-package ca.on.oicr.icgc.argo.program_service.grpc;
+package org.icgc.argo.program_service.grpc;
 
-import ca.on.oicr.icgc.argo.program_service.services.EgoService;
+import org.icgc.argo.program_service.services.EgoService;
 import io.grpc.*;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
