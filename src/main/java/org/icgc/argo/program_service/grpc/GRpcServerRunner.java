@@ -38,11 +38,22 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
             .start();
 
     log.info("Server started, listening on " + port);
-    server.awaitTermination();
+    startDaemonAwaitThread();
+  }
+
+  private void startDaemonAwaitThread() {
+    Thread awaitThread = new Thread(()->{
+      try {
+        GRpcServerRunner.this.server.awaitTermination();
+      } catch (InterruptedException e) {
+        log.error("gRPC server stopped.", e);
+      }
+    });
+    awaitThread.start();
   }
 
   @Override
-  public void destroy() throws Exception {
+  final public void destroy() throws Exception {
     log.info("Shutting down gRPC server ...");
     Optional.ofNullable(server).ifPresent(Server::shutdown);
     log.info("gRPC server stopped.");

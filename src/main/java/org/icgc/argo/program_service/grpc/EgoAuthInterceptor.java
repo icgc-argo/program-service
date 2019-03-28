@@ -5,11 +5,9 @@ import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.icgc.argo.program_service.services.EgoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -23,7 +21,7 @@ import java.util.List;
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
 @Component
-class EgoAuthInterceptor implements ServerInterceptor {
+public class EgoAuthInterceptor implements ServerInterceptor {
 
   private final EgoService egoService;
 
@@ -55,6 +53,9 @@ class EgoAuthInterceptor implements ServerInterceptor {
     return Contexts.interceptCall(context, call, metadata, next);
   }
 
+  /**
+   * Handling authorization
+   */
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.METHOD)
   public @interface EgoAuth {
@@ -64,10 +65,9 @@ class EgoAuthInterceptor implements ServerInterceptor {
     @Slf4j
     @Component
     class EgoAuthAspect {
-
       @Around("@annotation(egoAuth)")
       public Object checkIdentity(ProceedingJoinPoint pjp, EgoAuth egoAuth) {
-        val egoToken = EgoAuthInterceptor.EGO_TOKEN.get();
+        val egoToken = EGO_TOKEN.get();
         val call = Iterables.get(List.of(pjp.getArgs()), 1, null);
         assert call instanceof StreamObserver;
 
@@ -86,5 +86,5 @@ class EgoAuthInterceptor implements ServerInterceptor {
       }
     }
   }
-
 }
+

@@ -1,23 +1,25 @@
 package org.icgc.argo.program_service.services;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.icgc.argo.program_service.Utils;
+import org.icgc.argo.program_service.properties.EgoProperties;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import javax.validation.constraints.NotNull;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Optional;
 
 @Slf4j
@@ -25,39 +27,39 @@ import java.util.Optional;
 public class EgoService {
 
   private final EgoProperties properties;
+  private final RSAPublicKey egoPublicKey;
 
   @Autowired
   public EgoService(EgoProperties egoProperties) {
     this.properties = egoProperties;
+
+    PublicKey egoPublicKey = null;
+    try {
+      RestTemplate restTemplate = new RestTemplate();
+      val resp = restTemplate.getForEntity(properties.getBaseUrl() + properties.getPublicKeyPath(), String.class);
+      egoPublicKey = Utils.getPublicKey(resp.getBody(), "RSA");
+    } catch(HttpClientErrorException.BadRequest e) {
+      log.info("Cannot get public key of ego");
+    }
+
+    this.egoPublicKey = (RSAPublicKey) egoPublicKey;
   }
 
   public Optional<EgoToken> verifyToken(String jwtToken) {
-    RestTemplate restTemplate = new RestTemplate();
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("token", jwtToken);
-
-    val entity = new HttpEntity<String>(headers);
-    String body;
-
     try {
-      // TODO: Verify token by public key
-      val resp = restTemplate.exchange(properties.getBaseUrl() + properties.getTokenVerifyPath(), HttpMethod.GET, entity, String.class);
-      body = resp.getBody();
-    } catch(HttpClientErrorException.BadRequest e) {
-      log.info("JWT token cannot be verified");
-      return Optional.empty();
-    }
-
-    if (body != null && body.equals("true")) {
-      return parseToken(jwtToken);
-    } else {
+      Algorithm algorithm = Algorithm.RSA256(this.egoPublicKey, null);
+      JWTVerifier verifier = JWT.require(algorithm)
+              .withIssuer("ego")
+              .build(); //Reusable verifier instance
+      val jwt = verifier.verify(jwtToken);
+      return parseToken(jwt);
+    } catch (JWTVerificationException e) {
       return Optional.empty();
     }
   }
 
-  private Optional<EgoToken> parseToken(String jwtToken) {
+  private Optional<EgoToken> parseToken(DecodedJWT jwt) {
     try {
-      DecodedJWT jwt = JWT.decode(jwtToken);
       EgoToken egoToken = new EgoToken(jwt, jwt.getClaim("context").as(EgoToken.Context.class));
       return Optional.of(egoToken);
     } catch (JWTDecodeException exception){
@@ -99,21 +101,3 @@ public class EgoService {
   }
 }
 
-@Component
-@ConfigurationProperties(prefix="ego")
-@Validated
-class EgoProperties {
-  /**
-   * Base url of ego
-   */
-  @Setter(AccessLevel.PUBLIC) @Getter(AccessLevel.PUBLIC)
-  @NotNull
-  private String baseUrl;
-
-  /**
-   * Path to verify the ego token. TODO: verify with public key
-   */
-  @Setter(AccessLevel.PUBLIC) @Getter(AccessLevel.PUBLIC)
-  @NotNull
-  private String tokenVerifyPath;
-}
