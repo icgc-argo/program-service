@@ -43,12 +43,6 @@ public class EgoAuthInterceptor implements ServerInterceptor {
     // You need to implement validateIdentity
     String token = metadata.get(JWT_METADATA_KEY);
     val egoToken = egoService.verifyToken(token);
-//    if (egoToken.isEmpty()) {
-//      // Assume user not authenticated
-//      call.close(Status.fromCode(Status.Code.UNAUTHENTICATED).withDescription("Cannot find ego user"),
-//              new Metadata());
-//      return new ServerCall.Listener() {};
-//    }
     Context context = Context.current().withValue(EGO_TOKEN, egoToken.orElse(null));
     return Contexts.interceptCall(context, call, metadata, next);
   }

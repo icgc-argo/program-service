@@ -18,6 +18,7 @@ public class Utils {
     key = key.replace("\r", "");
     key = key.replace("-----BEGIN PUBLIC KEY-----", "");
     key = key.replace("-----END PUBLIC KEY-----", "");
+    key = key.replace(" ", "");
     PublicKey publicKey = null;
     try {
       val keyBytes = Base64.getDecoder().decode(key);

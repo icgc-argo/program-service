@@ -44,7 +44,7 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   private void startDaemonAwaitThread() {
     Thread awaitThread = new Thread(()->{
       try {
-        GRpcServerRunner.this.server.awaitTermination();
+        this.server.awaitTermination();
       } catch (InterruptedException e) {
         log.error("gRPC server stopped.", e);
       }

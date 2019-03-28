@@ -26,12 +26,10 @@ import java.util.Optional;
 @Service
 public class EgoService {
 
-  private final EgoProperties properties;
   private final RSAPublicKey egoPublicKey;
 
   @Autowired
-  public EgoService(EgoProperties egoProperties) {
-    this.properties = egoProperties;
+  public EgoService(EgoProperties properties) {
 
     PublicKey egoPublicKey = null;
     try {
@@ -43,6 +41,10 @@ public class EgoService {
     }
 
     this.egoPublicKey = (RSAPublicKey) egoPublicKey;
+  }
+
+  public EgoService(RSAPublicKey egoPublicKey) {
+    this.egoPublicKey = egoPublicKey;
   }
 
   public Optional<EgoToken> verifyToken(String jwtToken) {
@@ -81,6 +83,7 @@ public class EgoService {
       public User user;
 
       @Data
+      @JsonIgnoreProperties(ignoreUnknown = true)
       static class User {
         public String name;
         public String email;
@@ -94,7 +97,6 @@ public class EgoService {
         public String type;
         public String[] roles;
         public String[] groups;
-        // TODO: figure out what this field do
         public String[] permissions;
       }
     }
