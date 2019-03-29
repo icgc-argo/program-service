@@ -3,6 +3,10 @@ package org.icgc.argo.program_service;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -32,5 +36,15 @@ public class Utils {
     }
 
     return publicKey;
+  }
+
+  public static String toString(InputStream in) throws IOException {
+    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+    StringBuilder result = new StringBuilder();
+    String line;
+    while((line = reader.readLine()) != null) {
+      result.append(line);
+    }
+    return result.toString();
   }
 }

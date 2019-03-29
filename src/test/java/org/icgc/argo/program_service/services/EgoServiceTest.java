@@ -2,27 +2,25 @@ package org.icgc.argo.program_service.services;
 
 import lombok.val;
 import org.icgc.argo.program_service.Utils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
 
 import java.security.interfaces.RSAPublicKey;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(MockitoJUnitRunner.class)
-public class EgoServiceTest {
+
+class EgoServiceTest {
   @Test
-  public void verifyKey() {
+  void verifyKey() {
     val rsaPublicKey = (RSAPublicKey) Utils.getPublicKey(publickKey, "RSA");
 
     val egoService = new EgoService(rsaPublicKey);
 
-    assertTrue(egoService.verifyToken(validToken).isPresent());
-    assertFalse(egoService.verifyToken(expiredToken).isPresent());
-    assertFalse(egoService.verifyToken(wrongIssToken).isPresent());
-    assertTrue(egoService.verifyToken(hasExtraFieldToken).isPresent());
+    assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
+    assertFalse(egoService.verifyToken(expiredToken).isPresent(), "Expired token should return empty ego token");
+    assertFalse(egoService.verifyToken(wrongIssToken).isPresent(), "Wrong issuer token should return empty ego token");
+    assertTrue(egoService.verifyToken(hasExtraFieldToken).isPresent(), "Return ego token when a token contains an unrecognized field");
   }
 
   // exp 2053872034

@@ -1,3 +1,6 @@
 ego:
-  baseUrl: "https://ego.qa.cancercollaboratory.org/api"
-  publicKeyPath: "/oauth/token/public_key"
+  publicKeyUrl: "https://ego.qa.cancercollaboratory.org/api/oauth/token/public_key"
+
+
+spring.main.banner-mode: 'off'
+

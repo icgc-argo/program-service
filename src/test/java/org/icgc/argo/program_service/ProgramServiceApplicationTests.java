@@ -1,19 +1,11 @@
 package org.icgc.argo.program_service;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import static org.junit.Assert.assertTrue;
-
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class ProgramServiceApplicationTests {
-
+@SpringJUnitConfig
+class ProgramServiceApplicationTests {
 	@Test
-	public void contextLoads() {
-	  assertTrue(true);
+	void contextLoads() {
 	}
-
 }

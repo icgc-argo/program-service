@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import javax.validation.constraints.NotNull;
 
 /**
- * Ego external configuration
+ * Ego external configuration, served as metadata for application.yml
  */
 @Component
 @ConfigurationProperties(prefix="ego")
@@ -17,14 +17,8 @@ import javax.validation.constraints.NotNull;
 @Setter @Getter
 public class EgoProperties {
   /**
-   * Base url of ego
+   * Url to the public key used by ego to encrypt jwt token.
    */
   @NotNull
-  private String baseUrl;
-
-  /**
-   * Path to the public key used by ego to encrypt jwt token.
-   */
-  @NotNull
-  private String publicKeyPath;
+  private String publicKeyUrl;
 }

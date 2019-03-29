@@ -12,13 +12,12 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.properties.EgoProperties;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
-import java.security.PublicKey;
+import java.io.IOException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Optional;
 
@@ -29,18 +28,15 @@ public class EgoService {
   private final RSAPublicKey egoPublicKey;
 
   @Autowired
-  public EgoService(EgoProperties properties) {
-
-    PublicKey egoPublicKey = null;
+  public EgoService(@Value("${ego.publicKeyUrl}") UrlResource publicKeyResource) {
+    RSAPublicKey egoPublicKey = null;
     try {
-      RestTemplate restTemplate = new RestTemplate();
-      val resp = restTemplate.getForEntity(properties.getBaseUrl() + properties.getPublicKeyPath(), String.class);
-      egoPublicKey = Utils.getPublicKey(resp.getBody(), "RSA");
-    } catch(HttpClientErrorException.BadRequest e) {
+      String key = Utils.toString(publicKeyResource.getInputStream());
+      egoPublicKey = (RSAPublicKey) Utils.getPublicKey(key, "RSA");
+    } catch(IOException e) {
       log.info("Cannot get public key of ego");
     }
-
-    this.egoPublicKey = (RSAPublicKey) egoPublicKey;
+    this.egoPublicKey = egoPublicKey;
   }
 
   public EgoService(RSAPublicKey egoPublicKey) {
