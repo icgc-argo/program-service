@@ -1,0 +1,3 @@
+[submodule "src/main/argo-proto"]
+	path = src/main/argo-proto
+	url = git@github.com:icgc-argo/argo-proto.git
