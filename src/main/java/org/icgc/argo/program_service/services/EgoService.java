@@ -7,16 +7,18 @@ import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.Utils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Optional;
@@ -58,7 +60,7 @@ public class EgoService {
 
   private Optional<EgoToken> parseToken(DecodedJWT jwt) {
     try {
-      EgoToken egoToken = new EgoToken(jwt, jwt.getClaim("context").as(EgoToken.Context.class));
+      EgoToken egoToken = new EgoToken(jwt, jwt.getClaim("context").as(Context.class));
       return Optional.of(egoToken);
     } catch (JWTDecodeException exception){
       //Invalid token
@@ -66,35 +68,37 @@ public class EgoService {
     }
   }
 
-  @AllArgsConstructor
-  public static class EgoToken {
+  public static class EgoToken extends Context.User {
     public final DecodedJWT jwt;
 
-    public final Context context;
+    EgoToken(@NotNull DecodedJWT jwt, @NotNull Context context) {
+      this.jwt = jwt;
+      BeanUtils.copyProperties(context.user, this);
+    }
+  }
 
-    @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  @Setter @Getter
+  private static class Context {
+    //      public String[] scope;
+    User user;
+
     @JsonIgnoreProperties(ignoreUnknown = true)
-    static class Context {
-      //      public String[] scope;
-      public User user;
-
-      @Data
-      @JsonIgnoreProperties(ignoreUnknown = true)
-      static class User {
-        public String name;
-        public String email;
-        public String status;
-        public String firstName;
-        public String lastName;
-        public String test;
-        public String createdAt;
-        public String lastLogin;
-        public String preferredLanguage;
-        public String type;
-        public String[] roles;
-        public String[] groups;
-        public String[] permissions;
-      }
+    @Setter @Getter
+    private static class User {
+      String name;
+      String email;
+      String status;
+      String firstName;
+      String lastName;
+      String test;
+      String createdAt;
+      String lastLogin;
+      String preferredLanguage;
+      String type;
+      String[] roles;
+      String[] groups;
+      String[] permissions;
     }
   }
 }

@@ -1,6 +1,7 @@
 package org.icgc.argo.program_service.grpc;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
+import java.util.Set;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
@@ -56,9 +58,10 @@ public class EgoAuthInterceptor implements ServerInterceptor {
     String[] rolesAllowed() default {"ADMIN", "USER"};
 
     @Aspect
-    @Slf4j
     @Component
+    @Slf4j
     class EgoAuthAspect {
+
       @Around("@annotation(egoAuth)")
       public Object checkIdentity(ProceedingJoinPoint pjp, EgoAuth egoAuth) {
         val egoToken = EGO_TOKEN.get();
@@ -67,16 +70,22 @@ public class EgoAuthInterceptor implements ServerInterceptor {
 
         if (egoToken == null) {
           ((StreamObserver) call).onError(new StatusException(Status.fromCode(Status.Code.UNAUTHENTICATED)));
+          return null;
+        }
+
+        val availableRoles = Sets.intersection(Set.of(egoAuth.rolesAllowed()), Set.of(egoToken.getRoles()));
+
+        if (availableRoles.isEmpty()) {
+          ((StreamObserver) call).onError(new StatusException(Status.fromCode(Status.Code.PERMISSION_DENIED)));
+          return null;
         } else {
           try {
             return pjp.proceed();
           } catch(Throwable e) {
-            EgoAuthAspect.log.info(e.getMessage());
+            log.info(e.getMessage());
+            return null;
           }
         }
-
-        EgoAuthAspect.log.info("check identity");
-        return null;
       }
     }
   }

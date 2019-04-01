@@ -17,11 +17,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 
+import java.io.IOException;
 import java.util.Optional;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.given;
 
 // GrpcCleanupRule only works with junit 4
@@ -54,22 +56,6 @@ public class EgoAuthInterceptorTest {
 
   @Test
   public void egoAuthInterceptor_setEgoToken() throws Exception {
-    class JwtClientInterceptor implements ClientInterceptor {
-      public String token;
-
-      @Override
-      public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
-              MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
-        return new ForwardingClientCall.SimpleForwardingClientCall<>(next.newCall(method, callOptions)) {
-          @Override
-          public void start(Listener<RespT> responseListener, Metadata headers) {
-            headers.put(EgoAuthInterceptor.JWT_METADATA_KEY, token);
-            super.start(responseListener, headers);
-          }
-        };
-      }
-    }
-
     ProgramServiceImplBase programServiceImplBase =
             new ProgramServiceImplBase() {
               @Override
@@ -99,4 +85,64 @@ public class EgoAuthInterceptorTest {
     assertNull(this.egoTokenSpy);
   }
 
+  class JwtClientInterceptor implements ClientInterceptor {
+    private String token;
+
+    @Override
+    public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
+            MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
+      return new ForwardingClientCall.SimpleForwardingClientCall<>(next.newCall(method, callOptions)) {
+        @Override
+        public void start(Listener<RespT> responseListener, Metadata headers) {
+          headers.put(EgoAuthInterceptor.JWT_METADATA_KEY, token);
+          super.start(responseListener, headers);
+        }
+      };
+    }
+  }
+
+  @Test
+  public void egoAuthInterceptor_egoAuthAnnotation() throws IOException {
+    ProgramServiceImplBase target = new ProgramServiceImplBase() {
+      @EgoAuthInterceptor.EgoAuth(rolesAllowed = {"ADMIN"})
+      public void create(ProgramDetails request, StreamObserver<ProgramDetails> responseObserver) {
+        responseObserver.onNext(ProgramDetails.getDefaultInstance());
+        responseObserver.onCompleted();
+      }
+    };
+    AspectJProxyFactory factory = new AspectJProxyFactory(target);
+    factory.setProxyTargetClass(true);
+    factory.addAspect(EgoAuthInterceptor.EgoAuth.EgoAuthAspect.class);
+    ProgramServiceImplBase proxy = factory.getProxy();
+
+    // Create a server, add service, start, and register for automatic graceful shutdown.
+    grpcCleanup.register(InProcessServerBuilder.forName(serverName).directExecutor()
+            .addService(ServerInterceptors.intercept(proxy, new EgoAuthInterceptor(egoService))).build().start());
+    val jwtClientInterceptor = new JwtClientInterceptor();
+    val blockingStub = ProgramServiceGrpc.newBlockingStub(channel).withInterceptors(jwtClientInterceptor);
+
+    try {
+      jwtClientInterceptor.token = "123";
+      given(egoService.verifyToken("123")).willReturn(Optional.empty());
+      blockingStub.create(ProgramDetails.getDefaultInstance());
+      fail("Expect an status runtime exception to be thrown");
+    } catch (StatusRuntimeException e) {
+      assertEquals(e.getStatus(), Status.fromCode(Status.Code.UNAUTHENTICATED));
+    }
+
+    try {
+      given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
+      given(egoToken.getRoles()).willReturn(new String[]{"USER"});
+      blockingStub.create(ProgramDetails.getDefaultInstance());
+      fail("Expect an status runtime exception to be thrown");
+    } catch (StatusRuntimeException e) {
+      assertEquals(e.getStatus(), Status.fromCode(Status.Code.PERMISSION_DENIED));
+    }
+
+    given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
+    given(egoToken.getRoles()).willReturn(new String[]{"USER", "ADMIN"});
+    val resp = blockingStub.create(ProgramDetails.getDefaultInstance());
+    assertThat(resp, instanceOf(ProgramDetails.class));
+
+  }
 }
