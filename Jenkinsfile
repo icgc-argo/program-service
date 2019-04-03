@@ -2,23 +2,28 @@ pipeline {
     agent {
         kubernetes {
             label 'program-service-executor'
-            defaultContainer 'jnlp'
             yaml """
 apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: java
-    image: openjdk:11-jdk
+  - name: docker
+    image: docker:18
     tty: true
+    volumeMounts:
+    - mountPath: "/var/run/docker.sock"
+      name: "docker-sock"
+  volumes:
+  - name: "docker-sock"
+    hostPath: "/var/run/docker.sock"
 """
         }
     }
     stages {
-        stage('Run maven') {
+        stage('Build image') {
             steps {
-                container('java') {
-                    sh './mvnw clean package'
+                container('docker') {
+                    sh 'docker build .'
                 }
             }
         }
