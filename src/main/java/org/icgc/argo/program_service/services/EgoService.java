@@ -96,7 +96,6 @@ public class EgoService {
       String lastLogin;
       String preferredLanguage;
       String type;
-      String[] roles;
       String[] groups;
       String[] permissions;
     }

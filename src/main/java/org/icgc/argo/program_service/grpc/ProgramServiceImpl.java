@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
 
   @Override
-  @EgoAuth(rolesAllowed = {"ADMIN"})
+  @EgoAuth(typesAllowed = {"ADMIN"})
   public void create(ProgramDetails request,
                      io.grpc.stub.StreamObserver<ProgramDetails> responseObserver) {
     ProgramDetails detail = ProgramDetails.newBuilder().build();
