@@ -11,11 +11,13 @@ spec:
     image: docker:18
     tty: true
     volumeMounts:
-    - mountPath: "/var/run/docker.sock"
-      name: "docker-sock"
+    - mountPath: /var/run/docker.sock
+      name: docker-sock
   volumes:
-  - name: "docker-sock"
-    hostPath: "/var/run/docker.sock"
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
+      type: File
 """
         }
     }
@@ -23,7 +25,8 @@ spec:
         stage('Build image') {
             steps {
                 container('docker') {
-                    sh 'docker build .'
+                    // DNS error if --network is default
+                    sh 'docker build --network=host .'
                 }
             }
         }
