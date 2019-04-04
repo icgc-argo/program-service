@@ -73,9 +73,7 @@ public class EgoAuthInterceptor implements ServerInterceptor {
           return null;
         }
 
-        val availableRoles = Sets.intersection(Set.of(egoAuth.typesAllowed()), Set.of(egoToken.getType()));
-
-        if (availableRoles.isEmpty()) {
+        if (!Set.of(egoAuth.typesAllowed()).contains(egoToken.getType())) {
           ((StreamObserver) call).onError(new StatusException(Status.fromCode(Status.Code.PERMISSION_DENIED)));
           return null;
         } else {
