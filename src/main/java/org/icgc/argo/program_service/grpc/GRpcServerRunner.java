@@ -1,10 +1,9 @@
 package org.icgc.argo.program_service.grpc;
 
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
-import io.grpc.ServerInterceptors;
+import io.grpc.*;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -18,21 +17,30 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
 
   private Server server;
 
-  private final EgoAuthInterceptor egoAuthInterceptor;
+  private EgoAuthInterceptor egoAuthInterceptor;
   private final ProgramServiceImpl programServiceImpl;
 
 
   @Autowired
-  public GRpcServerRunner(EgoAuthInterceptor egoAuthInterceptor, ProgramServiceImpl programServiceImpl) {
-    this.egoAuthInterceptor = egoAuthInterceptor;
+  public GRpcServerRunner(ProgramServiceImpl programServiceImpl) {
     this.programServiceImpl = programServiceImpl;
+  }
+
+  @Autowired(required = false)
+  public void setEgoAuthInterceptor(EgoAuthInterceptor egoAuthInterceptor) {
+    this.egoAuthInterceptor = egoAuthInterceptor;
   }
 
   @Override
   public void run(String... args) throws Exception {
     int port = 50051;
+
+    val programService =
+            egoAuthInterceptor == null ? programServiceImpl.bindService()
+                    : ServerInterceptors.intercept(programServiceImpl, egoAuthInterceptor);
+
     server = ServerBuilder.forPort(port)
-            .addService(ServerInterceptors.intercept(programServiceImpl, egoAuthInterceptor))
+            .addService(programService)
             .addService(ProtoReflectionService.newInstance())
             .build()
             .start();

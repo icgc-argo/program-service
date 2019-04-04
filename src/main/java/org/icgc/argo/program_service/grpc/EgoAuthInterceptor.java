@@ -11,6 +11,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.icgc.argo.program_service.services.EgoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.ElementType;
@@ -23,6 +24,7 @@ import java.util.Set;
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
 @Component
+@Profile("auth")
 public class EgoAuthInterceptor implements ServerInterceptor {
 
   private final EgoService egoService;
