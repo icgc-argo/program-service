@@ -104,7 +104,7 @@ public class EgoAuthInterceptorTest {
   @Test
   public void egoAuthInterceptor_egoAuthAnnotation() throws IOException {
     ProgramServiceImplBase target = new ProgramServiceImplBase() {
-      @EgoAuthInterceptor.EgoAuth(rolesAllowed = {"ADMIN"})
+      @EgoAuthInterceptor.EgoAuth(typesAllowed = {"ADMIN"})
       public void create(ProgramDetails request, StreamObserver<ProgramDetails> responseObserver) {
         responseObserver.onNext(ProgramDetails.getDefaultInstance());
         responseObserver.onCompleted();
@@ -132,7 +132,7 @@ public class EgoAuthInterceptorTest {
 
     try {
       given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
-      given(egoToken.getRoles()).willReturn(new String[]{"USER"});
+      given(egoToken.getType()).willReturn("USER");
       blockingStub.create(ProgramDetails.getDefaultInstance());
       fail("Expect an status runtime exception to be thrown");
     } catch (StatusRuntimeException e) {
@@ -140,7 +140,7 @@ public class EgoAuthInterceptorTest {
     }
 
     given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
-    given(egoToken.getRoles()).willReturn(new String[]{"USER", "ADMIN"});
+    given(egoToken.getType()).willReturn("ADMIN");
     val resp = blockingStub.create(ProgramDetails.getDefaultInstance());
     assertThat(resp, instanceOf(ProgramDetails.class));
 

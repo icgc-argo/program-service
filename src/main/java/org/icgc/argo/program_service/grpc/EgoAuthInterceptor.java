@@ -55,7 +55,7 @@ public class EgoAuthInterceptor implements ServerInterceptor {
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.METHOD)
   public @interface EgoAuth {
-    String[] rolesAllowed() default {"ADMIN", "USER"};
+    String[] typesAllowed() default {"ADMIN", "USER"};
 
     @Aspect
     @Component
@@ -73,7 +73,7 @@ public class EgoAuthInterceptor implements ServerInterceptor {
           return null;
         }
 
-        val availableRoles = Sets.intersection(Set.of(egoAuth.rolesAllowed()), Set.of(egoToken.getRoles()));
+        val availableRoles = Sets.intersection(Set.of(egoAuth.typesAllowed()), Set.of(egoToken.getType()));
 
         if (availableRoles.isEmpty()) {
           ((StreamObserver) call).onError(new StatusException(Status.fromCode(Status.Code.PERMISSION_DENIED)));
