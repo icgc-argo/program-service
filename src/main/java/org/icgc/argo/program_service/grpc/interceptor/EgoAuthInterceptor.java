@@ -1,4 +1,4 @@
-package org.icgc.argo.program_service.grpc;
+package org.icgc.argo.program_service.grpc.interceptor;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -25,7 +25,7 @@ import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
 @Component
 @Profile("auth")
-public class EgoAuthInterceptor implements ServerInterceptor {
+public class EgoAuthInterceptor implements AuthInterceptor {
 
   private final EgoService egoService;
 
@@ -62,6 +62,7 @@ public class EgoAuthInterceptor implements ServerInterceptor {
     @Aspect
     @Component
     @Slf4j
+    @Profile("auth")
     class EgoAuthAspect {
 
       @Around("@annotation(egoAuth)")

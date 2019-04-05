@@ -55,7 +55,8 @@ public class EgoService {
               .build(); //Reusable verifier instance
       val jwt = verifier.verify(jwtToken);
       return parseToken(jwt);
-    } catch (JWTVerificationException e) {
+    } catch (JWTVerificationException | NullPointerException e) {
+      // Handle NPE defensively for null JWT.
       return Optional.empty();
     }
   }

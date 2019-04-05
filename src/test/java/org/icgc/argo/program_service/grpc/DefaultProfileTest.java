@@ -9,6 +9,7 @@ import lombok.SneakyThrows;
 import lombok.val;
 import org.icgc.argo.program_service.ProgramDetails;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
+import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.services.EgoService;
 import org.junit.Before;
 import org.junit.Rule;

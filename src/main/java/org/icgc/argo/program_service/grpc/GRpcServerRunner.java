@@ -4,6 +4,8 @@ import io.grpc.*;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.grpc.interceptor.AuthInterceptor;
+import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -17,27 +19,22 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
 
   private Server server;
 
-  private EgoAuthInterceptor egoAuthInterceptor;
+  private final AuthInterceptor authInterceptor;
   private final ProgramServiceImpl programServiceImpl;
 
 
   @Autowired
-  public GRpcServerRunner(ProgramServiceImpl programServiceImpl) {
+  public GRpcServerRunner(ProgramServiceImpl programServiceImpl, AuthInterceptor authInterceptor) {
     this.programServiceImpl = programServiceImpl;
-  }
-
-  @Autowired(required = false)
-  public void setEgoAuthInterceptor(EgoAuthInterceptor egoAuthInterceptor) {
-    this.egoAuthInterceptor = egoAuthInterceptor;
+    this.authInterceptor = authInterceptor;
   }
 
   @Override
   public void run(String... args) throws Exception {
     int port = 50051;
 
-    val programService =
-            egoAuthInterceptor == null ? programServiceImpl.bindService()
-                    : ServerInterceptors.intercept(programServiceImpl, egoAuthInterceptor);
+    // Interceptor bean depends on run profile.
+    val programService = ServerInterceptors.intercept(programServiceImpl, authInterceptor);
 
     server = ServerBuilder.forPort(port)
             .addService(programService)
