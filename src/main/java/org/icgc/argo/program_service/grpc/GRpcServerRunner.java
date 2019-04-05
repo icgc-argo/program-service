@@ -5,7 +5,6 @@ import io.grpc.protobuf.services.ProtoReflectionService;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.grpc.interceptor.AuthInterceptor;
-import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
