@@ -1,6 +1,64 @@
 ego:
   publicKeyUrl: "https://ego.qa.cancercollaboratory.org/api/oauth/token/public_key"
 
+spring:
+  application:
+    name: program-service
 
-spring.main.banner-mode: 'off'
+  flyway:
+    enabled: false
 
+  # Datasource
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/program_db
+    username: postgres
+    password: password
+    max-active: 10
+    max-idle: 1
+    min-idle: 1
+
+spring.jpa.database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+# set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
+
+logging:
+  console:
+    enabled: true
+    threshold: ALL
+  loggers:
+    "org.skife.jdbi.v2": TRACE
+  level:
+    root: ERROR
+    #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    #org.springframework.boot: INFO
+    org.icgc.argo.program_service: DEBUG
+
+
+# Hibernate SQL Debugging
+#spring.jpa.properties.hibernate.format_sql: true
+#logging.level.org.hibernate.SQL: DEBUG
+#logging.level.org.hibernate.type.descriptor.sql: TRACE
+
+
+# When you are desperate, use this...
+#logging.level.org.hibernate: TRACE
+
+---
+###############################################################################
+# Profile - "test"
+###############################################################################
+spring:
+  profiles: test
+
+spring.datasource:
+  driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  url: jdbc:tc:postgresql:9.5.13://localhost:5432/program_db?TC_INITFUNCTION=org.icgc.argo.program_service.test.FlywayInit::initTestContainers
+
+  username: postgres
+  password:
+  max-active: 1000
+  max-idle: 10
+  min-idle: 1
