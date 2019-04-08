@@ -4,13 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.ProgramDetails;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
-import org.icgc.argo.program_service.grpc.EgoAuthInterceptor.EgoAuth;
 import org.icgc.argo.program_service.model.entity.Program;
 import org.icgc.argo.program_service.repository.ProgramRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Component
 @Slf4j
