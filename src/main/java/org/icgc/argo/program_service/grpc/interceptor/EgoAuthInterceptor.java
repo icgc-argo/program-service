@@ -1,9 +1,10 @@
-package org.icgc.argo.program_service.grpc;
+package org.icgc.argo.program_service.grpc.interceptor;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -11,6 +12,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.icgc.argo.program_service.services.EgoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.ElementType;
@@ -23,7 +25,8 @@ import java.util.Set;
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
 @Component
-public class EgoAuthInterceptor implements ServerInterceptor {
+@Profile("auth")
+public class EgoAuthInterceptor implements AuthInterceptor {
 
   private final EgoService egoService;
 
@@ -60,8 +63,10 @@ public class EgoAuthInterceptor implements ServerInterceptor {
     @Aspect
     @Component
     @Slf4j
+    @Profile("auth")
     class EgoAuthAspect {
 
+      @SneakyThrows
       @Around("@annotation(egoAuth)")
       public Object checkIdentity(ProceedingJoinPoint pjp, EgoAuth egoAuth) {
         val egoToken = EGO_TOKEN.get();
@@ -81,7 +86,7 @@ public class EgoAuthInterceptor implements ServerInterceptor {
             return pjp.proceed();
           } catch(Throwable e) {
             log.info(e.getMessage());
-            return null;
+            throw e;
           }
         }
       }

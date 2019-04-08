@@ -15,6 +15,7 @@ import org.icgc.argo.program_service.Utils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
+@Profile("auth")
 public class EgoService {
 
   private final RSAPublicKey egoPublicKey;
@@ -53,7 +55,8 @@ public class EgoService {
               .build(); //Reusable verifier instance
       val jwt = verifier.verify(jwtToken);
       return parseToken(jwt);
-    } catch (JWTVerificationException e) {
+    } catch (JWTVerificationException | NullPointerException e) {
+      // Handle NPE defensively for null JWT.
       return Optional.empty();
     }
   }
