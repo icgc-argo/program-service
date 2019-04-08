@@ -4,6 +4,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -65,6 +66,7 @@ public class EgoAuthInterceptor implements AuthInterceptor {
     @Profile("auth")
     class EgoAuthAspect {
 
+      @SneakyThrows
       @Around("@annotation(egoAuth)")
       public Object checkIdentity(ProceedingJoinPoint pjp, EgoAuth egoAuth) {
         val egoToken = EGO_TOKEN.get();
@@ -86,7 +88,7 @@ public class EgoAuthInterceptor implements AuthInterceptor {
             return pjp.proceed();
           } catch(Throwable e) {
             log.info(e.getMessage());
-            return null;
+            throw e;
           }
         }
       }
