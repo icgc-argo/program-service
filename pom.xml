@@ -178,14 +178,20 @@
 	</dependencies>
 
 	<build>
-		<extensions>
-			<extension>
+		<plugins>
+			<plugin>
 				<groupId>kr.motd.maven</groupId>
 				<artifactId>os-maven-plugin</artifactId>
-				<version>1.5.0.Final</version>
-			</extension>
-		</extensions>
-		<plugins>
+				<version>1.6.1</version>
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<goals>
+							<goal>detect</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.1</version>
@@ -215,5 +221,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
