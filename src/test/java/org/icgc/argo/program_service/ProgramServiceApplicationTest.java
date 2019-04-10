@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig
-class ProgramServiceApplicationTests {
+class ProgramServiceApplicationTest {
 	@Test
 	void contextLoads() {
 	}

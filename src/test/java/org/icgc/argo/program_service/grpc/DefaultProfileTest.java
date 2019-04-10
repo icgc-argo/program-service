@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.springframework.test.context.ActiveProfiles;
 import static org.junit.Assert.*;
 
+// TODO: This test doesn't work, it should be converted to integration test
 @ActiveProfiles("default")
 public class DefaultProfileTest {
 
