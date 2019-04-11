@@ -1,8 +1,18 @@
+server:
+  port : 8083
+
 spring:
   application:
     name: program-service
   flyway:
     enabled: false
+
+  # url for spring boot admin client service
+  boot:
+    admin:
+      client:
+        url: http://localhost:8082
+
 
   # Datasource
   datasource:
@@ -28,10 +38,10 @@ logging:
   level:
     root: ERROR
     #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
-    #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     #org.springframework.boot: INFO
     org.icgc.argo.program_service: DEBUG
 
+management.endpoints.web.exposure.include: "*"
 
 # Hibernate SQL Debugging
 #spring.jpa.properties.hibernate.format_sql: true
