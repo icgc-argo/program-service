@@ -20,6 +20,11 @@ spec:
     volumeMounts:
     - mountPath: /var/run/docker.sock
       name: docker-sock
+  - name: java
+    image: openjdk:11-jdk-slim
+    command:
+    - cat
+    tty: true
   volumes:
   - name: docker-sock
     hostPath:
@@ -29,6 +34,15 @@ spec:
         }
     }
     stages {
+        stage('Test') {
+            // TODO: integration test
+            steps {
+                container('java') {
+                    sh "./mvnw test"
+                    junit "**/TEST-*.xml"
+                }
+            }
+        }
         stage('Build') {
             steps {
                 container('docker') {
