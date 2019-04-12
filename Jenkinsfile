@@ -1,3 +1,5 @@
+def commit = "UNKNOWN"
+
 pipeline {
     agent {
         kubernetes {
@@ -29,20 +31,27 @@ spec:
     stages {
         stage('Build image') {
             steps {
-                container('helm') {
-                    withCredentials([file(credentialsId:'4ed1e45c-b552-466b-8f86-729402993e3b', variable: 'KUBECONFIG')]) {
-                        sh 'helm ls --kubeconfig $KUBECONFIG'
-                    }
-                }
                 container('docker') {
                     withCredentials([usernamePassword(credentialsId:'8d0aaceb-2a19-4f92-ae37-5b61e4c0feb8', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         sh 'docker login -u $USERNAME -p $PASSWORD'
                     }
-                    // DNS error if --network is default
-                    sh 'docker build --network=host . -t overture/program-service:$(git describe --always)'
-                    sh 'docker push overture/program-service:$(git describe --always)'
-                }
+                    script {
+                        commit = sh(returnStdout: true, script: 'git describe --always').trim()
+                    }
 
+                    // DNS error if --network is default
+                    sh "docker build --network=host . -t overture/program-service:${commit}"
+
+                    sh "docker push overture/program-service:${commit}"
+                }
+                container('helm') {
+                    withCredentials([file(credentialsId:'4ed1e45c-b552-466b-8f86-729402993e3b', variable: 'KUBECONFIG')]) {
+                        sh 'helm init --client-only'
+                        sh 'helm ls --kubeconfig $KUBECONFIG'
+                        sh 'helm repo add overture https://overture-stack.github.io/charts/'
+                        sh "helm upgrade program-service-qa overture/program-service --reuse-values --set image.tag=${commit}"
+                    }
+                }
             }
         }
     }
