@@ -39,7 +39,6 @@ spec:
             steps {
                 container('java') {
                     sh "./mvnw test"
-                    junit "**/TEST-*.xml"
                 }
             }
         }
@@ -71,6 +70,11 @@ spec:
                     }
                 }
             }
+        }
+    }
+    post {
+        always {
+            junit "**/TEST-*.xml"
         }
     }
 }
