@@ -29,7 +29,7 @@ spec:
         }
     }
     stages {
-        stage('Build image') {
+        stage('Build') {
             steps {
                 container('docker') {
                     withCredentials([usernamePassword(credentialsId:'8d0aaceb-2a19-4f92-ae37-5b61e4c0feb8', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
@@ -44,6 +44,10 @@ spec:
 
                     sh "docker push overture/program-service:${commit}"
                 }
+            }
+        }
+        stage('Deploy') {
+            steps {
                 container('helm') {
                     withCredentials([file(credentialsId:'4ed1e45c-b552-466b-8f86-729402993e3b', variable: 'KUBECONFIG')]) {
                         sh 'helm init --client-only'
