@@ -25,6 +25,11 @@ spec:
     command:
     - cat
     tty: true
+  - name: postgres
+    image: postgres:11.2-alpine
+    env:
+    - name: POSTGRES_DB
+      value: program_db
   volumes:
   - name: docker-sock
     hostPath:
@@ -38,7 +43,7 @@ spec:
             // TODO: integration test
             steps {
                 container('java') {
-                    sh "./mvnw test"
+                    sh "./mvnw verify"
                 }
             }
         }
