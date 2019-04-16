@@ -1,4 +1,4 @@
-package org.icgc.argo.program_service.test;
+package org.icgc.argo.car_service.test;
 
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.Flyway;

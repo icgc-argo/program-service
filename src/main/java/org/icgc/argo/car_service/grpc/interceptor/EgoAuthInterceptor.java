@@ -1,4 +1,4 @@
-package org.icgc.argo.program_service.grpc.interceptor;
+package org.icgc.argo.car_service.grpc.interceptor;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -10,7 +10,7 @@ import lombok.val;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.icgc.argo.program_service.services.EgoService;
+import org.icgc.argo.car_service.services.EgoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package org.icgc.argo.program_service;
+package org.icgc.argo.car_service;
 
 
 import org.junit.jupiter.api.Test;

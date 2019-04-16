@@ -1,4 +1,4 @@
-package org.icgc.argo.program_service.properties;
+package org.icgc.argo.car_service.properties;
 
 import lombok.Getter;
 import lombok.Setter;

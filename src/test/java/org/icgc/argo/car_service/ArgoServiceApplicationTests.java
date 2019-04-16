@@ -1,10 +1,10 @@
-package org.icgc.argo.program_service;
+package org.icgc.argo.car_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig
-class ProgramServiceApplicationTests {
+class ArgoServiceApplicationTests {
 	@Test
 	void contextLoads() {
 	}
