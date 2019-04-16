@@ -1,7 +1,11 @@
 package org.icgc.argo.program_service.grpc;
 
-import io.grpc.*;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.ServerInterceptors;
+import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
 import io.grpc.protobuf.services.ProtoReflectionService;
+import io.grpc.services.HealthStatusManager;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.grpc.interceptor.AuthInterceptor;
@@ -20,12 +24,14 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
 
   private final AuthInterceptor authInterceptor;
   private final ProgramServiceImpl programServiceImpl;
+  private final HealthStatusManager healthStatusManager;
 
 
   @Autowired
   public GRpcServerRunner(ProgramServiceImpl programServiceImpl, AuthInterceptor authInterceptor) {
     this.programServiceImpl = programServiceImpl;
     this.authInterceptor = authInterceptor;
+    this.healthStatusManager = new HealthStatusManager();
   }
 
   @Override
@@ -34,10 +40,12 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
 
     // Interceptor bean depends on run profile.
     val programService = ServerInterceptors.intercept(programServiceImpl, authInterceptor);
+    healthStatusManager.setStatus("program_service.ProgramService", ServingStatus.SERVING);
 
     server = ServerBuilder.forPort(port)
             .addService(programService)
             .addService(ProtoReflectionService.newInstance())
+            .addService(healthStatusManager.getHealthService())
             .build()
             .start();
 

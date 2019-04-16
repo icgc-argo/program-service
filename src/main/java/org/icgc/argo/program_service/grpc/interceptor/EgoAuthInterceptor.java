@@ -1,7 +1,6 @@
 package org.icgc.argo.program_service.grpc.interceptor;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 import lombok.SneakyThrows;
@@ -74,14 +73,12 @@ public class EgoAuthInterceptor implements AuthInterceptor {
         assert call instanceof StreamObserver;
 
         if (egoToken == null) {
-          ((StreamObserver) call).onError(new StatusException(Status.fromCode(Status.Code.UNAUTHENTICATED)));
+          ((StreamObserver<?>) call).onError(new StatusException(Status.fromCode(Status.Code.UNAUTHENTICATED)));
           return null;
         }
 
-        val availableRoles = Sets.intersection(Set.of(egoAuth.typesAllowed()), Set.of(egoToken.getType()));
-
-        if (availableRoles.isEmpty()) {
-          ((StreamObserver) call).onError(new StatusException(Status.fromCode(Status.Code.PERMISSION_DENIED)));
+        if (!Set.of(egoAuth.typesAllowed()).contains(egoToken.getType())) {
+          ((StreamObserver<?>) call).onError(new StatusException(Status.fromCode(Status.Code.PERMISSION_DENIED)));
           return null;
         } else {
           try {
