@@ -1,4 +1,4 @@
-package org.icgc.argo.car_service.grpc;
+package org.icgc.argo.argo_template_grpc_service.grpc;
 
 import io.grpc.Channel;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -7,10 +7,10 @@ import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.icgc.argo.car_service.Car;
-import org.icgc.argo.car_service.CarServiceGrpc;
-import org.icgc.argo.car_service.grpc.interceptor.EgoAuthInterceptor;
-import org.icgc.argo.car_service.services.EgoService;
+import org.icgc.argo.argo_template_grpc_service.grpc.interceptor.EgoAuthInterceptor;
+import org.icgc.argo.argo_template_grpc_service.services.EgoService;
+import org.icgc.argo.proto.TemplateCar;
+import org.icgc.argo.proto.TemplateCarServiceGrpc;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,11 +45,11 @@ public class DefaultProfileTest {
   @SneakyThrows
   @Test
   public void egoInterceptorDisabled(){
-    val target = new CarServiceGrpc.CarServiceImplBase() {
+    val target = new TemplateCarServiceGrpc.TemplateCarServiceImplBase() {
       @Override
       @EgoAuthInterceptor.EgoAuth(typesAllowed = {"ADMIN"})
-      public void createCar(Car request, StreamObserver<Car> responseObserver) {
-        responseObserver.onNext(Car.getDefaultInstance());
+      public void create(TemplateCar request, StreamObserver<TemplateCar> responseObserver) {
+        responseObserver.onNext(TemplateCar.getDefaultInstance());
         responseObserver.onCompleted();
       }
     };
@@ -57,14 +57,14 @@ public class DefaultProfileTest {
     // Create a server, add service, start, and register for automatic graceful shutdown.
     grpcCleanup.register(InProcessServerBuilder.forName(serverName).directExecutor().addService(target).build().start());
 
-    val blockingStub = CarServiceGrpc.newBlockingStub(channel);
+    val blockingStub = TemplateCarServiceGrpc.newBlockingStub(channel);
 
     //EgoService is not initialized under default profile
     assertNull(egoService);
 
     //Ego interceptor is not stopping create request, as expected
-    val detail = blockingStub.createCar(Car.getDefaultInstance());
-    assertTrue(detail.equals(Car.getDefaultInstance()));
+    val detail = blockingStub.create(TemplateCar.getDefaultInstance());
+    assertTrue(detail.equals(TemplateCar.getDefaultInstance()));
   }
 
 }

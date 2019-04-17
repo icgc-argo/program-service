@@ -1,4 +1,4 @@
-package org.icgc.argo.car_service.model;
+package org.icgc.argo.argo_template_grpc_service.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

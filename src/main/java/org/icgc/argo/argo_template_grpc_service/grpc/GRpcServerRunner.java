@@ -1,12 +1,10 @@
-package org.icgc.argo.car_service.grpc;
+package org.icgc.argo.argo_template_grpc_service.grpc;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.ServerInterceptors;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.icgc.argo.car_service.grpc.interceptor.AuthInterceptor;
+import org.icgc.argo.argo_template_grpc_service.grpc.interceptor.AuthInterceptor;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -21,11 +19,13 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   private Server server;
 
   private final AuthInterceptor authInterceptor;
-  private final CarServiceImpl carServiceImpl;
+//  private final ProgramServiceImplBase templateCarServiceImpl;
 
   @Autowired
-  public GRpcServerRunner(CarServiceImpl carServiceImpl, AuthInterceptor authInterceptor) {
-    this.carServiceImpl = carServiceImpl;
+  public GRpcServerRunner(
+//      ProgramServiceImplBase templateCarServiceImpl,
+      AuthInterceptor authInterceptor) {
+//    this.templateCarServiceImpl = templateCarServiceImpl;
     this.authInterceptor = authInterceptor;
   }
 
@@ -34,10 +34,10 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
     int port = 50051;
 
     // Interceptor bean depends on run profile.
-    val carService = ServerInterceptors.intercept(carServiceImpl, authInterceptor);
+//    val carService = ServerInterceptors.intercept(templateCarServiceImpl, authInterceptor);
 
     server = ServerBuilder.forPort(port)
-            .addService(carService)
+//            .addService(carService)
             .addService(ProtoReflectionService.newInstance())
             .build()
             .start();

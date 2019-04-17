@@ -1,7 +1,7 @@
-package org.icgc.argo.car_service.services;
+package org.icgc.argo.argo_template_grpc_service.services;
 
 import lombok.val;
-import org.icgc.argo.car_service.Utils;
+import org.icgc.argo.argo_template_grpc_service.Utils;
 import org.junit.jupiter.api.Test;
 
 import java.security.interfaces.RSAPublicKey;

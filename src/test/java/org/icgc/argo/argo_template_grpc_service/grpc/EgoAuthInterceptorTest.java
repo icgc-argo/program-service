@@ -1,17 +1,25 @@
-package org.icgc.argo.car_service.grpc;
+package org.icgc.argo.argo_template_grpc_service.grpc;
 
-import io.grpc.*;
+import io.grpc.CallOptions;
+import io.grpc.Channel;
+import io.grpc.ClientCall;
+import io.grpc.ClientInterceptor;
+import io.grpc.ForwardingClientCall;
+import io.grpc.Metadata;
+import io.grpc.MethodDescriptor;
+import io.grpc.ServerInterceptors;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import lombok.val;
-import org.icgc.argo.car_service.Car;
-import org.icgc.argo.car_service.CarServiceGrpc;
-import org.icgc.argo.car_service.CarServiceGrpc.CarServiceImplBase;
-import org.icgc.argo.car_service.grpc.interceptor.EgoAuthInterceptor;
-import org.icgc.argo.car_service.services.EgoService;
-import org.icgc.argo.car_service.services.EgoService.EgoToken;
+import org.icgc.argo.argo_template_grpc_service.grpc.interceptor.EgoAuthInterceptor;
+import org.icgc.argo.argo_template_grpc_service.services.EgoService;
+import org.icgc.argo.argo_template_grpc_service.services.EgoService.EgoToken;
+import org.icgc.argo.proto.TemplateCar;
+import org.icgc.argo.proto.TemplateCarServiceGrpc;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,7 +32,11 @@ import java.io.IOException;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.BDDMockito.given;
 
 // GrpcCleanupRule only works with junit 4
@@ -57,12 +69,12 @@ public class EgoAuthInterceptorTest {
 
   @Test
   public void egoAuthInterceptor_setEgoToken() throws Exception {
-    CarServiceImplBase programServiceImplBase =
-            new CarServiceImplBase() {
+    TemplateCarServiceGrpc.TemplateCarServiceImplBase programServiceImplBase =
+            new TemplateCarServiceGrpc.TemplateCarServiceImplBase() {
               @Override
-              public void createCar(Car request, StreamObserver<Car> responseObserver) {
+              public void create(TemplateCar request, StreamObserver<TemplateCar> responseObserver) {
                 EgoAuthInterceptorTest.this.egoTokenSpy = EgoAuthInterceptor.EGO_TOKEN.get();
-                responseObserver.onNext(Car.getDefaultInstance());
+                responseObserver.onNext(TemplateCar.getDefaultInstance());
                 responseObserver.onCompleted();
               }
             };
@@ -72,17 +84,17 @@ public class EgoAuthInterceptorTest {
             .addService(ServerInterceptors.intercept(programServiceImplBase, new EgoAuthInterceptor(egoService))).build().start());
 
     val jwtClientInterceptor = new JwtClientInterceptor();
-    val blockingStub = CarServiceGrpc.newBlockingStub(channel).withInterceptors(jwtClientInterceptor);
+    val blockingStub = TemplateCarServiceGrpc.newBlockingStub(channel).withInterceptors(jwtClientInterceptor);
 
     jwtClientInterceptor.token = "123";
     given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
 
-    blockingStub.createCar(Car.getDefaultInstance());
+    blockingStub.create(TemplateCar.getDefaultInstance());
     assertNotNull(this.egoTokenSpy);
 
     given(egoService.verifyToken("321")).willReturn(Optional.empty());
     jwtClientInterceptor.token = "321";
-    blockingStub.createCar(Car.getDefaultInstance());
+    blockingStub.create(TemplateCar.getDefaultInstance());
     assertNull(this.egoTokenSpy);
   }
 
@@ -104,28 +116,28 @@ public class EgoAuthInterceptorTest {
 
   @Test
   public void egoAuthInterceptor_egoAuthAnnotation() throws IOException {
-    CarServiceImplBase target = new CarServiceImplBase() {
+    TemplateCarServiceGrpc.TemplateCarServiceImplBase target = new TemplateCarServiceGrpc.TemplateCarServiceImplBase() {
       @EgoAuthInterceptor.EgoAuth(typesAllowed = {"ADMIN"})
-      public void create(Car request, StreamObserver<Car> responseObserver) {
-        responseObserver.onNext(Car.getDefaultInstance());
+      public void create(TemplateCar request, StreamObserver<TemplateCar> responseObserver) {
+        responseObserver.onNext(TemplateCar.getDefaultInstance());
         responseObserver.onCompleted();
       }
     };
     AspectJProxyFactory factory = new AspectJProxyFactory(target);
     factory.setProxyTargetClass(true);
     factory.addAspect(EgoAuthInterceptor.EgoAuth.EgoAuthAspect.class);
-    CarServiceImplBase proxy = factory.getProxy();
+    TemplateCarServiceGrpc.TemplateCarServiceImplBase proxy = factory.getProxy();
 
     // Create a server, add service, start, and register for automatic graceful shutdown.
     grpcCleanup.register(InProcessServerBuilder.forName(serverName).directExecutor()
             .addService(ServerInterceptors.intercept(proxy, new EgoAuthInterceptor(egoService))).build().start());
     val jwtClientInterceptor = new JwtClientInterceptor();
-    val blockingStub = CarServiceGrpc.newBlockingStub(channel).withInterceptors(jwtClientInterceptor);
+    val blockingStub = TemplateCarServiceGrpc.newBlockingStub(channel).withInterceptors(jwtClientInterceptor);
 
     try {
       jwtClientInterceptor.token = "123";
       given(egoService.verifyToken("123")).willReturn(Optional.empty());
-      blockingStub.createCar(Car.getDefaultInstance());
+      blockingStub.create(TemplateCar.getDefaultInstance());
       fail("Expect an status runtime exception to be thrown");
     } catch (StatusRuntimeException e) {
       assertEquals(e.getStatus(), Status.fromCode(Status.Code.UNAUTHENTICATED));
@@ -134,7 +146,7 @@ public class EgoAuthInterceptorTest {
     try {
       given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
       given(egoToken.getType()).willReturn("USER");
-      blockingStub.createCar(Car.getDefaultInstance());
+      blockingStub.create(TemplateCar.getDefaultInstance());
       fail("Expect an status runtime exception to be thrown");
     } catch (StatusRuntimeException e) {
       assertEquals(e.getStatus(), Status.fromCode(Status.Code.PERMISSION_DENIED));
@@ -142,8 +154,8 @@ public class EgoAuthInterceptorTest {
 
     given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
     given(egoToken.getType()).willReturn("ADMIN");
-    val resp = blockingStub.createCar(Car.getDefaultInstance());
-    assertThat(resp, instanceOf(Car.class));
+    val resp = blockingStub.create(TemplateCar.getDefaultInstance());
+    assertThat(resp, instanceOf(TemplateCar.class));
 
   }
 }

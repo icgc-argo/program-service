@@ -1,4 +1,4 @@
-package org.icgc.argo.car_service.grpc.interceptor;
+package org.icgc.argo.argo_template_grpc_service.grpc.interceptor;
 
 import io.grpc.ServerInterceptor;
 

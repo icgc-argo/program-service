@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ca.on.oicr.icgc.argo</groupId>
-	<artifactId>program-service</artifactId>
+	<artifactId>argo-template-grpc-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>program-service</name>
+	<name>argo-template-grpc-service</name>
 	<description>Demo project for Spring Boot</description>
 
 	<properties>
