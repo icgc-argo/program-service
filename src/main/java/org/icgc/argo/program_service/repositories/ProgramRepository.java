@@ -1,4 +1,4 @@
-package org.icgc.argo.program_service.repository;
+package org.icgc.argo.program_service.repositories;
 
 import org.icgc.argo.program_service.model.entity.Program;
 import org.springframework.data.repository.CrudRepository;

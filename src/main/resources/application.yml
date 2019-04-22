@@ -16,6 +16,9 @@ spring:
     username: postgres
     password: password
 
+app:
+  invitationUrlPrefix: "https://frontend/invite/"
+
 #spring.jpa.database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
