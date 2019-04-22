@@ -1,34 +1,41 @@
-CREATE TYPE membershiptype AS ENUM ('FULL', 'ASSOCIATE');
+CREATE TYPE membership AS ENUM ('FULL', 'ASSOCIATE');
 
-CREATE TABLE CANCER (
+CREATE TABLE cancer (
     id                UUID PRIMARY KEY,
     name              VARCHAR(255) UNIQUE NOT NULL
 );
 
-CREATE TABLE SITE  (
+CREATE TABLE site  (
     id                UUID PRIMARY KEY,
     name              VARCHAR(255) UNIQUE NOT NULL
 );
 
-CREATE TABLE PROGRAMCANCER (
+CREATE TABLE program_cancer (
   program_id          UUID NOT NULL,
   cancer_id           UUID NOT NULL,
+
   PRIMARY KEY(program_id, cancer_id),
-  FOREIGN KEY(program_id) REFERENCES PROGRAM(id),
-  FOREIGN KEY(cancer_id)  REFERENCES CANCER(id)
+  FOREIGN KEY(program_id) REFERENCES program(id),
+  FOREIGN KEY(cancer_id)  REFERENCES cancer(id)
 );
 
-CREATE TABLE PROGRAMSITE (
+CREATE TABLE program_site (
   program_id            UUID  NOT NULL,
   site_id               UUID  NOT NULL,
+
   PRIMARY KEY(program_id, site_id),
-  FOREIGN KEY(program_id) REFERENCES PROGRAM(id),
-  FOREIGN KEY(site_id)  REFERENCES SITE(id)
+  FOREIGN KEY(program_id) REFERENCES program(id),
+  FOREIGN KEY(site_id)  REFERENCES site(id)
 );
 
-ALTER TABLE PROGRAM ADD COLUMN date_updated TIMESTAMP NOT NULL;
-ALTER TABLE PROGRAM ADD COLUMN institutions VARCHAR(255) DEFAULT '';
-ALTER TABLE PROGRAM ADD COLUMN countries VARCHAR(255) NOT NULL;
-ALTER TABLE PROGRAM ADD COLUMN regions VARCHAR(255) DEFAULT '';
-ALTER TABLE PROGRAM ALTER COLUMN membership_type TYPE membershiptype USING membership_type :: membershiptype;
-ALTER TABLE PROGRAM ALTER COLUMN membership_type SET NOT NULL;
+ALTER TABLE program ADD COLUMN date_updated TIMESTAMP NOT NULL;
+ALTER TABLE program ADD COLUMN institutions VARCHAR(255) NOT NULL DEFAULT '';
+ALTER TABLE program ADD COLUMN countries VARCHAR(255) NOT NULL;
+ALTER TABLE program ADD COLUMN regions VARCHAR(255) DEFAULT '';
+
+ALTER TABLE program ALTER COLUMN submitted_donors SET DEFAULT 0;
+ALTER TABLE program ALTER COLUMN genomic_donors SET DEFAULT 0;
+ALTER TABLE program ALTER COLUMN commitment_donors SET DEFAULT 0;
+
+ALTER TABLE program ALTER COLUMN membership_type TYPE membership USING membership_type :: membership;
+ALTER TABLE program ALTER COLUMN membership_type SET NOT NULL;
