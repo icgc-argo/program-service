@@ -1,7 +1,9 @@
 package org.icgc.argo.program_service.grpc;
 
 import com.google.common.collect.Streams;
+import io.grpc.stub.StreamObserver;
 import lombok.val;
+import org.icgc.argo.program_service.Empty;
 import org.icgc.argo.program_service.ProgramCollection;
 import org.icgc.argo.program_service.ProgramDetails;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
   private final ProgramRepository programRepository;
   private final DaoDToConverter converter;
+
   @Autowired
   public ProgramServiceImpl(ProgramRepository programRepository, DaoDToConverter converter) {
     this.programRepository = programRepository;
@@ -25,11 +28,10 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   @EgoAuth(typesAllowed = {"ADMIN"})
-  public void create(
+  public void create(ProgramDetails request, StreamObserver<ProgramDetails> responseObserver) {
     // TODO: (1) Create the rest of the program entities
     //       (2) Set up the permissions, groups in EGO
     //       (3) Populate the lookup tables for program, role, group_id
-    ProgramDetails request, io.grpc.stub.StreamObserver<ProgramDetails> responseObserver) {
     val program = request.getProgram();
     val dao = converter.convertProgramToDao(program);
     programRepository.save(dao);
@@ -38,18 +40,18 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-  public void list(org.icgc.argo.program_service.Empty request,
-    io.grpc.stub.StreamObserver<org.icgc.argo.program_service.ProgramCollection> responseObserver) {
+  public void list(Empty request, StreamObserver<ProgramCollection> responseObserver) {
     val programs = programRepository.findAll();
-
     val results = Streams.stream(programs)
-      .map(p-> converter.convertDaoToProgram(p))
+      .map(converter::convertDaoToProgram)
       .collect(Collectors.toUnmodifiableList());
 
     val collection = ProgramCollection
       .newBuilder()
       .addAllPrograms(results)
       .build();
+
     responseObserver.onNext(collection);
+    responseObserver.onCompleted();
   }
 }
