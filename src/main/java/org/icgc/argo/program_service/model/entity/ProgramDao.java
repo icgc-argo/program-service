@@ -1,9 +1,6 @@
 package org.icgc.argo.program_service.model.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -16,8 +13,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Program {
-
+public class ProgramDao {
   @Id
   @GenericGenerator(name = "program_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "program_uuid")
