@@ -5,7 +5,7 @@ CREATE TABLE cancer (
     name              VARCHAR(255) UNIQUE NOT NULL
 );
 
-CREATE TABLE site  (
+CREATE TABLE primary_site  (
     id                UUID PRIMARY KEY,
     name              VARCHAR(255) UNIQUE NOT NULL
 );
@@ -25,7 +25,7 @@ CREATE TABLE program_site (
 
   PRIMARY KEY(program_id, site_id),
   FOREIGN KEY(program_id) REFERENCES program(id),
-  FOREIGN KEY(site_id)  REFERENCES site(id)
+  FOREIGN KEY(site_id)  REFERENCES primary_site(id)
 );
 
 ALTER TABLE program ADD COLUMN date_updated TIMESTAMP NOT NULL;
