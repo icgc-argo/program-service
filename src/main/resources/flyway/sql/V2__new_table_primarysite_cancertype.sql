@@ -19,7 +19,7 @@ CREATE TABLE program_cancer (
   FOREIGN KEY(cancer_id)  REFERENCES cancer(id)
 );
 
-CREATE TABLE program_site (
+CREATE TABLE program_primary_site (
   program_id            UUID  NOT NULL,
   site_id               UUID  NOT NULL,
 
