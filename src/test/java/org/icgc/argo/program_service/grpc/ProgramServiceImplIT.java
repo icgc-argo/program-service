@@ -18,10 +18,12 @@ import java.util.UUID;
 
 import static junit.framework.TestCase.*;
 
+// TODO: program service is already running at the phase of pre-integration-test, use the existing running 50051 port
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles({ "test", "default" })
-public class ProgramServiceImplTest {
+public class ProgramServiceImplIT {
+
   @Autowired
   private ProgramServiceImpl programService;
 

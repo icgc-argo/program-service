@@ -32,7 +32,7 @@ public class EgoService {
   private final RSAPublicKey egoPublicKey;
 
   @Autowired
-  public EgoService(@Value("${ego.publicKeyUrl}") UrlResource publicKeyResource) {
+  public EgoService(@Value("${app.egoPublicKeyUrl}") UrlResource publicKeyResource) {
     RSAPublicKey egoPublicKey = null;
     try {
       String key = Utils.toString(publicKeyResource.getInputStream());

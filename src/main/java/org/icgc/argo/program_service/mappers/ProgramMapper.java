@@ -17,6 +17,7 @@ import java.util.UUID;
      * Program Conversions
      */
     Program convertProgramToDao(org.icgc.argo.program_service.Program program);
+
     @Mapping(target = "mergeFrom", ignore = true)
     @Mapping(target = "clearField", ignore = true)
     @Mapping(target = "clearOneof", ignore = true)
