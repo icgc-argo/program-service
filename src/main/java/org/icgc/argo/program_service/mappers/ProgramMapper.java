@@ -3,7 +3,7 @@ package org.icgc.argo.program_service.mappers;
 import com.google.protobuf.Timestamp;
 import org.icgc.argo.program_service.model.entity.Program;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -11,27 +11,14 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
-@Mapper( config = MapperConfig.class)
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
   public interface ProgramMapper {
     /**
      * Program Conversions
      */
-    Program convertProgramToDao(org.icgc.argo.program_service.Program program);
+    Program ProgramMessageToProgram(org.icgc.argo.program_service.Program programMessage);
 
-    @Mapping(target = "mergeFrom", ignore = true)
-    @Mapping(target = "clearField", ignore = true)
-    @Mapping(target = "clearOneof", ignore = true)
-    @Mapping(target = "unknownFields", ignore = true)
-    @Mapping(target = "mergeUnknownFields", ignore = true)
-    @Mapping(target = "allFields", ignore = true)
-    @Mapping(target = "idBytes", ignore = true)
-    @Mapping(target = "shortNameBytes", ignore = true)
-    @Mapping(target = "descriptionBytes", ignore = true)
-    @Mapping(target = "nameBytes", ignore = true)
-    @Mapping(target = "membershipTypeValue", ignore = true)
-    @Mapping(target = "websiteBytes", ignore = true)
-    @Mapping(target = "mergeCreatedAt", ignore = true)
-    org.icgc.argo.program_service.Program convertDaoToProgram(Program dao);
+    org.icgc.argo.program_service.Program ProgramToProgramMessage(Program program);
 
     default UUID map(String s) {
       return UUID.fromString(s);

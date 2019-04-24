@@ -33,7 +33,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     //       (2) Set up the permissions, groups in EGO
     //       (3) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
-    val dao = converter.convertProgramToDao(program);
+    val dao = converter.ProgramMessageToProgram(program);
     programRepository.save(dao);
     responseObserver.onNext(request);
     responseObserver.onCompleted();
@@ -43,7 +43,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void list(Empty request, StreamObserver<ProgramCollection> responseObserver) {
     val programs = programRepository.findAll();
     val results = Streams.stream(programs)
-      .map(converter::convertDaoToProgram)
+      .map(converter::ProgramToProgramMessage)
       .collect(Collectors.toUnmodifiableList());
 
     val collection = ProgramCollection
