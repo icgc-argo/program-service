@@ -1,10 +1,9 @@
 package org.icgc.argo.program_service.grpc;
 
+import com.google.protobuf.Timestamp;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
 import org.icgc.argo.program_service.*;
-
-import org.icgc.argo.program_service.Date;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.shaded.com.google.common.collect.Sets;
 
-import java.util.*;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 
 import static junit.framework.TestCase.*;
 
@@ -85,6 +86,12 @@ public class ProgramServiceImplTest {
      int genomicDonors,
      String website
   ) {
+    Instant instant = Instant.now();
+    val timestamp = Timestamp.newBuilder()
+            .setSeconds(instant.getEpochSecond())
+            .setNanos(instant.getNano())
+            .build();
+
     val p = Program
       .newBuilder()
       .setName(name)
@@ -97,7 +104,7 @@ public class ProgramServiceImplTest {
       .setWebsite(website)
       // gets over-written, but we still need to set it.
       .setId(UUID.randomUUID().toString())
-      .setDateCreated(Date.newBuilder().build())
+      .setCreatedAt(timestamp)
       .build();
     return p;
   }

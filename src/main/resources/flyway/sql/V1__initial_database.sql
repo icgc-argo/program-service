@@ -1,4 +1,4 @@
-CREATE TABLE PROGRAM
+CREATE TABLE program
 (
     id                UUID PRIMARY KEY,
     short_name        VARCHAR(255) UNIQUE NOT NULL,
@@ -9,5 +9,5 @@ CREATE TABLE PROGRAM
     submitted_donors  INT                 NOT NULL,
     genomic_donors    INT                 NOT NULL,
     website           VARCHAR(255)        NOT NULL,
-    date_created      TIMESTAMP           NOT NULL
+    created_at        TIMESTAMP           NOT NULL
 );

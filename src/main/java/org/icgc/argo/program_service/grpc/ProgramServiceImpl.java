@@ -7,7 +7,7 @@ import org.icgc.argo.program_service.Empty;
 import org.icgc.argo.program_service.ProgramCollection;
 import org.icgc.argo.program_service.ProgramDetails;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
-import org.icgc.argo.program_service.converters.DaoDToConverter;
+import org.icgc.argo.program_service.mappers.ProgramMapper;
 import org.icgc.argo.program_service.repository.ProgramRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
   private final ProgramRepository programRepository;
-  private final DaoDToConverter converter;
+  private final ProgramMapper converter;
 
   @Autowired
-  public ProgramServiceImpl(ProgramRepository programRepository, DaoDToConverter converter) {
+  public ProgramServiceImpl(ProgramRepository programRepository, ProgramMapper converter) {
     this.programRepository = programRepository;
     this.converter = converter;
   }

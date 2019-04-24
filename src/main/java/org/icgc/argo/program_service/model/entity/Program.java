@@ -4,6 +4,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -35,6 +36,6 @@ public class Program {
 
   private String website;
 
-  private Date dateCreated;
+  private LocalDateTime createdAt;
 
 }
