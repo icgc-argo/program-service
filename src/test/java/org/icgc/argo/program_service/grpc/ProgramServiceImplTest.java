@@ -4,19 +4,22 @@ import io.grpc.stub.StreamObserver;
 import lombok.val;
 import org.icgc.argo.program_service.*;
 
+import org.icgc.argo.program_service.Date;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.testcontainers.shaded.com.google.common.collect.Sets;
 
-import java.util.UUID;
+import java.util.*;
 
-import static junit.framework.TestCase.assertNull;
-import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ActiveProfiles({ "test", "default" })
 public class ProgramServiceImplTest {
   @Autowired
   private ProgramServiceImpl programService;
@@ -30,7 +33,7 @@ public class ProgramServiceImplTest {
     assertTrue(programsObserver.completed);
     assertNull(programsObserver.thrown);
 
-    createProgram("Alice Bob and Charlie's Test Program Name",
+    val p1 = buildProgram("Alice Bob and Charlie's Test Program Name",
       "ABC",
       "A test project. Fix this description later.",
       "FULL",
@@ -40,7 +43,9 @@ public class ProgramServiceImplTest {
       "http://abc-project.test"
     );
 
-    createProgram("Xander's Yearly Zoological Experimentations",
+    createProgram(p1);
+
+    val p2 = buildProgram("Xander's Yearly Zoological Experimentations",
       "XYZ",
       "This needs a better description.",
       "ASSOCIATE",
@@ -50,13 +55,28 @@ public class ProgramServiceImplTest {
       "http://xyz.org"
     );
 
+    createProgram(p2);
+
     programService.list(request, programsObserver);
     assertTrue(programsObserver.completed);
     assertNull(programsObserver.thrown);
-    System.err.printf("Got programs -->%s<--\n",programsObserver.programs.toString());
+
+    val programList = programsObserver.result.getProgramsList();
+    System.err.printf("Got result -->%s<--\n",programList.toString());
+
+    assertEquals("Two programs", 2, programList.size());
+
+    val t1 = Sets.newTreeSet( new ProgramComparator());
+    val t2 = Sets.newTreeSet( new ProgramComparator());
+
+    t1.addAll(programList);
+    t2.add(p1);
+    t2.add(p2);
+    assertEquals("Same programs except for id and date", t1,t2);
   }
-  
-  public void createProgram(String name,
+
+
+  public Program buildProgram(String name,
      String shortName,
      String description,
      String membershipType,
@@ -65,7 +85,7 @@ public class ProgramServiceImplTest {
      int genomicDonors,
      String website
   ) {
-    val p1= Program
+    val p = Program
       .newBuilder()
       .setName(name)
       .setShortName(shortName)
@@ -75,29 +95,45 @@ public class ProgramServiceImplTest {
       .setSubmittedDonors(submittedDonors)
       .setGenomicDonors(genomicDonors)
       .setWebsite(website)
-      //.setId(UUID.randomUUID().toString())
-      .setId("23d77265-b613-4726-aad5-c85636a6b7fb")
+      // gets over-written, but we still need to set it.
+      .setId(UUID.randomUUID().toString())
       .setDateCreated(Date.newBuilder().build())
       .build();
+    return p;
+  }
 
-    // case2: single program
-    val d1 = ProgramDetails
-      .newBuilder()
-      .setProgram(p1)
-      .build();
+  public void createProgram(Program p) {
+    val details = ProgramDetails.newBuilder().setProgram(p).build();
     val resultObserver = new TestObserver<ProgramDetails>();
-    programService.create(d1, resultObserver);
+    programService.create(details, resultObserver);
+    assertTrue(resultObserver.completed);
+    assertNull(resultObserver.thrown);
+  }
+}
 
+// compare all the fields of our Program except for date and id
+class ProgramComparator extends PartialComparison<Program> {
+  @Override
+  List<Comparable> contents(Program object) {
+    return List.of(
+      object.getName(),
+      object.getShortName(),
+      object.getDescription(),
+      object.getCommitmentDonors(),
+      object.getSubmittedDonors(),
+      object.getGenomicDonors(),
+      object.getWebsite()
+    );
   }
 }
 
 class TestObserver<T> implements StreamObserver<T> {
-  public T programs;
+  public T result;
   public Throwable thrown;
   public boolean completed = false;
 
-  @Override public void onNext(T programCollection) {
-    programs = programCollection;
+  @Override public void onNext(T value) {
+    result = value;
   }
 
   @Override public void onError(Throwable throwable) {
@@ -108,3 +144,4 @@ class TestObserver<T> implements StreamObserver<T> {
     completed = true;
   }
 }
+
