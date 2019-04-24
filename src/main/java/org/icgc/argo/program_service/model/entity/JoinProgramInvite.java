@@ -2,7 +2,6 @@ package org.icgc.argo.program_service.model.entity;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
 import org.icgc.argo.program_service.UserRole;
 
 import javax.persistence.*;
@@ -11,13 +10,11 @@ import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Entity
-public class JoinProgramInvitation {
+public class JoinProgramInvite {
 
   public enum Status {PENDING, ACCEPTED, REVOKED};
 
   @Id
-  @GenericGenerator(name = "program_uuid", strategy = "org.hibernate.id.UUIDGenerator")
-  @GeneratedValue(generator = "program_uuid")
   private UUID id;
 
   @Column(nullable = false, updatable = false)
@@ -51,7 +48,7 @@ public class JoinProgramInvitation {
   @Column(nullable = false)
   private Status status;
 
-  public JoinProgramInvitation(Program program, String userEmail, String firstName, String lastName, UserRole role) {
+  public JoinProgramInvite(Program program, String userEmail, String firstName, String lastName, UserRole role) {
     this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
     this.expiredAt = this.createdAt.plusHours(48);
     this.acceptedAt = null;

@@ -2,9 +2,9 @@ package org.icgc.argo.program_service.services;
 
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
-import org.icgc.argo.program_service.model.entity.JoinProgramInvitation;
+import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.Program;
-import org.icgc.argo.program_service.repositories.JoinProgramInvitationRepository;
+import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -20,11 +20,11 @@ import java.util.UUID;
 @Service
 @Validated
 public class ProgramService {
-  private final JoinProgramInvitationRepository invitationRepository;
+  private final JoinProgramInviteRepository invitationRepository;
   private final ProgramRepository programRepository;
   private final MailSender mailSender;
 
-  public ProgramService(JoinProgramInvitationRepository invitationRepository, ProgramRepository programRepository, MailSender mailSender) {
+  public ProgramService(JoinProgramInviteRepository invitationRepository, ProgramRepository programRepository, MailSender mailSender) {
     this.invitationRepository = invitationRepository;
     this.programRepository = programRepository;
     this.mailSender = mailSender;
@@ -39,12 +39,12 @@ public class ProgramService {
                          @NotBlank @NotNull String firstName,
                          @NotBlank @NotNull String lastName,
                          @NotNull UserRole role) {
-    val invitation = new JoinProgramInvitation(program, userEmail, firstName, lastName, role);
+    val invitation = new JoinProgramInvite(program, userEmail, firstName, lastName, role);
     invitationRepository.save(invitation);
-    sendInvitation(invitation);
+    sendInvite(invitation);
   }
 
-  void sendInvitation(@NotNull JoinProgramInvitation invitation) {
+  void sendInvite(@NotNull JoinProgramInvite invitation) {
     SimpleMailMessage msg = new SimpleMailMessage();
     msg.setTo(invitation.getUserEmail());
 //    TODO: Add invitation link
@@ -52,6 +52,14 @@ public class ProgramService {
             "Dear " + invitation.getFirstName()
                     + invitation.getLastName()
                     + ", you are invited to join program.");
+
     mailSender.send(msg);
+    invitation.setEmailSent(true);
+    invitationRepository.save(invitation);
+  }
+
+  public void acceptInvite(JoinProgramInvite invitation) {
+    invitation.accept();
+    invitationRepository.save(invitation);
   }
 }

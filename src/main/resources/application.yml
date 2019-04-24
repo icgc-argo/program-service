@@ -18,6 +18,7 @@ spring:
 
 app:
   invitationUrlPrefix: "https://frontend/invite/"
+  egoPublicKeyUrl: "https://ego.qa.cancercollaboratory.org/api/oauth/token/public_key"
 
 #spring.jpa.database-platform: org.hibernate.dialect.PostgreSQLDialect
 
@@ -61,5 +62,3 @@ spring.datasource:
 spring:
   profiles: auth
 
-ego:
-  publicKeyUrl: "https://ego.qa.cancercollaboratory.org/api/oauth/token/public_key"

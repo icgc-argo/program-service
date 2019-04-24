@@ -21,5 +21,11 @@ public class AppProperties {
    */
   @NotNull
   private String invitationUrlPrefix;
+
+  /**
+   * Url to the public key used by ego to encrypt jwt token.
+   */
+  @NotNull
+  private String egoPublicKeyUrl;
 }
 

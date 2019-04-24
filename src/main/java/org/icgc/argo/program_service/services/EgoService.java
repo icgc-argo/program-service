@@ -11,7 +11,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
+import org.icgc.argo.program_service.model.entity.Program;
+import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,10 +22,12 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -30,9 +35,12 @@ import java.util.Optional;
 public class EgoService {
 
   private final RSAPublicKey egoPublicKey;
+  private final ProgramEgoGroupRepository programEgoGroupRepository;
 
   @Autowired
-  public EgoService(@Value("${ego.publicKeyUrl}") UrlResource publicKeyResource) {
+  public EgoService(@Value("${app.egoPublicKeyUrl}") UrlResource publicKeyResource, ProgramEgoGroupRepository programEgoGroupRepository) {
+    this.programEgoGroupRepository = programEgoGroupRepository;
+
     RSAPublicKey egoPublicKey = null;
     try {
       String key = Utils.toString(publicKeyResource.getInputStream());
@@ -43,8 +51,9 @@ public class EgoService {
     this.egoPublicKey = egoPublicKey;
   }
 
-  public EgoService(RSAPublicKey egoPublicKey) {
+  public EgoService(RSAPublicKey egoPublicKey, ProgramEgoGroupRepository programEgoGroupRepository) {
     this.egoPublicKey = egoPublicKey;
+    this.programEgoGroupRepository = programEgoGroupRepository;
   }
 
   public Optional<EgoToken> verifyToken(String jwtToken) {
@@ -102,6 +111,16 @@ public class EgoService {
       String[] groups;
       String[] permissions;
     }
+  }
+
+  Optional<UUID> getEgoGroupId(Program program, UserRole role) {
+    val programEgoGroup = programEgoGroupRepository.findbyProgramAndRole(program, role);
+    return programEgoGroup.map(v -> v.getProgram().getId());
+  }
+
+  public void addUser(@Email String email, Program program, UserRole role) {
+    val groupId = getEgoGroupId(program, role);
+    // TODO:rpcAddUser(userEmailAddr, groupId);
   }
 }
 
