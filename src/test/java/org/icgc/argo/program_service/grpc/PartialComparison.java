@@ -17,11 +17,11 @@ abstract class PartialComparison<T> implements Comparator<T> {
     val c2 = contents(o2);
 
     for(int i=0; i < c1.size(); i++) {
-      Object a = c1.get(i);
-      Object b = c2.get(i);
+      Comparable a = c1.get(i);
+      Comparable b = c2.get(i);
 
       if (!a.equals(b)) {
-        return ((Comparable) a).compareTo(b);
+        return a.compareTo(b);
       }
     }
     return 0;
