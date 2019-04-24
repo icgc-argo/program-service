@@ -11,6 +11,6 @@ public class Tables {
   public static final String CANCER = "cancer";
   public static final String SITE = "primary_site";
   public static final String PROGRAM_CANCER = "program_cancer";
-  public static final String PROGRAM_SITE = "program_site";
+  public static final String PROGRAM_PRIMARY_SITE = "program_primary_site";
 
 }
