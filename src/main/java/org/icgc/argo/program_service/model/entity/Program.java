@@ -13,7 +13,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProgramDao {
+public class Program {
   @Id
   @GenericGenerator(name = "program_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "program_uuid")

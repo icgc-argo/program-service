@@ -5,8 +5,7 @@ import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 
 import org.icgc.argo.program_service.Date;
-import org.icgc.argo.program_service.Program;
-import org.icgc.argo.program_service.model.entity.ProgramDao;
+import org.icgc.argo.program_service.model.entity.Program;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -17,7 +16,7 @@ import java.util.UUID;
     /**
      * Program Conversions
      */
-    ProgramDao convertProgramToDao(Program program);
+    Program convertProgramToDao(org.icgc.argo.program_service.Program program);
     @Mapping(target = "mergeFrom", ignore = true)
     @Mapping(target = "clearField", ignore = true)
     @Mapping(target = "clearOneof", ignore = true)
@@ -31,7 +30,7 @@ import java.util.UUID;
     @Mapping(target = "membershipTypeValue", ignore = true)
     @Mapping(target = "websiteBytes", ignore = true)
     @Mapping(target = "mergeDateCreated", ignore = true)
-    Program convertDaoToProgram(ProgramDao dao);
+    org.icgc.argo.program_service.Program convertDaoToProgram(Program dao);
 
     default UUID map(String s) {
       return UUID.fromString(s);
