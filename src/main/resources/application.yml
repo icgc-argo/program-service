@@ -24,6 +24,7 @@ spring:
     password: password
 
 app:
+  egoPublicKeyUrl: "https://ego.qa.cancercollaboratory.org/api/oauth/token/public_key"
   grpcPort: 50051
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
@@ -68,8 +69,6 @@ app:
 ###############################################################################
 # Profile - "auth"
 ###############################################################################
-app:
-  egoPublicKeyUrl: "https://ego.qa.cancercollaboratory.org/api/oauth/token/public_key"
 
 spring:
   profiles: auth

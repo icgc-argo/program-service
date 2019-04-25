@@ -49,6 +49,7 @@ public class Program implements NameableEntity<UUID> {
   private String description;
 
   @NotNull
+  @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.MEMBERSHIPTYPE)
   private org.icgc.argo.program_service.MembershipType membershipType;
 
