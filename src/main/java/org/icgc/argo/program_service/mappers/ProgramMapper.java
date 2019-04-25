@@ -3,6 +3,7 @@ package org.icgc.argo.program_service.mappers;
 import com.google.protobuf.Timestamp;
 import org.icgc.argo.program_service.model.entity.Program;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import java.time.Instant;
@@ -21,7 +22,11 @@ import java.util.UUID;
     org.icgc.argo.program_service.Program ProgramToProgramMessage(Program program);
 
     default UUID map(String s) {
-      return UUID.fromString(s);
+      try {
+        return UUID.fromString(s);
+      } catch (IllegalArgumentException e) {
+        return null;
+      }
     }
 
     default String map(UUID uuid) {

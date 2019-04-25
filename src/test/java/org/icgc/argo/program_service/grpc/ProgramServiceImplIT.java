@@ -10,13 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.testcontainers.shaded.com.google.common.collect.Sets;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
 
 import static junit.framework.TestCase.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 // TODO: program service is already running at the phase of pre-integration-test, use the existing running 50051 port
 @RunWith(SpringRunner.class)
@@ -45,7 +43,6 @@ public class ProgramServiceImplIT {
       3,
       "http://abc-project.test"
     );
-
     createProgram(p1);
 
     val p2 = buildProgram("Xander's Yearly Zoological Experimentations",
@@ -65,17 +62,10 @@ public class ProgramServiceImplIT {
     assertNull(programsObserver.thrown);
 
     val programList = programsObserver.result.getProgramsList();
-    System.err.printf("Got result -->%s<--\n",programList.toString());
 
     assertEquals("Two programs", 2, programList.size());
 
-    val t1 = Sets.newTreeSet( new ProgramComparator());
-    val t2 = Sets.newTreeSet( new ProgramComparator());
-
-    t1.addAll(programList);
-    t2.add(p1);
-    t2.add(p2);
-    assertEquals("Same programs except for id and date", t1,t2);
+    assertThat(programList).usingElementComparatorOnFields("shortName", "description", "name", "commitmentDonors", "submittedDonors", "genomicDonors", "website", "createdAt", "membershipType").contains(p1, p2);
   }
 
 
@@ -104,8 +94,6 @@ public class ProgramServiceImplIT {
       .setSubmittedDonors(submittedDonors)
       .setGenomicDonors(genomicDonors)
       .setWebsite(website)
-      // gets over-written, but we still need to set it.
-      .setId(UUID.randomUUID().toString())
       .setCreatedAt(timestamp)
       .build();
     return p;
@@ -117,22 +105,6 @@ public class ProgramServiceImplIT {
     programService.create(details, resultObserver);
     assertTrue(resultObserver.completed);
     assertNull(resultObserver.thrown);
-  }
-}
-
-// compare all the fields of our Program except for date and id
-class ProgramComparator extends PartialComparison<Program> {
-  @Override
-  List<Comparable> contents(Program object) {
-    return List.of(
-      object.getName(),
-      object.getShortName(),
-      object.getDescription(),
-      object.getCommitmentDonors(),
-      object.getSubmittedDonors(),
-      object.getGenomicDonors(),
-      object.getWebsite()
-    );
   }
 }
 
