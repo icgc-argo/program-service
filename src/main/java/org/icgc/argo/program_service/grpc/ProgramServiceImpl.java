@@ -34,7 +34,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
             .description(programProto.getDescription())
             .commitmentDonors(programProto.getCommitmentDonors())
             .genomicDonors(programProto.getGenomicDonors())
-            .membershipType(programProto.getMembershipType().toString())
+            .membershipType(programProto.getMembershipType())
             .website(programProto.getWebsite())
             .submittedDonors(programProto.getSubmittedDonors())
             .dateCreated(new Date())
