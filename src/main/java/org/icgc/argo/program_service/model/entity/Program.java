@@ -7,8 +7,10 @@ import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
@@ -47,6 +49,7 @@ public class Program implements NameableEntity<UUID> {
   private String description;
 
   @NotNull
+  @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.MEMBERSHIPTYPE)
   private org.icgc.argo.program_service.MembershipType membershipType;
 
@@ -68,13 +71,13 @@ public class Program implements NameableEntity<UUID> {
 
   @NotNull
   @EqualsAndHashCode.Exclude
-  @Column(name = SqlFields.DATECREATED)
-  private Date dateCreated;
+  @Column(name = SqlFields.CREATEDAT)
+  private LocalDateTime createdAt;
 
   @NotNull
   @EqualsAndHashCode.Exclude
-  @Column(name = SqlFields.DATEUPDATED)
-  private Date dateUpdated;
+  @Column(name = SqlFields.UPDATEDAT)
+  private Date updatedAt;
 
   @NotNull
   @Column(name = SqlFields.INSTITUTIONS)

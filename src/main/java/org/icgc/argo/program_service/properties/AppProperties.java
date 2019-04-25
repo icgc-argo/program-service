@@ -13,14 +13,19 @@ import javax.validation.constraints.NotNull;
  * Ego external configuration, served as metadata for application.yml
  */
 @Component
-@ConfigurationProperties(prefix="ego")
+@ConfigurationProperties(prefix="app")
 @Validated
 @Setter @Getter
-@Profile("auth")
-public class EgoProperties {
+public class AppProperties {
   /**
    * Url to the public key used by ego to encrypt jwt token.
    */
   @NotNull
-  private String publicKeyUrl;
+  private String egoPublicKeyUrl;
+
+  /**
+   * Port used by grpc server
+   */
+  @NotNull
+  private Integer grpcPort;
 }

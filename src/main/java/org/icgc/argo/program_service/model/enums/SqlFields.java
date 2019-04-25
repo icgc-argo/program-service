@@ -15,8 +15,8 @@ public class SqlFields {
   public static final String SUBMITTEDDONORS = "submitted_donors";
   public static final String GENOMICDONORS = "genomic_donors";
   public static final String WEBSITE = "website";
-  public static final String DATECREATED = "date_created";
-  public static final String DATEUPDATED = "date_updated";
+  public static final String CREATEDAT = "created_at";
+  public static final String UPDATEDAT = "updated_at";
   public static final String INSTITUTIONS = "institutions";
   public static final String REGIONS = "regions";
   public static final String COUNTRIES = "countries";
