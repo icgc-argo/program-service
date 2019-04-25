@@ -16,7 +16,6 @@ import javax.validation.constraints.NotNull;
 @ConfigurationProperties(prefix="app")
 @Validated
 @Setter @Getter
-@Profile("auth")
 public class AppProperties {
   /**
    * Url to the public key used by ego to encrypt jwt token.
