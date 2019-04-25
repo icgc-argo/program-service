@@ -21,11 +21,11 @@ CREATE TABLE program_cancer (
 
 CREATE TABLE program_primary_site (
   program_id            UUID  NOT NULL,
-  site_id               UUID  NOT NULL,
+  primary_site_id               UUID  NOT NULL,
 
-  PRIMARY KEY(program_id, site_id),
+  PRIMARY KEY(program_id, primary_site_id),
   FOREIGN KEY(program_id) REFERENCES program(id),
-  FOREIGN KEY(site_id)  REFERENCES primary_site(id)
+  FOREIGN KEY(primary_site_id)  REFERENCES primary_site(id)
 );
 
 ALTER TABLE program ADD COLUMN date_updated TIMESTAMP NOT NULL;
