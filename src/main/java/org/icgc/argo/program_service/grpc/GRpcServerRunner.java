@@ -11,6 +11,7 @@ import lombok.val;
 import org.icgc.argo.program_service.grpc.interceptor.AuthInterceptor;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +27,8 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   private final ProgramServiceImpl programServiceImpl;
   private final HealthStatusManager healthStatusManager;
 
+  @Value("${app.grpcPort}")
+  private Integer port;
 
   @Autowired
   public GRpcServerRunner(ProgramServiceImpl programServiceImpl, AuthInterceptor authInterceptor) {
@@ -36,8 +39,6 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
 
   @Override
   public void run(String... args) throws Exception {
-    int port = 50051;
-
     // Interceptor bean depends on run profile.
     val programService = ServerInterceptors.intercept(programServiceImpl, authInterceptor);
     healthStatusManager.setStatus("program_service.ProgramService", ServingStatus.SERVING);

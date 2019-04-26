@@ -114,7 +114,7 @@ public class EgoService {
   }
 
   Optional<UUID> getEgoGroupId(Program program, UserRole role) {
-    val programEgoGroup = programEgoGroupRepository.findbyProgramAndRole(program, role);
+    val programEgoGroup = programEgoGroupRepository.findByProgramAndRole(program, role);
     return programEgoGroup.map(v -> v.getProgram().getId());
   }
 

@@ -10,6 +10,8 @@ spring:
   boot:
     admin:
       client:
+        instance:
+          service-base-url: http://localhost
         url: http://localhost:8082
   datasource:
     url: jdbc:postgresql://localhost:5432/program_db
@@ -19,8 +21,7 @@ spring:
 app:
   invitationUrlPrefix: "https://frontend/invite/"
   egoPublicKeyUrl: "https://ego.qa.cancercollaboratory.org/api/oauth/token/public_key"
-
-#spring.jpa.database-platform: org.hibernate.dialect.PostgreSQLDialect
+  grpcPort: 50051
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
 #spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
@@ -54,6 +55,9 @@ spring.datasource:
   url: jdbc:tc:postgresql:9.5.13://localhost:5432/program_db?TC_INITFUNCTION=org.icgc.argo.program_service.test.FlywayInit::initTestContainers
   username: postgres
   password:
+
+app:
+  grpcPort: 50052
 
 ---
 ###############################################################################

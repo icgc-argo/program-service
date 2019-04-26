@@ -40,11 +40,11 @@ public class ProgramService {
                          @NotBlank @NotNull String lastName,
                          @NotNull UserRole role) {
     val invitation = new JoinProgramInvite(program, userEmail, firstName, lastName, role);
-    invitationRepository.save(invitation);
     sendInvite(invitation);
+    invitationRepository.save(invitation);
   }
 
-  void sendInvite(@NotNull JoinProgramInvite invitation) {
+  private void sendInvite(@NotNull JoinProgramInvite invitation) {
     SimpleMailMessage msg = new SimpleMailMessage();
     msg.setTo(invitation.getUserEmail());
 //    TODO: Add invitation link
@@ -55,7 +55,6 @@ public class ProgramService {
 
     mailSender.send(msg);
     invitation.setEmailSent(true);
-    invitationRepository.save(invitation);
   }
 
   public void acceptInvite(JoinProgramInvite invitation) {

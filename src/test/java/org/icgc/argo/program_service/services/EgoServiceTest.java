@@ -15,7 +15,7 @@ class EgoServiceTest {
   void verifyKey() {
     val rsaPublicKey = (RSAPublicKey) Utils.getPublicKey(publickKey, "RSA");
 
-    val egoService = new EgoService(rsaPublicKey);
+    val egoService = new EgoService(rsaPublicKey, null);
 
     assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
     assertFalse(egoService.verifyToken(expiredToken).isPresent(), "Expired token should return empty ego token");

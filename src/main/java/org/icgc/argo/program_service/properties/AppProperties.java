@@ -27,5 +27,11 @@ public class AppProperties {
    */
   @NotNull
   private String egoPublicKeyUrl;
+
+  /**
+   * Port used by grpc server
+   */
+  @NotNull
+  private Integer grpcPort;
 }
 

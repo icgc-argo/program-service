@@ -15,3 +15,11 @@ CREATE TABLE join_program_invite
     emailSent   BOOLEAN                 NOT NULL,
     status      join_program_invite_status NOT NULL
 );
+
+CREATE TABLE program_ego_group
+(
+    id           UUID PRIMARY KEY,
+    program_id   UUID REFERENCES program NOT NULL,
+    role         user_role               NOT NULL,
+    ego_group_id UUID                    NOT NULL
+);
