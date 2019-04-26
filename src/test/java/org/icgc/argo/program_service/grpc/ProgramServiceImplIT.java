@@ -97,8 +97,6 @@ public class ProgramServiceImplIT {
       .setSubmittedDonors(submittedDonors)
       .setGenomicDonors(genomicDonors)
       .setWebsite(website)
-     // .addCancerTypes(Cancer.newBuilder().setId("a").setName("b").build())
-     // .addPrimarySites(PrimarySite.newBuilder().setId("x").setName("y").build())
       .setCountries("Canada")
       .build();
     return p;
