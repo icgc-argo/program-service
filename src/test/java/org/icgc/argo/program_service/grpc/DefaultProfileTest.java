@@ -7,7 +7,8 @@ import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.icgc.argo.program_service.ProgramDetails;
+import org.icgc.argo.program_service.CreateProgramRequest;
+import org.icgc.argo.program_service.CreateProgramResponse;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.services.EgoService;
@@ -46,23 +47,22 @@ public class DefaultProfileTest {
   public void egoInterceptorDisabled(){
     val target = new ProgramServiceGrpc.ProgramServiceImplBase() {
       @EgoAuthInterceptor.EgoAuth(typesAllowed = {"ADMIN"})
-      public void create(ProgramDetails request, StreamObserver<ProgramDetails> responseObserver) {
-        responseObserver.onNext(ProgramDetails.getDefaultInstance());
+      public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
+        responseObserver.onNext(CreateProgramResponse.newBuilder().build().getDefaultInstance());
         responseObserver.onCompleted();
       }
     };
 
     // Create a server, add service, start, and register for automatic graceful shutdown.
     grpcCleanup.register(InProcessServerBuilder.forName(serverName).directExecutor().addService(target).build().start());
-
     val blockingStub = ProgramServiceGrpc.newBlockingStub(channel);
 
     //EgoService is not initialized under default profile
     assertNull(egoService);
 
     //Ego interceptor is not stopping create request, as expected
-    val detail = blockingStub.create(ProgramDetails.getDefaultInstance());
-    assertTrue(detail.equals(ProgramDetails.getDefaultInstance()));
+    val detail = blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
+    assertTrue(detail.equals(CreateProgramResponse.newBuilder().build().getDefaultInstance()));
   }
 
 }

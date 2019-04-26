@@ -1,15 +1,14 @@
 package org.icgc.argo.program_service.mappers;
 
 import com.google.protobuf.Timestamp;
-import org.icgc.argo.program_service.model.entity.Program;
+import org.icgc.argo.program_service.*;
+
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.UUID;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
@@ -17,9 +16,18 @@ import java.util.UUID;
     /**
      * Program Conversions
      */
-    Program ProgramMessageToProgram(org.icgc.argo.program_service.Program programMessage);
+    Program ProgramEntityToProgram(ProgramEntity entity);
+    ProgramEntity ProgramToProgramEntity(Program program);
 
-    org.icgc.argo.program_service.Program ProgramToProgramMessage(Program program);
+    default GetProgramResponse map(ProgramEntity entity) {
+      return GetProgramResponse
+        .newBuilder()
+        .setId(map(entity.getId()))
+        .setCreatedAt(map(entity.getCreatedAt()))
+        .setUpdatedAt(map(entity.getUpdatedAt()))
+        .setProgram(ProgramEntityToProgram(entity))
+        .build();
+    }
 
     default UUID map(String s) {
       try {
@@ -33,8 +41,16 @@ import java.util.UUID;
       return uuid.toString();
     }
 
-    default LocalDateTime map(Timestamp timestamp) {
-      return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos()), ZoneId.of("UTC"));
+    default LocalDate map(Date date) {
+      return LocalDate.of(date.getYear(), date.getMonth(), date.getDay());
+    }
+
+    default Date map (LocalDate date) {
+      return Date.newBuilder()
+        .setYear(date.getYear())
+        .setMonth(date.getMonthValue())
+        .setDay(date.getDayOfMonth())
+        .build();
     }
 
     default Timestamp map(LocalDateTime date) {

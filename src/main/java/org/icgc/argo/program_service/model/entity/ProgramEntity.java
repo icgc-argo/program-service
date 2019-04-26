@@ -10,8 +10,7 @@ import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,8 +25,7 @@ import static com.google.common.collect.Sets.newHashSet;
 @FieldNameConstants
 @AllArgsConstructor
 @NoArgsConstructor
-public class Program implements NameableEntity<UUID> {
-
+public class ProgramEntity implements NameableEntity<UUID> {
   @Id
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
@@ -72,12 +70,12 @@ public class Program implements NameableEntity<UUID> {
   @NotNull
   @EqualsAndHashCode.Exclude
   @Column(name = SqlFields.CREATEDAT)
-  private LocalDateTime createdAt;
+  private LocalDate createdAt;
 
   @NotNull
   @EqualsAndHashCode.Exclude
   @Column(name = SqlFields.UPDATEDAT)
-  private Date updatedAt;
+  private LocalDate updatedAt;
 
   @NotNull
   @Column(name = SqlFields.INSTITUTIONS)
@@ -99,7 +97,7 @@ public class Program implements NameableEntity<UUID> {
           fetch = FetchType.LAZY,
           orphanRemoval = true
   )
-  private Set<ProgramCancer> cancers = newHashSet();
+  private Set<ProgramCancer> cancerTypes = newHashSet();
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
@@ -110,6 +108,5 @@ public class Program implements NameableEntity<UUID> {
           fetch = FetchType.LAZY,
           orphanRemoval = true
   )
-  private Set<ProgramPrimarySite> sites = newHashSet();
-
+  private Set<ProgramPrimarySite> primarySites = newHashSet();
 }

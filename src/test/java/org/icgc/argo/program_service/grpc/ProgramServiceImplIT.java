@@ -1,6 +1,6 @@
 package org.icgc.argo.program_service.grpc;
 
-import com.google.protobuf.Timestamp;
+import com.google.common.collect.Streams;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
 import org.icgc.argo.program_service.*;
@@ -10,8 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.testcontainers.shaded.com.google.common.collect.Sets;
 
-import java.time.Instant;
+import java.time.LocalDate;
+import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,8 +31,8 @@ public class ProgramServiceImplIT {
   public void test_list() {
     // case 1: empty list
     val request = Empty.getDefaultInstance();
-    val programsObserver = new TestObserver<ProgramCollection>();
-    programService.list(request, programsObserver);
+    val programsObserver = new TestObserver<ListProgramsResponse>();
+    programService.listPrograms(request, programsObserver);
     assertTrue(programsObserver.completed);
     assertNull(programsObserver.thrown);
 
@@ -57,7 +59,7 @@ public class ProgramServiceImplIT {
 
     createProgram(p2);
 
-    programService.list(request, programsObserver);
+    programService.listPrograms(request, programsObserver);
     assertTrue(programsObserver.completed);
     assertNull(programsObserver.thrown);
 
@@ -65,9 +67,16 @@ public class ProgramServiceImplIT {
 
     assertEquals("Two programs", 2, programList.size());
 
-    assertThat(programList).usingElementComparatorOnFields("shortName", "description", "name", "commitmentDonors", "submittedDonors", "genomicDonors", "website", "createdAt", "membershipType").contains(p1, p2);
-  }
+    val expectedPrograms = Sets.newHashSet();
+    expectedPrograms.add(p1);
+    expectedPrograms.add(p2);
+    val actualPrograms =
+      programList.stream()
+      .map(GetProgramResponse::getProgram)
+      .collect(Collectors.toUnmodifiableSet());
 
+    assertThat(actualPrograms).isEqualTo(expectedPrograms);
+  }
 
   public Program buildProgram(String name,
      String shortName,
@@ -78,12 +87,6 @@ public class ProgramServiceImplIT {
      int genomicDonors,
      String website
   ) {
-    Instant instant = Instant.now();
-    val timestamp = Timestamp.newBuilder()
-            .setSeconds(instant.getEpochSecond())
-            .setNanos(instant.getNano())
-            .build();
-
     val p = Program
       .newBuilder()
       .setName(name)
@@ -94,15 +97,20 @@ public class ProgramServiceImplIT {
       .setSubmittedDonors(submittedDonors)
       .setGenomicDonors(genomicDonors)
       .setWebsite(website)
-      .setCreatedAt(timestamp)
+     // .addCancerTypes(Cancer.newBuilder().setId("a").setName("b").build())
+     // .addPrimarySites(PrimarySite.newBuilder().setId("x").setName("y").build())
+      .setCountries("Canada")
       .build();
     return p;
   }
 
   public void createProgram(Program p) {
-    val details = ProgramDetails.newBuilder().setProgram(p).build();
-    val resultObserver = new TestObserver<ProgramDetails>();
-    programService.create(details, resultObserver);
+    val details = CreateProgramRequest
+      .newBuilder()
+      .setProgram(p)
+      .build();
+    val resultObserver = new TestObserver<CreateProgramResponse>();
+    programService.createProgram(details, resultObserver);
     assertTrue(resultObserver.completed);
     assertNull(resultObserver.thrown);
   }

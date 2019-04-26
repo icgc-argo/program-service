@@ -22,7 +22,7 @@ import static com.google.common.collect.Sets.newHashSet;
 @FieldNameConstants
 @AllArgsConstructor
 @NoArgsConstructor
-public class PrimarySite implements NameableEntity<UUID> {
+public class PrimarySiteEntity implements NameableEntity<UUID> {
 
   @Id
   @EqualsAndHashCode.Exclude
