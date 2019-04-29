@@ -3,7 +3,7 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
-import org.icgc.argo.program_service.model.entity.Program;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.springframework.mail.MailSender;
@@ -30,11 +30,11 @@ public class ProgramService {
     this.mailSender = mailSender;
   }
 
-  public Optional<Program> getProgram(UUID uuid) {
+  public Optional<ProgramEntity> getProgram(UUID uuid) {
     return programRepository.findById(uuid);
   }
 
-  public void inviteUser(@NotNull Program program,
+  public void inviteUser(@NotNull ProgramEntity program,
                          @Email @NotNull String userEmail,
                          @NotBlank @NotNull String firstName,
                          @NotBlank @NotNull String lastName,

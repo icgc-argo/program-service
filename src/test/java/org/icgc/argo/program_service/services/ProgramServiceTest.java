@@ -3,7 +3,7 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
-import org.icgc.argo.program_service.model.entity.Program;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +29,7 @@ class ProgramServiceTest {
   private ProgramService programService;
 
   @Mock
-  private Program program;
+  private ProgramEntity program;
 
   @Mock
   private JoinProgramInviteRepository invitationRepository;

@@ -10,14 +10,14 @@ import javax.persistence.ManyToOne;
 import java.util.UUID;
 
 @Entity
-public class ProgramEgoGroup {
+public class ProgramEgoGroupEntity {
 
   @Id
   private UUID id;
 
   @ManyToOne
   @Getter
-  private Program program;
+  private ProgramEntity program;
 
   @Column(nullable = false, updatable = false)
   private UserRole role;
@@ -25,7 +25,7 @@ public class ProgramEgoGroup {
   @Column(nullable = false, updatable = false)
   private UUID egoGroupId;
 
-  public ProgramEgoGroup(Program program, UserRole role, UUID egoGroupId) {
+  public ProgramEgoGroupEntity(ProgramEntity program, UserRole role, UUID egoGroupId) {
     this.program = program;
     this.role = role;
     this.egoGroupId = egoGroupId;

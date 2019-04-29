@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.model.entity.Program;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,12 +113,12 @@ public class EgoService {
     }
   }
 
-  Optional<UUID> getEgoGroupId(Program program, UserRole role) {
+  Optional<UUID> getEgoGroupId(ProgramEntity program, UserRole role) {
     val programEgoGroup = programEgoGroupRepository.findByProgramAndRole(program, role);
     return programEgoGroup.map(v -> v.getProgram().getId());
   }
 
-  public void addUser(@Email String email, Program program, UserRole role) {
+  public void addUser(@Email String email, ProgramEntity program, UserRole role) {
     val groupId = getEgoGroupId(program, role);
     // TODO:rpcAddUser(userEmailAddr, groupId);
   }

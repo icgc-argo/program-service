@@ -4,8 +4,8 @@ import com.google.protobuf.Timestamp;
 import io.grpc.ManagedChannelBuilder;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
+import org.icgc.argo.program_service.CreateProgramRequest;
 import org.icgc.argo.program_service.Program;
-import org.icgc.argo.program_service.ProgramDetails;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
 import org.junit.jupiter.api.Test;
 
@@ -28,9 +28,9 @@ class ProgramServiceClientIT {
 
     val program = Program.newBuilder().setName(RandomString.make(15)).setCreatedAt(timestamp).setShortName(RandomString.make(10)).setDescription("nothing");
 
-    val programDetails = ProgramDetails.newBuilder().setProgram(program).build();
+    val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
 
-    val response = blockingStub.create(programDetails);
-    assertThat(response.getProgram()).isEqualToComparingOnlyGivenFields(program, "name");
+    val response = blockingStub.createProgram(createProgramRequest);
+    assertThat(response.getId()).isNotEmpty();
   }
 }

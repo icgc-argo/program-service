@@ -26,7 +26,7 @@ public class JoinProgramInvite {
   private LocalDateTime acceptedAt;
 
   @ManyToOne
-  private Program program;
+  private ProgramEntity program;
 
   @Column(nullable = false, updatable = false)
   @Getter private String userEmail;
@@ -48,7 +48,7 @@ public class JoinProgramInvite {
   @Column(nullable = false)
   private Status status;
 
-  public JoinProgramInvite(Program program, String userEmail, String firstName, String lastName, UserRole role) {
+  public JoinProgramInvite(ProgramEntity program, String userEmail, String firstName, String lastName, UserRole role) {
     this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
     this.expiredAt = this.createdAt.plusHours(48);
     this.acceptedAt = null;
