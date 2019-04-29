@@ -17,24 +17,32 @@ spec:
   - name: docker
     image: docker:18-git
     tty: true
-    volumeMounts:
-    - mountPath: /var/run/docker.sock
-      name: docker-sock
+    env:
+      - name: DOCKER_HOST
+        value: tcp://localhost:2375
   - name: java
     image: openjdk:11-jdk-slim
     command:
     - cat
     tty: true
+    env:
+      - name: DOCKER_HOST
+        value: tcp://localhost:2375
   - name: postgres
     image: postgres:11.2-alpine
     env:
     - name: POSTGRES_DB
       value: program_db
+  - name: dind-daemon
+    image: docker:18.06-dind
+    securityContext:
+        privileged: true
+    volumeMounts:
+      - name: docker-graph-storage
+        mountPath: /var/lib/docker
   volumes:
-  - name: docker-sock
-    hostPath:
-      path: /var/run/docker.sock
-      type: File
+  - name: docker-graph-storage
+    emptyDir: {}
 """
         }
     }

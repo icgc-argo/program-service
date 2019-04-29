@@ -1,6 +1,6 @@
 package org.icgc.argo.program_service.model.entity;
 
-public interface Identifiable<ID> {
+public interface IdentifiableEntity<ID> {
 
   ID getId();
 }

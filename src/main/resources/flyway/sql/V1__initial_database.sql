@@ -9,7 +9,7 @@ CREATE TABLE program
     submitted_donors  INT                 NOT NULL DEFAULT 0,
     genomic_donors    INT                 NOT NULL DEFAULT 0,
     website           VARCHAR(255)        NOT NULL,
-    created_at        TIMESTAMP           NOT NULL,
+    created_at        TIMESTAMP                NOT NULL,
     updated_at        TIMESTAMP,
     institutions      varchar(255)        DEFAULT '',
     countries         varchar(255)        DEFAULT '',

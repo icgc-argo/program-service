@@ -23,7 +23,7 @@ import static com.google.common.collect.Sets.newHashSet;
 @FieldNameConstants
 @AllArgsConstructor
 @NoArgsConstructor
-public class Cancer implements NameableEntity<UUID> {
+public class CancerEntity implements NameableEntity<UUID> {
 
   @Id
   @Column(name = SqlFields.ID)

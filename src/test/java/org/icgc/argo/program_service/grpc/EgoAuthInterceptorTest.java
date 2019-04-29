@@ -6,7 +6,8 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import lombok.val;
-import org.icgc.argo.program_service.ProgramDetails;
+import org.icgc.argo.program_service.CreateProgramRequest;
+import org.icgc.argo.program_service.CreateProgramResponse;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
 import org.icgc.argo.program_service.ProgramServiceGrpc.ProgramServiceImplBase;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
@@ -60,9 +61,9 @@ public class EgoAuthInterceptorTest {
     ProgramServiceImplBase programServiceImplBase =
             new ProgramServiceImplBase() {
               @Override
-              public void create(ProgramDetails request, StreamObserver<ProgramDetails> responseObserver) {
+              public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
                 EgoAuthInterceptorTest.this.egoTokenSpy = EgoAuthInterceptor.EGO_TOKEN.get();
-                responseObserver.onNext(ProgramDetails.getDefaultInstance());
+                responseObserver.onNext(CreateProgramResponse.getDefaultInstance());
                 responseObserver.onCompleted();
               }
             };
@@ -77,12 +78,12 @@ public class EgoAuthInterceptorTest {
     jwtClientInterceptor.token = "123";
     given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
 
-    blockingStub.create(ProgramDetails.getDefaultInstance());
+    blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
     assertNotNull(this.egoTokenSpy);
 
     given(egoService.verifyToken("321")).willReturn(Optional.empty());
     jwtClientInterceptor.token = "321";
-    blockingStub.create(ProgramDetails.getDefaultInstance());
+    blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
     assertNull(this.egoTokenSpy);
   }
 
@@ -106,8 +107,8 @@ public class EgoAuthInterceptorTest {
   public void egoAuthInterceptor_egoAuthAnnotation() throws IOException {
     ProgramServiceImplBase target = new ProgramServiceImplBase() {
       @EgoAuthInterceptor.EgoAuth(typesAllowed = {"ADMIN"})
-      public void create(ProgramDetails request, StreamObserver<ProgramDetails> responseObserver) {
-        responseObserver.onNext(ProgramDetails.getDefaultInstance());
+      public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
+        responseObserver.onNext(CreateProgramResponse.getDefaultInstance());
         responseObserver.onCompleted();
       }
     };
@@ -125,7 +126,7 @@ public class EgoAuthInterceptorTest {
     try {
       jwtClientInterceptor.token = "123";
       given(egoService.verifyToken("123")).willReturn(Optional.empty());
-      blockingStub.create(ProgramDetails.getDefaultInstance());
+      blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
       fail("Expect an status runtime exception to be thrown");
     } catch (StatusRuntimeException e) {
       assertEquals(e.getStatus(), Status.fromCode(Status.Code.UNAUTHENTICATED));
@@ -134,7 +135,7 @@ public class EgoAuthInterceptorTest {
     try {
       given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
       given(egoToken.getType()).willReturn("USER");
-      blockingStub.create(ProgramDetails.getDefaultInstance());
+      blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
       fail("Expect an status runtime exception to be thrown");
     } catch (StatusRuntimeException e) {
       assertEquals(e.getStatus(), Status.fromCode(Status.Code.PERMISSION_DENIED));
@@ -142,8 +143,8 @@ public class EgoAuthInterceptorTest {
 
     given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
     given(egoToken.getType()).willReturn("ADMIN");
-    val resp = blockingStub.create(ProgramDetails.getDefaultInstance());
-    assertThat(resp, instanceOf(ProgramDetails.class));
+    val resp = blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
+    assertThat(resp, instanceOf(CreateProgramResponse.class));
 
   }
 }

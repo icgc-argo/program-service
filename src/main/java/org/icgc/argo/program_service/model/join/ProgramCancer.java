@@ -3,9 +3,9 @@ package org.icgc.argo.program_service.model.join;
 import lombok.*;
 
 import lombok.experimental.FieldNameConstants;
-import org.icgc.argo.program_service.model.entity.Cancer;
-import org.icgc.argo.program_service.model.entity.Identifiable;
-import org.icgc.argo.program_service.model.entity.Program;
+import org.icgc.argo.program_service.model.entity.CancerEntity;
+import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import javax.persistence.*;
@@ -19,7 +19,7 @@ import javax.persistence.*;
 @FieldNameConstants
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProgramCancer implements Identifiable<ProgramCancerId> {
+public class ProgramCancer implements IdentifiableEntity<ProgramCancerId> {
 
   @EmbeddedId
   private ProgramCancerId id;
@@ -31,7 +31,7 @@ public class ProgramCancer implements Identifiable<ProgramCancerId> {
   @ManyToOne(
           cascade = {CascadeType.PERSIST, CascadeType.MERGE},
           fetch = FetchType.LAZY)
-  private Program program;
+  private ProgramEntity program;
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
@@ -40,6 +40,6 @@ public class ProgramCancer implements Identifiable<ProgramCancerId> {
   @ManyToOne(
           cascade = {CascadeType.PERSIST, CascadeType.MERGE},
           fetch = FetchType.LAZY)
-  private Cancer cancer;
+  private CancerEntity cancer;
 
 }
