@@ -1,6 +1,5 @@
 package org.icgc.argo.program_service.grpc;
 
-import com.google.common.collect.Streams;
 import io.grpc.Status;
 import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
@@ -69,10 +68,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
     val programs = programRepository.findAll();
 
-    val results =
-            Streams.stream(programs)
-                    .map(programMapper::ProgramEntityToProgram)
-                    .collect(Collectors.toUnmodifiableList());
+    val results = programs.stream()
+            .map(programMapper::ProgramEntityToProgram)
+            .collect(Collectors.toUnmodifiableList());
 
     val collection = ListProgramsResponse
             .newBuilder()
