@@ -1,11 +1,13 @@
 package org.icgc.argo.program_service.services;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
+import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.util.UUID;
 
 @Service
 @Validated
+@Slf4j
 public class ProgramService {
   private final JoinProgramInviteRepository invitationRepository;
   private final ProgramRepository programRepository;
@@ -54,8 +57,12 @@ public class ProgramService {
                     + invitation.getLastName()
                     + ", you are invited to join program.");
 
-    mailSender.send(msg);
-    invitation.setEmailSent(true);
+    try {
+      mailSender.send(msg);
+      invitation.setEmailSent(true);
+    } catch (MailAuthenticationException e) {
+      log.info("Cannot log in to mail server", e);
+    }
   }
 
   public void acceptInvite(JoinProgramInvite invitation) {

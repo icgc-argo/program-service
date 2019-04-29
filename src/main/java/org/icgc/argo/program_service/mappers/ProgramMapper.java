@@ -1,7 +1,6 @@
 package org.icgc.argo.program_service.mappers;
 
 import com.google.protobuf.Timestamp;
-import org.icgc.argo.program_service.GetProgramResponse;
 import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.mapstruct.Mapper;

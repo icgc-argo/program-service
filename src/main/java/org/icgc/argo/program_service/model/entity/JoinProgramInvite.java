@@ -2,6 +2,7 @@ package org.icgc.argo.program_service.model.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
 import org.icgc.argo.program_service.UserRole;
 
 import javax.persistence.*;
@@ -16,6 +17,7 @@ public class JoinProgramInvite {
 
   @Id
   @Getter
+  @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
   @Column(nullable = false, updatable = false)
@@ -38,6 +40,7 @@ public class JoinProgramInvite {
   @Column(nullable = false)
   @Getter private String lastName;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private UserRole role;
 
