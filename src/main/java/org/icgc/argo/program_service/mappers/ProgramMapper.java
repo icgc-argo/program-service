@@ -1,9 +1,10 @@
 package org.icgc.argo.program_service.mappers;
 
 import com.google.protobuf.Timestamp;
-import org.icgc.argo.program_service.model.entity.Program;
+import org.icgc.argo.program_service.GetProgramResponse;
+import org.icgc.argo.program_service.Program;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import java.time.Instant;
@@ -17,9 +18,8 @@ import java.util.UUID;
     /**
      * Program Conversions
      */
-    Program ProgramMessageToProgram(org.icgc.argo.program_service.Program programMessage);
-
-    org.icgc.argo.program_service.Program ProgramToProgramMessage(Program program);
+    Program ProgramEntityToProgram(ProgramEntity entity);
+    ProgramEntity ProgramToProgramEntity(Program program);
 
     default UUID map(String s) {
       try {
@@ -37,8 +37,8 @@ import java.util.UUID;
       return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos()), ZoneId.of("UTC"));
     }
 
-    default Timestamp map(LocalDateTime date) {
-      Instant instant = date.toInstant(ZoneOffset.UTC);
+    default Timestamp map(LocalDateTime dateTime) {
+      Instant instant = dateTime.toInstant(ZoneOffset.UTC);
       return Timestamp.newBuilder()
               .setSeconds(instant.getEpochSecond())
               .setNanos(instant.getNano())

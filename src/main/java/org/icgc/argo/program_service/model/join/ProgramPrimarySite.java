@@ -2,9 +2,9 @@ package org.icgc.argo.program_service.model.join;
 
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
-import org.icgc.argo.program_service.model.entity.Identifiable;
-import org.icgc.argo.program_service.model.entity.PrimarySite;
-import org.icgc.argo.program_service.model.entity.Program;
+import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
+import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import javax.persistence.*;
@@ -18,7 +18,7 @@ import javax.persistence.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProgramPrimarySite implements Identifiable<ProgramPrimarySiteId> {
+public class ProgramPrimarySite implements IdentifiableEntity<ProgramPrimarySiteId> {
 
   @EmbeddedId
   private ProgramPrimarySiteId id;
@@ -30,7 +30,7 @@ public class ProgramPrimarySite implements Identifiable<ProgramPrimarySiteId> {
   @ManyToOne(
           cascade = {CascadeType.PERSIST, CascadeType.MERGE},
           fetch = FetchType.LAZY)
-  private Program program;
+  private ProgramEntity program;
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
@@ -39,6 +39,6 @@ public class ProgramPrimarySite implements Identifiable<ProgramPrimarySiteId> {
   @ManyToOne(
           cascade = {CascadeType.PERSIST, CascadeType.MERGE},
           fetch = FetchType.LAZY)
-  private PrimarySite site;
+  private PrimarySiteEntity site;
 
 }
