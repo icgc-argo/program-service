@@ -3,19 +3,15 @@ package org.icgc.argo.program_service.grpc;
 import com.google.common.collect.Streams;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
-import org.icgc.argo.program_service.Empty;
-import org.icgc.argo.program_service.ProgramServiceGrpc;
-import org.icgc.argo.program_service.CreateProgramRequest;
-import org.icgc.argo.program_service.CreateProgramResponse;
-import org.icgc.argo.program_service.ListProgramsResponse;
+import org.icgc.argo.program_service.*;
+import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.icgc.argo.program_service.mappers.ProgramMapper;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repository.ProgramRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.stream.Collectors;
 
 @Component
@@ -37,9 +33,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     //       (3) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
     val dao = programMapper.ProgramToProgramEntity(program);
-    val today = LocalDate.now();
-    dao.setCreatedAt(today);
-    dao.setUpdatedAt(today);
+    val now = LocalDateTime.now(ZoneId.of("UTC"));
+    dao.setCreatedAt(now);
+    dao.setUpdatedAt(now);
 
     val entity = programRepository.save(dao);
     val response = CreateProgramResponse

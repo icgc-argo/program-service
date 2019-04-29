@@ -10,7 +10,7 @@ import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -70,12 +70,12 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @NotNull
   @EqualsAndHashCode.Exclude
   @Column(name = SqlFields.CREATEDAT)
-  private LocalDate createdAt;
+  private LocalDateTime createdAt;
 
   @NotNull
   @EqualsAndHashCode.Exclude
   @Column(name = SqlFields.UPDATEDAT)
-  private LocalDate updatedAt;
+  private LocalDateTime updatedAt;
 
   @NotNull
   @Column(name = SqlFields.INSTITUTIONS)
