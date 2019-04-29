@@ -272,7 +272,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.5.1</version>
 				<configuration>
 					<source>11</source> <!-- or higher, depending on your project -->
 					<target>11</target> <!-- or higher, depending on your project -->
@@ -287,18 +286,12 @@
 							<artifactId>lombok</artifactId>
 							<version>${lombok.version}</version>
 						</path>
+						<path>
+							<groupId>org.springframework.boot</groupId>
+							<artifactId>spring-boot-configuration-processor</artifactId>
+							<version>2.1.3.RELEASE</version>
+						</path>
 					</annotationProcessorPaths>
-					<compilerArgs>
-						<compilerArg>
-							-Amapstruct.suppressGeneratorVersionInfoComment=false
-						</compilerArg>
-						<compilerArg>
-							-Amapstruct.unmappedTargetPolicy=ERROR
-						</compilerArg>
-						<compilerArg>
-							-Amapstruct.defaultComponentModel=spring
-						</compilerArg>
-					</compilerArgs>
 				</configuration>
 			</plugin>
 		</plugins>

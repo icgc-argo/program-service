@@ -61,7 +61,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       return;
     }
 
-    programService.inviteUser(program.get(), request.getEmail(), request.getFirstName(), request.getLastName(), request.getRole());
+    val id = programService.inviteUser(program.get(), request.getEmail(), request.getFirstName(), request.getLastName(), request.getRole());
+    val inviteUserResponse = InviteUserResponse.newBuilder().setInvitationId(id.toString()).build();
+    responseObserver.onNext(inviteUserResponse);
     responseObserver.onCompleted();
   }
 

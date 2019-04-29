@@ -34,7 +34,7 @@ public class ProgramService {
     return programRepository.findById(uuid);
   }
 
-  public void inviteUser(@NotNull ProgramEntity program,
+  public UUID inviteUser(@NotNull ProgramEntity program,
                          @Email @NotNull String userEmail,
                          @NotBlank @NotNull String firstName,
                          @NotBlank @NotNull String lastName,
@@ -42,6 +42,7 @@ public class ProgramService {
     val invitation = new JoinProgramInvite(program, userEmail, firstName, lastName, role);
     sendInvite(invitation);
     invitationRepository.save(invitation);
+    return invitation.getId();
   }
 
   private void sendInvite(@NotNull JoinProgramInvite invitation) {

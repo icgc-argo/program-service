@@ -15,6 +15,7 @@ public class JoinProgramInvite {
   public enum Status {PENDING, ACCEPTED, REVOKED};
 
   @Id
+  @Getter
   private UUID id;
 
   @Column(nullable = false, updatable = false)
