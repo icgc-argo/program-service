@@ -21,16 +21,6 @@ import java.util.UUID;
     Program ProgramEntityToProgram(ProgramEntity entity);
     ProgramEntity ProgramToProgramEntity(Program program);
 
-    default GetProgramResponse map(ProgramEntity entity) {
-      return GetProgramResponse
-        .newBuilder()
-        .setId(map(entity.getId()))
-        .setCreatedAt(map(entity.getCreatedAt()))
-        .setUpdatedAt(map(entity.getUpdatedAt()))
-        .setProgram(ProgramEntityToProgram(entity))
-        .build();
-    }
-
     default UUID map(String s) {
       try {
         return UUID.fromString(s);

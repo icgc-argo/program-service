@@ -52,14 +52,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val programs = programRepository.findAll();
 
     val results =
-      Streams.stream(programs)
-      .map(programMapper::map)
-      .collect(Collectors.toUnmodifiableList());
+            Streams.stream(programs)
+                    .map(programMapper::ProgramEntityToProgram)
+                    .collect(Collectors.toUnmodifiableList());
 
     val collection = ListProgramsResponse
-      .newBuilder()
-      .addAllPrograms(results)
-      .build();
+            .newBuilder()
+            .addAllPrograms(results)
+            .build();
 
     responseObserver.onNext(collection);
     responseObserver.onCompleted();
