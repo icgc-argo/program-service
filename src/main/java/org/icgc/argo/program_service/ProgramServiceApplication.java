@@ -23,6 +23,7 @@ public class ProgramServiceApplication {
     mailSender.setHost("smtp.gmail.com");
     mailSender.setPort(587);
 
+    // TODO: set up mailhog
     mailSender.setUsername("my.gmail@gmail.com");
     mailSender.setPassword("password");
 

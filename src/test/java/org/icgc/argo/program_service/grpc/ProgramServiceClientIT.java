@@ -24,7 +24,7 @@ class ProgramServiceClientIT {
   }
 
   @Test
-  void inviteUsers() {
+  void addUser() {
     val program = Program.newBuilder().setName(RandomString.make(15)).setShortName(RandomString.make(10)).setDescription("nothing");
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
     val response = blockingStub.createProgram(createProgramRequest);
@@ -32,6 +32,8 @@ class ProgramServiceClientIT {
 
     val inviteUserRequest = InviteUserRequest.newBuilder().setFirstName("First").setLastName("Last").setEmail("user@example.com").setRole(UserRole.ADMIN).setProgramId(programId).build();
     val inviteUserResponse = blockingStub.inviteUser(inviteUserRequest);
-    assertThat(inviteUserResponse.getInvitationId()).isNotEmpty();
+    assertThat(inviteUserResponse.getInviteId()).isNotEmpty();
+
+    inviteUserResponse.getInviteId();
   }
 }
