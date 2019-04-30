@@ -17,16 +17,28 @@ import javax.validation.constraints.NotNull;
 @Setter @Getter
 public class AppProperties {
   /**
-   * Url prefix of the invitation link, it should be followed by invitation uuid
+   * Url prefix of the invite link, it should be followed by invite's uuid
    */
   @NotNull
   private String invitationUrlPrefix;
 
   /**
-   * Url to the public key used by ego to encrypt jwt token.
+   * Ego api url
    */
   @NotNull
-  private String egoPublicKeyUrl;
+  private String egoUrl;
+
+  /**
+   * Ego client Id, it has to be manually added in ego
+   */
+  @NotNull
+  private String egoClientId;
+
+  /**
+   * Ego client secret
+   */
+  @NotNull
+  private String egoClientSecret;
 
   /**
    * Port used by grpc server

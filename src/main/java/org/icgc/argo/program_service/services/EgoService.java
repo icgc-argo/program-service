@@ -14,13 +14,20 @@ import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
@@ -31,24 +38,49 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@Profile("auth")
 public class EgoService {
 
-  private final RSAPublicKey egoPublicKey;
   private final ProgramEgoGroupRepository programEgoGroupRepository;
 
-  @Autowired
-  public EgoService(@Value("${app.egoPublicKeyUrl}") UrlResource publicKeyResource, ProgramEgoGroupRepository programEgoGroupRepository) {
-    this.programEgoGroupRepository = programEgoGroupRepository;
+  private RSAPublicKey egoPublicKey;
+  private String appJwt;
 
+  @Autowired
+  public EgoService(ProgramEgoGroupRepository programEgoGroupRepository) {
+    this.programEgoGroupRepository = programEgoGroupRepository;
+  }
+
+  @Autowired
+  private void setEgoPublicKey(AppProperties appProperties) {
     RSAPublicKey egoPublicKey = null;
     try {
+      val publicKeyResource = new UrlResource(appProperties.getEgoUrl() + "/oauth/token/public_key");
       String key = Utils.toString(publicKeyResource.getInputStream());
       egoPublicKey = (RSAPublicKey) Utils.getPublicKey(key, "RSA");
     } catch(IOException e) {
       log.info("Cannot get public key of ego");
     }
     this.egoPublicKey = egoPublicKey;
+  }
+
+  @Autowired
+  private void setAppJwt(AppProperties appProperties)  {
+    val restTemplate = new RestTemplate();
+
+    val headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+    val body = new LinkedMultiValueMap<String, String>();
+    body.add("grant_type", "client_credentials");
+    body.add("client_id", appProperties.getEgoClientId());
+    body.add("client_secret", appProperties.getEgoClientSecret());
+
+    val request = new HttpEntity<MultiValueMap<String, String>>(body, headers);
+    try {
+      this.appJwt = restTemplate.exchange(appProperties.getEgoUrl() + "/oauth/token", HttpMethod.POST, request, String.class).getBody();
+    } catch (HttpClientErrorException e) {
+      log.error(e.getMessage());
+    }
   }
 
   public EgoService(RSAPublicKey egoPublicKey, ProgramEgoGroupRepository programEgoGroupRepository) {
@@ -121,6 +153,7 @@ public class EgoService {
   public void addUser(@Email String email, ProgramEntity program, UserRole role) {
     val groupId = getEgoGroupId(program, role);
     // TODO:rpcAddUser(userEmailAddr, groupId);
+
   }
 }
 

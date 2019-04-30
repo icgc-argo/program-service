@@ -20,7 +20,9 @@ spring:
 
 app:
   invitationUrlPrefix: "https://frontend/invite/"
-  egoPublicKeyUrl: "https://ego.qa.cancercollaboratory.org/api/oauth/token/public_key"
+  egoUrl: "https://ego.qa.cancercollaboratory.org/api"
+  egoClientId: "program-service"
+  egoClientSecret: "qa-program-service"
   grpcPort: 50051
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
