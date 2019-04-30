@@ -1,7 +1,9 @@
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
+import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.UserRole;
+import org.icgc.argo.program_service.mappers.ProgramMapper;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
@@ -19,17 +21,22 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceTest {
   private ProgramService programService;
 
   @Mock
-  private ProgramEntity program;
+  private Program program;
+
+  @Mock
+  private ProgramEntity programEntity;
 
   @Mock
   private JoinProgramInviteRepository invitationRepository;
@@ -43,19 +50,22 @@ class ProgramServiceTest {
   @Mock
   private JoinProgramInvite invitation;
 
+  @Mock
+  private ProgramMapper programMapper;
+
   @BeforeEach
   void init() {
-    this.programService = new ProgramService(invitationRepository, programRepository, mailSender);
+    this.programService = new ProgramService(invitationRepository, programRepository, mailSender, programMapper);
   }
 
   @Test
   void inviteUser() {
-    programService.inviteUser(program, "user@example.com", "First", "Last", UserRole.ADMIN);
+    programService.inviteUser(programEntity, "user@example.com", "First", "Last", UserRole.ADMIN);
     val invitationCaptor = ArgumentCaptor.forClass(JoinProgramInvite.class);
     verify(invitationRepository).save(invitationCaptor.capture());
 
     val invitation = invitationCaptor.getValue();
-    assertThat(ReflectionTestUtils.getField(invitation, "program")).isEqualTo(program);
+    assertThat(ReflectionTestUtils.getField(invitation, "program")).isEqualTo(programEntity);
     assertThat(ReflectionTestUtils.getField(invitation, "userEmail")).isEqualTo("user@example.com");
     assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "createdAt"))
             .as("Creation time is within 5 seconds")
@@ -85,5 +95,20 @@ class ProgramServiceTest {
   void acceptInvitation() {
     programService.acceptInvite(invitation);
     verify(invitation).accept();
+  }
+
+  @Test
+  void createProgram() {
+    when(programMapper.ProgramToProgramEntity(program)).thenReturn(programEntity);
+    programService.createProgram(program);
+    verify(programRepository).save(programEntity);
+  }
+
+  @Test
+  void listPrograms() {
+    when(programRepository.findAll()).thenReturn(List.of(programEntity));
+    when(programMapper.ProgramEntityToProgram(programEntity)).thenReturn(program);
+    val programs = programService.listPrograms();
+    assertThat(programs).contains(program);
   }
 }

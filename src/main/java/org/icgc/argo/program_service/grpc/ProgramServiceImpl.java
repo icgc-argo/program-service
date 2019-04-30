@@ -12,10 +12,6 @@ import org.icgc.argo.program_service.services.ProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.stream.Collectors;
-
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
   private final ProgramRepository programRepository;
@@ -36,16 +32,12 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     //       (2) Set up the permissions, groups in EGO
     //       (3) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
-    val dao = programMapper.ProgramToProgramEntity(program);
-    val now = LocalDateTime.now(ZoneId.of("UTC"));
-    dao.setCreatedAt(now);
-    dao.setUpdatedAt(now);
 
-    val entity = programRepository.save(dao);
+    val programEntity = programService.createProgram(program);
     val response = CreateProgramResponse
       .newBuilder()
-      .setId(programMapper.map(entity.getId()))
-      .setCreatedAt(programMapper.map(entity.getCreatedAt()))
+      .setId(programMapper.map(programEntity.getId()))
+      .setCreatedAt(programMapper.map(programEntity.getCreatedAt()))
       .build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();
@@ -68,15 +60,11 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
-    val programs = programRepository.findAll();
-
-    val results = programs.stream()
-            .map(programMapper::ProgramEntityToProgram)
-            .collect(Collectors.toUnmodifiableList());
+    val programs = programService.listPrograms();
 
     val collection = ListProgramsResponse
             .newBuilder()
-            .addAllPrograms(results)
+            .addAllPrograms(programs)
             .build();
 
     responseObserver.onNext(collection);
