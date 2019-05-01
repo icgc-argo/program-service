@@ -73,6 +73,7 @@ spec:
             }
         }
         stage('Deploy') {
+            when { branch 'master' }
             steps {
                 container('helm') {
                     withCredentials([file(credentialsId:'4ed1e45c-b552-466b-8f86-729402993e3b', variable: 'KUBECONFIG')]) {
