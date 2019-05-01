@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ProgramServiceClientIT {
+class ProgramServiceImplClientIT {
   private ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051).usePlaintext().build();
   private ProgramServiceGrpc.ProgramServiceBlockingStub blockingStub = ProgramServiceGrpc.newBlockingStub(channel);
 
@@ -35,5 +35,12 @@ class ProgramServiceClientIT {
     assertThat(inviteUserResponse.getInviteId()).isNotEmpty();
 
     inviteUserResponse.getInviteId();
+  }
+
+  @Test
+  void removeUser() {
+    val removeUserRequest = RemoveUserRequest.newBuilder().setProgramId("123").setUserId("123").build();
+    val removeUserResponse = blockingStub.removeUser(removeUserRequest);
+    assertThat(removeUserResponse).isNotNull();
   }
 }

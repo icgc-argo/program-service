@@ -8,20 +8,17 @@ import lombok.val;
 import org.icgc.argo.program_service.*;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.icgc.argo.program_service.mappers.ProgramMapper;
-import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
-  private final ProgramRepository programRepository;
   private final ProgramService programService;
   private final ProgramMapper programMapper;
 
   @Autowired
-  public ProgramServiceImpl(ProgramRepository programRepository, ProgramService programService, ProgramMapper programMapper) {
-    this.programRepository = programRepository;
+  public ProgramServiceImpl(ProgramService programService, ProgramMapper programMapper) {
     this.programMapper = programMapper;
       this.programService = programService;
   }
@@ -60,6 +57,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onCompleted();
   }
 
+  @Override
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
     val programs = programService.listPrograms();
 
@@ -69,6 +67,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
             .build();
 
     responseObserver.onNext(collection);
+    responseObserver.onCompleted();
+  }
+
+
+  @Override
+  public void removeUser(org.icgc.argo.program_service.RemoveUserRequest request,
+                         io.grpc.stub.StreamObserver<com.google.protobuf.Empty> responseObserver) {
+    responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
 }
