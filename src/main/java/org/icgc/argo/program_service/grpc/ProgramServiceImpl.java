@@ -1,5 +1,6 @@
 package org.icgc.argo.program_service.grpc;
 
+import com.google.protobuf.Empty;
 import io.grpc.Status;
 import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
