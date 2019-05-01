@@ -63,11 +63,12 @@ public class ProgramServiceImplIT {
     assertTrue(programsObserver.completed);
     assertNull(programsObserver.thrown);
 
-    val programList = programsObserver.result.getProgramsList();
+    val programList = programsObserver.result.
+      getProgramsList().stream().map(GetProgramResponse::getProgram)
+      .collect(Collectors.toUnmodifiableSet());
 
     assertEquals("Two programs", 2, programList.size());
-
-    assertThat(programList).usingElementComparatorOnFields("shortName", "description", "name", "commitmentDonors", "submittedDonors", "genomicDonors", "website", "membershipType").contains(p1, p2);
+    assertThat(programList).contains(p1, p2);
   }
 
   public Program buildProgram(String name,

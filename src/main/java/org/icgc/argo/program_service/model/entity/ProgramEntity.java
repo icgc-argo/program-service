@@ -97,7 +97,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
           fetch = FetchType.LAZY,
           orphanRemoval = true
   )
-  private Set<ProgramCancer> cancerTypes = newHashSet();
+  private Set<ProgramCancer> programCancers = newHashSet();
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
@@ -108,5 +108,5 @@ public class ProgramEntity implements NameableEntity<UUID> {
           fetch = FetchType.LAZY,
           orphanRemoval = true
   )
-  private Set<ProgramPrimarySite> primarySites = newHashSet();
+  private Set<ProgramPrimarySite> programPrimarySites = newHashSet();
 }

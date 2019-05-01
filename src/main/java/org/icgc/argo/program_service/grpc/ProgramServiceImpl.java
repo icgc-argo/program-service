@@ -28,9 +28,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
-    // TODO: (1) Create the rest of the program entities
-    //       (2) Set up the permissions, groups in EGO
-    //       (3) Populate the lookup tables for program, role, group_id
+    // TODO:
+    //       (1) Set up the permissions, groups in EGO
+    //       (2) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
     val dao = programMapper.ProgramToProgramEntity(program);
     val now = LocalDateTime.now(ZoneId.of("UTC"));
@@ -53,7 +53,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
     val results =
             Streams.stream(programs)
-                    .map(programMapper::ProgramEntityToProgram)
+                    .map(programMapper::toGetProgramResponse)
                     .collect(Collectors.toUnmodifiableList());
 
     val collection = ListProgramsResponse
@@ -63,5 +63,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
     responseObserver.onNext(collection);
     responseObserver.onCompleted();
+  }
+
+  @Override public void updateProgram(UpdateProgramRequest request,  StreamObserver<UpdateProgramResponse> response) {
+
   }
 }

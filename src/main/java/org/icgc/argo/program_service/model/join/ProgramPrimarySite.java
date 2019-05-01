@@ -2,7 +2,7 @@ package org.icgc.argo.program_service.model.join;
 
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
-import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
+import org.icgc.argo.program_service.model.entity.BaseEntity;
 import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.enums.SqlFields;
@@ -18,7 +18,7 @@ import javax.persistence.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProgramPrimarySite implements IdentifiableEntity<ProgramPrimarySiteId> {
+public class ProgramPrimarySite implements BaseEntity<ProgramPrimarySiteId> {
 
   @EmbeddedId
   private ProgramPrimarySiteId id;

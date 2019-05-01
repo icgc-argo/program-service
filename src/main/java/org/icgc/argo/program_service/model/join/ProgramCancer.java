@@ -4,7 +4,7 @@ import lombok.*;
 
 import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
-import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
+import org.icgc.argo.program_service.model.entity.BaseEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
@@ -19,7 +19,7 @@ import javax.persistence.*;
 @FieldNameConstants
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProgramCancer implements IdentifiableEntity<ProgramCancerId> {
+public class ProgramCancer implements BaseEntity<ProgramCancerId> {
 
   @EmbeddedId
   private ProgramCancerId id;
