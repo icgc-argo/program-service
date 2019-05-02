@@ -7,7 +7,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public interface ProgramEgoGroupRepository extends JpaRepository<ProgramEgoGroupEntity, UUID> {
-  Optional<ProgramEgoGroupEntity> findByProgramAndRole(ProgramEntity program, UserRole role);
+  Optional<ProgramEgoGroupEntity> findByProgramIdAndRole(UUID programId, UserRole role);
+
+  Stream<ProgramEgoGroupEntity> findAllByProgramId(UUID programId);
 }

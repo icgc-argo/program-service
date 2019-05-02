@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.springframework.beans.BeanUtils;
@@ -113,7 +112,7 @@ public class EgoService {
   }
 
   public static class EgoToken extends Context.User {
-    public final DecodedJWT jwt;
+    final DecodedJWT jwt;
 
     EgoToken(@NotNull DecodedJWT jwt, @NotNull Context context) {
       this.jwt = jwt;
@@ -145,15 +144,19 @@ public class EgoService {
     }
   }
 
-  Optional<UUID> getEgoGroupId(ProgramEntity program, UserRole role) {
-    val programEgoGroup = programEgoGroupRepository.findByProgramAndRole(program, role);
+  private Optional<UUID> getEgoGroupId(UUID programId, UserRole role) {
+    val programEgoGroup = programEgoGroupRepository.findByProgramIdAndRole(programId, role);
     return programEgoGroup.map(v -> v.getProgram().getId());
   }
 
-  public void addUser(@Email String email, ProgramEntity program, UserRole role) {
-    val groupId = getEgoGroupId(program, role);
+  public void addUser(@Email String email, UUID programId, UserRole role) {
+    val groupId = getEgoGroupId(programId, role);
     // TODO:rpcAddUser(userEmailAddr, groupId);
+  }
 
+  public void removeUser(UUID userId, UUID programId) {
+    val groups = programEgoGroupRepository.findAllByProgramId(programId);
+    // TODO:rpcRemoveUser(userId, groupId);
   }
 }
 
