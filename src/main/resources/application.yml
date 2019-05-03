@@ -26,11 +26,11 @@ app:
   grpcPort: 50051
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
-#spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 
 logging:
   level:
-    root: ERROR
+    root: info
     org.icgc.argo.program_service: DEBUG
     #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     #org.springframework.boot: INFO

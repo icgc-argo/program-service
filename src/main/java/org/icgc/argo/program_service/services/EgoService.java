@@ -17,8 +17,11 @@ import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import org.testcontainers.shaded.org.apache.http.auth.AuthScope;
 import org.testcontainers.shaded.org.apache.http.auth.UsernamePasswordCredentials;
 import org.testcontainers.shaded.org.apache.http.client.CredentialsProvider;
@@ -28,6 +31,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,11 +53,13 @@ public class EgoService {
   private void setEgoPublicKey(AppProperties appProperties) {
     RSAPublicKey egoPublicKey = null;
     try {
-      val publicKeyResource = new UrlResource(appProperties.getEgoUrl() + "/oauth/token/public_key");
-      String key = Utils.toString(publicKeyResource.getInputStream());
+      val restTemplate = new RestTemplateBuilder().setConnectTimeout(Duration.ofSeconds(3)).build();
+      log.info("Start fetching ego public key");
+      val key = restTemplate.getForEntity(appProperties.getEgoUrl() + "/oauth/token/public_key", String.class).getBody();
+      log.info("Ego public key is fetched");
       egoPublicKey = (RSAPublicKey) Utils.getPublicKey(key, "RSA");
-    } catch(IOException e) {
-      log.info("Cannot get public key of ego");
+    } catch(RestClientException e) {
+      log.error("Cannot get public key of ego", e);
     }
     this.egoPublicKey = egoPublicKey;
   }
