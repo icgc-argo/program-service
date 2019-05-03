@@ -1,5 +1,6 @@
 package org.icgc.argo.program_service;
 
+import lombok.val;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +20,7 @@ public class ProgramServiceApplication {
 
   @Bean
   public JavaMailSender getJavaMailSender() {
-    JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+    val mailSender = new JavaMailSenderImpl();
     mailSender.setHost("smtp.gmail.com");
     mailSender.setPort(587);
 

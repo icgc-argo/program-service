@@ -18,15 +18,11 @@ import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.testcontainers.shaded.org.apache.http.auth.AuthScope;
+import org.testcontainers.shaded.org.apache.http.auth.UsernamePasswordCredentials;
+import org.testcontainers.shaded.org.apache.http.client.CredentialsProvider;
+import org.testcontainers.shaded.org.apache.http.impl.client.BasicCredentialsProvider;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
@@ -42,7 +38,7 @@ public class EgoService {
   private final ProgramEgoGroupRepository programEgoGroupRepository;
 
   private RSAPublicKey egoPublicKey;
-  private String appJwt;
+  private final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
   @Autowired
   public EgoService(ProgramEgoGroupRepository programEgoGroupRepository) {
@@ -63,23 +59,9 @@ public class EgoService {
   }
 
   @Autowired
-  private void setAppJwt(AppProperties appProperties)  {
-    val restTemplate = new RestTemplate();
-
-    val headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-    val body = new LinkedMultiValueMap<String, String>();
-    body.add("grant_type", "client_credentials");
-    body.add("client_id", appProperties.getEgoClientId());
-    body.add("client_secret", appProperties.getEgoClientSecret());
-
-    val request = new HttpEntity<MultiValueMap<String, String>>(body, headers);
-    try {
-      this.appJwt = restTemplate.exchange(appProperties.getEgoUrl() + "/oauth/token", HttpMethod.POST, request, String.class).getBody();
-    } catch (HttpClientErrorException e) {
-      log.error(e.getMessage());
-    }
+  private void setCredentialsProvider(AppProperties appProperties)  {
+    val credentials = new UsernamePasswordCredentials(appProperties.getEgoClientId(), appProperties.getEgoClientSecret());
+    credentialsProvider.setCredentials(AuthScope.ANY, credentials);
   }
 
   public EgoService(RSAPublicKey egoPublicKey, ProgramEgoGroupRepository programEgoGroupRepository) {
