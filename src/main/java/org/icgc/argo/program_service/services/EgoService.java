@@ -18,10 +18,8 @@ import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 import org.testcontainers.shaded.org.apache.http.auth.AuthScope;
 import org.testcontainers.shaded.org.apache.http.auth.UsernamePasswordCredentials;
 import org.testcontainers.shaded.org.apache.http.client.CredentialsProvider;
@@ -29,7 +27,6 @@ import org.testcontainers.shaded.org.apache.http.impl.client.BasicCredentialsPro
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
-import java.io.IOException;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.Optional;
@@ -67,7 +64,7 @@ public class EgoService {
   @Autowired
   private void setCredentialsProvider(AppProperties appProperties)  {
     val credentials = new UsernamePasswordCredentials(appProperties.getEgoClientId(), appProperties.getEgoClientSecret());
-    credentialsProvider.setCredentials(AuthScope.ANY, credentials);
+    this.credentialsProvider.setCredentials(AuthScope.ANY, credentials);
   }
 
   public EgoService(RSAPublicKey egoPublicKey, ProgramEgoGroupRepository programEgoGroupRepository) {
