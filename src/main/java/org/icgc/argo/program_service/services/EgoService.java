@@ -50,7 +50,7 @@ public class EgoService {
   private void setEgoPublicKey(AppProperties appProperties) {
     RSAPublicKey egoPublicKey = null;
     try {
-      val restTemplate = new RestTemplateBuilder().setConnectTimeout(Duration.ofSeconds(3)).build();
+      val restTemplate = new RestTemplateBuilder().setConnectTimeout(Duration.ofSeconds(10)).build();
       log.info("Start fetching ego public key");
       val key = restTemplate.getForEntity(appProperties.getEgoUrl() + "/oauth/token/public_key", String.class).getBody();
       log.info("Ego public key is fetched");
