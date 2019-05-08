@@ -67,11 +67,6 @@ public class EgoService {
     this.credentialsProvider.setCredentials(AuthScope.ANY, credentials);
   }
 
-  public EgoService(RSAPublicKey egoPublicKey, ProgramEgoGroupRepository programEgoGroupRepository) {
-    this.egoPublicKey = egoPublicKey;
-    this.programEgoGroupRepository = programEgoGroupRepository;
-  }
-
   public Optional<EgoToken> verifyToken(String jwtToken) {
     try {
       Algorithm algorithm = Algorithm.RSA256(this.egoPublicKey, null);
