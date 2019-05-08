@@ -16,7 +16,7 @@ class EgoServiceIT {
 
   @Test
   void egoServiceInitialization() {
-    assertThat(ReflectionTestUtils.getField(egoService, "credentialsProvider")).isNotNull();
+    assertThat(ReflectionTestUtils.getField(egoService, "restTemplate")).isNotNull();
     assertThat(ReflectionTestUtils.getField(egoService, "egoPublicKey")).isNotNull();
   }
 

@@ -20,10 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
-import org.testcontainers.shaded.org.apache.http.auth.AuthScope;
-import org.testcontainers.shaded.org.apache.http.auth.UsernamePasswordCredentials;
-import org.testcontainers.shaded.org.apache.http.client.CredentialsProvider;
-import org.testcontainers.shaded.org.apache.http.impl.client.BasicCredentialsProvider;
+import org.springframework.web.client.RestTemplate;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
@@ -37,20 +34,28 @@ import java.util.UUID;
 public class EgoService {
 
   private final ProgramEgoGroupRepository programEgoGroupRepository;
+  private RestTemplate restTemplate;
 
   private RSAPublicKey egoPublicKey;
-  private final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+  private AppProperties appProperties;
 
   @Autowired
-  public EgoService(ProgramEgoGroupRepository programEgoGroupRepository) {
+  public EgoService(ProgramEgoGroupRepository programEgoGroupRepository, AppProperties appProperties) {
     this.programEgoGroupRepository = programEgoGroupRepository;
+    this.appProperties = appProperties;
   }
 
   @Autowired
-  private void setEgoPublicKey(AppProperties appProperties) {
+  private void setRestTemplate() {
+    this.restTemplate = new RestTemplateBuilder()
+            .basicAuthentication(appProperties.getEgoClientId(), this.appProperties.getEgoClientSecret())
+            .setConnectTimeout(Duration.ofSeconds(10)).build();
+  }
+
+  @Autowired
+  private void setEgoPublicKey() {
     RSAPublicKey egoPublicKey = null;
     try {
-      val restTemplate = new RestTemplateBuilder().setConnectTimeout(Duration.ofSeconds(10)).build();
       log.info("Start fetching ego public key");
       val key = restTemplate.getForEntity(appProperties.getEgoUrl() + "/oauth/token/public_key", String.class).getBody();
       log.info("Ego public key is fetched");
@@ -59,12 +64,6 @@ public class EgoService {
       log.error("Cannot get public key of ego", e);
     }
     this.egoPublicKey = egoPublicKey;
-  }
-
-  @Autowired
-  private void setCredentialsProvider(AppProperties appProperties)  {
-    val credentials = new UsernamePasswordCredentials(appProperties.getEgoClientId(), appProperties.getEgoClientSecret());
-    this.credentialsProvider.setCredentials(AuthScope.ANY, credentials);
   }
 
   public Optional<EgoToken> verifyToken(String jwtToken) {
