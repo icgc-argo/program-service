@@ -3,7 +3,6 @@ package org.icgc.argo.program_service.properties;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
@@ -18,10 +17,28 @@ import javax.validation.constraints.NotNull;
 @Setter @Getter
 public class AppProperties {
   /**
-   * Url to the public key used by ego to encrypt jwt token.
+   * Url prefix of the invite link, it should be followed by invite's uuid
    */
   @NotNull
-  private String egoPublicKeyUrl;
+  private String invitationUrlPrefix;
+
+  /**
+   * Ego api url
+   */
+  @NotNull
+  private String egoUrl;
+
+  /**
+   * Ego client Id, it has to be manually added in ego
+   */
+  @NotNull
+  private String egoClientId;
+
+  /**
+   * Ego client secret
+   */
+  @NotNull
+  private String egoClientSecret;
 
   /**
    * Port used by grpc server
@@ -29,3 +46,4 @@ public class AppProperties {
   @NotNull
   private Integer grpcPort;
 }
+

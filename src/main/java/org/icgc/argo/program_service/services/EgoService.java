@@ -11,39 +11,58 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
+import org.icgc.argo.program_service.properties.AppProperties;
+import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.UrlResource;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
-import java.io.IOException;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
-@Profile("auth")
 public class EgoService {
 
-  private final RSAPublicKey egoPublicKey;
+  private final ProgramEgoGroupRepository programEgoGroupRepository;
+  private RestTemplate restTemplate;
+
+  private RSAPublicKey egoPublicKey;
+  private AppProperties appProperties;
 
   @Autowired
-  public EgoService(@Value("${app.egoPublicKeyUrl}") UrlResource publicKeyResource) {
-    RSAPublicKey egoPublicKey = null;
-    try {
-      String key = Utils.toString(publicKeyResource.getInputStream());
-      egoPublicKey = (RSAPublicKey) Utils.getPublicKey(key, "RSA");
-    } catch(IOException e) {
-      log.info("Cannot get public key of ego");
-    }
-    this.egoPublicKey = egoPublicKey;
+  public EgoService(ProgramEgoGroupRepository programEgoGroupRepository, AppProperties appProperties) {
+    this.programEgoGroupRepository = programEgoGroupRepository;
+    this.appProperties = appProperties;
   }
 
-  public EgoService(RSAPublicKey egoPublicKey) {
+  @Autowired
+  private void setRestTemplate() {
+    this.restTemplate = new RestTemplateBuilder()
+            .basicAuthentication(appProperties.getEgoClientId(), this.appProperties.getEgoClientSecret())
+            .setConnectTimeout(Duration.ofSeconds(10)).build();
+  }
+
+  @Autowired
+  private void setEgoPublicKey() {
+    RSAPublicKey egoPublicKey = null;
+    try {
+      log.info("Start fetching ego public key");
+      val key = restTemplate.getForEntity(appProperties.getEgoUrl() + "/oauth/token/public_key", String.class).getBody();
+      log.info("Ego public key is fetched");
+      egoPublicKey = (RSAPublicKey) Utils.getPublicKey(key, "RSA");
+    } catch(RestClientException e) {
+      log.error("Cannot get public key of ego", e);
+    }
     this.egoPublicKey = egoPublicKey;
   }
 
@@ -72,7 +91,7 @@ public class EgoService {
   }
 
   public static class EgoToken extends Context.User {
-    public final DecodedJWT jwt;
+    final DecodedJWT jwt;
 
     EgoToken(@NotNull DecodedJWT jwt, @NotNull Context context) {
       this.jwt = jwt;
@@ -102,6 +121,21 @@ public class EgoService {
       String[] groups;
       String[] permissions;
     }
+  }
+
+  private Optional<UUID> getEgoGroupId(UUID programId, UserRole role) {
+    val programEgoGroup = programEgoGroupRepository.findByProgramIdAndRole(programId, role);
+    return programEgoGroup.map(v -> v.getProgram().getId());
+  }
+
+  public void addUser(@Email String email, UUID programId, UserRole role) {
+    val groupId = getEgoGroupId(programId, role);
+    // TODO:rpcAddUser(userEmailAddr, groupId);
+  }
+
+  public void removeUser(UUID userId, UUID programId) {
+    val groups = programEgoGroupRepository.findAllByProgramId(programId);
+    // TODO:rpcRemoveUser(userId, groupId);
   }
 }
 
