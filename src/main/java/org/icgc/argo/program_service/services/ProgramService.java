@@ -33,12 +33,15 @@ public class ProgramService {
   private final ProgramRepository programRepository;
   private final MailSender mailSender;
   private final ProgramMapper programMapper;
+  private final EgoService egoService;
 
-  public ProgramService(JoinProgramInviteRepository invitationRepository, ProgramRepository programRepository, MailSender mailSender, ProgramMapper programMapper) {
+
+  public ProgramService(JoinProgramInviteRepository invitationRepository, ProgramRepository programRepository, MailSender mailSender, ProgramMapper programMapper, EgoService egoService) {
     this.invitationRepository = invitationRepository;
     this.programRepository = programRepository;
     this.mailSender = mailSender;
     this.programMapper = programMapper;
+    this.egoService = egoService;
   }
 
   public Optional<ProgramEntity> getProgram(UUID uuid) {
@@ -85,15 +88,15 @@ public class ProgramService {
     programEntity.setUpdatedAt(now);
 
     val entity = programRepository.save(programEntity);
+    egoService.setUpProgram(programEntity);
     return entity;
   }
 
   public List<Program> listPrograms() {
     val programEntities = programRepository.findAll();
 
-    val programs = programEntities.stream()
+    return programEntities.stream()
             .map(programMapper::ProgramEntityToProgram)
             .collect(Collectors.toUnmodifiableList());
-    return programs;
   }
 }
