@@ -3,14 +3,17 @@ package org.icgc.argo.program_service.model.entity;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
+import org.icgc.argo.program_service.CancerType;
+import org.icgc.argo.program_service.PrimarySite;
+import org.icgc.argo.program_service.ProgramMembershipType;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
-import org.icgc.argo.program_service.model.join.ProgramCancer;
-import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -49,7 +52,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @NotNull
   @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.MEMBERSHIPTYPE)
-  private org.icgc.argo.program_service.MembershipType membershipType;
+  private ProgramMembershipType membershipType;
 
   @NotNull
   @Column(name = SqlFields.COMMITMENTDONORS)
@@ -88,25 +91,6 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @Column(name = SqlFields.COUNTRIES)
   private String countries;
 
-  @EqualsAndHashCode.Exclude
-  @ToString.Exclude
-  @Builder.Default
-  @OneToMany(
-          mappedBy = ProgramCancer.Fields.program,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.LAZY,
-          orphanRemoval = true
-  )
-  private Set<ProgramCancer> programCancers = newHashSet();
-
-  @EqualsAndHashCode.Exclude
-  @ToString.Exclude
-  @Builder.Default
-  @OneToMany(
-          mappedBy = ProgramPrimarySite.Fields.program,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.LAZY,
-          orphanRemoval = true
-  )
-  private Set<ProgramPrimarySite> programPrimarySites = newHashSet();
+  private List<CancerType> cancerTypesList = new ArrayList<>();
+  private List<PrimarySite> primarySitesList = new ArrayList<>();
 }

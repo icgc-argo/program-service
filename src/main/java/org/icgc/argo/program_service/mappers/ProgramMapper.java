@@ -5,7 +5,7 @@ import org.icgc.argo.program_service.GetProgramResponse;
 import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.mapstruct.Mapper;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.Mapping;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -13,20 +13,37 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
-@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(config = ProgramServiceMapperConfig.class)
   public interface ProgramMapper {
-    /**
-     * Program Conversions
-     */
+    @Mapping(target="mergeFrom", ignore = true)
+    @Mapping(target="clearField", ignore = true)
+    @Mapping(target="clearOneof", ignore = true)
+    @Mapping(target="shortNameBytes", ignore = true)
+    @Mapping(target="descriptionBytes", ignore = true)
+    @Mapping(target="nameBytes", ignore = true)
+    @Mapping(target="membershipTypeValue", ignore = true)
+    @Mapping(target="websiteBytes", ignore = true)
+    @Mapping(target="institutionsBytes", ignore = true)
+    @Mapping(target="countriesBytes", ignore = true)
+    @Mapping(target="regionsBytes", ignore = true)
+    @Mapping(target="unknownFields", ignore = true)
+    @Mapping(target="mergeUnknownFields", ignore = true)
+    @Mapping(target="allFields", ignore=true)
+    @Mapping(target="cancerTypesValueList", ignore = true)
+    @Mapping(target="primarySitesValueList", ignore = true)
     Program ProgramEntityToProgram(ProgramEntity entity);
+
+    @Mapping(target="id", ignore = true)
+    @Mapping(target="createdAt", ignore = true)
+    @Mapping(target="updatedAt", ignore = true)
     ProgramEntity ProgramToProgramEntity(Program program);
 
     default GetProgramResponse toGetProgramResponse(ProgramEntity entity) {
       return GetProgramResponse
         .newBuilder()
         .setId(entity.getId().toString())
-        .setCreatedAt(map(entity.getCreatedAt()))
-        .setUpdatedAt(map(entity.getUpdatedAt()))
+        .setCreatedAt(toTimeStamp(entity.getCreatedAt()))
+        .setUpdatedAt(toTimeStamp(entity.getUpdatedAt()))
         .setProgram(ProgramEntityToProgram(entity))
         .build();
     }
@@ -39,15 +56,15 @@ import java.util.UUID;
       }
     }
 
-    default String map(UUID uuid) {
+    default String toString(UUID uuid) {
       return uuid.toString();
     }
 
-    default LocalDateTime map(Timestamp timestamp) {
+    default LocalDateTime toLocalDateTime(Timestamp timestamp) {
       return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos()), ZoneId.of("UTC"));
     }
 
-    default Timestamp map(LocalDateTime dateTime) {
+    default Timestamp toTimeStamp(LocalDateTime dateTime) {
       Instant instant = dateTime.toInstant(ZoneOffset.UTC);
       return Timestamp.newBuilder()
               .setSeconds(instant.getEpochSecond())

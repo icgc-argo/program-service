@@ -40,8 +40,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val entity = programRepository.save(dao);
     val response = CreateProgramResponse
       .newBuilder()
-      .setId(programMapper.map(entity.getId()))
-      .setCreatedAt(programMapper.map(entity.getCreatedAt()))
+      .setId(programMapper.toString(entity.getId()))
+      .setCreatedAt(programMapper.toTimeStamp(entity.getCreatedAt()))
       .build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();

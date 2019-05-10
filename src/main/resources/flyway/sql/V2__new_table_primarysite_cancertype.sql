@@ -1,11 +1,6 @@
-CREATE TABLE cancer (
-    id                UUID PRIMARY KEY,
-    name              VARCHAR(255) UNIQUE NOT NULL
-);
-
-CREATE TABLE primary_site  (
-    id                UUID PRIMARY KEY,
-    name              VARCHAR(255) UNIQUE NOT NULL
+CREATE TABLE cancer_types (
+    program_id        UUID PRIMARY KEY,
+    cancer_type       VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE program_cancer (
@@ -19,7 +14,7 @@ CREATE TABLE program_cancer (
 
 CREATE TABLE program_primary_site (
   program_id            UUID  NOT NULL,
-  primary_site_id               UUID  NOT NULL,
+  primary_site_id       UUID  NOT NULL,
 
   PRIMARY KEY(program_id, primary_site_id),
   FOREIGN KEY(program_id) REFERENCES program(id),

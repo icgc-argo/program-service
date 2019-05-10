@@ -21,7 +21,7 @@ public class SqlFields {
   public static final String REGIONS = "regions";
   public static final String COUNTRIES = "countries";
   public static final String PROGRAMID_JOIN = "program_id";
-  public static final String CANCERID_JOIN = "cancer_id";
+  public static final String CANCER_TYPES = "cancer_types";
   public static final String SITEID_JOIN = "primary_site_id";
 
 }

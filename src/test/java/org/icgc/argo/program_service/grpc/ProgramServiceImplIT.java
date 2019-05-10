@@ -1,6 +1,5 @@
 package org.icgc.argo.program_service.grpc;
 
-import com.google.common.collect.Streams;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
 import org.icgc.argo.program_service.*;
@@ -10,9 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.testcontainers.shaded.com.google.common.collect.Sets;
 
-import java.time.LocalDate;
 import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.*;
@@ -85,7 +82,7 @@ public class ProgramServiceImplIT {
       .setName(name)
       .setShortName(shortName)
       .setDescription(description)
-      .setMembershipType(MembershipType.valueOf(membershipType))
+      .setMembershipType(ProgramMembershipType.valueOf(membershipType))
       .setCommitmentDonors(commitmentDonors)
       .setSubmittedDonors(submittedDonors)
       .setGenomicDonors(genomicDonors)
