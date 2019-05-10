@@ -1,11 +1,15 @@
 package org.icgc.argo.program_service.grpc;
 
 import com.google.common.collect.Streams;
+import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
-import org.icgc.argo.program_service.*;
+import org.icgc.argo.program_service.CreateProgramRequest;
+import org.icgc.argo.program_service.CreateProgramResponse;
+import org.icgc.argo.program_service.ListProgramsResponse;
+import org.icgc.argo.program_service.ProgramServiceGrpc;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
-import org.icgc.argo.program_service.mappers.ProgramMapper;
+import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.repository.ProgramRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,12 +21,12 @@ import java.util.stream.Collectors;
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
   private final ProgramRepository programRepository;
-  private final ProgramMapper programMapper;
+  private final ProgramConverter programConverter;
 
   @Autowired
-  public ProgramServiceImpl(ProgramRepository programRepository, ProgramMapper programMapper) {
+  public ProgramServiceImpl(ProgramRepository programRepository, ProgramConverter programConverter) {
     this.programRepository = programRepository;
-    this.programMapper = programMapper;
+    this.programConverter = programConverter;
   }
 
   @Override
@@ -32,7 +36,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     //       (2) Set up the permissions, groups in EGO
     //       (3) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
-    val dao = programMapper.ProgramToProgramEntity(program);
+    val dao = programConverter.ProgramToProgramEntity(program);
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     dao.setCreatedAt(now);
     dao.setUpdatedAt(now);
@@ -40,8 +44,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val entity = programRepository.save(dao);
     val response = CreateProgramResponse
       .newBuilder()
-      .setId(programMapper.map(entity.getId()))
-      .setCreatedAt(programMapper.map(entity.getCreatedAt()))
+      .setId(programConverter.map(entity.getId()))
+      .setCreatedAt(programConverter.map(entity.getCreatedAt()))
       .build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();
@@ -53,7 +57,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
     val results =
             Streams.stream(programs)
-                    .map(programMapper::ProgramEntityToProgram)
+                    .map(programConverter::programEntityToProgram)
                     .collect(Collectors.toUnmodifiableList());
 
     val collection = ListProgramsResponse
