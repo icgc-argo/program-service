@@ -45,6 +45,6 @@ public class CancerEntity implements NameableEntity<UUID> {
           cascade = CascadeType.ALL,
           fetch = FetchType.LAZY,
           orphanRemoval = true)
-  private Set<ProgramCancer> programs = newHashSet();
+  private Set<ProgramCancer> programCancers = newHashSet();
 
 }

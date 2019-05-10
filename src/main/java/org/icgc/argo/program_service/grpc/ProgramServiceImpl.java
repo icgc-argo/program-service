@@ -8,8 +8,8 @@ import org.icgc.argo.program_service.CreateProgramRequest;
 import org.icgc.argo.program_service.CreateProgramResponse;
 import org.icgc.argo.program_service.ListProgramsResponse;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
+import org.icgc.argo.program_service.converter.ToProtoProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
-import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.repository.ProgramRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,12 +21,12 @@ import java.util.stream.Collectors;
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
   private final ProgramRepository programRepository;
-  private final ProgramConverter programConverter;
+  private final ToProtoProgramConverter toProtoProgramConverter;
 
   @Autowired
-  public ProgramServiceImpl(ProgramRepository programRepository, ProgramConverter programConverter) {
+  public ProgramServiceImpl(ProgramRepository programRepository, ToProtoProgramConverter toProtoProgramConverter) {
     this.programRepository = programRepository;
-    this.programConverter = programConverter;
+    this.toProtoProgramConverter = toProtoProgramConverter;
   }
 
   @Override
@@ -36,7 +36,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     //       (2) Set up the permissions, groups in EGO
     //       (3) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
-    val dao = programConverter.ProgramToProgramEntity(program);
+    val dao = toProtoProgramConverter.ProgramToProgramEntity(program);
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     dao.setCreatedAt(now);
     dao.setUpdatedAt(now);
@@ -44,8 +44,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val entity = programRepository.save(dao);
     val response = CreateProgramResponse
       .newBuilder()
-      .setId(programConverter.map(entity.getId()))
-      .setCreatedAt(programConverter.map(entity.getCreatedAt()))
+      .setId(toProtoProgramConverter.map(entity.getId()))
+      .setCreatedAt(toProtoProgramConverter.map(entity.getCreatedAt()))
       .build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();
@@ -57,7 +57,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
     val results =
             Streams.stream(programs)
-                    .map(programConverter::programEntityToProgram)
+                    .map(toProtoProgramConverter::programEntityToProgram)
                     .collect(Collectors.toUnmodifiableList());
 
     val collection = ListProgramsResponse

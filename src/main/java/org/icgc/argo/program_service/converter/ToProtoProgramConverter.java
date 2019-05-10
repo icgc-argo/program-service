@@ -14,12 +14,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
-public interface ProgramConverter {
-
-  /**
-   * To Entity Converters
-   */
-
+public interface ToProtoProgramConverter {
 
   /**
    * To Proto Converters
@@ -92,15 +87,5 @@ public interface ProgramConverter {
   default MembershipTypeValue boxMembershipType(MembershipType m){
     return MembershipTypeValue.newBuilder().setValue(m).build();
   }
-
-  default MembershipType unboxMembershipTypeValue(MembershipTypeValue v){
-    return v.getValue();
-  }
-
-
-  /**
-   * Other Converters
-   */
-
 
 }
