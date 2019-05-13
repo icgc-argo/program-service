@@ -1,6 +1,9 @@
 package org.icgc.argo.program_service.model.entity;
 
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
 import org.icgc.argo.program_service.model.enums.SqlFields;
@@ -8,7 +11,16 @@ import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -18,13 +30,9 @@ import static com.google.common.collect.Sets.newHashSet;
 
 @Entity
 @Table(name = Tables.PROGRAM)
-@Builder
 @Data
-@EqualsAndHashCode
-@ToString
+@Accessors(chain = true)
 @FieldNameConstants
-@AllArgsConstructor
-@NoArgsConstructor
 public class ProgramEntity implements NameableEntity<UUID> {
   @Id
   @ToString.Exclude
@@ -53,15 +61,15 @@ public class ProgramEntity implements NameableEntity<UUID> {
 
   @NotNull
   @Column(name = SqlFields.COMMITMENTDONORS)
-  private int commitmentDonors;
+  private Integer commitmentDonors;
 
   @NotNull
   @Column(name = SqlFields.SUBMITTEDDONORS)
-  private int submittedDonors;
+  private Integer submittedDonors;
 
   @NotNull
   @Column(name = SqlFields.GENOMICDONORS)
-  private int genomicDonors;
+  private Integer genomicDonors;
 
   @NotNull
   @Column(name = SqlFields.WEBSITE)
@@ -88,9 +96,8 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @Column(name = SqlFields.COUNTRIES)
   private String countries;
 
-  @EqualsAndHashCode.Exclude
   @ToString.Exclude
-  @Builder.Default
+  @EqualsAndHashCode.Exclude
   @OneToMany(
           mappedBy = ProgramCancer.Fields.program,
           cascade = CascadeType.ALL,
@@ -99,9 +106,8 @@ public class ProgramEntity implements NameableEntity<UUID> {
   )
   private Set<ProgramCancer> programCancers = newHashSet();
 
-  @EqualsAndHashCode.Exclude
   @ToString.Exclude
-  @Builder.Default
+  @EqualsAndHashCode.Exclude
   @OneToMany(
           mappedBy = ProgramPrimarySite.Fields.program,
           cascade = CascadeType.ALL,
@@ -109,4 +115,5 @@ public class ProgramEntity implements NameableEntity<UUID> {
           orphanRemoval = true
   )
   private Set<ProgramPrimarySite> programPrimarySites = newHashSet();
+
 }

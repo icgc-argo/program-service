@@ -78,7 +78,7 @@ public interface ToProtoProgramConverter {
   }
 
   default PrimarySiteEntity programPrimarySiteToPrimarySiteEntity(ProgramPrimarySite c){
-    return c.getSite();
+    return c.getPrimarySite();
   }
 
   /**

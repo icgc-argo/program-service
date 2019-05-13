@@ -34,11 +34,21 @@ public class ProgramPrimarySite implements IdentifiableEntity<ProgramPrimarySite
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
-  @MapsId(value = ProgramPrimarySiteId.Fields.siteId)
+  @MapsId(value = ProgramPrimarySiteId.Fields.primarySiteId)
   @JoinColumn(name = SqlFields.SITEID_JOIN)
   @ManyToOne(
           cascade = {CascadeType.PERSIST, CascadeType.MERGE},
           fetch = FetchType.LAZY)
-  private PrimarySiteEntity site;
+  private PrimarySiteEntity primarySite;
 
+  public static ProgramPrimarySite createProgramPrimarySite(@NonNull ProgramEntity p, @NonNull PrimarySiteEntity ps){
+    return ProgramPrimarySite.builder()
+        .id(ProgramPrimarySiteId.builder()
+            .primarySiteId(ps.getId())
+            .programId(p.getId())
+            .build())
+        .primarySite(ps)
+        .program(p)
+        .build();
+  }
 }

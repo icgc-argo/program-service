@@ -42,4 +42,14 @@ public class ProgramCancer implements IdentifiableEntity<ProgramCancerId> {
           fetch = FetchType.LAZY)
   private CancerEntity cancer;
 
+  public static ProgramCancer createProgramCancer(@NonNull ProgramEntity p, @NonNull CancerEntity c){
+    return ProgramCancer.builder()
+        .id(ProgramCancerId.builder()
+            .programId(p.getId())
+            .cancerId(c.getId())
+            .build())
+        .program(p)
+        .cancer(c)
+        .build();
+  }
 }
