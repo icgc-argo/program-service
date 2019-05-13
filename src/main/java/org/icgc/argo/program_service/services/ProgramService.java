@@ -44,6 +44,10 @@ public class ProgramService {
     this.egoService = egoService;
   }
 
+  public Optional<ProgramEntity> getProgram(String name) {
+    return programRepository.findByName(name);
+  }
+
   public Optional<ProgramEntity> getProgram(UUID uuid) {
     return programRepository.findById(uuid);
   }
@@ -90,6 +94,16 @@ public class ProgramService {
     val entity = programRepository.save(programEntity);
     egoService.setUpProgram(programEntity);
     return entity;
+  }
+
+  public void removeProgram(UUID programId) {
+    // TODO: egoService.cleanUpProgram
+    programRepository.deleteById(programId);
+  }
+
+  public void removeProgram(ProgramEntity program) {
+    // TODO: egoService.cleanUpProgram
+    programRepository.deleteById(program.getId());
   }
 
   public List<Program> listPrograms() {

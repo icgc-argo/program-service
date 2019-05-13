@@ -24,7 +24,7 @@ public class ProgramServiceImplIT {
   private ProgramServiceImpl programService;
 
   @Test
-  public void test_list() {
+  public void testList() {
     // case 1: empty list
     val request = Empty.getDefaultInstance();
     val programsObserver = new TestObserver<ListProgramsResponse>();

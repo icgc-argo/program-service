@@ -45,5 +45,11 @@ public class AppProperties {
    */
   @NotNull
   private Integer grpcPort;
+
+  /**
+   * GRPC can be disabled when doing test
+   */
+  @NotNull
+  private Boolean grpcEnabled;
 }
 

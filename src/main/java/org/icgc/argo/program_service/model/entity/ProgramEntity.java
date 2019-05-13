@@ -109,4 +109,15 @@ public class ProgramEntity implements NameableEntity<UUID> {
           orphanRemoval = true
   )
   private Set<ProgramPrimarySite> primarySites = newHashSet();
+
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
+  @Builder.Default
+  @OneToMany(
+          mappedBy = ProgramEgoGroupEntity.Fields.program,
+          cascade = CascadeType.ALL,
+          fetch = FetchType.EAGER,
+          orphanRemoval = true
+  )
+  private Set<ProgramEgoGroupEntity> egoGroups = newHashSet();
 }

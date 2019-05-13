@@ -6,7 +6,8 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.icgc.argo.program_service.UserRole;
@@ -18,14 +19,15 @@ import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
-import java.io.Serializable;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.List;
@@ -135,7 +137,7 @@ public class EgoService {
   }
 
   @AllArgsConstructor @NoArgsConstructor @Data
-  private static class EgoGroup implements Serializable {
+  private static class Group {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private UUID id;
     @JsonProperty
@@ -147,7 +149,7 @@ public class EgoService {
   }
 
   @AllArgsConstructor @NoArgsConstructor @Data
-  private static class EgoPolicy implements Serializable {
+  private static class Policy {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private UUID id;
     @JsonProperty()
@@ -155,14 +157,41 @@ public class EgoService {
   }
 
   @AllArgsConstructor @NoArgsConstructor @Data
-  private static class EgoPermission implements Serializable {
+  private static class EgoPermission {
     @JsonProperty
     private String mask;
   }
 
+  @AllArgsConstructor @NoArgsConstructor @Data
+  public static class User {
+    @JsonProperty
+    private UUID id;
+
+    @JsonProperty
+    private String email;
+
+    @JsonProperty
+    private String firstName;
+
+    @JsonProperty
+    private String lastName;
+  }
+
+  @AllArgsConstructor @NoArgsConstructor @Data
+  public static class EgoCollection<T> {
+    @JsonProperty
+    List<T> resultSet;
+
+    @JsonProperty
+    Integer limit;
+
+    @JsonProperty
+    Integer offset;
+  }
+
   public void setUpProgram(ProgramEntity program) {
-    val groups = createEgoGroups(program.getShortName());
-    createEgoPolicies(program.getShortName(), groups);
+    val groups = createGroups(program.getShortName());
+    createPolicies(program.getShortName(), groups);
 
     groups.forEach(group ->{
       UserRole role;
@@ -184,7 +213,7 @@ public class EgoService {
     });
   }
 
-  private List<EgoPolicy> createEgoPolicies(String programShortName, List<EgoGroup> groups) {
+  private List<Policy> createPolicies(String programShortName, List<Group> groups) {
     val policy1 = createEgoPolicy("PROGRAM-" + programShortName);
 
     val policy2 = createEgoPolicy("PROGRAM-DATA" + programShortName);
@@ -226,44 +255,93 @@ public class EgoService {
             .collect(Collectors.toList());
   }
 
-  private Optional<EgoPolicy> createEgoPolicy(String policyName) {
-    try {
-      val request = new HttpEntity<EgoPolicy>(new EgoPolicy(null, policyName));
-      val egoPolicy = restTemplate.postForObject(appProperties.getEgoUrl() + "/policies", request, EgoPolicy.class);
-      return Optional.ofNullable(egoPolicy);
-    } catch(RestClientException e) {
-      log.error(e.toString());
-      return Optional.empty();
-    }
+  private Optional<Policy> createEgoPolicy(String policyName) {
+    return createObject(new Policy(null, policyName), Policy.class, "/policies");
   }
 
-  private List<EgoGroup> createEgoGroups(String programShortName) {
+  private List<Group> createGroups(String programShortName) {
     val groupNames = Stream.of(UserRole.values()).map(UserRole::name).map(s -> "PROGRAM-" + programShortName + "-" + s);
 
     return groupNames
-            .map(this::createEgoGroup)
+            .map(this::createGroup)
             .filter(Optional::isPresent)
             .map(Optional::get)
             .collect(Collectors.toList());
   }
 
-  private Optional<EgoGroup> createEgoGroup(String groupName) {
+  private Optional<Group> createGroup(String groupName) {
+    val group = createObject(new Group(null, groupName, null, "APPROVED"), Group.class, "/groups");
+    if (group.isEmpty()) {
+      return getGroup(groupName);
+    }
+    return group;
+  }
+
+  private Optional<Group> getGroup(String groupName) {
     try {
-      val request = new HttpEntity<EgoGroup>(new EgoGroup(null, groupName, null, "APPROVED"));
-      val egoGroup = restTemplate.postForObject(appProperties.getEgoUrl() + "/groups", request, EgoGroup.class);
-      return Optional.ofNullable(egoGroup);
+      val responseEntity = restTemplate.exchange(String.format("%s/groups?query=%s", appProperties.getEgoUrl(), groupName), HttpMethod.GET, null, new ParameterizedTypeReference<EgoCollection<Group>>() {});
+      val groupCollection = responseEntity.getBody();
+      if (groupCollection != null) {
+        return groupCollection.getResultSet().stream().findFirst();
+      }
+      return Optional.empty();
     } catch(RestClientException e) {
-      log.error(e.toString());
+      log.error("Cannot get ego group", e);
       return Optional.empty();
     }
   }
 
-  public void addUser(@Email String email, UUID programId, UserRole role) {
-    val groupId = getEgoGroupId(programId, role);
-    // TODO:rpcAddUser(userEmailAddr, groupId);
+  private <T> Optional<T> createObject(T egoObject, Class<T> egoObjectType, String path) {
+    try {
+      val request = new HttpEntity<>(egoObject);
+      val obj = restTemplate.postForObject(appProperties.getEgoUrl() + path, request, egoObjectType);
+      return Optional.ofNullable(obj);
+    } catch(RestClientException e) {
+      log.error("Cannot create ego object", e);
+      return Optional.empty();
+    }
   }
 
-  public void removeUser(UUID userId, UUID programId) {
+
+  Optional<User> getUser(@Email String email) {
+    try {
+      val responseEntity = restTemplate.exchange(String.format("%s/users?query=%s", appProperties.getEgoUrl(), email), HttpMethod.GET, null, new ParameterizedTypeReference<EgoCollection<User>>() {});
+      val userCollection = responseEntity.getBody();
+      if (userCollection != null) {
+        return userCollection.getResultSet().stream().findFirst();
+      }
+      return Optional.empty();
+    } catch(RestClientException e) {
+      log.error("Cannot get ego user", e);
+      return Optional.empty();
+    }
+  }
+
+  Boolean joinProgram(@Email String email, ProgramEntity programEntity, UserRole role) {
+    val user = getUser(email).orElse(null);
+    if (user == null) {
+      log.error("Cannot find user with email {}", email);
+      return false;
+    }
+    val programEgoGroup = programEgoGroupRepository.findByProgramIdAndRole(programEntity.getId(), role);
+    if (programEgoGroup.isEmpty()) {
+      log.error("Cannot find program ego group, have you created the groups in ego?");
+      return false;
+    }
+    val egoGroupId = programEgoGroup.map(ProgramEgoGroupEntity::getEgoGroupId).get();
+    val body = List.of(user.getId());
+    val request = new HttpEntity<>(body);
+    try {
+      restTemplate.exchange(appProperties.getEgoUrl() + String.format("/groups/%s/users", egoGroupId),
+              HttpMethod.POST, request, String.class);
+      log.info("{} joined program {}", email, programEntity.getName());
+    } catch (RestClientException e) {
+      log.error("Cannot {} joined program {}", email, programEntity.getName(), e);
+    }
+    return true;
+  }
+
+  public void leaveProgram(UUID userId, UUID programId) {
     val groups = programEgoGroupRepository.findAllByProgramId(programId);
     // TODO:rpcRemoveUser(userId, groupId);
   }
