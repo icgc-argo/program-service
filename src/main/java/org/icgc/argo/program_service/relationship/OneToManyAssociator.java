@@ -48,6 +48,9 @@ public class OneToManyAssociator<
     C extends IdentifiableEntity<CID>,
     PID, CID> implements Associator<P, C, CID> {
 
+  /**
+   * Functions
+   */
   @NonNull private final Function<P, Collection<C>> getChildrenFromParentFunction;
   @NonNull private final BiConsumer<P, C> setParentFieldForChildFunction;
 

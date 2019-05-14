@@ -50,8 +50,15 @@ public class ManyToManyAssociator<
     J extends IdentifiableEntity<JID> ,
     ID, JID> implements Associator<P, C, ID> {
 
+  /**
+   * Dependencies
+   */
   @NonNull private final OneToManyAssociator<P, J, ID, JID> oneParentToManyJoinRelationship;
   @NonNull private final OneToManyAssociator<C, J, ID, JID> oneChildToManyJoinRelationship;
+
+  /**
+   * Functions
+   */
   @NonNull private final BiFunction<P, C, J> createJoinEntityFunction;
   @NonNull private final Function<P, Collection<J>> getJoinEntitiesFromParentFunction;
   @NonNull private final Function<J, C> getChildFromJoinEntityFunction;
