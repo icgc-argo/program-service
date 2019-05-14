@@ -23,17 +23,20 @@ import com.google.common.collect.Sets;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
+import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 import static java.util.stream.IntStream.range;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -45,11 +48,27 @@ public class CollectionUtils {
   }
 
   public static <T, U> Set<U> mapToImmutableSet(Collection<T> collection, Function<T, U> mapper) {
-    return collection.stream().map(mapper).collect(toImmutableSet());
+    return collection.stream().map(mapper).collect(toUnmodifiableSet());
+  }
+
+  public static <T, U> List<U> mapToImmutableList(Collection<T> collection, Function<T, U> mapper) {
+    return collection.stream().map(mapper).collect(toUnmodifiableList());
   }
 
   public static <T, U> List<U> mapToList(Collection<T> collection, Function<T, U> mapper) {
     return collection.stream().map(mapper).collect(toList());
+  }
+
+  public static List<UUID> convertToUUIDImmutableList(Collection<String> uuids) {
+    return mapToImmutableList(uuids, UUID::fromString);
+  }
+
+  public static Set<UUID> convertToUUIDImmutableSet(Collection<String> uuids) {
+    return mapToImmutableSet(uuids, UUID::fromString);
+  }
+
+  public static <ID, T extends IdentifiableEntity<ID>> Set<ID> convertToIds(Collection<T> entities) {
+    return mapToImmutableSet(entities, IdentifiableEntity::getId);
   }
 
   public static <T> Set<T> findDuplicates(Collection<T> collection) {
