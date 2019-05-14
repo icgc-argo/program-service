@@ -14,7 +14,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-import static java.util.stream.Collectors.toUnmodifiableSet;
+import java.util.Collection;
+import java.util.Set;
+
 import static org.icgc.argo.program_service.relationship.Relationships.PROGRAM_CANCER_RELATIONSHIP;
 import static org.icgc.argo.program_service.relationship.Relationships.PROGRAM_PRIMARY_SITE_RELATIONSHIP;
 
@@ -23,9 +25,11 @@ public interface ToEntityProgramConverter {
 
   @Mapping(target = "programCancers", ignore = true)
   CancerEntity cancerToPartialCancerEntity(Cancer c);
+  Set<CancerEntity> cancersToCancerEntities(Collection<Cancer> cancers);
 
   @Mapping(target = "programPrimarySites", ignore = true)
   PrimarySiteEntity primarySiteToPartialPrimarySiteEntity(PrimarySite p);
+  Set<PrimarySiteEntity> primarySitesToPrimarySiteEntities(Collection<PrimarySite> primarySites);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "programCancers", ignore = true)
@@ -34,16 +38,10 @@ public interface ToEntityProgramConverter {
 
   @AfterMapping
   default void updateProgramRelationships(Program p, @MappingTarget ProgramEntity programEntity){
-    val cancerEntities = p.getCancerTypesList().stream()
-        .map(this::cancerToPartialCancerEntity)
-        .collect(toUnmodifiableSet());
-
+    val cancerEntities = cancersToCancerEntities(programToCancers(p));
     PROGRAM_CANCER_RELATIONSHIP.associate(programEntity, cancerEntities);
 
-    val primarySiteEntities = p.getPrimarySitesList().stream()
-        .map(this::primarySiteToPartialPrimarySiteEntity)
-        .collect(toUnmodifiableSet());
-
+    val primarySiteEntities = primarySitesToPrimarySiteEntities(programToPrimarySites(p));
     PROGRAM_PRIMARY_SITE_RELATIONSHIP.associate(programEntity, primarySiteEntities);
   }
 
@@ -52,6 +50,14 @@ public interface ToEntityProgramConverter {
    */
   default MembershipType unboxMembershipTypeValue(MembershipTypeValue v){
     return v.getValue();
+  }
+
+  default Collection<Cancer> programToCancers(Program p){
+    return p.getCancerTypesList();
+  }
+
+  default Collection<PrimarySite> programToPrimarySites(Program p){
+    return p.getPrimarySitesList();
   }
 
 }
