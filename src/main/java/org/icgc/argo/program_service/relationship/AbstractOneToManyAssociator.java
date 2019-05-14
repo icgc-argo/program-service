@@ -18,7 +18,6 @@
 
 package org.icgc.argo.program_service.relationship;
 
-import com.google.common.collect.ImmutableSet;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
 
@@ -36,57 +35,34 @@ import java.util.Collection;
  * @param <CID> child entity ID type
  */
 //TODO: [rtisma] replace this with a concrete Lamba implementation, of the interface OneToManyRelationship. The interface should not be bounded by IdentifiableEntity
-public abstract class OneToManyRelationship<
+public abstract class AbstractOneToManyAssociator<
     P extends IdentifiableEntity<PID>,
     C extends IdentifiableEntity<CID>,
-    PID, CID> {
+    PID, CID> implements Associatior<P, C, CID> {
 
-  /**
-   * Associate the {@param child} with the {@param parent}
-   */
   //TODO: [rtisma] check that the parent doesnt already have the child
+  @Override
   public P associate(P parent, C child){
     getChildrenFromParent(parent).add(child);
     setParentForChild(child, parent);
     return parent;
   }
 
-  /**
-   * Associate the {@param children} with the {@param parent}
-   */
-  //TODO: [rtisma] check that the parent doesnt already have the children
-  public P associate(P parent, Collection<C> children){
-    children.forEach(x -> associate(parent, x));
-    return parent;
-  }
-
-  /**
-   * Disassociate children matching ids contained in {@param childIdsToDisassociate} from the input {@param parent}
-   */
   //TODO: [rtisma] check that the parent contains all the child ids
+  @Override
   public P disassociate(P parent, Collection<CID> childIdsToDisassociate){
     val children = getChildrenFromParent(parent);
     disassociateSelectedChildren(children, childIdsToDisassociate);
     return parent;
   }
 
-  /**
-   * Disassociate children matching ids contained in {@param childIdsToDisassociate} from all input {@param parents}
-   */
   //TODO: [rtisma] check that all the parents contains all the child ids
+  @Override
   public Collection<P> disassociate(Collection<P> parents, Collection<CID> childIdsToDisassociate){
     parents.stream()
         .map(this::getChildrenFromParent)
         .forEach(children ->  disassociateSelectedChildren(children, childIdsToDisassociate));
     return parents;
-  }
-
-  /**
-   * Disassociate children matching the id {@param childIdsToDisassociate} from all input {@param parents}
-   */
-  //TODO: [rtisma] check that all the parents contain the child id
-  public Collection<P> disassociate(Collection<P> parents, CID childIdToDisassociate){
-    return disassociate(parents, ImmutableSet.of(childIdToDisassociate));
   }
 
   private void disassociateSelectedChildren(Collection<C> children, Collection<CID> selectedChildIds ){

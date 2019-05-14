@@ -41,7 +41,7 @@ import java.util.function.Function;
  */
 @Value
 @Builder
-public class ManyToManyRelationshipFactory<
+public class AssociatorFactory<
       P extends IdentifiableEntity<ID>,
       C extends IdentifiableEntity<ID>,
       J extends IdentifiableEntity<JID> ,
@@ -54,8 +54,8 @@ public class ManyToManyRelationshipFactory<
   @NonNull private final BiConsumer<P, J> setParentForJoinEntityFunction;
   @NonNull private final BiConsumer<C, J> setChildForJoinEntityFunction;
 
-  public OneToManyRelationship<P, J, ID, JID> buildParentOneToManyRelationship(){
-    return new OneToManyRelationship<>(){
+  public AbstractOneToManyAssociator<P, J, ID, JID> buildParentOneToManyRelationship(){
+    return new AbstractOneToManyAssociator<>(){
 
       @Override public Collection<J> getChildrenFromParent(@NonNull P parent) {
         return getJoinEntitiesFromParentFunction.apply(parent);
@@ -67,8 +67,8 @@ public class ManyToManyRelationshipFactory<
     };
   }
 
-  public OneToManyRelationship<C, J, ID, JID> buildChildOneToManyRelationship(){
-    return new OneToManyRelationship<>(){
+  public AbstractOneToManyAssociator<C, J, ID, JID> buildChildOneToManyRelationship(){
+    return new AbstractOneToManyAssociator<>(){
 
       @Override public Collection<J> getChildrenFromParent(@NonNull C child) {
         return getJoinEntitiesFromChildFunction.apply(child);
@@ -80,10 +80,10 @@ public class ManyToManyRelationshipFactory<
     };
   }
 
-  public ManyToManyRelationship<P, C, J, ID, JID> buildManyToManyRelationship(){
+  public AbstractManyToManyAssociator<P, C, J, ID, JID> buildManyToManyRelationship(){
     val left = buildParentOneToManyRelationship();
     val right = buildChildOneToManyRelationship();
-    return new ManyToManyRelationship<>(left, right) {
+    return new AbstractManyToManyAssociator<>(left, right) {
 
       @Override protected J createJoinEntity(@NonNull P parent, @NonNull C child) {
         return createJoinEntityFunction.apply(parent, child);

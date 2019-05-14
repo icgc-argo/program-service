@@ -34,8 +34,8 @@ import static lombok.AccessLevel.PRIVATE;
 @NoArgsConstructor(access = PRIVATE)
 public class Relationships {
 
-  public static final ManyToManyRelationship<ProgramEntity, CancerEntity, ProgramCancer, UUID, ProgramCancerId>
-      PROGRAM_CANCER_RELATIONSHIP = ManyToManyRelationshipFactory.<ProgramEntity, CancerEntity,
+  public static final AssociatorFactory<ProgramEntity, CancerEntity, ProgramCancer, UUID, ProgramCancerId>
+      PROGRAM_CANCER_RELATIONSHIP_FACTORY = AssociatorFactory.<ProgramEntity, CancerEntity,
       ProgramCancer, UUID, ProgramCancerId>builder()
       .createJoinEntityFunction(ProgramCancer::createProgramCancer)
       .getJoinEntitiesFromChildFunction(CancerEntity::getProgramCancers)
@@ -43,20 +43,26 @@ public class Relationships {
       .getChildFromJoinEntityFunction(ProgramCancer::getCancer)
       .setChildForJoinEntityFunction((cancer, programCancer) -> programCancer.setCancer(cancer))
       .setParentForJoinEntityFunction((program, programCancer) -> programCancer.setProgram(program))
-      .build()
-      .buildManyToManyRelationship();
+      .build();
 
-  public static final ManyToManyRelationship<ProgramEntity, PrimarySiteEntity,
-      ProgramPrimarySite, UUID, ProgramPrimarySiteId> PROGRAM_PRIMARY_SITE_RELATIONSHIP =
-      ManyToManyRelationshipFactory.<ProgramEntity, PrimarySiteEntity,
-      ProgramPrimarySite, UUID, ProgramPrimarySiteId>builder()
-      .createJoinEntityFunction(ProgramPrimarySite::createProgramPrimarySite)
-      .getJoinEntitiesFromChildFunction(PrimarySiteEntity::getProgramPrimarySites)
+  public static final AssociatorFactory<ProgramEntity, PrimarySiteEntity,
+        ProgramPrimarySite, UUID, ProgramPrimarySiteId> PROGRAM_PRIMARY_SITE_RELATIONSHIP_FACTORY =
+      AssociatorFactory.<ProgramEntity, PrimarySiteEntity,
+          ProgramPrimarySite, UUID, ProgramPrimarySiteId>builder()
+          .createJoinEntityFunction(ProgramPrimarySite::createProgramPrimarySite)
+          .getJoinEntitiesFromChildFunction(PrimarySiteEntity::getProgramPrimarySites)
           .getJoinEntitiesFromParentFunction(ProgramEntity::getProgramPrimarySites)
-      .getChildFromJoinEntityFunction(ProgramPrimarySite::getPrimarySite)
-      .setChildForJoinEntityFunction((primarySite, programPrimarySite) -> programPrimarySite.setPrimarySite(primarySite))
-      .setParentForJoinEntityFunction((primarySite, programPrimarySite) -> programPrimarySite.setProgram(primarySite))
-      .build()
-      .buildManyToManyRelationship();
+          .getChildFromJoinEntityFunction(ProgramPrimarySite::getPrimarySite)
+          .setChildForJoinEntityFunction((primarySite, programPrimarySite) -> programPrimarySite.setPrimarySite(primarySite))
+          .setParentForJoinEntityFunction((primarySite, programPrimarySite) -> programPrimarySite.setProgram(primarySite))
+          .build();
+
+  public static final AbstractManyToManyAssociator<ProgramEntity, CancerEntity, ProgramCancer, UUID, ProgramCancerId>
+      PROGRAM_CANCER_RELATIONSHIP = PROGRAM_CANCER_RELATIONSHIP_FACTORY.buildManyToManyRelationship();
+
+  public static final AbstractManyToManyAssociator<ProgramEntity, PrimarySiteEntity,
+        ProgramPrimarySite, UUID, ProgramPrimarySiteId> PROGRAM_PRIMARY_SITE_RELATIONSHIP =
+      PROGRAM_PRIMARY_SITE_RELATIONSHIP_FACTORY.buildManyToManyRelationship();
+
 
 }

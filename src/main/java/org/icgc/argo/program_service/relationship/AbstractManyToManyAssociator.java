@@ -40,32 +40,35 @@ import static java.util.stream.Collectors.toUnmodifiableSet;
 
 //TODO: [rtisma] convert to concreate class called ManyToManyLambdaRelationship, where it implements the ManyToManyRelationship interface. Having that interface will allow for decoration in the future. The interface should not be bounded to IdentifiableEntity
 @RequiredArgsConstructor
-public abstract class ManyToManyRelationship<
+public abstract class AbstractManyToManyAssociator<
     P extends IdentifiableEntity<ID>,
     C extends IdentifiableEntity<ID>,
     J extends IdentifiableEntity<JID> ,
-    ID, JID> {
+    ID, JID> implements Associatior<P, C, ID> {
 
-  @NonNull private final OneToManyRelationship<P, J, ID, JID> oneParentToManyJoinRelationship;
-  @NonNull private final OneToManyRelationship<C, J, ID, JID> oneChildToManyJoinRelationship;
+  @NonNull private final AbstractOneToManyAssociator<P, J, ID, JID> oneParentToManyJoinRelationship;
+  @NonNull private final AbstractOneToManyAssociator<C, J, ID, JID> oneChildToManyJoinRelationship;
 
-  /**
-   * Associate the {@param parent} with the {@param children}
-   */
   //TODO: [rtisma] check parent does not already have those children
-  public P associate(P parent, Collection<C> children){
-    children.forEach(child -> {
-      val join = createJoinEntity(parent, child);
-      oneParentToManyJoinRelationship.associate(parent, join);
-      oneChildToManyJoinRelationship.associate(child, join);
-    });
+  @Override
+  public P associate(P parent, C child) {
+    val join = createJoinEntity(parent, child);
+    oneParentToManyJoinRelationship.associate(parent, join);
+    oneChildToManyJoinRelationship.associate(child, join);
     return parent;
+  }
+
+  @Override
+  public Collection<P> disassociate(Collection<P> parents, Collection<ID> childIdsToDisassociate) {
+    parents.forEach(p -> disassociate(p, childIdsToDisassociate));
+    return parents;
   }
 
   /**
    * Disassociate children matching ids contained in {@param childIdsToDisassociate} for the {@param parent}
    */
   //TODO: [rtisma] check parent has all the children from the id list
+  @Override
   public P disassociate(P parent, Collection<ID> childIdsToDisassociate){
     val parentJoinEntities = getJoinEntitiesFromParent(parent);
 

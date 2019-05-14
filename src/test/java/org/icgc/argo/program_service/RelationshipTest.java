@@ -21,19 +21,26 @@ package org.icgc.argo.program_service;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
+import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
+import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
+import org.icgc.argo.program_service.relationship.Associatior;
 import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 import org.testcontainers.shaded.org.apache.commons.lang.NotImplementedException;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.argo.program_service.RandomGenerator.createRandomGenerator;
 import static org.icgc.argo.program_service.relationship.Relationships.PROGRAM_CANCER_RELATIONSHIP;
+import static org.icgc.argo.program_service.relationship.Relationships.PROGRAM_PRIMARY_SITE_RELATIONSHIP;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToImmutableList;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.CollectionUtils.repeatedCallsOf;
@@ -57,8 +64,6 @@ public class RelationshipTest {
 	@BeforeEach
 	public void beforeTest(){
 		this.randomGenerator = createRandomGenerator("relationship-test");
-		this.programs = repeatedCallsOf(this::generateRandomProgramEntity, 3);
-		this.cancers = repeatedCallsOf(this::generateRandomCancerEntity, 3);
 	}
 
 	private ProgramEntity generateRandomProgramEntity(){
@@ -73,6 +78,12 @@ public class RelationshipTest {
 		return new CancerEntity()
 				.setId(randomGenerator.randomUUID())
 				.setName(randomGenerator.randomAsciiString(8));
+	}
+
+	private PrimarySiteEntity generateRandomPrimarySiteEntity(){
+		return new PrimarySiteEntity()
+				.setId(randomGenerator.randomUUID())
+				.setName(randomGenerator.randomAsciiString(9));
 	}
 
 	@Test
@@ -123,61 +134,80 @@ public class RelationshipTest {
 		throw new NotImplementedException("the test one2ManyAssociate_someChildrenAlreadyAssociated_Conflict is not implemented yet");
 	}
 
-
 	@Test
 	public void one2ManyDisassociate_allChildrenAssociated_Success(){
-		// Assert all programs are not associated with any cancers, and vice-versa
-		programs.forEach(x -> assertThat(x.getProgramCancers()).isEmpty());
-		cancers.forEach(x -> assertThat(x.getProgramCancers()).isEmpty());
+	}
+
+	private <P extends IdentifiableEntity<ID>, C extends IdentifiableEntity<ID>, J, ID>
+	void runMany2ManyAssociation_AllChildrenAssociated_SuccessTest(
+			Associatior<P, C, ID> associator,
+			Supplier<P> randomParentGeneratorFunction,
+			Supplier<C> randomChildGeneratorFunction,
+			Function<P, Collection<J>> getJoinEntitiesFromParentFunction,
+			Function<C, Collection<J>> getJoinEntitiesFromChildFunction,
+			Function<J, P> getParentFromJoinEntityFunction,
+			Function<J, C> getChildFromJoinEntityFunction ){
+
+		// Generate data
+		val parents = repeatedCallsOf(randomParentGeneratorFunction, 3);
+		val children = repeatedCallsOf(randomChildGeneratorFunction, 3);
+
+		// Assert all parents are not associated with any children, and vice-versa
+		parents.forEach(x -> assertThat(getJoinEntitiesFromParentFunction.apply(x)).isEmpty());
+		children.forEach(x -> assertThat(getJoinEntitiesFromChildFunction.apply(x)).isEmpty());
 
 		// Create relationships
-		PROGRAM_CANCER_RELATIONSHIP.associate(programs.get(0), cancers); // Cancer 0, 1 and 2
-		PROGRAM_CANCER_RELATIONSHIP.associate(programs.get(1), cancers.subList(0,1)); // Cancer 0
-		PROGRAM_CANCER_RELATIONSHIP.associate(programs.get(2), cancers.subList(0,2)); // Cancer 0 and 1
+		associator.associate(parents.get(0), children); // Child 0, 1 and 2
+		associator.associate(parents.get(1), children.subList(0,1)); // Child 0
+		associator.associate(parents.get(2), children.subList(0,2)); // Child 0 and 1
 
 		// Disassociate relationships
-		val cancerIds = mapToImmutableList(cancers, IdentifiableEntity::getId);
-		val programIds = mapToImmutableList(programs, IdentifiableEntity::getId);
+		val childIds = mapToImmutableList(children, IdentifiableEntity::getId);
+		val parentIds = mapToImmutableList(parents, IdentifiableEntity::getId);
 
-		// Disassociate the Cancer 0 and 1 for Program 0
-		PROGRAM_CANCER_RELATIONSHIP.disassociate(programs.get(0), cancerIds.subList(0,2));
+		// Disassociate the Child 0 and 1 for Program 0
+		associator.disassociate(parents.get(0), childIds.subList(0,2));
 
-		// Assert only 1 left for Program 0 (i.e Cancer 2)
-		assertThat(programs.get(0).getProgramCancers()).hasSize(1);
-		val actualCancerIds = mapToImmutableList(programs.get(0).getProgramCancers(), x -> x.getCancer().getId());
-		assertThat(actualCancerIds).containsExactlyInAnyOrderElementsOf(cancerIds.subList(2,3));
+		// Assert only 1 left for Parent 0 (i.e Child 2)
+		assertThat(getJoinEntitiesFromParentFunction.apply(parents.get(0))).hasSize(1);
+		val actualChildIds = mapToImmutableList(getJoinEntitiesFromParentFunction.apply(parents.get(0)),
+				x -> getChildFromJoinEntityFunction.apply(x).getId());
+		assertThat(actualChildIds).containsExactlyInAnyOrderElementsOf(childIds.subList(2,3));
 
-		// Assert Cancer 0 has Program 1 and 2
-    assertThat(cancers.get(0).getProgramCancers()).hasSize(2);
-    val actualProgramIds = mapToImmutableList(cancers.get(0).getProgramCancers(), x -> x.getProgram().getId());
-    assertThat(actualProgramIds).containsExactlyInAnyOrderElementsOf(programIds.subList(1,3));
+		// Assert Child 0 has Parent 1 and 2
+    assertThat(getJoinEntitiesFromChildFunction.apply(children.get(0))).hasSize(2);
+    val actualParentIds = mapToImmutableList(getJoinEntitiesFromChildFunction.apply(children.get(0)),
+				x -> getParentFromJoinEntityFunction.apply(x).getId());
+    assertThat(actualParentIds).containsExactlyInAnyOrderElementsOf(parentIds.subList(1,3));
 
-    // Assert Cancer 1 has Program 2
-		assertThat(cancers.get(1).getProgramCancers()).hasSize(1);
-		val actualProgramIds2 = mapToImmutableList(cancers.get(1).getProgramCancers(), x -> x.getProgram().getId());
-		assertThat(actualProgramIds2).containsExactlyInAnyOrderElementsOf(programIds.subList(2,3));
+    // Assert Child 1 has Parent 2
+		assertThat(getJoinEntitiesFromChildFunction.apply(children.get(1))).hasSize(1);
+		val actualParentIds2 = mapToImmutableList(getJoinEntitiesFromChildFunction.apply(children.get(1)),
+				x -> getParentFromJoinEntityFunction.apply(x).getId());
+		assertThat(actualParentIds2).containsExactlyInAnyOrderElementsOf(parentIds.subList(2,3));
 
-		// Assert Cancer 2 has Program 0
-		assertThat(cancers.get(2).getProgramCancers()).hasSize(1);
-		val actualProgramIds3 = mapToImmutableList(cancers.get(2).getProgramCancers(), x -> x.getProgram().getId());
-		assertThat(actualProgramIds3).containsExactlyInAnyOrderElementsOf(programIds.subList(0,1));
+		// Assert Child 2 has Parent 0
+		assertThat(getJoinEntitiesFromChildFunction.apply(children.get(2))).hasSize(1);
+		val actualParentIds3 = mapToImmutableList(getJoinEntitiesFromChildFunction.apply(children.get(2)),
+				x -> getParentFromJoinEntityFunction.apply(x).getId());
+		assertThat(actualParentIds3).containsExactlyInAnyOrderElementsOf(parentIds.subList(0,1));
 
-		// Disassociate the Cancer 2 from Program 0
-		PROGRAM_CANCER_RELATIONSHIP.disassociate(programs.get(0), cancerIds.subList(2,3));
+		// Disassociate the Child 2 from Parent 0
+		associator.disassociate(parents.get(0), childIds.subList(2,3));
 
-		// Assert Cancer 2 has no more programs
-		assertThat(cancers.get(2).getProgramCancers()).isEmpty();
+		// Assert Child 2 has no more parents
+		assertThat(getJoinEntitiesFromChildFunction.apply(children.get(2))).isEmpty();
 
-		// Assert Program 0 has no more associated cancers
-		assertThat(programs.get(0).getProgramCancers()).isEmpty();
+		// Assert Parent 0 has no more associated children
+		assertThat(getJoinEntitiesFromParentFunction.apply(parents.get(0))).isEmpty();
 
-		// Disassociate all cancers from Program 1 and 2
-		PROGRAM_CANCER_RELATIONSHIP.disassociate(programs.get(1), cancerIds.subList(0,1));
-		PROGRAM_CANCER_RELATIONSHIP.disassociate(programs.get(2), cancerIds.subList(0,2));
+		// Disassociate all children from Parent 1 and 2
+		associator.disassociate(parents.get(1), childIds.subList(0,1));
+		associator.disassociate(parents.get(2), childIds.subList(0,2));
 
-		// Assert all programs do not have cancers associated do not have any associated cancers, and vice-versa
-		programs.forEach(x -> assertThat(x.getProgramCancers()).isEmpty());
-		cancers.forEach(x -> assertThat(x.getProgramCancers()).isEmpty());
+		// Assert all parents do not have children associated do not have any associated children, and vice-versa
+		parents.forEach(x -> assertThat(getJoinEntitiesFromParentFunction.apply(x)).isEmpty());
+		children.forEach(x -> assertThat(getJoinEntitiesFromChildFunction.apply(x)).isEmpty());
 	}
 
 
@@ -190,7 +220,21 @@ public class RelationshipTest {
 
 	@Test
 	public void many2ManyAssociate_unassociatedChildren_Success(){
-		throw new NotImplementedException("the test many2ManyAssociate_unassociatedChildren_Success is not implemented yet");
+		runMany2ManyAssociation_AllChildrenAssociated_SuccessTest(PROGRAM_CANCER_RELATIONSHIP,
+				this::generateRandomProgramEntity,
+				this::generateRandomCancerEntity,
+				ProgramEntity::getProgramCancers,
+				CancerEntity::getProgramCancers,
+				ProgramCancer::getProgram,
+				ProgramCancer::getCancer);
+
+		runMany2ManyAssociation_AllChildrenAssociated_SuccessTest(PROGRAM_PRIMARY_SITE_RELATIONSHIP,
+				this::generateRandomProgramEntity,
+				this::generateRandomPrimarySiteEntity,
+				ProgramEntity::getProgramPrimarySites,
+				PrimarySiteEntity::getProgramPrimarySites,
+				ProgramPrimarySite::getProgram,
+				ProgramPrimarySite::getPrimarySite);
 	}
 
 
