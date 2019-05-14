@@ -22,7 +22,7 @@ import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
 
 import java.util.Collection;
 
-public interface Associatior<P, C extends IdentifiableEntity<CID>, CID>{
+public interface Associator<P, C extends IdentifiableEntity<CID>, CID>{
 
   /**
    * Associate the {@param child} with the {@param parent}

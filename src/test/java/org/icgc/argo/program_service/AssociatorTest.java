@@ -25,49 +25,95 @@ import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
-import org.icgc.argo.program_service.relationship.Associatior;
-import org.junit.Ignore;
+import org.icgc.argo.program_service.relationship.Associator;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 import org.testcontainers.shaded.org.apache.commons.lang.NotImplementedException;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.argo.program_service.RandomGenerator.createRandomGenerator;
-import static org.icgc.argo.program_service.relationship.Relationships.PROGRAM_CANCER_RELATIONSHIP;
-import static org.icgc.argo.program_service.relationship.Relationships.PROGRAM_PRIMARY_SITE_RELATIONSHIP;
+import static org.icgc.argo.program_service.relationship.Associators.PROGRAM_CANCER_ASSOCIATOR;
+import static org.icgc.argo.program_service.relationship.Associators.PROGRAM_PRIMARY_SITE_ASSOCIATOR;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToImmutableList;
-import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.CollectionUtils.repeatedCallsOf;
 
-public class RelationshipTest {
-
-  // one2ManyAssociate_unassociatedChildren_Success
-  // one2ManyAssociate_someChildrenAlreadyAssociated_Conflict
-  // one2ManyDisassociate_allChildrenAssociated_Success
-  // one2ManyDisassociate_someChildrenNotAssociated_NotFound
-
-  // many2ManyAssociate_unassociatedChildren_Success
-  // many2ManyAssociate_someChildrenAlreadyAssociated_Conflict
-  // many2ManyDisassociate_allChildrenAssociated_Success
-  // many2ManyDisassociate_someChildrenNotAssociated_NotFound
+public class AssociatorTest {
 
 	private RandomGenerator randomGenerator;
-	private List<ProgramEntity> programs;
-	private List<CancerEntity> cancers;
 
 	@BeforeEach
 	public void beforeTest(){
 		this.randomGenerator = createRandomGenerator("relationship-test");
 	}
 
+	/**
+	 * Tests association and disassociation of ProgramEntity, ProgramCancer and CancerEntity
+	 */
+	@Test
+	public void programCancerMany2ManyAssociation_unassociated_Success(){
+		runMany2ManyAssociation_AllChildrenAssociated_SuccessTest(PROGRAM_CANCER_ASSOCIATOR,
+				this::generateRandomProgramEntity,
+				this::generateRandomCancerEntity,
+				ProgramEntity::getProgramCancers,
+				CancerEntity::getProgramCancers,
+				ProgramCancer::getProgram,
+				ProgramCancer::getCancer);
+
+	}
+
+	/**
+	 * Tests association and disassociation of ProgramEntity, ProgramPrimarySite and PrimarySiteEntity
+	 */
+	@Test
+	public void programPrimarySiteMany2ManyAssociation_unassociated_Success(){
+		runMany2ManyAssociation_AllChildrenAssociated_SuccessTest(PROGRAM_PRIMARY_SITE_ASSOCIATOR,
+				this::generateRandomProgramEntity,
+				this::generateRandomPrimarySiteEntity,
+				ProgramEntity::getProgramPrimarySites,
+				PrimarySiteEntity::getProgramPrimarySites,
+				ProgramPrimarySite::getProgram,
+				ProgramPrimarySite::getPrimarySite);
+	}
+
+	@Test
+	@Disabled
+	public void one2ManyAssociate_someChildrenAlreadyAssociated_Conflict(){
+		throw new NotImplementedException("the test one2ManyAssociate_someChildrenAlreadyAssociated_Conflict is not implemented yet");
+	}
+
+	@Test
+	@Disabled
+	public void one2ManyDisassociate_someChildrenNotAssociated_NotFound(){
+		throw new NotImplementedException("the test one2ManyDisassociate_someChildrenNotAssociated_NotFound is not implemented yet");
+	}
+
+	@Test
+	@Disabled
+	public void many2ManyAssociate_someChildrenAlreadyAssociated_Conflict(){
+		throw new NotImplementedException("the test many2ManyAssociate_someChildrenAlreadyAssociated_Conflict is not implemented yet");
+	}
+
+
+	@Test
+	@Disabled
+	public void many2ManyDisassociate_allChildrenAssociated_Success(){
+		throw new NotImplementedException("the test many2ManyDisassociate_allChildrenAssociated_Success is not implemented yet");
+	}
+
+
+	@Test
+	@Disabled
+	public void many2ManyDisassociate_someChildrenNotAssociated_NotFound(){
+		throw new NotImplementedException("the test many2ManyDisassociate_someChildrenNotAssociated_NotFound is not implemented yet");
+	}
+
 	private ProgramEntity generateRandomProgramEntity(){
-	  return new ProgramEntity()
+		return new ProgramEntity()
 				.setName(randomGenerator.randomAsciiString(7))
 				.setId(randomGenerator.randomUUID())
 				.setMembershipType(randomGenerator.randomEnumOf(MembershipType.class))
@@ -86,61 +132,12 @@ public class RelationshipTest {
 				.setName(randomGenerator.randomAsciiString(9));
 	}
 
-	@Test
-	public void one2ManyAssociate_unassociatedChildren_Success(){
-		// Assert all programs are not associated with any cancers
-	  programs.forEach(x -> assertThat(x.getProgramCancers()).isEmpty());
-	  cancers.forEach(x -> assertThat(x.getProgramCancers()).isEmpty());
-
-	  // Create relationships
-		PROGRAM_CANCER_RELATIONSHIP.associate(programs.get(0), cancers);
-		PROGRAM_CANCER_RELATIONSHIP.associate(programs.get(1), cancers.subList(0,1));
-		PROGRAM_CANCER_RELATIONSHIP.associate(programs.get(2), cancers.subList(0,2));
-
-		// Assert first program has all 3 cancers
-		assertThat(programs.get(0).getProgramCancers()).hasSize(3);
-		assertThat(mapToList(programs.get(0).getProgramCancers(), ProgramCancer::getCancer))
-				.containsExactlyInAnyOrderElementsOf(cancers);
-
-		// Assert second program has the first cancer
-		assertThat(programs.get(1).getProgramCancers()).hasSize(1);
-		assertThat(mapToList(programs.get(1).getProgramCancers(), ProgramCancer::getCancer))
-				.containsExactlyInAnyOrderElementsOf(cancers.subList(0,1));
-
-		// Assert third program has the first 2 cancers
-		assertThat(programs.get(2).getProgramCancers()).hasSize(2);
-		assertThat(mapToList(programs.get(2).getProgramCancers(), ProgramCancer::getCancer))
-				.containsExactlyInAnyOrderElementsOf(cancers.subList(0,2));
-
-		// Assert first cancer has 3 programs
-		assertThat(cancers.get(0).getProgramCancers()).hasSize(3);
-		assertThat(mapToList(cancers.get(0).getProgramCancers(), ProgramCancer::getProgram))
-				.containsExactlyInAnyOrderElementsOf(programs);
-
-		// Assert second cancer has first and third programs
-		assertThat(cancers.get(1).getProgramCancers()).hasSize(2);
-		assertThat(mapToList(cancers.get(1).getProgramCancers(), ProgramCancer::getProgram))
-				.containsExactlyInAnyOrderElementsOf(ImmutableList.of(programs.get(0), programs.get(2)));
-
-		// Assert third cancer has only the first program
-		assertThat(cancers.get(2).getProgramCancers()).hasSize(1);
-		assertThat(mapToList(cancers.get(2).getProgramCancers(), ProgramCancer::getProgram))
-				.containsExactlyInAnyOrderElementsOf(ImmutableList.of(programs.get(0)));
-	}
-
-	@Test
-	@Ignore
-	public void one2ManyAssociate_someChildrenAlreadyAssociated_Conflict(){
-		throw new NotImplementedException("the test one2ManyAssociate_someChildrenAlreadyAssociated_Conflict is not implemented yet");
-	}
-
-	@Test
-	public void one2ManyDisassociate_allChildrenAssociated_Success(){
-	}
-
-	private <P extends IdentifiableEntity<ID>, C extends IdentifiableEntity<ID>, J, ID>
+	/**
+	 * This test creates associations, asserts them, and then disassociates them and asserts them
+	 */
+	private static <P extends IdentifiableEntity<ID>, C extends IdentifiableEntity<ID>, J, ID>
 	void runMany2ManyAssociation_AllChildrenAssociated_SuccessTest(
-			Associatior<P, C, ID> associator,
+			Associator<P, C, ID> associator,
 			Supplier<P> randomParentGeneratorFunction,
 			Supplier<C> randomChildGeneratorFunction,
 			Function<P, Collection<J>> getJoinEntitiesFromParentFunction,
@@ -175,12 +172,12 @@ public class RelationshipTest {
 		assertThat(actualChildIds).containsExactlyInAnyOrderElementsOf(childIds.subList(2,3));
 
 		// Assert Child 0 has Parent 1 and 2
-    assertThat(getJoinEntitiesFromChildFunction.apply(children.get(0))).hasSize(2);
-    val actualParentIds = mapToImmutableList(getJoinEntitiesFromChildFunction.apply(children.get(0)),
+		assertThat(getJoinEntitiesFromChildFunction.apply(children.get(0))).hasSize(2);
+		val actualParentIds = mapToImmutableList(getJoinEntitiesFromChildFunction.apply(children.get(0)),
 				x -> getParentFromJoinEntityFunction.apply(x).getId());
-    assertThat(actualParentIds).containsExactlyInAnyOrderElementsOf(parentIds.subList(1,3));
+		assertThat(actualParentIds).containsExactlyInAnyOrderElementsOf(parentIds.subList(1,3));
 
-    // Assert Child 1 has Parent 2
+		// Assert Child 1 has Parent 2
 		assertThat(getJoinEntitiesFromChildFunction.apply(children.get(1))).hasSize(1);
 		val actualParentIds2 = mapToImmutableList(getJoinEntitiesFromChildFunction.apply(children.get(1)),
 				x -> getParentFromJoinEntityFunction.apply(x).getId());
@@ -209,54 +206,5 @@ public class RelationshipTest {
 		parents.forEach(x -> assertThat(getJoinEntitiesFromParentFunction.apply(x)).isEmpty());
 		children.forEach(x -> assertThat(getJoinEntitiesFromChildFunction.apply(x)).isEmpty());
 	}
-
-
-	@Test
-	@Ignore
-	public void one2ManyDisassociate_someChildrenNotAssociated_NotFound(){
-		throw new NotImplementedException("the test one2ManyDisassociate_someChildrenNotAssociated_NotFound is not implemented yet");
-	}
-
-
-	@Test
-	public void many2ManyAssociate_unassociatedChildren_Success(){
-		runMany2ManyAssociation_AllChildrenAssociated_SuccessTest(PROGRAM_CANCER_RELATIONSHIP,
-				this::generateRandomProgramEntity,
-				this::generateRandomCancerEntity,
-				ProgramEntity::getProgramCancers,
-				CancerEntity::getProgramCancers,
-				ProgramCancer::getProgram,
-				ProgramCancer::getCancer);
-
-		runMany2ManyAssociation_AllChildrenAssociated_SuccessTest(PROGRAM_PRIMARY_SITE_RELATIONSHIP,
-				this::generateRandomProgramEntity,
-				this::generateRandomPrimarySiteEntity,
-				ProgramEntity::getProgramPrimarySites,
-				PrimarySiteEntity::getProgramPrimarySites,
-				ProgramPrimarySite::getProgram,
-				ProgramPrimarySite::getPrimarySite);
-	}
-
-
-	@Test
-	@Ignore
-	public void many2ManyAssociate_someChildrenAlreadyAssociated_Conflict(){
-		throw new NotImplementedException("the test many2ManyAssociate_someChildrenAlreadyAssociated_Conflict is not implemented yet");
-	}
-
-
-	@Test
-	public void many2ManyDisassociate_allChildrenAssociated_Success(){
-		throw new NotImplementedException("the test many2ManyDisassociate_allChildrenAssociated_Success is not implemented yet");
-	}
-
-
-	@Test
-	@Ignore
-	public void many2ManyDisassociate_someChildrenNotAssociated_NotFound(){
-		throw new NotImplementedException("the test many2ManyDisassociate_someChildrenNotAssociated_NotFound is not implemented yet");
-	}
-
-
 
 }

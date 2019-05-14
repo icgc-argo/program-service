@@ -32,10 +32,10 @@ import java.util.UUID;
 import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
-public class Relationships {
+public class Associators {
 
   public static final AssociatorFactory<ProgramEntity, CancerEntity, ProgramCancer, UUID, ProgramCancerId>
-      PROGRAM_CANCER_RELATIONSHIP_FACTORY = AssociatorFactory.<ProgramEntity, CancerEntity,
+      PROGRAM_CANCER_ASSOCIATOR_FACTORY = AssociatorFactory.<ProgramEntity, CancerEntity,
       ProgramCancer, UUID, ProgramCancerId>builder()
       .createJoinEntityFunction(ProgramCancer::createProgramCancer)
       .getJoinEntitiesFromChildFunction(CancerEntity::getProgramCancers)
@@ -46,7 +46,7 @@ public class Relationships {
       .build();
 
   public static final AssociatorFactory<ProgramEntity, PrimarySiteEntity,
-        ProgramPrimarySite, UUID, ProgramPrimarySiteId> PROGRAM_PRIMARY_SITE_RELATIONSHIP_FACTORY =
+        ProgramPrimarySite, UUID, ProgramPrimarySiteId> PROGRAM_PRIMARY_SITE_ASSOCIATOR_FACTORY =
       AssociatorFactory.<ProgramEntity, PrimarySiteEntity,
           ProgramPrimarySite, UUID, ProgramPrimarySiteId>builder()
           .createJoinEntityFunction(ProgramPrimarySite::createProgramPrimarySite)
@@ -57,12 +57,12 @@ public class Relationships {
           .setParentForJoinEntityFunction((primarySite, programPrimarySite) -> programPrimarySite.setProgram(primarySite))
           .build();
 
-  public static final AbstractManyToManyAssociator<ProgramEntity, CancerEntity, ProgramCancer, UUID, ProgramCancerId>
-      PROGRAM_CANCER_RELATIONSHIP = PROGRAM_CANCER_RELATIONSHIP_FACTORY.buildManyToManyRelationship();
+  public static final ManyToManyAssociator<ProgramEntity, CancerEntity, ProgramCancer, UUID, ProgramCancerId>
+      PROGRAM_CANCER_ASSOCIATOR = PROGRAM_CANCER_ASSOCIATOR_FACTORY.buildManyToManyRelationship();
 
-  public static final AbstractManyToManyAssociator<ProgramEntity, PrimarySiteEntity,
-        ProgramPrimarySite, UUID, ProgramPrimarySiteId> PROGRAM_PRIMARY_SITE_RELATIONSHIP =
-      PROGRAM_PRIMARY_SITE_RELATIONSHIP_FACTORY.buildManyToManyRelationship();
+  public static final ManyToManyAssociator<ProgramEntity, PrimarySiteEntity,
+          ProgramPrimarySite, UUID, ProgramPrimarySiteId> PROGRAM_PRIMARY_SITE_ASSOCIATOR =
+      PROGRAM_PRIMARY_SITE_ASSOCIATOR_FACTORY.buildManyToManyRelationship();
 
 
 }

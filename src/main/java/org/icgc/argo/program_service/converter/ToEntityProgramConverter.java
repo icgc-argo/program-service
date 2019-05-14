@@ -17,8 +17,8 @@ import org.mapstruct.MappingTarget;
 import java.util.Collection;
 import java.util.Set;
 
-import static org.icgc.argo.program_service.relationship.Relationships.PROGRAM_CANCER_RELATIONSHIP;
-import static org.icgc.argo.program_service.relationship.Relationships.PROGRAM_PRIMARY_SITE_RELATIONSHIP;
+import static org.icgc.argo.program_service.relationship.Associators.PROGRAM_CANCER_ASSOCIATOR;
+import static org.icgc.argo.program_service.relationship.Associators.PROGRAM_PRIMARY_SITE_ASSOCIATOR;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class } )
 public interface ToEntityProgramConverter {
@@ -39,10 +39,10 @@ public interface ToEntityProgramConverter {
   @AfterMapping
   default void updateProgramRelationships(Program p, @MappingTarget ProgramEntity programEntity){
     val cancerEntities = cancersToCancerEntities(programToCancers(p));
-    PROGRAM_CANCER_RELATIONSHIP.associate(programEntity, cancerEntities);
+    PROGRAM_CANCER_ASSOCIATOR.associate(programEntity, cancerEntities);
 
     val primarySiteEntities = primarySitesToPrimarySiteEntities(programToPrimarySites(p));
-    PROGRAM_PRIMARY_SITE_RELATIONSHIP.associate(programEntity, primarySiteEntities);
+    PROGRAM_PRIMARY_SITE_ASSOCIATOR.associate(programEntity, primarySiteEntities);
   }
 
   /**

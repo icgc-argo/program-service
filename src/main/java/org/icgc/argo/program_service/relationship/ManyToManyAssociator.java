@@ -18,12 +18,15 @@
 
 package org.icgc.argo.program_service.relationship;
 
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
 
 import java.util.Collection;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
@@ -39,15 +42,19 @@ import static java.util.stream.Collectors.toUnmodifiableSet;
  */
 
 //TODO: [rtisma] convert to concreate class called ManyToManyLambdaRelationship, where it implements the ManyToManyRelationship interface. Having that interface will allow for decoration in the future. The interface should not be bounded to IdentifiableEntity
+@Builder
 @RequiredArgsConstructor
-public abstract class AbstractManyToManyAssociator<
+public class ManyToManyAssociator<
     P extends IdentifiableEntity<ID>,
     C extends IdentifiableEntity<ID>,
     J extends IdentifiableEntity<JID> ,
-    ID, JID> implements Associatior<P, C, ID> {
+    ID, JID> implements Associator<P, C, ID> {
 
-  @NonNull private final AbstractOneToManyAssociator<P, J, ID, JID> oneParentToManyJoinRelationship;
-  @NonNull private final AbstractOneToManyAssociator<C, J, ID, JID> oneChildToManyJoinRelationship;
+  @NonNull private final OneToManyAssociator<P, J, ID, JID> oneParentToManyJoinRelationship;
+  @NonNull private final OneToManyAssociator<C, J, ID, JID> oneChildToManyJoinRelationship;
+  @NonNull private final BiFunction<P, C, J> createJoinEntityFunction;
+  @NonNull private final Function<P, Collection<J>> getJoinEntitiesFromParentFunction;
+  @NonNull private final Function<J, C> getChildFromJoinEntityFunction;
 
   //TODO: [rtisma] check parent does not already have those children
   @Override
@@ -90,16 +97,22 @@ public abstract class AbstractManyToManyAssociator<
   /**
    * Create a join entity (J) using the parent (P) and child (C)
    */
-  protected abstract J createJoinEntity(P parent, C child);
+  protected J createJoinEntity(P parent, C child){
+    return createJoinEntityFunction.apply(parent, child);
+  }
 
   /**
    * Extract the join entities (J) from the parent entity (P)
    */
-  protected abstract Collection<J> getJoinEntitiesFromParent(P parent);
+  protected Collection<J> getJoinEntitiesFromParent(@NonNull P parent) {
+    return getJoinEntitiesFromParentFunction.apply(parent);
+  }
 
   /**
    * Extract the child entity (C) from the join entity (J)
    */
-  protected abstract C getChildFromJoinEntity(J joinEntity);
+  protected C getChildFromJoinEntity(@NonNull J joinEntity) {
+    return getChildFromJoinEntityFunction.apply(joinEntity);
+  }
 
 }

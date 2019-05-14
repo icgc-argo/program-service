@@ -18,10 +18,15 @@
 
 package org.icgc.argo.program_service.relationship;
 
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
 
 import java.util.Collection;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * This abstract class manages relationships between a parent and its child entities in a OneToMany relationship.
@@ -35,16 +40,22 @@ import java.util.Collection;
  * @param <CID> child entity ID type
  */
 //TODO: [rtisma] replace this with a concrete Lamba implementation, of the interface OneToManyRelationship. The interface should not be bounded by IdentifiableEntity
-public abstract class AbstractOneToManyAssociator<
+
+@Builder
+@RequiredArgsConstructor
+public class OneToManyAssociator<
     P extends IdentifiableEntity<PID>,
     C extends IdentifiableEntity<CID>,
-    PID, CID> implements Associatior<P, C, CID> {
+    PID, CID> implements Associator<P, C, CID> {
+
+  @NonNull private final Function<P, Collection<C>> getChildrenFromParentFunction;
+  @NonNull private final BiConsumer<P, C> setParentFieldForChildFunction;
 
   //TODO: [rtisma] check that the parent doesnt already have the child
   @Override
   public P associate(P parent, C child){
     getChildrenFromParent(parent).add(child);
-    setParentForChild(child, parent);
+    setParentFieldForChild(parent, child);
     return parent;
   }
 
@@ -68,18 +79,22 @@ public abstract class AbstractOneToManyAssociator<
   private void disassociateSelectedChildren(Collection<C> children, Collection<CID> selectedChildIds ){
     children.stream()
         .filter(x -> selectedChildIds.contains(x.getId()))
-        .forEach(x -> setParentForChild(x, null) );
+        .forEach(x -> setParentFieldForChild( null, x) );
     children.removeIf(x -> selectedChildIds.contains(x.getId()));
   }
 
   /**
    * Extract the children from the {@param parent}
    */
-  public abstract Collection<C> getChildrenFromParent(P parent);
+  public Collection<C> getChildrenFromParent(@NonNull P parent) {
+    return getChildrenFromParentFunction.apply(parent);
+  }
 
   /**
    * Set the {@param parent} with the {@param child}
    */
-  protected abstract void setParentForChild(C child, P parent);
+  protected void setParentFieldForChild(P parent, @NonNull C child) {
+    setParentFieldForChildFunction.accept(parent, child);
+  }
 
 }

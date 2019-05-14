@@ -54,49 +54,29 @@ public class AssociatorFactory<
   @NonNull private final BiConsumer<P, J> setParentForJoinEntityFunction;
   @NonNull private final BiConsumer<C, J> setChildForJoinEntityFunction;
 
-  public AbstractOneToManyAssociator<P, J, ID, JID> buildParentOneToManyRelationship(){
-    return new AbstractOneToManyAssociator<>(){
-
-      @Override public Collection<J> getChildrenFromParent(@NonNull P parent) {
-        return getJoinEntitiesFromParentFunction.apply(parent);
-      }
-
-      @Override protected void setParentForChild(@NonNull J joinEntity, P parent) {
-        setParentForJoinEntityFunction.accept(parent, joinEntity);
-      }
-    };
+  public OneToManyAssociator<P, J, ID, JID> buildParentOneToManyRelationship(){
+    return OneToManyAssociator.<P, J, ID, JID>builder()
+        .getChildrenFromParentFunction(getJoinEntitiesFromParentFunction)
+        .setParentFieldForChildFunction(setParentForJoinEntityFunction)
+        .build();
   }
 
-  public AbstractOneToManyAssociator<C, J, ID, JID> buildChildOneToManyRelationship(){
-    return new AbstractOneToManyAssociator<>(){
-
-      @Override public Collection<J> getChildrenFromParent(@NonNull C child) {
-        return getJoinEntitiesFromChildFunction.apply(child);
-      }
-
-      @Override protected void setParentForChild(@NonNull J joinEntity, C child) {
-        setChildForJoinEntityFunction.accept(child, joinEntity);
-      }
-    };
+  public OneToManyAssociator<C, J, ID, JID> buildChildOneToManyRelationship(){
+    return OneToManyAssociator.<C, J, ID, JID>builder()
+        .getChildrenFromParentFunction(getJoinEntitiesFromChildFunction)
+        .setParentFieldForChildFunction(setChildForJoinEntityFunction)
+        .build();
   }
 
-  public AbstractManyToManyAssociator<P, C, J, ID, JID> buildManyToManyRelationship(){
+  public ManyToManyAssociator<P, C, J, ID, JID> buildManyToManyRelationship(){
     val left = buildParentOneToManyRelationship();
     val right = buildChildOneToManyRelationship();
-    return new AbstractManyToManyAssociator<>(left, right) {
-
-      @Override protected J createJoinEntity(@NonNull P parent, @NonNull C child) {
-        return createJoinEntityFunction.apply(parent, child);
-      }
-
-      @Override protected Collection<J> getJoinEntitiesFromParent(@NonNull P parent) {
-        return getJoinEntitiesFromParentFunction.apply(parent);
-      }
-
-      @Override protected C getChildFromJoinEntity(@NonNull J joinEntity) {
-        return getChildFromJoinEntityFunction.apply(joinEntity);
-      }
-    };
-
+    return ManyToManyAssociator.<P, C, J, ID, JID>builder()
+        .createJoinEntityFunction(createJoinEntityFunction)
+        .getChildFromJoinEntityFunction(getChildFromJoinEntityFunction)
+        .getJoinEntitiesFromParentFunction(getJoinEntitiesFromParentFunction)
+        .oneParentToManyJoinRelationship(left)
+        .oneChildToManyJoinRelationship(right)
+        .build();
   }
 }
