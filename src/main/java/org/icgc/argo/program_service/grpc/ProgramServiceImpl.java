@@ -1,13 +1,15 @@
 package org.icgc.argo.program_service.grpc;
 
-import com.google.common.collect.Streams;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
+import lombok.NonNull;
 import lombok.val;
 import org.icgc.argo.program_service.CreateProgramRequest;
 import org.icgc.argo.program_service.CreateProgramResponse;
 import org.icgc.argo.program_service.ListProgramsResponse;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
+import org.icgc.argo.program_service.converter.ToEntityProgramConverter;
 import org.icgc.argo.program_service.converter.ToProtoProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.icgc.argo.program_service.repository.ProgramRepository;
@@ -16,17 +18,20 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.stream.Collectors;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
   private final ProgramRepository programRepository;
   private final ToProtoProgramConverter toProtoProgramConverter;
+  private final ToEntityProgramConverter toEntityProgramConverter;
 
   @Autowired
-  public ProgramServiceImpl(ProgramRepository programRepository, ToProtoProgramConverter toProtoProgramConverter) {
+  public ProgramServiceImpl(@NonNull ProgramRepository programRepository,
+     @NonNull ToProtoProgramConverter toProtoProgramConverter,
+      @NonNull ToEntityProgramConverter toEntityProgramConverter ) {
     this.programRepository = programRepository;
     this.toProtoProgramConverter = toProtoProgramConverter;
+    this.toEntityProgramConverter = toEntityProgramConverter;
   }
 
   @Override
@@ -36,36 +41,22 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     //       (2) Set up the permissions, groups in EGO
     //       (3) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
-    val dao = toProtoProgramConverter.ProgramToProgramEntity(program);
+    val dao = toEntityProgramConverter.programToProgramEntity(program);
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     dao.setCreatedAt(now);
     dao.setUpdatedAt(now);
 
     val entity = programRepository.save(dao);
-    val response = CreateProgramResponse
-      .newBuilder()
-      .setId(toProtoProgramConverter.map(entity.getId()))
-      .setCreatedAt(toProtoProgramConverter.map(entity.getCreatedAt()))
-      .build();
+    val response = toProtoProgramConverter.programEntityToCreateProgramResponse(entity);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
 
   @Override
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
-    val programs = programRepository.findAll();
-
-    val results =
-            Streams.stream(programs)
-                    .map(toProtoProgramConverter::programEntityToProgram)
-                    .collect(Collectors.toUnmodifiableList());
-
-    val collection = ListProgramsResponse
-            .newBuilder()
-            .addAllPrograms(results)
-            .build();
-
-    responseObserver.onNext(collection);
+    val programEntities = ImmutableList.copyOf(programRepository.findAll());
+    val listProgramsResponse = toProtoProgramConverter.programEntitiesToListProgramsResponse(programEntities);
+    responseObserver.onNext(listProgramsResponse);
     responseObserver.onCompleted();
   }
 }

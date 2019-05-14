@@ -13,15 +13,12 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.icgc.argo.program_service.relationship.Relationships.PROGRAM_CANCER_RELATIONSHIP;
 import static org.icgc.argo.program_service.relationship.Relationships.PROGRAM_PRIMARY_SITE_RELATIONSHIP;
 
-@Mapper(config = ConverterConfig.class,
-    uses = { CommonConverter.class },
-    unmappedTargetPolicy = ReportingPolicy.ERROR)
+@Mapper(config = ConverterConfig.class, uses = { CommonConverter.class } )
 public interface ToEntityProgramConverter {
 
   @Mapping(target = "programCancers", ignore = true)
