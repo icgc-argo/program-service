@@ -96,13 +96,8 @@ public class ProgramService {
     return entity;
   }
 
-  public void removeProgram(UUID programId) {
-    // TODO: egoService.cleanUpProgram
-    programRepository.deleteById(programId);
-  }
-
   public void removeProgram(ProgramEntity program) {
-    // TODO: egoService.cleanUpProgram
+    egoService.cleanUpProgram(program);
     programRepository.deleteById(program.getId());
   }
 
