@@ -53,9 +53,12 @@ class ProgramServiceTest {
   @Mock
   private ProgramMapper programMapper;
 
+  @Mock
+  private EgoService egoService;
+
   @BeforeEach
   void init() {
-    this.programService = new ProgramService(invitationRepository, programRepository, mailSender, programMapper);
+    this.programService = new ProgramService(invitationRepository, programRepository, mailSender, programMapper, egoService);
   }
 
   @Test

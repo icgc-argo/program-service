@@ -13,12 +13,15 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Slf4j
 @Component
+@ConditionalOnProperty(value="app.grpcEnabled")
 public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
 
   private Server server;
@@ -43,12 +46,16 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
     val programService = ServerInterceptors.intercept(programServiceImpl, authInterceptor);
     healthStatusManager.setStatus("program_service.ProgramService", ServingStatus.SERVING);
 
-    server = ServerBuilder.forPort(port)
-            .addService(programService)
-            .addService(ProtoReflectionService.newInstance())
-            .addService(healthStatusManager.getHealthService())
-            .build()
-            .start();
+    try {
+      server = ServerBuilder.forPort(port)
+              .addService(programService)
+              .addService(ProtoReflectionService.newInstance())
+              .addService(healthStatusManager.getHealthService())
+              .build()
+              .start();
+    } catch (IOException e) {
+      log.error("gRPC server cannot be started", e);
+    }
 
     log.info("gRPC Server started, listening on port " + port);
     startDaemonAwaitThread();

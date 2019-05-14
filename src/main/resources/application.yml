@@ -23,6 +23,7 @@ app:
   egoUrl: "https://ego.qa.cancercollaboratory.org/api"
   egoClientId: "program-service"
   egoClientSecret: "qa-program-service"
+  grpcEnabled: true
   grpcPort: 50051
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
