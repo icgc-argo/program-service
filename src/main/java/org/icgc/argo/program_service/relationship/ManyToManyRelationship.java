@@ -37,6 +37,8 @@ import static java.util.stream.Collectors.toUnmodifiableSet;
  * @param <ID> parent and child ID type
  * @param <JID> join entity ID type
  */
+
+//TODO: [rtisma] convert to concreate class called ManyToManyLambdaRelationship, where it implements the ManyToManyRelationship interface. Having that interface will allow for decoration in the future. The interface should not be bounded to IdentifiableEntity
 @RequiredArgsConstructor
 public abstract class ManyToManyRelationship<
     P extends IdentifiableEntity<ID>,
@@ -50,6 +52,7 @@ public abstract class ManyToManyRelationship<
   /**
    * Associate the {@param parent} with the {@param children}
    */
+  //TODO: [rtisma] check parent does not already have those children
   public P associate(P parent, Collection<C> children){
     children.forEach(child -> {
       val join = createJoinEntity(parent, child);
@@ -62,6 +65,7 @@ public abstract class ManyToManyRelationship<
   /**
    * Disassociate children matching ids contained in {@param childIdsToDisassociate} for the {@param parent}
    */
+  //TODO: [rtisma] check parent has all the children from the id list
   public P disassociate(P parent, Collection<ID> childIdsToDisassociate){
     val parentJoinEntities = getJoinEntitiesFromParent(parent);
 

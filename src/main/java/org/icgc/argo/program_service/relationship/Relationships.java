@@ -39,10 +39,10 @@ public class Relationships {
       ProgramCancer, UUID, ProgramCancerId>builder()
       .createJoinEntityFunction(ProgramCancer::createProgramCancer)
       .getJoinEntitiesFromChildFunction(CancerEntity::getProgramCancers)
-      .getChildFromJoinEntityFunction(ProgramCancer::getCancer)
       .getJoinEntitiesFromParentFunction(ProgramEntity::getProgramCancers)
-      .setChildForJoinEntityFunction((ce, pc) -> pc.setCancer(ce))
-      .setParentForJoinEntityFunction((pe, pc) -> pc.setProgram(pe))
+      .getChildFromJoinEntityFunction(ProgramCancer::getCancer)
+      .setChildForJoinEntityFunction((cancer, programCancer) -> programCancer.setCancer(cancer))
+      .setParentForJoinEntityFunction((program, programCancer) -> programCancer.setProgram(program))
       .build()
       .buildManyToManyRelationship();
 
@@ -52,8 +52,8 @@ public class Relationships {
       ProgramPrimarySite, UUID, ProgramPrimarySiteId>builder()
       .createJoinEntityFunction(ProgramPrimarySite::createProgramPrimarySite)
       .getJoinEntitiesFromChildFunction(PrimarySiteEntity::getProgramPrimarySites)
+          .getJoinEntitiesFromParentFunction(ProgramEntity::getProgramPrimarySites)
       .getChildFromJoinEntityFunction(ProgramPrimarySite::getPrimarySite)
-      .getJoinEntitiesFromParentFunction(ProgramEntity::getProgramPrimarySites)
       .setChildForJoinEntityFunction((primarySite, programPrimarySite) -> programPrimarySite.setPrimarySite(primarySite))
       .setParentForJoinEntityFunction((primarySite, programPrimarySite) -> programPrimarySite.setProgram(primarySite))
       .build()
