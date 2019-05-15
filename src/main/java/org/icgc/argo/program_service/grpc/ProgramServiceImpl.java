@@ -8,19 +8,24 @@ import lombok.val;
 import org.icgc.argo.program_service.*;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.icgc.argo.program_service.mappers.ProgramMapper;
+import org.icgc.argo.program_service.services.EgoService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
   private final ProgramService programService;
   private final ProgramMapper programMapper;
+  private final EgoService egoService;
 
   @Autowired
-  public ProgramServiceImpl(ProgramService programService, ProgramMapper programMapper) {
+  public ProgramServiceImpl(ProgramService programService, ProgramMapper programMapper, EgoService egoService) {
     this.programMapper = programMapper;
-      this.programService = programService;
+    this.programService = programService;
+    this.egoService = egoService;
   }
 
   @Override
@@ -57,6 +62,19 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onCompleted();
   }
 
+  // not tested
+  @Override
+  public void joinProgram(org.icgc.argo.program_service.JoinProgramRequest request,
+                          io.grpc.stub.StreamObserver<com.google.protobuf.Empty> responseObserver) {
+    val succeed = programService.acceptInvite(UUID.fromString(request.getJoinProgramInvitationId()));
+    if (!succeed) {
+      responseObserver.onError(new StatusException(Status.fromCode(Status.Code.UNKNOWN)));
+      return;
+    }
+    responseObserver.onNext(Empty.getDefaultInstance());
+    responseObserver.onCompleted();
+  }
+
   @Override
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
     val programs = programService.listPrograms();
@@ -70,11 +88,13 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onCompleted();
   }
 
-
+  // not tested
   @Override
   public void removeUser(org.icgc.argo.program_service.RemoveUserRequest request,
                          io.grpc.stub.StreamObserver<com.google.protobuf.Empty> responseObserver) {
+    egoService.leaveProgram(UUID.fromString(request.getUserId()), UUID.fromString(request.getProgramId()));
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
 }
+

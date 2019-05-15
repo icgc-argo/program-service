@@ -29,6 +29,7 @@ public class JoinProgramInvite {
   private LocalDateTime acceptedAt;
 
   @ManyToOne
+  @Getter
   private ProgramEntity program;
 
   @Column(nullable = false, updatable = false)
@@ -42,7 +43,7 @@ public class JoinProgramInvite {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private UserRole role;
+  @Getter private UserRole role;
 
   @Column(nullable = false)
   @Getter @Setter

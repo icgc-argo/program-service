@@ -80,9 +80,18 @@ public class ProgramService {
     }
   }
 
-  void acceptInvite(JoinProgramInvite invitation) {
-    invitation.accept();
-    invitationRepository.save(invitation);
+  public Boolean acceptInvite(UUID invitationId) {
+    val invitation = invitationRepository.findById(invitationId);
+    if (invitation.isPresent()) {
+      val i = invitation.get();
+      i.accept();
+      val email = invitation.get().getUserEmail();
+      egoService.joinProgram(email, i.getProgram(), i.getRole());
+      invitationRepository.save(invitation.get());
+      return true;
+    } else {
+      return false;
+    }
   }
 
   public ProgramEntity createProgram(Program program) {
