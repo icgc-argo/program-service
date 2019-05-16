@@ -16,7 +16,7 @@
  *
  */
 
-package org.icgc.argo.program_service.relationship;
+package org.icgc.argo.program_service.association;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -41,7 +41,7 @@ import java.util.function.Function;
  */
 @Value
 @Builder
-public class AssociatorFactory<
+public class ManyToManyAssociatorFactory<
       P extends IdentifiableEntity<ID>,
       C extends IdentifiableEntity<ID>,
       J extends IdentifiableEntity<JID> ,

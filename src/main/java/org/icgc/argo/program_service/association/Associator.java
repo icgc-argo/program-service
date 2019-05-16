@@ -16,7 +16,7 @@
  *
  */
 
-package org.icgc.argo.program_service.relationship;
+package org.icgc.argo.program_service.association;
 
 import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
 

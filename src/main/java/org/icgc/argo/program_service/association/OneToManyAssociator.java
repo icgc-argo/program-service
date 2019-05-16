@@ -16,7 +16,7 @@
  *
  */
 
-package org.icgc.argo.program_service.relationship;
+package org.icgc.argo.program_service.association;
 
 import lombok.Builder;
 import lombok.NonNull;

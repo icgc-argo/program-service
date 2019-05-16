@@ -16,7 +16,7 @@
  *
  */
 
-package org.icgc.argo.program_service.relationship;
+package org.icgc.argo.program_service.association;
 
 import lombok.NoArgsConstructor;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
@@ -31,11 +31,14 @@ import java.util.UUID;
 
 import static lombok.AccessLevel.PRIVATE;
 
+/**
+ * Note: the constant associators are defined statically so they can be used within mapstruct
+ */
 @NoArgsConstructor(access = PRIVATE)
 public class Associators {
 
-  public static final AssociatorFactory<ProgramEntity, CancerEntity, ProgramCancer, UUID, ProgramCancerId>
-      PROGRAM_CANCER_ASSOCIATOR_FACTORY = AssociatorFactory.<ProgramEntity, CancerEntity,
+  public static final ManyToManyAssociatorFactory<ProgramEntity, CancerEntity, ProgramCancer, UUID, ProgramCancerId>
+      PROGRAM_CANCER_ASSOCIATOR_FACTORY = ManyToManyAssociatorFactory.<ProgramEntity, CancerEntity,
       ProgramCancer, UUID, ProgramCancerId>builder()
       .createJoinEntityFunction(ProgramCancer::createProgramCancer)
       .getJoinEntitiesFromChildFunction(CancerEntity::getProgramCancers)
@@ -45,9 +48,9 @@ public class Associators {
       .setParentForJoinEntityFunction((program, programCancer) -> programCancer.setProgram(program))
       .build();
 
-  public static final AssociatorFactory<ProgramEntity, PrimarySiteEntity,
-        ProgramPrimarySite, UUID, ProgramPrimarySiteId> PROGRAM_PRIMARY_SITE_ASSOCIATOR_FACTORY =
-      AssociatorFactory.<ProgramEntity, PrimarySiteEntity,
+  public static final ManyToManyAssociatorFactory<ProgramEntity, PrimarySiteEntity,
+          ProgramPrimarySite, UUID, ProgramPrimarySiteId> PROGRAM_PRIMARY_SITE_ASSOCIATOR_FACTORY =
+      ManyToManyAssociatorFactory.<ProgramEntity, PrimarySiteEntity,
           ProgramPrimarySite, UUID, ProgramPrimarySiteId>builder()
           .createJoinEntityFunction(ProgramPrimarySite::createProgramPrimarySite)
           .getJoinEntitiesFromChildFunction(PrimarySiteEntity::getProgramPrimarySites)

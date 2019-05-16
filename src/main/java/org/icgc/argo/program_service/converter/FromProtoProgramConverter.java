@@ -17,8 +17,8 @@ import org.mapstruct.MappingTarget;
 import java.util.Collection;
 import java.util.Set;
 
-import static org.icgc.argo.program_service.relationship.Associators.PROGRAM_CANCER_ASSOCIATOR;
-import static org.icgc.argo.program_service.relationship.Associators.PROGRAM_PRIMARY_SITE_ASSOCIATOR;
+import static org.icgc.argo.program_service.association.Associators.PROGRAM_CANCER_ASSOCIATOR;
+import static org.icgc.argo.program_service.association.Associators.PROGRAM_PRIMARY_SITE_ASSOCIATOR;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class } )
 public interface FromProtoProgramConverter {
