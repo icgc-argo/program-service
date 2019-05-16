@@ -6,7 +6,6 @@ spring:
     name: program-service
   flyway:
     enabled: false
-
   # url for spring boot admin client service
   boot:
     admin:
@@ -14,17 +13,17 @@ spring:
         instance:
           service-base-url: http://localhost
         url: http://localhost:8082
-
-
-  # Datasource
   datasource:
-    driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/program_db
     username: postgres
     password: password
 
 app:
-  egoPublicKeyUrl: "https://ego.qa.cancercollaboratory.org/api/oauth/token/public_key"
+  invitationUrlPrefix: "https://frontend/invite/"
+  egoUrl: "https://ego.qa.cancercollaboratory.org/api"
+  egoClientId: "program-service"
+  egoClientSecret: "qa-program-service"
+  grpcEnabled: true
   grpcPort: 50051
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
@@ -32,10 +31,10 @@ spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 
 logging:
   level:
-    root: ERROR
+    root: info
+    org.icgc.argo.program_service: DEBUG
     #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     #org.springframework.boot: INFO
-    org.icgc.argo.program_service: DEBUG
 
 management.endpoints.web.exposure.include: "*"
 
@@ -43,7 +42,6 @@ management.endpoints.web.exposure.include: "*"
 #spring.jpa.properties.hibernate.format_sql: true
 #logging.level.org.hibernate.SQL: DEBUG
 #logging.level.org.hibernate.type.descriptor.sql: TRACE
-
 
 # When you are desperate, use this...
 #logging.level.org.hibernate: TRACE
@@ -58,7 +56,6 @@ spring:
 spring.datasource:
   driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
   url: jdbc:tc:postgresql:9.5.13://localhost:5432/program_db?TC_INITFUNCTION=org.icgc.argo.program_service.test.FlywayInit::initTestContainers
-
   username: postgres
   password:
 
@@ -69,6 +66,6 @@ app:
 ###############################################################################
 # Profile - "auth"
 ###############################################################################
-
 spring:
   profiles: auth
+

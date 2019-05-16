@@ -21,6 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // TODO: program service is already running at the phase of pre-integration-test, use the existing running 50051 port
@@ -33,7 +34,7 @@ public class ProgramServiceImplIT {
   private ProgramServiceImpl programService;
 
   @Test
-  public void test_list() {
+  public void testList() {
     // case 1: empty list
     val request = Empty.getDefaultInstance();
     val programsObserver = new TestObserver<ListProgramsResponse>();

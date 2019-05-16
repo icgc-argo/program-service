@@ -51,6 +51,7 @@ spec:
             // TODO: integration test
             steps {
                 container('java') {
+                    sh "./fly.sh migrate"
                     sh "./mvnw verify"
                 }
             }
