@@ -29,10 +29,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
- * This abstract class manages relationships between a parent and its child entities in a OneToMany relationship.
- * Each parent and child type pair will have a specific implementation, which is why this class is abstract.
- * The purpose of this class is to ensure a consistent way of managing bidirectional relationships between
- * entities that have a OneToMany relationship.
+ * This class manages OneToMany BiDirectional relationships between a parent and its child entities.
  *
  * @param <P> parent entity type
  * @param <C> child entity type

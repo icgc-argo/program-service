@@ -28,10 +28,10 @@ import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static java.util.stream.Collectors.toUnmodifiableSet;
+import static java.util.stream.Collectors.toMap;
 
 /**
- * A ManyToMany relationship manager that manages relationships between 2 entities (P and C) using a join entity (J).
+ * A ManyToMany BiDirectional relationship manager that manages relationships between 2 entities (P and C) using a join entity (J).
  * Since a ManyToMany can be represented as 2 OneToMany relationships, 2 OneToManyRelationship objects are required
  *
  * @param <P> parent entity type
@@ -41,7 +41,6 @@ import static java.util.stream.Collectors.toUnmodifiableSet;
  * @param <JID> join entity ID type
  */
 
-//TODO: [rtisma] convert to concreate class called ManyToManyLambdaRelationship, where it implements the ManyToManyRelationship interface. Having that interface will allow for decoration in the future. The interface should not be bounded to IdentifiableEntity
 @Builder
 @RequiredArgsConstructor
 public class ManyToManyAssociator<
@@ -86,15 +85,12 @@ public class ManyToManyAssociator<
   public P disassociate(P parent, Collection<ID> childIdsToDisassociate){
     val parentJoinEntities = getJoinEntitiesFromParent(parent);
 
-    val childEntities = parentJoinEntities.stream()
-        .map(this::getChildFromJoinEntity)
-        .filter(x -> childIdsToDisassociate.contains(x.getId()))
-        .collect(toUnmodifiableSet());
-
-    val commonJoinIds = parentJoinEntities.stream()
+    val jidToChildMap = parentJoinEntities.stream()
         .filter(x -> childIdsToDisassociate.contains(getChildFromJoinEntity(x).getId()))
-        .map(IdentifiableEntity::getId)
-        .collect(toUnmodifiableSet());
+        .collect(toMap(IdentifiableEntity::getId, this::getChildFromJoinEntity));
+
+    val childEntities = jidToChildMap.values();
+    val commonJoinIds = jidToChildMap.keySet();
 
     oneParentToManyJoinRelationship.disassociate(parent, commonJoinIds);
     oneChildToManyJoinRelationship.disassociate(childEntities, commonJoinIds);
