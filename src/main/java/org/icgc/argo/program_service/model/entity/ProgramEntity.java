@@ -118,7 +118,6 @@ public class ProgramEntity implements NameableEntity<UUID> {
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
-  @Builder.Default
   @OneToMany(
           mappedBy = ProgramEgoGroupEntity.Fields.program,
           cascade = CascadeType.ALL,

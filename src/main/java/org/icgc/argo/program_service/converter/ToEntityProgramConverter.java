@@ -34,6 +34,7 @@ public interface ToEntityProgramConverter {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
+  @Mapping(target = "egoGroups", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
 
   @AfterMapping
@@ -43,6 +44,7 @@ public interface ToEntityProgramConverter {
 
     val primarySiteEntities = primarySitesToPrimarySiteEntities(programToPrimarySites(p));
     PROGRAM_PRIMARY_SITE_ASSOCIATOR.associate(programEntity, primarySiteEntities);
+
   }
 
   /**

@@ -1,7 +1,10 @@
 package org.icgc.argo.program_service.converter;
 
+import com.google.protobuf.StringValue;
+import lombok.NonNull;
 import org.icgc.argo.program_service.Cancer;
 import org.icgc.argo.program_service.CreateProgramResponse;
+import org.icgc.argo.program_service.InviteUserResponse;
 import org.icgc.argo.program_service.ListProgramsResponse;
 import org.icgc.argo.program_service.MembershipType;
 import org.icgc.argo.program_service.MembershipTypeValue;
@@ -18,6 +21,7 @@ import org.mapstruct.Mapping;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ToProtoProgramConverter {
@@ -105,6 +109,11 @@ public interface ToProtoProgramConverter {
     return programEntitiesToListProgramsResponse(0, programEntities);
   }
 
+  default InviteUserResponse inviteIdToInviteUserResponse(@NonNull UUID inviteId){
+    return InviteUserResponse.newBuilder()
+        .setInviteId(StringValue.of(inviteId.toString()))
+        .build();
+  }
 
   /**
    * JoinEntity Converters

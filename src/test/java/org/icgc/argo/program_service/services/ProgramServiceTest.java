@@ -1,9 +1,7 @@
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
-import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.UserRole;
-import org.icgc.argo.program_service.mappers.ProgramMapper;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
@@ -33,7 +31,7 @@ class ProgramServiceTest {
   private ProgramService programService;
 
   @Mock
-  private Program program;
+  private ProgramEntity program;
 
   @Mock
   private ProgramEntity programEntity;
@@ -51,14 +49,11 @@ class ProgramServiceTest {
   private JoinProgramInvite invitation;
 
   @Mock
-  private ProgramMapper programMapper;
-
-  @Mock
   private EgoService egoService;
 
   @BeforeEach
   void init() {
-    this.programService = new ProgramService(invitationRepository, programRepository, mailSender, programMapper, egoService);
+    this.programService = new ProgramService(invitationRepository, programRepository, mailSender, egoService);
   }
 
   @Test
@@ -100,9 +95,9 @@ class ProgramServiceTest {
     verify(invitation).accept();
   }
 
+  //TODO: [rtisma] Need to test database transactions, since inproper entity syncing can result in un-committed changes. Simply mocking the createProgram does not ensure that child entities were actually created.
   @Test
   void createProgram() {
-    when(programMapper.ProgramToProgramEntity(program)).thenReturn(programEntity);
     programService.createProgram(program);
     verify(programRepository).save(programEntity);
   }
@@ -110,7 +105,6 @@ class ProgramServiceTest {
   @Test
   void listPrograms() {
     when(programRepository.findAll()).thenReturn(List.of(programEntity));
-    when(programMapper.ProgramEntityToProgram(programEntity)).thenReturn(program);
     val programs = programService.listPrograms();
     assertThat(programs).contains(program);
   }
