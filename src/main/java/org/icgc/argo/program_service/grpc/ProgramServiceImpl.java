@@ -12,7 +12,7 @@ import org.icgc.argo.program_service.InviteUserRequest;
 import org.icgc.argo.program_service.InviteUserResponse;
 import org.icgc.argo.program_service.ListProgramsResponse;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
-import org.icgc.argo.program_service.converter.ToEntityProgramConverter;
+import org.icgc.argo.program_service.converter.FromProtoProgramConverter;
 import org.icgc.argo.program_service.converter.ToProtoProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.icgc.argo.program_service.services.ProgramService;
@@ -21,17 +21,21 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
+
+  /**
+   * Dependencies
+   */
   private final ProgramService programService;
   private final ToProtoProgramConverter toProtoProgramConverter;
-  private final ToEntityProgramConverter toEntityProgramConverter;
+  private final FromProtoProgramConverter fromProtoProgramConverter;
 
   @Autowired
-  public ProgramServiceImpl(@NonNull ProgramService programService, 
+  public ProgramServiceImpl(@NonNull ProgramService programService,
      @NonNull ToProtoProgramConverter toProtoProgramConverter,
-      @NonNull ToEntityProgramConverter toEntityProgramConverter ) {
+      @NonNull FromProtoProgramConverter fromProtoProgramConverter) {
       this.programService = programService;
     this.toProtoProgramConverter = toProtoProgramConverter;
-    this.toEntityProgramConverter = toEntityProgramConverter;
+    this.fromProtoProgramConverter = fromProtoProgramConverter;
   }
 
   @Override
@@ -41,8 +45,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     //       (2) Set up the permissions, groups in EGO
     //       (3) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
-    val dao = toEntityProgramConverter.programToProgramEntity(program);
-    val entity = programService.createProgram(dao);
+    val entity = programService.createProgram(program);
     val response = toProtoProgramConverter.programEntityToCreateProgramResponse(entity);
     responseObserver.onNext(response);
     responseObserver.onCompleted();

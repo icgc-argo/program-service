@@ -1,7 +1,10 @@
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
+import net.bytebuddy.utility.RandomString;
+import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.UserRole;
+import org.icgc.argo.program_service.converter.FromProtoProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
@@ -31,7 +34,7 @@ class ProgramServiceTest {
   private ProgramService programService;
 
   @Mock
-  private ProgramEntity program;
+  private Program program;
 
   @Mock
   private ProgramEntity programEntity;
@@ -49,11 +52,15 @@ class ProgramServiceTest {
   private JoinProgramInvite invitation;
 
   @Mock
+  private FromProtoProgramConverter fromProtoProgramConverter;
+
+  @Mock
   private EgoService egoService;
 
   @BeforeEach
   void init() {
-    this.programService = new ProgramService(invitationRepository, programRepository, mailSender, egoService);
+    this.programService = new ProgramService(invitationRepository, programRepository
+        , fromProtoProgramConverter, mailSender, egoService);
   }
 
   @Test
@@ -95,17 +102,22 @@ class ProgramServiceTest {
     verify(invitation).accept();
   }
 
-  //TODO: [rtisma] Need to test database transactions, since inproper entity syncing can result in un-committed changes. Simply mocking the createProgram does not ensure that child entities were actually created.
   @Test
   void createProgram() {
-    programService.createProgram(program);
-    verify(programRepository).save(programEntity);
+    val inputProgramEntity = new ProgramEntity().setName(RandomString.make(10)).setShortName(RandomString.make(33));
+    assertThat(inputProgramEntity.getCreatedAt()).isNull();
+    assertThat(inputProgramEntity.getUpdatedAt()).isNull();
+    when(fromProtoProgramConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
+    val outputEntity = programService.createProgram(program);
+    assertThat(outputEntity.getCreatedAt()).isNotNull();
+    assertThat(outputEntity.getUpdatedAt()).isNotNull();
+    verify(programRepository).save(inputProgramEntity);
   }
 
   @Test
   void listPrograms() {
     when(programRepository.findAll()).thenReturn(List.of(programEntity));
     val programs = programService.listPrograms();
-    assertThat(programs).contains(program);
+    assertThat(programs).contains(programEntity);
   }
 }

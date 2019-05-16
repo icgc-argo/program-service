@@ -17,6 +17,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.argo.program_service.UtilsTest.stringValue;
 
 @SpringBootTest
 @ActiveProfiles({ "test", "default" })
@@ -45,7 +46,10 @@ class EgoServiceIT {
       return;
     }
 
-    val program = Program.newBuilder().setName("TestProgram").setShortName("TestShortName").build();
+    val program = Program.newBuilder()
+        .setName(stringValue("TestProgram"))
+        .setShortName(stringValue("TestShortName"))
+        .build();
     this.programEntity = programService.createProgram(program);
 
     // Policies are created

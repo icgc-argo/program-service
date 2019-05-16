@@ -3,7 +3,9 @@ package org.icgc.argo.program_service.services;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.UserRole;
+import org.icgc.argo.program_service.converter.FromProtoProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
@@ -34,38 +36,45 @@ public class ProgramService {
    */
   private final JoinProgramInviteRepository invitationRepository;
   private final ProgramRepository programRepository;
+  private final FromProtoProgramConverter fromProtoProgramConverter;
   private final MailSender mailSender;
   private final EgoService egoService;
 
   @Autowired
   public ProgramService(@NonNull JoinProgramInviteRepository invitationRepository,
       @NonNull ProgramRepository programRepository,
+      @NonNull FromProtoProgramConverter fromProtoProgramConverter,
       @NonNull MailSender mailSender,
       @NonNull EgoService egoService) {
     this.invitationRepository = invitationRepository;
     this.programRepository = programRepository;
     this.mailSender = mailSender;
     this.egoService = egoService;
+    this.fromProtoProgramConverter = fromProtoProgramConverter;
   }
 
+  //TODO: add existence check, and fail with not found
   public Optional<ProgramEntity> getProgram(@NonNull String name) {
     return programRepository.findByName(name);
   }
 
+  //TODO: add existence check, and fail with not found
   public Optional<ProgramEntity> getProgram(@NonNull UUID uuid) {
     return programRepository.findById(uuid);
   }
 
   //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
-  public ProgramEntity createProgram(@NonNull ProgramEntity programEntity) {
+  public ProgramEntity createProgram(@NonNull Program program) {
+    val programEntity = fromProtoProgramConverter.programToProgramEntity(program);
+
     // Set the timestamps
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
 
-    val entity = programRepository.save(programEntity);
+    programRepository.save(programEntity);
     egoService.setUpProgram(programEntity);
-    return entity;
+    return programEntity;
   }
 
   //TODO: add existence check, and fail with not found

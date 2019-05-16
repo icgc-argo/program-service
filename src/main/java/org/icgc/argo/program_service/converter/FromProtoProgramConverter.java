@@ -21,7 +21,7 @@ import static org.icgc.argo.program_service.relationship.Associators.PROGRAM_CAN
 import static org.icgc.argo.program_service.relationship.Associators.PROGRAM_PRIMARY_SITE_ASSOCIATOR;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class } )
-public interface ToEntityProgramConverter {
+public interface FromProtoProgramConverter {
 
   @Mapping(target = "programCancers", ignore = true)
   CancerEntity cancerToPartialCancerEntity(Cancer c);
