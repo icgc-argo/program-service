@@ -96,5 +96,13 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
+
+  @Override
+  public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
+    programService.removeProgram(UUID.fromString(request.getProgramId()));
+    responseObserver.onNext(Empty.getDefaultInstance());
+    responseObserver.onCompleted();
+  }
+
 }
 

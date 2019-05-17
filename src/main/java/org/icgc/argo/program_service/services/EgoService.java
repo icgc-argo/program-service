@@ -224,7 +224,6 @@ public class EgoService {
     });
   }
 
-  @Transactional
   public void cleanUpProgram(ProgramEntity programEntity) {
     programEgoGroupRepository.findAllByProgramId(programEntity.getId()).forEach(programEgoGroup ->{
       val egoGroupId = programEgoGroup.getEgoGroupId();
@@ -299,7 +298,7 @@ public class EgoService {
   }
 
   private List<Group> createGroups(String programShortName) {
-    val groupNames = Stream.of(UserRole.values()).map(UserRole::name).map(s -> "PROGRAM-" + programShortName + "-" + s);
+    val groupNames = Stream.of(UserRole.values()).filter(role -> !role.equals(UserRole.UNRECOGNIZED)).map(UserRole::name).map(s -> "PROGRAM-" + programShortName + "-" + s);
 
     return groupNames
             .map(this::createGroup)

@@ -110,6 +110,15 @@ public class ProgramService {
     programRepository.deleteById(program.getId());
   }
 
+  public void removeProgram(UUID programId) {
+    val program = programRepository.findById(programId);
+    if (program.isPresent()) {
+      removeProgram(program.get());
+    } else {
+      log.error("Could not find program {}", programId);
+    }
+  }
+
   public List<Program> listPrograms() {
     val programEntities = programRepository.findAll();
 
