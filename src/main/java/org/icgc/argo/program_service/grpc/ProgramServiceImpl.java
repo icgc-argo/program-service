@@ -64,8 +64,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   // not tested
   @Override
-  public void joinProgram(org.icgc.argo.program_service.JoinProgramRequest request,
-                          io.grpc.stub.StreamObserver<com.google.protobuf.Empty> responseObserver) {
+  public void joinProgram(JoinProgramRequest request,
+                          StreamObserver<com.google.protobuf.Empty> responseObserver) {
     val succeed = programService.acceptInvite(UUID.fromString(request.getJoinProgramInvitationId()));
     if (!succeed) {
       responseObserver.onError(new StatusException(Status.fromCode(Status.Code.UNKNOWN)));
@@ -90,8 +90,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   // not tested
   @Override
-  public void removeUser(org.icgc.argo.program_service.RemoveUserRequest request,
-                         io.grpc.stub.StreamObserver<com.google.protobuf.Empty> responseObserver) {
+  public void removeUser(RemoveUserRequest request,
+                         StreamObserver<com.google.protobuf.Empty> responseObserver) {
     egoService.leaveProgram(UUID.fromString(request.getUserId()), UUID.fromString(request.getProgramId()));
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
