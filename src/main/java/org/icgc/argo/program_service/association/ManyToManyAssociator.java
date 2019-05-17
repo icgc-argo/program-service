@@ -29,6 +29,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
+import static org.icgc.argo.program_service.association.OneToManyAssociator.checkMissingChildIds;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToImmutableSet;
 
 /**
  * A ManyToMany BiDirectional relationship manager that manages relationships between 2 entities (P and C) using a join entity (J).
@@ -48,6 +50,11 @@ public class ManyToManyAssociator<
     C extends IdentifiableEntity<ID>,
     J extends IdentifiableEntity<JID> ,
     ID, JID> implements Associator<P, C, ID> {
+
+  /**
+   * Config
+   */
+  @NonNull private final Class<C> childClass;
 
   /**
    * Dependencies
@@ -83,17 +90,36 @@ public class ManyToManyAssociator<
   //TODO: [rtisma] check parent has all the children from the id list
   @Override
   public P disassociate(P parent, Collection<ID> childIdsToDisassociate){
-    val parentJoinEntities = getJoinEntitiesFromParent(parent);
+    // Get exising join entities
+    val existingJoinEntities = getJoinEntitiesFromParent(parent);
 
-    val jidToChildMap = parentJoinEntities.stream()
+    // Check that all the childIdsToDisassociate are already associated with the parent
+    val existingChildIds = mapToImmutableSet(existingJoinEntities, x -> getChildFromJoinEntity(x).getId());
+    checkMissingChildIds(parent,childClass, childIdsToDisassociate, existingChildIds);
+
+    for (val existingJoinEntity : existingJoinEntities){
+      val child = getChildFromJoinEntity(existingJoinEntity);
+      if (childIdsToDisassociate.contains(child.getId())){
+        val existingJoinEntityId = existingJoinEntity.getId();
+        oneChildToManyJoinRelationship.disassociate(child, existingJoinEntityId);
+        oneParentToManyJoinRelationship.disassociate(parent, existingJoinEntityId);
+      }
+    }
+
+    // Create a lookup map
+    val disassociationMap = existingJoinEntities.stream()
         .filter(x -> childIdsToDisassociate.contains(getChildFromJoinEntity(x).getId()))
         .collect(toMap(IdentifiableEntity::getId, this::getChildFromJoinEntity));
 
-    val childEntities = jidToChildMap.values();
-    val commonJoinIds = jidToChildMap.keySet();
+    // Disassociate all of the commonJoinEntities from the parent
+    val joinIdsToDisassociate = disassociationMap.keySet();
+    oneParentToManyJoinRelationship.disassociate(parent, joinIdsToDisassociate);
 
-    oneParentToManyJoinRelationship.disassociate(parent, commonJoinIds);
-    oneChildToManyJoinRelationship.disassociate(childEntities, commonJoinIds);
+    joinIdsToDisassociate.forEach( x ->{
+          val child = disassociationMap.get(x);
+          oneChildToManyJoinRelationship.disassociate(child, x);
+        }
+    );
     return parent;
   }
 
@@ -117,5 +143,6 @@ public class ManyToManyAssociator<
   protected C getChildFromJoinEntity(@NonNull J joinEntity) {
     return getChildFromJoinEntityFunction.apply(joinEntity);
   }
+
 
 }

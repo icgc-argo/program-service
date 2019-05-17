@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
+import lombok.val;
 import org.hibernate.annotations.GenericGenerator;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
@@ -27,6 +28,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
+import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
 
 @Entity
 @Table(name = Tables.PROGRAM)
@@ -34,6 +37,7 @@ import static com.google.common.collect.Sets.newHashSet;
 @Accessors(chain = true)
 @FieldNameConstants
 public class ProgramEntity implements NameableEntity<UUID> {
+
   @Id
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
@@ -49,10 +53,6 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @NotNull
   @Column(name = SqlFields.NAME)
   private String name;
-
-  @NotNull
-  @Column(name = SqlFields.DESCRIPTION)
-  private String description;
 
   @NotNull
   @Enumerated(EnumType.STRING)
@@ -89,12 +89,16 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @Column(name = SqlFields.INSTITUTIONS)
   private String institutions;
 
-  @Column(name = SqlFields.REGIONS)
-  private String regions;
-
   @NotNull
   @Column(name = SqlFields.COUNTRIES)
   private String countries;
+
+  @Column(name = SqlFields.REGIONS)
+  private String regions;
+
+  @Column(name = SqlFields.DESCRIPTION)
+  private String description;
+
 
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
@@ -125,4 +129,16 @@ public class ProgramEntity implements NameableEntity<UUID> {
           orphanRemoval = true
   )
   private Set<ProgramEgoGroupEntity> egoGroups = newHashSet();
+
+  public void associateCancer(CancerEntity c){
+    val pc = createProgramCancer(this, c);
+    this.getProgramCancers().add(pc);
+    c.getProgramCancers().add(pc);
+  }
+
+  public void associatePrimarySite(PrimarySiteEntity ps){
+    val pps = createProgramPrimarySite(this, ps);
+    this.getProgramPrimarySites().add(pps);
+    ps.getProgramPrimarySites().add(pps);
+  }
 }

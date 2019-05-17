@@ -21,6 +21,7 @@ package org.icgc.argo.program_service.association;
 import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface Associator<P, C extends IdentifiableEntity<CID>, CID>{
 
@@ -39,6 +40,12 @@ public interface Associator<P, C extends IdentifiableEntity<CID>, CID>{
    */
   Collection<P> disassociate(Collection<P> parents, Collection<CID> childIdsToDisassociate);
 
+  /**
+   * Disassociate the child with id {@param childIdsToDisassociate} from the input {@param parent}
+   */
+  default P disassociate(P parent, CID childIdToDisassociate){
+    return disassociate(parent, List.of(childIdToDisassociate));
+  }
   /**
    * Associate the {@param children} with the {@param parent}
    */

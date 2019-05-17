@@ -1,6 +1,5 @@
 package org.icgc.argo.program_service.converter;
 
-import lombok.val;
 import org.icgc.argo.program_service.Cancer;
 import org.icgc.argo.program_service.MembershipType;
 import org.icgc.argo.program_service.MembershipTypeValue;
@@ -16,9 +15,6 @@ import org.mapstruct.MappingTarget;
 
 import java.util.Collection;
 import java.util.Set;
-
-import static org.icgc.argo.program_service.association.Associators.PROGRAM_CANCER_ASSOCIATOR;
-import static org.icgc.argo.program_service.association.Associators.PROGRAM_PRIMARY_SITE_ASSOCIATOR;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class } )
 public interface FromProtoProgramConverter {
@@ -39,12 +35,11 @@ public interface FromProtoProgramConverter {
 
   @AfterMapping
   default void updateProgramRelationships(Program p, @MappingTarget ProgramEntity programEntity){
-    val cancerEntities = cancersToCancerEntities(programToCancers(p));
-    PROGRAM_CANCER_ASSOCIATOR.associate(programEntity, cancerEntities);
+    cancersToCancerEntities(programToCancers(p))
+        .forEach(programEntity::associateCancer);
 
-    val primarySiteEntities = primarySitesToPrimarySiteEntities(programToPrimarySites(p));
-    PROGRAM_PRIMARY_SITE_ASSOCIATOR.associate(programEntity, primarySiteEntities);
-
+    primarySitesToPrimarySiteEntities(programToPrimarySites(p))
+        .forEach(programEntity::associatePrimarySite);
   }
 
   /**

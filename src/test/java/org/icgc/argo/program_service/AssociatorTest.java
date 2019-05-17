@@ -26,6 +26,7 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.association.Associator;
+import org.icgc.argo.program_service.utils.RandomGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.argo.program_service.RandomGenerator.createRandomGenerator;
+import static org.icgc.argo.program_service.utils.RandomGenerator.createRandomGenerator;
 import static org.icgc.argo.program_service.association.Associators.PROGRAM_CANCER_ASSOCIATOR;
 import static org.icgc.argo.program_service.association.Associators.PROGRAM_PRIMARY_SITE_ASSOCIATOR;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToImmutableList;

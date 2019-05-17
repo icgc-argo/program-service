@@ -40,6 +40,9 @@ public class Associators {
   public static final ManyToManyAssociatorFactory<ProgramEntity, CancerEntity, ProgramCancer, UUID, ProgramCancerId>
       PROGRAM_CANCER_ASSOCIATOR_FACTORY = ManyToManyAssociatorFactory.<ProgramEntity, CancerEntity,
       ProgramCancer, UUID, ProgramCancerId>builder()
+      .parentClass(ProgramEntity.class)
+      .joinClass(ProgramCancer.class)
+      .childClass(CancerEntity.class)
       .createJoinEntityFunction(ProgramCancer::createProgramCancer)
       .getJoinEntitiesFromChildFunction(CancerEntity::getProgramCancers)
       .getJoinEntitiesFromParentFunction(ProgramEntity::getProgramCancers)
@@ -52,6 +55,9 @@ public class Associators {
           ProgramPrimarySite, UUID, ProgramPrimarySiteId> PROGRAM_PRIMARY_SITE_ASSOCIATOR_FACTORY =
       ManyToManyAssociatorFactory.<ProgramEntity, PrimarySiteEntity,
           ProgramPrimarySite, UUID, ProgramPrimarySiteId>builder()
+          .parentClass(ProgramEntity.class)
+          .joinClass(ProgramPrimarySite.class)
+          .childClass(PrimarySiteEntity.class)
           .createJoinEntityFunction(ProgramPrimarySite::createProgramPrimarySite)
           .getJoinEntitiesFromChildFunction(PrimarySiteEntity::getProgramPrimarySites)
           .getJoinEntitiesFromParentFunction(ProgramEntity::getProgramPrimarySites)

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.icgc.argo.program_service;
+package org.icgc.argo.program_service.utils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;

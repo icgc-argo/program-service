@@ -47,6 +47,9 @@ public class ManyToManyAssociatorFactory<
       J extends IdentifiableEntity<JID> ,
       ID, JID>  {
 
+  @NonNull private final Class<P> parentClass;
+  @NonNull private final Class<J> joinClass;
+  @NonNull private final Class<C> childClass;
   @NonNull private final BiFunction<P, C, J> createJoinEntityFunction;
   @NonNull private final Function<P, Collection<J>> getJoinEntitiesFromParentFunction;
   @NonNull private final Function<C, Collection<J>> getJoinEntitiesFromChildFunction;
@@ -56,6 +59,8 @@ public class ManyToManyAssociatorFactory<
 
   public OneToManyAssociator<P, J, ID, JID> buildParentOneToManyRelationship(){
     return OneToManyAssociator.<P, J, ID, JID>builder()
+        .parentClass(parentClass)
+        .childClass(joinClass)
         .getChildrenFromParentFunction(getJoinEntitiesFromParentFunction)
         .setParentFieldForChildFunction(setParentForJoinEntityFunction)
         .build();
@@ -63,6 +68,8 @@ public class ManyToManyAssociatorFactory<
 
   public OneToManyAssociator<C, J, ID, JID> buildChildOneToManyRelationship(){
     return OneToManyAssociator.<C, J, ID, JID>builder()
+        .parentClass(childClass)
+        .childClass(joinClass)
         .getChildrenFromParentFunction(getJoinEntitiesFromChildFunction)
         .setParentFieldForChildFunction(setChildForJoinEntityFunction)
         .build();
@@ -72,6 +79,7 @@ public class ManyToManyAssociatorFactory<
     val left = buildParentOneToManyRelationship();
     val right = buildChildOneToManyRelationship();
     return ManyToManyAssociator.<P, C, J, ID, JID>builder()
+        .childClass(childClass)
         .createJoinEntityFunction(createJoinEntityFunction)
         .getChildFromJoinEntityFunction(getChildFromJoinEntityFunction)
         .getJoinEntitiesFromParentFunction(getJoinEntitiesFromParentFunction)
