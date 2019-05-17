@@ -8,7 +8,5 @@ import java.util.UUID;
 
 
 public interface ProgramRepository extends JpaRepository<ProgramEntity, UUID> {
-
   Optional<ProgramEntity> findByName(String name);
-
 }

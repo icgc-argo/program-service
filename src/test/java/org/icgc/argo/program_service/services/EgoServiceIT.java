@@ -35,7 +35,7 @@ class EgoServiceIT {
   @Autowired
   AppProperties appProperties;
 
-  ProgramEntity programEntity;
+  private ProgramEntity programEntity;
 
   @BeforeAll
   void setUp() {
@@ -46,11 +46,13 @@ class EgoServiceIT {
     }
 
     val program = Program.newBuilder().setName("TestProgram").setShortName("TestShortName").build();
-    this.programEntity = programService.createProgram(program);
+    val result = programService.createProgram(program);
+    assertThat(result.hasError()).isFalse();
+    this.programEntity = result.getValue();
 
     // Policies are created
-    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Policy>>() {}).isPresent()).isTrue();
-    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-DATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Policy>>() {}).isPresent()).isTrue();
+    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Policy>>() {}).hasValue()).isTrue();
+    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-DATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Policy>>() {}).hasValue()).isTrue();
 
     val bannedGroup = egoService.getGroup("PROGRAM-TestShortName-BANNED");
     val curatorGroup = egoService.getGroup("PROGRAM-TestShortName-CURATOR");
@@ -59,31 +61,31 @@ class EgoServiceIT {
     val adminGroup = egoService.getGroup("PROGRAM-TestShortName-ADMIN");
 
     // Groups are created
-    assertThat(bannedGroup.isPresent()).isTrue();
-    assertThat(curatorGroup.isPresent()).isTrue();
-    assertThat(collaboratorGroup.isPresent()).isTrue();
-    assertThat(submitterGroup.isPresent()).isTrue();
-    assertThat(adminGroup.isPresent()).isTrue();
+    assertThat(bannedGroup.hasValue()).isTrue();
+    assertThat(curatorGroup.hasValue()).isTrue();
+    assertThat(collaboratorGroup.hasValue()).isTrue();
+    assertThat(submitterGroup.hasValue()).isTrue();
+    assertThat(adminGroup.hasValue()).isTrue();
 
     // Groups have permissions
-    val bannedPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), bannedGroup.get().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Permission>>() {}).toArray(EgoService.Permission[]::new);
+    val bannedPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), bannedGroup.getValue().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Permission>>() {}).toArray(EgoService.Permission[]::new);
     assertThat(bannedPermissions.length).isEqualTo(2);
     assertThat(bannedPermissions).allMatch(permission -> permission.getAccessLevel().equals("DENY"));
 
-    val curatorPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), curatorGroup.get().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Permission>>() {}).toArray(EgoService.Permission[]::new);
+    val curatorPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), curatorGroup.getValue().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Permission>>() {}).toArray(EgoService.Permission[]::new);
     assertThat(curatorPermissions.length).isEqualTo(2);
     assertThat(curatorPermissions).allMatch(permission -> permission.getAccessLevel().equals("WRITE"));
 
-    val collaboratorPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), collaboratorGroup.get().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Permission>>() {}).toArray(EgoService.Permission[]::new);
+    val collaboratorPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), collaboratorGroup.getValue().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Permission>>() {}).toArray(EgoService.Permission[]::new);
     assertThat(collaboratorPermissions.length).isEqualTo(2);
     assertThat(collaboratorPermissions).allMatch(permission -> permission.getAccessLevel().equals("READ"));
 
-    val submitterPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), submitterGroup.get().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Permission>>() {}).toArray(EgoService.Permission[]::new);
+    val submitterPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), submitterGroup.getValue().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Permission>>() {}).toArray(EgoService.Permission[]::new);
     assertThat(submitterPermissions.length).isEqualTo(2);
     assertThat(submitterPermissions).anyMatch(permission -> permission.getAccessLevel().equals("READ"));
     assertThat(submitterPermissions).anyMatch(permission -> permission.getAccessLevel().equals("WRITE"));
 
-    val adminPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), adminGroup.get().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Permission>>() {}).toArray(EgoService.Permission[]::new);
+    val adminPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), adminGroup.getValue().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Permission>>() {}).toArray(EgoService.Permission[]::new);
     assertThat(adminPermissions.length).isEqualTo(2);
     assertThat(adminPermissions).allMatch(permission -> permission.getAccessLevel().equals("WRITE"));
   }
@@ -98,7 +100,7 @@ class EgoServiceIT {
   void getUser() {
     val egoUser = egoService.getUser("d8660091@gmail.com");
 
-    assertThat(egoUser.isPresent()).isTrue();
+    assertThat(egoUser.hasValue()).isTrue();
   }
 
   @Test
@@ -110,17 +112,20 @@ class EgoServiceIT {
 
   @AfterAll
   void cleanUp() {
-    programService.removeProgram(this.programEntity);
-
+    try {
+      programService.removeProgram(this.programEntity);
+    } catch(Throwable t) {
+      System.err.println("Caught exception:" + t.getMessage());
+    }
     // Groups are removed
-    assertThat(egoService.getGroup("PROGRAM-TestShortName-BANNED").isPresent()).isFalse();
-    assertThat(egoService.getGroup("PROGRAM-TestShortName-CURATOR").isPresent()).isFalse();
-    assertThat(egoService.getGroup("PROGRAM-TestShortName-COLLABORATOR").isPresent()).isFalse();
-    assertThat(egoService.getGroup("PROGRAM-TestShortName-SUBMITTER").isPresent()).isFalse();
-    assertThat(egoService.getGroup("PROGRAM-TestShortName-ADMIN").isPresent()).isFalse();
+    assertThat(egoService.getGroup("PROGRAM-TestShortName-BANNED").hasValue()).isFalse();
+    assertThat(egoService.getGroup("PROGRAM-TestShortName-CURATOR").hasValue()).isFalse();
+    assertThat(egoService.getGroup("PROGRAM-TestShortName-COLLABORATOR").hasValue()).isFalse();
+    assertThat(egoService.getGroup("PROGRAM-TestShortName-SUBMITTER").hasValue()).isFalse();
+    assertThat(egoService.getGroup("PROGRAM-TestShortName-ADMIN").hasValue()).isFalse();
 
     // Policies are removed
-    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Policy>>() {}).isPresent()).isFalse();
-    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-DATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Policy>>() {}).isPresent()).isFalse();
+    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Policy>>() {}).hasValue()).isFalse();
+    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-DATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Policy>>() {}).hasValue()).isFalse();
   }
 }

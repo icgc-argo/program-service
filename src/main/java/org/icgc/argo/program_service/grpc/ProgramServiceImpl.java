@@ -26,12 +26,17 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
-    // TODO: (1) Create the rest of the program entities
-    //       (2) Set up the permissions, groups in EGO
-    //       (3) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
 
-    val programEntity = programService.createProgram(program);
+    val result = programService.createProgram(program);
+    
+    if (result.hasError()) {
+      responseObserver.onError(result.getError());
+      responseObserver.onCompleted();
+      return;
+    }
+
+    val programEntity = result.getValue();
     val response = CreateProgramResponse
       .newBuilder()
       .setId(programMapper.map(programEntity.getId()))

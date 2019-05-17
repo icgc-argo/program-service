@@ -14,13 +14,16 @@ import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.client.HttpClientErrorException;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.io.IOError;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -85,15 +88,28 @@ public class ProgramService {
     invitationRepository.save(invitation);
   }
 
-  public ProgramEntity createProgram(Program program) {
+  public ErrorOr<ProgramEntity> createProgram(Program program) {
     val programEntity = programMapper.ProgramToProgramEntity(program);
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
 
-    val entity = programRepository.save(programEntity);
-    egoService.setUpProgram(programEntity);
-    return entity;
+    ProgramEntity saved;
+    try {
+      saved = programRepository.save(programEntity);
+    } catch(IOError error) {
+      return new ErrorOr(error);
+    } catch(NoSuchElementException e) {
+      return new ErrorOr(new RuntimeException("Could not save program"));
+    }
+
+    try {
+      egoService.setUpProgram(saved);
+    } catch(HttpClientErrorException error) {
+      return new ErrorOr(error);
+    }
+
+    return new ErrorOr(saved);
   }
 
   public void removeProgram(ProgramEntity program) {
