@@ -219,7 +219,10 @@ public class EgoService {
         return;
       }
 
-      val programEgoGroup = new ProgramEgoGroupEntity(program, role, group.id);
+      val programEgoGroup = new ProgramEgoGroupEntity()
+          .setProgram(program)
+          .setRole(role)
+          .setEgoGroupId(group.id);
       programEgoGroupRepository.save(programEgoGroup);
     });
   }

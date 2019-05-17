@@ -2,6 +2,7 @@ package org.icgc.argo.program_service.model.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
@@ -130,15 +131,21 @@ public class ProgramEntity implements NameableEntity<UUID> {
   )
   private Set<ProgramEgoGroupEntity> egoGroups = newHashSet();
 
-  public void associateCancer(CancerEntity c){
+  public void associateCancer(@NonNull CancerEntity c){
     val pc = createProgramCancer(this, c);
     this.getProgramCancers().add(pc);
     c.getProgramCancers().add(pc);
   }
 
-  public void associatePrimarySite(PrimarySiteEntity ps){
+  public void associatePrimarySite(@NonNull PrimarySiteEntity ps){
     val pps = createProgramPrimarySite(this, ps);
     this.getProgramPrimarySites().add(pps);
     ps.getProgramPrimarySites().add(pps);
   }
+
+  public void associateEgoGroup(@NonNull ProgramEgoGroupEntity e){
+    this.getEgoGroups().add(e);
+    e.setProgram(this);
+  }
+
 }

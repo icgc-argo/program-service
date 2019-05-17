@@ -1,5 +1,6 @@
 package org.icgc.argo.program_service;
 
+import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import org.junit.jupiter.api.Test;
 
@@ -29,8 +30,16 @@ public class UtilsTest {
     return StringValue.of(s);
   }
 
+  public static Int32Value int32Value(int i){
+    return Int32Value.of(i);
+  }
+
   public static UserRoleValue userRoleValue(UserRole u){
     return UserRoleValue.newBuilder().setValue(u).build();
+  }
+
+  public static MembershipTypeValue membershipTypeValue(MembershipType m){
+    return MembershipTypeValue.newBuilder().setValue(m).build();
   }
 
 }
