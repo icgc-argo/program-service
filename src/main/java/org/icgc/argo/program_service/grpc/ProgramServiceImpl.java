@@ -16,7 +16,7 @@ import org.icgc.argo.program_service.ProgramServiceGrpc;
 import org.icgc.argo.program_service.RemoveProgramRequest;
 import org.icgc.argo.program_service.RemoveUserRequest;
 import org.icgc.argo.program_service.converter.CommonConverter;
-import org.icgc.argo.program_service.converter.ToProtoProgramConverter;
+import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.icgc.argo.program_service.services.EgoService;
 import org.icgc.argo.program_service.services.ProgramService;
@@ -30,17 +30,17 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
    * Dependencies
    */
   private final ProgramService programService;
-  private final ToProtoProgramConverter toProtoProgramConverter;
+  private final ProgramConverter programConverter;
   private final CommonConverter commonConverter;
   private final EgoService egoService;
 
   @Autowired
   public ProgramServiceImpl(@NonNull ProgramService programService,
-     @NonNull ToProtoProgramConverter toProtoProgramConverter,
+     @NonNull ProgramConverter programConverter,
 	 @NonNull CommonConverter commonConverter,
 	 @NonNull EgoService egoService ) {
       this.programService = programService;
-    this.toProtoProgramConverter = toProtoProgramConverter;
+    this.programConverter = programConverter;
     this.egoService = egoService;
     this.commonConverter = commonConverter;
   }
@@ -54,7 +54,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     //       (3) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
     val entity = programService.createProgram(program);
-    val response = toProtoProgramConverter.programEntityToCreateProgramResponse(entity);
+    val response = programConverter.programEntityToCreateProgramResponse(entity);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
@@ -75,7 +75,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
         request.getLastName().getValue(),
         request.getRole().getValue());
 
-    val inviteUserResponse = toProtoProgramConverter.inviteIdToInviteUserResponse(inviteId);
+    val inviteUserResponse = programConverter.inviteIdToInviteUserResponse(inviteId);
     responseObserver.onNext(inviteUserResponse);
     responseObserver.onCompleted();
   }
@@ -96,7 +96,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
     val programEntities = programService.listPrograms();
-    val listProgramsResponse = toProtoProgramConverter.programEntitiesToListProgramsResponse(programEntities);
+    val listProgramsResponse = programConverter.programEntitiesToListProgramsResponse(programEntities);
     responseObserver.onNext(listProgramsResponse);
     responseObserver.onCompleted();
   }

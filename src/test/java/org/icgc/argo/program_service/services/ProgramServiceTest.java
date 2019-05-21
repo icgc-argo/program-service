@@ -4,7 +4,7 @@ import lombok.val;
 import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.UserRole;
-import org.icgc.argo.program_service.converter.FromProtoProgramConverter;
+import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
@@ -55,7 +55,7 @@ class ProgramServiceTest {
   private JoinProgramInvite invitation;
 
   @Mock
-  private FromProtoProgramConverter fromProtoProgramConverter;
+  private ProgramConverter programConverter;
 
   @Mock
   private EgoService egoService;
@@ -63,7 +63,7 @@ class ProgramServiceTest {
   @BeforeEach
   void init() {
     this.programService = new ProgramService(invitationRepository, programRepository
-        , fromProtoProgramConverter, mailSender, egoService);
+        , programConverter, mailSender, egoService);
   }
 
   @Test
@@ -112,7 +112,7 @@ class ProgramServiceTest {
     val inputProgramEntity = new ProgramEntity().setName(RandomString.make(10)).setShortName(RandomString.make(33));
     assertThat(inputProgramEntity.getCreatedAt()).isNull();
     assertThat(inputProgramEntity.getUpdatedAt()).isNull();
-    when(fromProtoProgramConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
+    when(programConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
     val outputEntity = programService.createProgram(program);
     assertThat(outputEntity.getCreatedAt()).isNotNull();
     assertThat(outputEntity.getUpdatedAt()).isNotNull();

@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.UserRole;
-import org.icgc.argo.program_service.converter.FromProtoProgramConverter;
+import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
@@ -37,21 +37,21 @@ public class ProgramService {
    */
   private final JoinProgramInviteRepository invitationRepository;
   private final ProgramRepository programRepository;
-  private final FromProtoProgramConverter fromProtoProgramConverter;
+  private final ProgramConverter programConverter;
   private final MailSender mailSender;
   private final EgoService egoService;
 
   @Autowired
   public ProgramService(@NonNull JoinProgramInviteRepository invitationRepository,
       @NonNull ProgramRepository programRepository,
-      @NonNull FromProtoProgramConverter fromProtoProgramConverter,
+      @NonNull ProgramConverter programConverter,
       @NonNull MailSender mailSender,
       @NonNull EgoService egoService) {
     this.invitationRepository = invitationRepository;
     this.programRepository = programRepository;
     this.mailSender = mailSender;
     this.egoService = egoService;
-    this.fromProtoProgramConverter = fromProtoProgramConverter;
+    this.programConverter = programConverter;
   }
 
   //TODO: add existence check, and fail with not found
@@ -66,7 +66,7 @@ public class ProgramService {
 
   //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
   public ProgramEntity createProgram(@NonNull Program program) {
-    val programEntity = fromProtoProgramConverter.programToProgramEntity(program);
+    val programEntity = programConverter.programToProgramEntity(program);
 
     // Set the timestamps
     val now = LocalDateTime.now(ZoneId.of("UTC"));
