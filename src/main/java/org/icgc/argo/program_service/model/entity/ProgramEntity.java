@@ -1,31 +1,44 @@
 package org.icgc.argo.program_service.model.entity;
 
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+import lombok.ToString;
+import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
+import lombok.val;
 import org.hibernate.annotations.GenericGenerator;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
+import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
 
 @Entity
 @Table(name = Tables.PROGRAM)
-@Builder
 @Data
-@EqualsAndHashCode
-@ToString
+@Accessors(chain = true)
 @FieldNameConstants
-@AllArgsConstructor
-@NoArgsConstructor
 public class ProgramEntity implements NameableEntity<UUID> {
+
   @Id
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
@@ -43,25 +56,21 @@ public class ProgramEntity implements NameableEntity<UUID> {
   private String name;
 
   @NotNull
-  @Column(name = SqlFields.DESCRIPTION)
-  private String description;
-
-  @NotNull
   @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.MEMBERSHIPTYPE)
   private org.icgc.argo.program_service.MembershipType membershipType;
 
   @NotNull
   @Column(name = SqlFields.COMMITMENTDONORS)
-  private int commitmentDonors;
+  private Integer commitmentDonors;
 
   @NotNull
   @Column(name = SqlFields.SUBMITTEDDONORS)
-  private int submittedDonors;
+  private Integer submittedDonors;
 
   @NotNull
   @Column(name = SqlFields.GENOMICDONORS)
-  private int genomicDonors;
+  private Integer genomicDonors;
 
   @NotNull
   @Column(name = SqlFields.WEBSITE)
@@ -81,38 +90,39 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @Column(name = SqlFields.INSTITUTIONS)
   private String institutions;
 
-  @Column(name = SqlFields.REGIONS)
-  private String regions;
-
   @NotNull
   @Column(name = SqlFields.COUNTRIES)
   private String countries;
 
-  @EqualsAndHashCode.Exclude
+  @Column(name = SqlFields.REGIONS)
+  private String regions;
+
+  @Column(name = SqlFields.DESCRIPTION)
+  private String description;
+
+
   @ToString.Exclude
-  @Builder.Default
+  @EqualsAndHashCode.Exclude
   @OneToMany(
           mappedBy = ProgramCancer.Fields.program,
           cascade = CascadeType.ALL,
           fetch = FetchType.LAZY,
           orphanRemoval = true
   )
-  private Set<ProgramCancer> cancerTypes = newHashSet();
+  private Set<ProgramCancer> programCancers = newHashSet();
 
-  @EqualsAndHashCode.Exclude
   @ToString.Exclude
-  @Builder.Default
+  @EqualsAndHashCode.Exclude
   @OneToMany(
           mappedBy = ProgramPrimarySite.Fields.program,
           cascade = CascadeType.ALL,
           fetch = FetchType.LAZY,
           orphanRemoval = true
   )
-  private Set<ProgramPrimarySite> primarySites = newHashSet();
+  private Set<ProgramPrimarySite> programPrimarySites = newHashSet();
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
-  @Builder.Default
   @OneToMany(
           mappedBy = ProgramEgoGroupEntity.Fields.program,
           cascade = CascadeType.ALL,
@@ -120,4 +130,22 @@ public class ProgramEntity implements NameableEntity<UUID> {
           orphanRemoval = true
   )
   private Set<ProgramEgoGroupEntity> egoGroups = newHashSet();
+
+  public void associateCancer(@NonNull CancerEntity c){
+    val pc = createProgramCancer(this, c);
+    this.getProgramCancers().add(pc);
+    c.getProgramCancers().add(pc);
+  }
+
+  public void associatePrimarySite(@NonNull PrimarySiteEntity ps){
+    val pps = createProgramPrimarySite(this, ps);
+    this.getProgramPrimarySites().add(pps);
+    ps.getProgramPrimarySites().add(pps);
+  }
+
+  public void associateEgoGroup(@NonNull ProgramEgoGroupEntity e){
+    this.getEgoGroups().add(e);
+    e.setProgram(this);
+  }
+
 }

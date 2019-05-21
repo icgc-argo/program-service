@@ -1,14 +1,17 @@
 package org.icgc.argo.program_service.services;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.UserRole;
-import org.icgc.argo.program_service.mappers.ProgramMapper;
+import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
+import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -23,33 +26,69 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Validated
 @Slf4j
 public class ProgramService {
+
+  /**
+   * Dependencies
+   */
   private final JoinProgramInviteRepository invitationRepository;
   private final ProgramRepository programRepository;
+  private final ProgramConverter programConverter;
   private final MailSender mailSender;
-  private final ProgramMapper programMapper;
   private final EgoService egoService;
 
-
-  public ProgramService(JoinProgramInviteRepository invitationRepository, ProgramRepository programRepository, MailSender mailSender, ProgramMapper programMapper, EgoService egoService) {
+  @Autowired
+  public ProgramService(@NonNull JoinProgramInviteRepository invitationRepository,
+      @NonNull ProgramRepository programRepository,
+      @NonNull ProgramConverter programConverter,
+      @NonNull MailSender mailSender,
+      @NonNull EgoService egoService) {
     this.invitationRepository = invitationRepository;
     this.programRepository = programRepository;
     this.mailSender = mailSender;
-    this.programMapper = programMapper;
     this.egoService = egoService;
+    this.programConverter = programConverter;
   }
 
-  public Optional<ProgramEntity> getProgram(String name) {
+  //TODO: add existence check, and fail with not found
+  public Optional<ProgramEntity> getProgram(@NonNull String name) {
     return programRepository.findByName(name);
   }
 
-  public Optional<ProgramEntity> getProgram(UUID uuid) {
+  //TODO: add existence check, and fail with not found
+  public Optional<ProgramEntity> getProgram(@NonNull UUID uuid) {
     return programRepository.findById(uuid);
+  }
+
+  //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
+  public ProgramEntity createProgram(@NonNull Program program) {
+    val programEntity = programConverter.programToProgramEntity(program);
+
+    // Set the timestamps
+    val now = LocalDateTime.now(ZoneId.of("UTC"));
+    programEntity.setCreatedAt(now);
+    programEntity.setUpdatedAt(now);
+
+    programRepository.save(programEntity);
+    egoService.setUpProgram(programEntity);
+    return programEntity;
+  }
+
+  //TODO: add existence check, and fail with not found
+  public void removeProgram(@NonNull ProgramEntity program) {
+    egoService.cleanUpProgram(program);
+    programRepository.deleteById(program.getId());
+  }
+
+  public List<ProgramEntity> listPrograms() {
+    return programRepository.findAll(new ProgramSpecificationBuilder()
+        .setFetchCancers(true)
+        .setFetchPrimarySites(true)
+        .listAll());
   }
 
   public UUID inviteUser(@NotNull ProgramEntity program,
@@ -61,6 +100,11 @@ public class ProgramService {
     sendInvite(invitation);
     invitationRepository.save(invitation);
     return invitation.getId();
+  }
+
+  void acceptInvite(JoinProgramInvite invitation) {
+    invitation.accept();
+    invitationRepository.save(invitation);
   }
 
   private void sendInvite(@NotNull JoinProgramInvite invitation) {
@@ -94,36 +138,14 @@ public class ProgramService {
     }
   }
 
-  public ProgramEntity createProgram(Program program) {
-    val programEntity = programMapper.ProgramToProgramEntity(program);
-    val now = LocalDateTime.now(ZoneId.of("UTC"));
-    programEntity.setCreatedAt(now);
-    programEntity.setUpdatedAt(now);
-
-    val entity = programRepository.save(programEntity);
-    egoService.setUpProgram(programEntity);
-    return entity;
-  }
-
-  public void removeProgram(ProgramEntity program) {
-    egoService.cleanUpProgram(program);
-    programRepository.deleteById(program.getId());
-  }
-
   public void removeProgram(UUID programId) {
     val program = programRepository.findById(programId);
     if (program.isPresent()) {
       removeProgram(program.get());
     } else {
+      //TODO: add proper error handling
       log.error("Could not find program {}", programId);
     }
   }
 
-  public List<Program> listPrograms() {
-    val programEntities = programRepository.findAll();
-
-    return programEntities.stream()
-            .map(programMapper::ProgramEntityToProgram)
-            .collect(Collectors.toUnmodifiableList());
-  }
 }

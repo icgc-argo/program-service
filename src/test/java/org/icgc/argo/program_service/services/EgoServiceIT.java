@@ -17,6 +17,10 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.argo.program_service.MembershipType.ASSOCIATE;
+import static org.icgc.argo.program_service.UtilsTest.int32Value;
+import static org.icgc.argo.program_service.UtilsTest.membershipTypeValue;
+import static org.icgc.argo.program_service.UtilsTest.stringValue;
 
 @SpringBootTest
 @ActiveProfiles({ "test", "default" })
@@ -45,7 +49,19 @@ class EgoServiceIT {
       return;
     }
 
-    val program = Program.newBuilder().setName("TestProgram").setShortName("TestShortName").build();
+    val program = Program.newBuilder()
+        .setName(stringValue("TestProgram"))
+        .setShortName(stringValue("TestShortName"))
+        .setCommitmentDonors(int32Value(0))
+        .setGenomicDonors(int32Value(0))
+        .setSubmittedDonors(int32Value(0))
+        .setMembershipType(membershipTypeValue(ASSOCIATE))
+        .setWebsite(stringValue("https://example.com"))
+        .setCountries(stringValue("Canada"))
+        .setInstitutions(stringValue("oicr"))
+        .setRegions(stringValue("toronto"))
+        .setDescription(stringValue(""))
+        .build();
     this.programEntity = programService.createProgram(program);
 
     // Policies are created
