@@ -60,6 +60,7 @@ class EgoServiceIT {
         .setCountries(stringValue("Canada"))
         .setInstitutions(stringValue("oicr"))
         .setRegions(stringValue("toronto"))
+        .setDescription(stringValue(""))
         .build();
     this.programEntity = programService.createProgram(program);
 
