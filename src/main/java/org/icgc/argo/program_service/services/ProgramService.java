@@ -10,6 +10,7 @@ import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
+import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailSender;
@@ -84,7 +85,10 @@ public class ProgramService {
   }
 
   public List<ProgramEntity> listPrograms() {
-    return programRepository.findAll();
+    return programRepository.findAll(new ProgramSpecificationBuilder()
+        .setFetchCancers(true)
+        .setFetchPrimarySites(true)
+        .listAll());
   }
 
   public UUID inviteUser(@NotNull ProgramEntity program,

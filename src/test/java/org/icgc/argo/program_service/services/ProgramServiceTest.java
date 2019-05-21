@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -27,8 +29,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -121,7 +121,8 @@ class ProgramServiceTest {
 
   @Test
   void listPrograms() {
-    when(programRepository.findAll()).thenReturn(List.of(programEntity));
+    when(programRepository.findAll((Specification<ProgramEntity>)Mockito.any()))
+        .thenReturn(List.of(programEntity));
     val programs = programService.listPrograms();
     assertThat(programs).contains(programEntity);
   }

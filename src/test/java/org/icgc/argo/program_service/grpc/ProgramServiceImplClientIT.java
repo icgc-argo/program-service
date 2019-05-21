@@ -12,6 +12,9 @@ import org.icgc.argo.program_service.UserRole;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.argo.program_service.MembershipType.ASSOCIATE;
+import static org.icgc.argo.program_service.UtilsTest.int32Value;
+import static org.icgc.argo.program_service.UtilsTest.membershipTypeValue;
 import static org.icgc.argo.program_service.UtilsTest.stringValue;
 import static org.icgc.argo.program_service.UtilsTest.userRoleValue;
 
@@ -22,8 +25,16 @@ class ProgramServiceImplClientIT {
   @Test
   void createAndListPrograms() {
     val program = Program.newBuilder()
-        .setName(stringValue(RandomString.make(15)))
         .setShortName(stringValue(RandomString.make(10)))
+        .setMembershipType(membershipTypeValue(ASSOCIATE))
+        .setWebsite(stringValue(""))
+        .setInstitutions(stringValue("oicr"))
+        .setRegions(stringValue(""))
+        .setName(stringValue(RandomString.make(15)))
+        .setCommitmentDonors(int32Value(234))
+        .setCountries(stringValue("canada"))
+        .setSubmittedDonors(int32Value(244))
+        .setGenomicDonors(int32Value(333))
         .setDescription(stringValue("nothing"));
 
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
@@ -35,9 +46,18 @@ class ProgramServiceImplClientIT {
   @Test
   void joinAndLeaveProgram() {
     val program = Program.newBuilder()
-        .setName(stringValue(RandomString.make(15)))
         .setShortName(stringValue(RandomString.make(10)))
+        .setMembershipType(membershipTypeValue(ASSOCIATE))
+        .setWebsite(stringValue(""))
+        .setInstitutions(stringValue("oicr"))
+        .setRegions(stringValue(""))
+        .setName(stringValue(RandomString.make(15)))
+        .setCommitmentDonors(int32Value(234))
+        .setCountries(stringValue("canada"))
+        .setSubmittedDonors(int32Value(244))
+        .setGenomicDonors(int32Value(333))
         .setDescription(stringValue("nothing"));
+
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
     val response = blockingStub.createProgram(createProgramRequest);
     val programId = response.getId();
