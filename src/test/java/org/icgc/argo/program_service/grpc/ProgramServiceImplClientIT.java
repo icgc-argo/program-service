@@ -8,7 +8,6 @@ import org.icgc.argo.program_service.CreateProgramRequest;
 import org.icgc.argo.program_service.InviteUserRequest;
 import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
-import org.icgc.argo.program_service.RemoveUserRequest;
 import org.icgc.argo.program_service.UserRole;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +34,10 @@ class ProgramServiceImplClientIT {
 
   @Test
   void joinAndLeaveProgram() {
-    val program = Program.newBuilder().setName(RandomString.make(15)).setShortName(RandomString.make(10)).setDescription("nothing");
+    val program = Program.newBuilder()
+        .setName(stringValue(RandomString.make(15)))
+        .setShortName(stringValue(RandomString.make(10)))
+        .setDescription(stringValue("nothing"));
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
     val response = blockingStub.createProgram(createProgramRequest);
     val programId = response.getId();
@@ -48,7 +50,7 @@ class ProgramServiceImplClientIT {
         .setProgramId(programId)
         .build();
     val inviteUserResponse = blockingStub.inviteUser(inviteUserRequest);
-    assertThat(inviteUserResponse.getInviteId()).isNotEmpty();
+    assertThat(inviteUserResponse.getInviteId().getValue()).isNotEmpty();
   }
 
 

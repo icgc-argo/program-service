@@ -10,18 +10,18 @@ import org.icgc.argo.program_service.CreateProgramRequest;
 import org.icgc.argo.program_service.CreateProgramResponse;
 import org.icgc.argo.program_service.InviteUserRequest;
 import org.icgc.argo.program_service.InviteUserResponse;
+import org.icgc.argo.program_service.JoinProgramRequest;
 import org.icgc.argo.program_service.ListProgramsResponse;
 import org.icgc.argo.program_service.ProgramServiceGrpc;
-import org.icgc.argo.program_service.converter.FromProtoProgramConverter;
+import org.icgc.argo.program_service.RemoveProgramRequest;
+import org.icgc.argo.program_service.RemoveUserRequest;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ToProtoProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
-import org.icgc.argo.program_service.mappers.ProgramMapper;
 import org.icgc.argo.program_service.services.EgoService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
@@ -31,18 +31,18 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
    */
   private final ProgramService programService;
   private final ToProtoProgramConverter toProtoProgramConverter;
-  private final FromProtoProgramConverter fromProtoProgramConverter;
+  private final CommonConverter commonConverter;
   private final EgoService egoService;
 
   @Autowired
   public ProgramServiceImpl(@NonNull ProgramService programService,
      @NonNull ToProtoProgramConverter toProtoProgramConverter,
-	 @NonNull EgoService egoService,
-      @NonNull FromProtoProgramConverter fromProtoProgramConverter) {
+	 @NonNull CommonConverter commonConverter,
+	 @NonNull EgoService egoService ) {
       this.programService = programService;
     this.toProtoProgramConverter = toProtoProgramConverter;
-    this.fromProtoProgramConverter = fromProtoProgramConverter;
     this.egoService = egoService;
+    this.commonConverter = commonConverter;
   }
 
 
@@ -61,7 +61,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void inviteUser(InviteUserRequest request, StreamObserver<InviteUserResponse> responseObserver) {
-    val programId = java.util.UUID.fromString(request.getProgramId().getValue());
+    val programId = commonConverter.stringToUUID(request.getProgramId());
     val programResult = programService.getProgram(programId);
 
     if (programResult.isEmpty()) {
@@ -84,7 +84,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void joinProgram(JoinProgramRequest request,
                           StreamObserver<com.google.protobuf.Empty> responseObserver) {
-    val succeed = programService.acceptInvite(UUID.fromString(request.getJoinProgramInvitationId()));
+    val succeed = programService.acceptInvite( commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
     if (!succeed) {
       responseObserver.onError(new StatusException(Status.fromCode(Status.Code.UNKNOWN)));
       return;
@@ -105,14 +105,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void removeUser(RemoveUserRequest request,
                          StreamObserver<com.google.protobuf.Empty> responseObserver) {
-    egoService.leaveProgram(UUID.fromString(request.getUserId()), UUID.fromString(request.getProgramId()));
+    egoService.leaveProgram(commonConverter.stringToUUID(request.getUserId()), commonConverter.stringToUUID(request.getProgramId()));
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
 
   @Override
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
-    programService.removeProgram(UUID.fromString(request.getProgramId()));
+    programService.removeProgram(commonConverter.stringToUUID(request.getProgramId()));
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }

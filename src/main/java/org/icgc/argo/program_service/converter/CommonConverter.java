@@ -47,6 +47,10 @@ public interface CommonConverter {
     }
   }
 
+  default UUID stringToUUID(StringValue s){
+    return stringToUUID(s.getValue());
+  }
+
   default String uuidToString(UUID uuid) {
     return uuid.toString();
   }

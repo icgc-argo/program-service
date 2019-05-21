@@ -134,36 +134,14 @@ public class ProgramService {
     }
   }
 
-  public ProgramEntity createProgram(Program program) {
-    val programEntity = programMapper.ProgramToProgramEntity(program);
-    val now = LocalDateTime.now(ZoneId.of("UTC"));
-    programEntity.setCreatedAt(now);
-    programEntity.setUpdatedAt(now);
-
-    val entity = programRepository.save(programEntity);
-    egoService.setUpProgram(programEntity);
-    return entity;
-  }
-
-  public void removeProgram(ProgramEntity program) {
-    egoService.cleanUpProgram(program);
-    programRepository.deleteById(program.getId());
-  }
-
   public void removeProgram(UUID programId) {
     val program = programRepository.findById(programId);
     if (program.isPresent()) {
       removeProgram(program.get());
     } else {
+      //TODO: add proper error handling
       log.error("Could not find program {}", programId);
     }
   }
 
-  public List<Program> listPrograms() {
-    val programEntities = programRepository.findAll();
-
-    return programEntities.stream()
-            .map(programMapper::ProgramEntityToProgram)
-            .collect(Collectors.toUnmodifiableList());
-  }
 }
