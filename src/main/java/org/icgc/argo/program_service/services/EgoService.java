@@ -59,7 +59,7 @@ public class EgoService {
     // TODO: Maybe jwt authentication
     this.restTemplate = new RestTemplateBuilder()
             .basicAuthentication(appProperties.getEgoClientId(), this.appProperties.getEgoClientSecret())
-            .setConnectTimeout(Duration.ofSeconds(10)).build();
+            .setConnectTimeout(Duration.ofSeconds(15)).build();
   }
 
   @Autowired
@@ -227,7 +227,6 @@ public class EgoService {
     });
   }
 
-  @Transactional
   public void cleanUpProgram(ProgramEntity programEntity) {
     programEgoGroupRepository.findAllByProgramId(programEntity.getId()).forEach(programEgoGroup ->{
       val egoGroupId = programEgoGroup.getEgoGroupId();
@@ -276,7 +275,6 @@ public class EgoService {
                     restTemplate.postForObject(url1, new HttpEntity<>(new PermissionRequest("WRITE")), PermissionRequest.class);
                     restTemplate.postForObject(url2, new HttpEntity<>(new PermissionRequest("WRITE")), PermissionRequest.class);
                   } else if (group.name.contains("BANNED")) {
-                    // TODO: change to admin when ego implement it
                     restTemplate.postForObject(url1, new HttpEntity<>(new PermissionRequest("DENY")), PermissionRequest.class);
                     restTemplate.postForObject(url2, new HttpEntity<>(new PermissionRequest("DENY")), PermissionRequest.class);
                   } else  {
@@ -302,7 +300,7 @@ public class EgoService {
   }
 
   private List<Group> createGroups(String programShortName) {
-    val groupNames = Stream.of(UserRole.values()).map(UserRole::name).map(s -> "PROGRAM-" + programShortName + "-" + s);
+    val groupNames = Stream.of(UserRole.values()).filter(role -> !role.equals(UserRole.UNRECOGNIZED)).map(UserRole::name).map(s -> "PROGRAM-" + programShortName + "-" + s);
 
     return groupNames
             .map(this::createGroup)
@@ -381,9 +379,25 @@ public class EgoService {
     return true;
   }
 
-  public void leaveProgram(UUID userId, UUID programId) {
+  Boolean leaveProgram(@Email String email, UUID programId) {
+    val user = getUser(email).orElse(null);
+    if (user == null) {
+      log.error("Cannot find user with email {}", email);
+      return false;
+    }
+    return this.leaveProgram(user.getId(), programId);
+  }
+
+  public Boolean leaveProgram(UUID userId, UUID programId) {
     val groups = programEgoGroupRepository.findAllByProgramId(programId);
-    // TODO:rpcRemoveUser(userId, groupId);
+    groups.forEach(group -> {
+      try {
+        restTemplate.delete(appProperties.getEgoUrl() + String.format("/groups/%s/users/%s", group.getEgoGroupId(), userId));
+      } catch (RestClientException e) {
+        log.info("Cannot remove user {} from group {}", userId, group.getRole());
+      }
+    });
+    return true;
   }
 }
 

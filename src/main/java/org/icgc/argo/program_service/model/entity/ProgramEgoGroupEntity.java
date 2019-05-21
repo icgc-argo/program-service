@@ -35,6 +35,7 @@ public class ProgramEgoGroupEntity {
 
   @Column(nullable = false, updatable = false)
   @Enumerated(EnumType.STRING)
+  @Getter
   private UserRole role;
 
   @Column(nullable = false, updatable = false)

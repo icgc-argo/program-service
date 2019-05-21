@@ -23,9 +23,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -98,7 +101,9 @@ class ProgramServiceTest {
 
   @Test
   void acceptInvitation() {
-    programService.acceptInvite(invitation);
+    when(invitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
+    programService.acceptInvite(invitation.getId());
+    verify(egoService).joinProgram(invitation.getUserEmail(), invitation.getProgram(), invitation.getRole());
     verify(invitation).accept();
   }
 

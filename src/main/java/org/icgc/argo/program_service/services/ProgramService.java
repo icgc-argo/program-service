@@ -119,4 +119,51 @@ public class ProgramService {
       log.info("Cannot log in to mail server", e);
     }
   }
+
+  public Boolean acceptInvite(UUID invitationId) {
+    val invitation = invitationRepository.findById(invitationId);
+    if (invitation.isPresent()) {
+      val i = invitation.get();
+      i.accept();
+      val email = invitation.get().getUserEmail();
+      egoService.joinProgram(email, i.getProgram(), i.getRole());
+      invitationRepository.save(invitation.get());
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public ProgramEntity createProgram(Program program) {
+    val programEntity = programMapper.ProgramToProgramEntity(program);
+    val now = LocalDateTime.now(ZoneId.of("UTC"));
+    programEntity.setCreatedAt(now);
+    programEntity.setUpdatedAt(now);
+
+    val entity = programRepository.save(programEntity);
+    egoService.setUpProgram(programEntity);
+    return entity;
+  }
+
+  public void removeProgram(ProgramEntity program) {
+    egoService.cleanUpProgram(program);
+    programRepository.deleteById(program.getId());
+  }
+
+  public void removeProgram(UUID programId) {
+    val program = programRepository.findById(programId);
+    if (program.isPresent()) {
+      removeProgram(program.get());
+    } else {
+      log.error("Could not find program {}", programId);
+    }
+  }
+
+  public List<Program> listPrograms() {
+    val programEntities = programRepository.findAll();
+
+    return programEntities.stream()
+            .map(programMapper::ProgramEntityToProgram)
+            .collect(Collectors.toUnmodifiableList());
+  }
 }

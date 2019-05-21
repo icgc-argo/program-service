@@ -34,11 +34,8 @@ class ProgramServiceImplClientIT {
   }
 
   @Test
-  void addUser() {
-    val program = Program.newBuilder()
-        .setName(stringValue(RandomString.make(15)))
-        .setShortName(stringValue(RandomString.make(10)))
-        .setDescription(stringValue("nothing"));
+  void joinAndLeaveProgram() {
+    val program = Program.newBuilder().setName(RandomString.make(15)).setShortName(RandomString.make(10)).setDescription("nothing");
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
     val response = blockingStub.createProgram(createProgramRequest);
     val programId = response.getId();
@@ -51,16 +48,8 @@ class ProgramServiceImplClientIT {
         .setProgramId(programId)
         .build();
     val inviteUserResponse = blockingStub.inviteUser(inviteUserRequest);
-    assertThat(inviteUserResponse.getInviteId().getValue()).isNotEmpty();
+    assertThat(inviteUserResponse.getInviteId()).isNotEmpty();
   }
 
-  @Test
-  void removeUser() {
-    val removeUserRequest = RemoveUserRequest.newBuilder()
-        .setProgramId(stringValue("123"))
-        .setUserId(stringValue("123"))
-        .build();
-    val removeUserResponse = blockingStub.removeUser(removeUserRequest);
-    assertThat(removeUserResponse).isNotNull();
-  }
+
 }
