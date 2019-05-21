@@ -220,7 +220,6 @@ public class EgoService {
       });
   }
 
-  @Transactional
   public void cleanUpProgram(ProgramEntity programEntity) {
     programEgoGroupRepository.findAllByProgramId(programEntity.getId()).forEach(programEgoGroup -> {
         val egoGroupId = programEgoGroup.getEgoGroupId();
@@ -257,6 +256,7 @@ public class EgoService {
     default:
       log.error("Unknown role " + role.name());
       return new PermissionRequest("DENY");
+
     }
   }
 
@@ -408,9 +408,25 @@ public class EgoService {
     return true;
   }
 
-  public void leaveProgram(UUID userId, UUID programId) {
+  Boolean leaveProgram(@Email String email, UUID programId) {
+    val user = getUser(email).orElse(null);
+    if (user == null) {
+      log.error("Cannot find user with email {}", email);
+      return false;
+    }
+    return this.leaveProgram(user.getId(), programId);
+  }
+
+  public Boolean leaveProgram(UUID userId, UUID programId) {
     val groups = programEgoGroupRepository.findAllByProgramId(programId);
-    // TODO:rpcRemoveUser(userId, groupId);
+    groups.forEach(group -> {
+      try {
+        restTemplate.delete(appProperties.getEgoUrl() + String.format("/groups/%s/users/%s", group.getEgoGroupId(), userId));
+      } catch (RestClientException e) {
+        log.info("Cannot remove user {} from group {}", userId, group.getRole());
+      }
+    });
+    return true;
   }
 }
 

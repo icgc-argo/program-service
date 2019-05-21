@@ -104,10 +104,19 @@ class EgoServiceIT {
   }
 
   @Test
-  void joinProgram() {
+  void joinAndLeaveProgram() {
     val result = egoService.joinProgram("d8660091@gmail.com", programEntity, UserRole.ADMIN);
-
     assertThat(result).isTrue();
+
+    val groupId = egoService.getGroup("PROGRAM-TestShortName-ADMIN").get().getId();
+
+    val user = egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.User>>() {});
+    assertThat(user.isPresent()).isTrue();
+
+    egoService.leaveProgram("d8660091@gmail.com", programEntity.getId());
+
+
+    assertThat(egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.User>>() {}).isPresent()).isFalse();
   }
 
   @AfterAll
