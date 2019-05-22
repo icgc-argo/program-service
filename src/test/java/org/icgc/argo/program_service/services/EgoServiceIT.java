@@ -62,7 +62,8 @@ class EgoServiceIT {
         .setRegions(stringValue("toronto"))
         .setDescription(stringValue(""))
         .build();
-    this.programEntity = programService.createProgram(program);
+    this.programEntity = programService.createProgram(program).getValue();
+    assertThat(this.programEntity).isNotNull();
 
     // Policies are created
     assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Policy>>() {}).hasValue()).isTrue();
@@ -122,15 +123,19 @@ class EgoServiceIT {
     val result = egoService.joinProgram("d8660091@gmail.com", programEntity, UserRole.ADMIN);
     assertThat(result).isTrue();
 
-    val groupId = egoService.getGroup("PROGRAM-TestShortName-ADMIN").get().getId();
+    val groupId = egoService.getGroup("PROGRAM-TestShortName-ADMIN").getValue().getId();
 
     val user = egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.User>>() {});
-    assertThat(user.isPresent()).isTrue();
+    assertThat(user.hasValue()).isTrue();
 
     egoService.leaveProgram("d8660091@gmail.com", programEntity.getId());
 
 
-    assertThat(egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.User>>() {}).isPresent()).isFalse();
+    assertThat(egoService.getObject(
+      String.format("%s/groups/%s/users?query=%s",
+        appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"),
+      new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.User>>() {}).
+      hasValue()).isFalse();
   }
 
   @AfterAll

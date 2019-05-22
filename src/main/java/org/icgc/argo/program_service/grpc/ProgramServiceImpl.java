@@ -23,6 +23,8 @@ import org.icgc.argo.program_service.services.ProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
 
@@ -118,7 +120,16 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
-    programService.removeProgram(commonConverter.stringToUUID(request.getProgramId()));
+    val uuid = commonConverter.stringToUUID(request.getProgramId());
+    val programEntity = programService.getProgram(uuid).get();
+
+    if (programEntity == null) {
+      responseObserver.onError(new Error("Not found"));
+      responseObserver.onCompleted();
+      return;
+    }
+
+    programService.removeProgram(programEntity);
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }

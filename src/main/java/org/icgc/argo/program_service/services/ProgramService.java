@@ -129,7 +129,7 @@ public class ProgramService {
   }
 
   public ErrorOr<ProgramEntity> createProgram(@NonNull Program program) {
-    val programEntity = programConverter.ProgramToProgramEntity(program);
+    val programEntity = programConverter.programToProgramEntity(program);
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
@@ -150,11 +150,6 @@ public class ProgramService {
     }
 
     return new ErrorOr(saved);
-  }
-
-  public void removeProgram(ProgramEntity program) {
-    egoService.cleanUpProgram(program);
-    programRepository.deleteById(program.getId());
   }
 
 }

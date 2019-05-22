@@ -215,7 +215,10 @@ public class EgoService {
         val group = result.getValue();
         createGroupPermission(programPolicy.id, group.id, getProgramMask(role));
         createGroupPermission(dataPolicy.id, group.id, getDataMask(role));
-        val programEgoGroup = new ProgramEgoGroupEntity(program, role, group.id);
+        val programEgoGroup = new ProgramEgoGroupEntity().
+          setProgram(program).
+          setRole(role).
+          setEgoGroupId(group.id);
         programEgoGroupRepository.save(programEgoGroup);
       });
   }
@@ -409,12 +412,12 @@ public class EgoService {
   }
 
   Boolean leaveProgram(@Email String email, UUID programId) {
-    val user = getUser(email).orElse(null);
-    if (user == null) {
+    val user = getUser(email);
+    if (!user.hasValue()) {
       log.error("Cannot find user with email {}", email);
       return false;
     }
-    return this.leaveProgram(user.getId(), programId);
+    return this.leaveProgram(user.getValue().getId(), programId);
   }
 
   public Boolean leaveProgram(UUID userId, UUID programId) {
