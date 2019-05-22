@@ -12,9 +12,6 @@ import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.MailAuthenticationException;
-import org.springframework.mail.MailSender;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -38,20 +35,21 @@ public class ProgramService {
   private final JoinProgramInviteRepository invitationRepository;
   private final ProgramRepository programRepository;
   private final ProgramConverter programConverter;
-  private final MailSender mailSender;
   private final EgoService egoService;
+  private final MailService mailService;
 
   @Autowired
   public ProgramService(@NonNull JoinProgramInviteRepository invitationRepository,
       @NonNull ProgramRepository programRepository,
       @NonNull ProgramConverter programConverter,
-      @NonNull MailSender mailSender,
-      @NonNull EgoService egoService) {
+      @NonNull EgoService egoService,
+      @NonNull MailService mailService
+  ) {
     this.invitationRepository = invitationRepository;
     this.programRepository = programRepository;
-    this.mailSender = mailSender;
     this.egoService = egoService;
     this.programConverter = programConverter;
+    this.mailService = mailService;
   }
 
   //TODO: add existence check, and fail with not found
@@ -84,6 +82,16 @@ public class ProgramService {
     programRepository.deleteById(program.getId());
   }
 
+  public void removeProgram(UUID programId) {
+    val program = programRepository.findById(programId);
+    if (program.isPresent()) {
+      removeProgram(program.get());
+    } else {
+      //TODO: add proper error handling
+      log.error("Could not find program {}", programId);
+    }
+  }
+
   public List<ProgramEntity> listPrograms() {
     return programRepository.findAll(new ProgramSpecificationBuilder()
         .setFetchCancers(true)
@@ -97,34 +105,12 @@ public class ProgramService {
                          @NotBlank @NotNull String lastName,
                          @NotNull UserRole role) {
     val invitation = new JoinProgramInvite(program, userEmail, firstName, lastName, role);
-    sendInvite(invitation);
     invitationRepository.save(invitation);
+    mailService.sendInviteEmail(invitation);
     return invitation.getId();
   }
 
-  void acceptInvite(JoinProgramInvite invitation) {
-    invitation.accept();
-    invitationRepository.save(invitation);
-  }
-
-  private void sendInvite(@NotNull JoinProgramInvite invitation) {
-    SimpleMailMessage msg = new SimpleMailMessage();
-    msg.setTo(invitation.getUserEmail());
-//    TODO: Add invitation link
-    msg.setText(
-            "Dear " + invitation.getFirstName()
-                    + invitation.getLastName()
-                    + ", you are invited to join program.");
-
-    try {
-      mailSender.send(msg);
-      invitation.setEmailSent(true);
-    } catch (MailAuthenticationException e) {
-      log.info("Cannot log in to mail server", e);
-    }
-  }
-
-  public Boolean acceptInvite(UUID invitationId) {
+  public boolean acceptInvite(UUID invitationId) {
     val invitation = invitationRepository.findById(invitationId);
     if (invitation.isPresent()) {
       val i = invitation.get();
@@ -137,15 +123,4 @@ public class ProgramService {
       return false;
     }
   }
-
-  public void removeProgram(UUID programId) {
-    val program = programRepository.findById(programId);
-    if (program.isPresent()) {
-      removeProgram(program.get());
-    } else {
-      //TODO: add proper error handling
-      log.error("Could not find program {}", programId);
-    }
-  }
-
 }
