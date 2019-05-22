@@ -19,12 +19,12 @@ public class ErrorOr<T> {
   }
 
   public boolean hasValue() {
-    return getValue() == null;
+    return getValue() != null;
   }
   public boolean hasError() {
-    return getError() == null;
+    return getError() != null;
   }
-  public boolean hasException() { return getException() == null; }
+  public boolean hasException() { return getException() != null; }
   public T getValue() {
     return this.value;
   }
