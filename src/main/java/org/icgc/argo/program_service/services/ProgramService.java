@@ -141,6 +141,11 @@ public class ProgramService {
       return new ErrorOr(error);
     } catch(NoSuchElementException e) {
       return new ErrorOr(new RuntimeException("Could not save program"));
+    } catch(NullPointerException e) {
+      return new ErrorOr(new Error("Could not save program"));
+    }
+    if (saved == null) {
+      return new ErrorOr(new Error("Could not save program -- no idea why..."));
     }
 
     try {

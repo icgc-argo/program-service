@@ -113,7 +113,9 @@ class ProgramServiceTest {
     assertThat(inputProgramEntity.getCreatedAt()).isNull();
     assertThat(inputProgramEntity.getUpdatedAt()).isNull();
     when(programConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
-    val outputEntity = programService.createProgram(program).getValue();
+    val result = programService.createProgram(program);
+    assertThat(result.hasValue()).isTrue();
+    val outputEntity = result.getValue();
     assertThat(outputEntity.getCreatedAt()).isNotNull();
     assertThat(outputEntity.getUpdatedAt()).isNotNull();
     verify(programRepository).save(inputProgramEntity);
