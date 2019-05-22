@@ -1,9 +1,10 @@
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
+import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.UserRole;
-import org.icgc.argo.program_service.mappers.ProgramMapper;
+import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
@@ -13,7 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -26,8 +29,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -54,14 +55,15 @@ class ProgramServiceTest {
   private JoinProgramInvite invitation;
 
   @Mock
-  private ProgramMapper programMapper;
+  private ProgramConverter programConverter;
 
   @Mock
   private EgoService egoService;
 
   @BeforeEach
   void init() {
-    this.programService = new ProgramService(invitationRepository, programRepository, mailSender, programMapper, egoService);
+    this.programService = new ProgramService(invitationRepository, programRepository
+        , programConverter, mailSender, egoService);
   }
 
   @Test
@@ -107,16 +109,21 @@ class ProgramServiceTest {
 
   @Test
   void createProgram() {
-    when(programMapper.ProgramToProgramEntity(program)).thenReturn(programEntity);
-    programService.createProgram(program);
-    verify(programRepository).save(programEntity);
+    val inputProgramEntity = new ProgramEntity().setName(RandomString.make(10)).setShortName(RandomString.make(33));
+    assertThat(inputProgramEntity.getCreatedAt()).isNull();
+    assertThat(inputProgramEntity.getUpdatedAt()).isNull();
+    when(programConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
+    val outputEntity = programService.createProgram(program);
+    assertThat(outputEntity.getCreatedAt()).isNotNull();
+    assertThat(outputEntity.getUpdatedAt()).isNotNull();
+    verify(programRepository).save(inputProgramEntity);
   }
 
   @Test
   void listPrograms() {
-    when(programRepository.findAll()).thenReturn(List.of(programEntity));
-    when(programMapper.ProgramEntityToProgram(programEntity)).thenReturn(program);
+    when(programRepository.findAll((Specification<ProgramEntity>)Mockito.any()))
+        .thenReturn(List.of(programEntity));
     val programs = programService.listPrograms();
-    assertThat(programs).contains(program);
+    assertThat(programs).contains(programEntity);
   }
 }

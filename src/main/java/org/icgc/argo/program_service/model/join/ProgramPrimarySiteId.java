@@ -24,6 +24,6 @@ public class ProgramPrimarySiteId implements Serializable {
   private UUID programId;
 
   @Column(name = SqlFields.SITEID_JOIN)
-  private UUID siteId;
+  private UUID primarySiteId;
 
 }

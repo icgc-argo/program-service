@@ -1,9 +1,16 @@
 package org.icgc.argo.program_service.grpc;
 
 import com.google.protobuf.Empty;
+import com.google.protobuf.Int32Value;
+import com.google.protobuf.StringValue;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
-import org.icgc.argo.program_service.*;
+import org.icgc.argo.program_service.CreateProgramRequest;
+import org.icgc.argo.program_service.CreateProgramResponse;
+import org.icgc.argo.program_service.ListProgramsResponse;
+import org.icgc.argo.program_service.MembershipType;
+import org.icgc.argo.program_service.MembershipTypeValue;
+import org.icgc.argo.program_service.Program;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +18,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
+import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -76,17 +86,19 @@ public class ProgramServiceImplIT {
      String website
   ) {
     val p = Program
-      .newBuilder()
-      .setName(name)
-      .setShortName(shortName)
-      .setDescription(description)
-      .setMembershipType(MembershipType.valueOf(membershipType))
-      .setCommitmentDonors(commitmentDonors)
-      .setSubmittedDonors(submittedDonors)
-      .setGenomicDonors(genomicDonors)
-      .setWebsite(website)
-      .setCountries("Canada")
-      .build();
+        .newBuilder()
+        .setName(StringValue.of(name))
+        .setShortName(StringValue.of(shortName))
+        .setDescription(StringValue.of(description))
+        .setMembershipType(MembershipTypeValue.newBuilder()
+            .setValue( MembershipType.valueOf(membershipType))
+            .build())
+        .setCommitmentDonors(Int32Value.of(commitmentDonors))
+        .setSubmittedDonors(Int32Value.of(submittedDonors))
+        .setGenomicDonors(Int32Value.of(genomicDonors))
+        .setWebsite(StringValue.of(website))
+        .setCountries(StringValue.of("Canada"))
+        .build();
     return p;
   }
 
