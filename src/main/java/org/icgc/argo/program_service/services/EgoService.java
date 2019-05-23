@@ -348,7 +348,8 @@ public class EgoService {
  }
 
  public Optional<Policy> getPolicy(String policyName) {
-    return getObjects("/policies?name=" + policyName, Policy.class).
+    val policies = getObjects("/policies?query=" + policyName, Policy.class);
+    return policies.
       filter( o -> o.name.equals(policyName)).
       findFirst();
   }
