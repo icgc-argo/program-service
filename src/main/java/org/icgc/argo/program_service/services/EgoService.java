@@ -10,8 +10,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.icgc.argo.program_service.User;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
@@ -32,6 +34,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,11 +50,14 @@ public class EgoService {
 
   private RSAPublicKey egoPublicKey;
   private AppProperties appProperties;
+  private final CommonConverter commonConverter;
+
 
   @Autowired
-  public EgoService(ProgramEgoGroupRepository programEgoGroupRepository, AppProperties appProperties) {
+  public EgoService(ProgramEgoGroupRepository programEgoGroupRepository, AppProperties appProperties, CommonConverter commonConverter) {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.appProperties = appProperties;
+    this.commonConverter = commonConverter;
   }
 
   @Autowired
@@ -172,7 +178,7 @@ public class EgoService {
   }
 
   @AllArgsConstructor @NoArgsConstructor @Data
-  static class User {
+  static class EgoUser {
     @JsonProperty
     private UUID id;
 
@@ -227,6 +233,40 @@ public class EgoService {
     });
   }
 
+  private User convertToUser(EgoUser egoUser){
+      if( egoUser == null){
+        return null;
+      }
+
+      return User.newBuilder()
+              .setEmail(commonConverter.boxString(egoUser.email))
+              .setFirstName(commonConverter.boxString(egoUser.firstName))
+              .setLastName(commonConverter.boxString(egoUser.lastName))
+              .setId(commonConverter.boxString(egoUser.id.toString()))
+              .build();
+  }
+
+  public List<User> getUserByGroup(UUID programId){
+    val userResults = new ArrayList();
+
+    programEgoGroupRepository.findAllByProgramId(programId).forEach( programEgoGroup -> {
+      val groupId = programEgoGroup.getEgoGroupId();
+      try {
+        val users = getObject(String.format("%s/groups/%s/users", appProperties.getEgoUrl(), groupId),
+                      new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
+        users.ifPresent( user -> {
+          val programUser = convertToUser(user);
+          userResults.add(programUser);
+        });
+      } catch (RestClientException e){
+        log.error("Fail to retrieve users from ego group: ", groupId);
+      }
+    });
+
+    return userResults;
+  }
+
+  @Transactional
   public void cleanUpProgram(ProgramEntity programEntity) {
     programEgoGroupRepository.findAllByProgramId(programEntity.getId()).forEach(programEgoGroup ->{
       val egoGroupId = programEgoGroup.getEgoGroupId();
@@ -351,8 +391,8 @@ public class EgoService {
   }
 
 
-  Optional<User> getUser(@Email String email) {
-    return getObject(String.format("%s/users?query=%s", appProperties.getEgoUrl(), email), new ParameterizedTypeReference<EgoCollection<User>>() {});
+  Optional<EgoUser> getUser(@Email String email) {
+    return getObject(String.format("%s/users?query=%s", appProperties.getEgoUrl(), email), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
   }
 
   Boolean joinProgram(@Email String email, ProgramEntity programEntity, UserRole role) {

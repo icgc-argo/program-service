@@ -3,6 +3,7 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.UserRole;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
 import org.junit.jupiter.api.AfterAll;
@@ -15,7 +16,10 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
+import java.util.ArrayList;
+import java.util.List;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.argo.program_service.MembershipType.ASSOCIATE;
 import static org.icgc.argo.program_service.UtilsTest.int32Value;
@@ -30,6 +34,7 @@ import static org.icgc.argo.program_service.UtilsTest.stringValue;
         "spring.datasource.driverClassName=org.postgresql.Driver",
 })
 class EgoServiceIT {
+
   @Autowired
   EgoService egoService;
 
@@ -39,7 +44,13 @@ class EgoServiceIT {
   @Autowired
   AppProperties appProperties;
 
+  @Autowired
+  CommonConverter commonConverter;
+
   ProgramEntity programEntity;
+
+  private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
+  private static final String COLLABORATOR_USER_EMAIL = "TestPS@dummy.com";
 
   @BeforeAll
   void setUp() {
@@ -112,9 +123,12 @@ class EgoServiceIT {
 
   @Test
   void getUser() {
-    val egoUser = egoService.getUser("d8660091@gmail.com");
-
-    assertThat(egoUser.isPresent()).isTrue();
+    val egoUser1 = egoService.getUser("d8660091@gmail.com");
+    val egoUser2 = egoService.getUser(ADMIN_USER_EMAIL);
+    val egoUser3 = egoService.getUser(COLLABORATOR_USER_EMAIL);
+    assertThat(egoUser1.isPresent()).isTrue();
+    assertThat(egoUser2.isPresent()).isTrue();
+    assertThat(egoUser3.isPresent()).isTrue();
   }
 
   @Test
@@ -124,13 +138,53 @@ class EgoServiceIT {
 
     val groupId = egoService.getGroup("PROGRAM-TestShortName-ADMIN").get().getId();
 
-    val user = egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.User>>() {});
+    val user = egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.EgoUser>>() {});
     assertThat(user.isPresent()).isTrue();
 
     egoService.leaveProgram("d8660091@gmail.com", programEntity.getId());
+    assertThat(egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.EgoUser>>() {}).isPresent()).isFalse();
+  }
 
+  @Test
+  void listUser(){
+    List<String> expectedUsers = new ArrayList();
+    expectedUsers.add(ADMIN_USER_EMAIL);
+    expectedUsers.add(COLLABORATOR_USER_EMAIL);
 
-    assertThat(egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.User>>() {}).isPresent()).isFalse();
+    val adminGroupId = egoService.getGroup("PROGRAM-TestShortName-ADMIN").get().getId();
+    val collaboratorGroupId = egoService.getGroup("PROGRAM-TestShortName-COLLABORATOR").get().getId();
+
+    // 1. add an ADMIN user to TestProgram
+    val adminJoin = egoService.joinProgram(ADMIN_USER_EMAIL, programEntity, UserRole.ADMIN);
+    assertThat(adminJoin).isTrue();
+
+    // 2. add a COLLABORATOR user to TestProgram
+    val collaboratorJoin = egoService.joinProgram(COLLABORATOR_USER_EMAIL, programEntity, UserRole.COLLABORATOR);
+    assertThat(collaboratorJoin).isTrue();
+
+    // 3. after calling listUser, verify if returned users match added users
+    val users = egoService.getUserByGroup(programEntity.getId());
+    users.forEach( user ->
+            assertTrue(ifUserExists(commonConverter.unboxStringValue(user.getEmail()), expectedUsers)));
+
+    // 4. remove users from the program
+    assertThat(egoService.leaveProgram(ADMIN_USER_EMAIL, programEntity.getId())).isTrue();
+    assertThat(egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getId())).isTrue();
+
+    // 5. Verify if users are deleted from each group
+    assertThat(egoService.getObject(
+                String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), adminGroupId, ADMIN_USER_EMAIL),
+                new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.EgoUser>>() {})
+        .isPresent()).isFalse();
+
+    assertThat(egoService.getObject(
+            String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), collaboratorGroupId, COLLABORATOR_USER_EMAIL),
+            new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.EgoUser>>() {})
+            .isPresent()).isFalse();
+  }
+
+  private boolean ifUserExists(String email, List<String> userList){
+    return userList.contains(email);
   }
 
   @AfterAll

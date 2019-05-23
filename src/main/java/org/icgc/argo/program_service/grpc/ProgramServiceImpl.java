@@ -6,15 +6,7 @@ import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
 import lombok.NonNull;
 import lombok.val;
-import org.icgc.argo.program_service.CreateProgramRequest;
-import org.icgc.argo.program_service.CreateProgramResponse;
-import org.icgc.argo.program_service.InviteUserRequest;
-import org.icgc.argo.program_service.InviteUserResponse;
-import org.icgc.argo.program_service.JoinProgramRequest;
-import org.icgc.argo.program_service.ListProgramsResponse;
-import org.icgc.argo.program_service.ProgramServiceGrpc;
-import org.icgc.argo.program_service.RemoveProgramRequest;
-import org.icgc.argo.program_service.RemoveUserRequest;
+import org.icgc.argo.program_service.*;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
@@ -35,11 +27,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   private final EgoService egoService;
 
   @Autowired
-  public ProgramServiceImpl(@NonNull ProgramService programService,
-     @NonNull ProgramConverter programConverter,
-	 @NonNull CommonConverter commonConverter,
-	 @NonNull EgoService egoService ) {
-      this.programService = programService;
+  public ProgramServiceImpl(@NonNull ProgramService programService, @NonNull ProgramConverter programConverter,
+                            @NonNull CommonConverter commonConverter, @NonNull EgoService egoService ) {
+    this.programService = programService;
     this.programConverter = programConverter;
     this.egoService = egoService;
     this.commonConverter = commonConverter;
@@ -49,9 +39,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
-    // TODO: (1) Create the rest of the program entities
-    //       (2) Set up the permissions, groups in EGO
-    //       (3) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
     val entity = programService.createProgram(program);
     val response = programConverter.programEntityToCreateProgramResponse(entity);
@@ -98,6 +85,15 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val programEntities = programService.listPrograms();
     val listProgramsResponse = programConverter.programEntitiesToListProgramsResponse(programEntities);
     responseObserver.onNext(listProgramsResponse);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
+    val programId = request.getProgramId();
+    val users = programService.listUser(commonConverter.stringToUUID(programId));
+    val response = programConverter.usersToListUserResponse(users);
+    responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
 
