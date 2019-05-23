@@ -5,7 +5,6 @@ import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 

@@ -84,3 +84,35 @@ app:
 spring:
   profiles: auth
 
+---
+###############################################################################
+# Profile - "int"
+###############################################################################
+spring.profiles: int
+spring:
+  profiles:
+    include: [auth]
+  flyway:
+    enabled: true
+  boot:
+    admin:
+      client:
+        url: http://localhost:9081
+  datasource:
+    url: jdbc:postgresql://localhost:9082/program_db
+    username: postgres
+    password: password
+
+server:
+  port: 8080
+
+management:
+  server:
+    port: 8081
+
+app:
+  egoUrl: "http://localhost:8080"
+  egoClientId: "ps-clientid"
+  egoClientSecret: "ps-clientsecret"
+  grpcEnabled: false
+
