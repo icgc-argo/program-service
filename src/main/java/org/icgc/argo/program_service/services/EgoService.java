@@ -433,6 +433,7 @@ public class EgoService {
     groups.forEach(group -> {
       try {
         restTemplate.delete(appProperties.getEgoUrl() + String.format("/groups/%s/users/%s", group.getEgoGroupId(), userId));
+        log.info("User {} left group {}", userId, group.getEgoGroupId());
       } catch (RestClientException e) {
         log.info("Cannot remove user {} from group {}", userId, group.getRole());
       }

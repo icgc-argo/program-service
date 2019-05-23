@@ -154,24 +154,21 @@ class EgoServiceIT {
     val adminGroupId = egoService.getGroup("PROGRAM-TestShortName-ADMIN").get().getId();
     val collaboratorGroupId = egoService.getGroup("PROGRAM-TestShortName-COLLABORATOR").get().getId();
 
-    // 1. add an ADMIN user to TestProgram
     val adminJoin = egoService.joinProgram(ADMIN_USER_EMAIL, programEntity, UserRole.ADMIN);
-    assertThat(adminJoin).isTrue();
+    assertThat(adminJoin).as("Can add ADMIN user to TestProgram.").isTrue();
 
-    // 2. add a COLLABORATOR user to TestProgram
     val collaboratorJoin = egoService.joinProgram(COLLABORATOR_USER_EMAIL, programEntity, UserRole.COLLABORATOR);
-    assertThat(collaboratorJoin).isTrue();
+    assertThat(collaboratorJoin).as("Can add COLLABORATOR user to TestProgram.").isTrue();
 
-    // 3. after calling listUser, verify if returned users match added users
     val users = egoService.getUserByGroup(programEntity.getId());
     users.forEach( user ->
             assertTrue(ifUserExists(commonConverter.unboxStringValue(user.getEmail()), expectedUsers)));
 
-    // 4. remove users from the program
-    assertThat(egoService.leaveProgram(ADMIN_USER_EMAIL, programEntity.getId())).isTrue();
-    assertThat(egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getId())).isTrue();
+    assertThat(egoService.leaveProgram(ADMIN_USER_EMAIL, programEntity.getId()))
+            .as("ADMIN user is removed from TestProgram.").isTrue();
+    assertThat(egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getId()))
+            .as("COLLABORATOR user is removed from TestProgram.").isTrue();
 
-    // 5. Verify if users are deleted from each group
     assertThat(egoService.getObject(
                 String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), adminGroupId, ADMIN_USER_EMAIL),
                 new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.EgoUser>>() {})
@@ -180,7 +177,7 @@ class EgoServiceIT {
     assertThat(egoService.getObject(
             String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), collaboratorGroupId, COLLABORATOR_USER_EMAIL),
             new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.EgoUser>>() {})
-            .isPresent()).isFalse();
+        .isPresent()).isFalse();
   }
 
   private boolean ifUserExists(String email, List<String> userList){
