@@ -2,14 +2,7 @@ package org.icgc.argo.program_service.converter;
 
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
-import org.icgc.argo.program_service.Cancer;
-import org.icgc.argo.program_service.CreateProgramResponse;
-import org.icgc.argo.program_service.InviteUserResponse;
-import org.icgc.argo.program_service.ListProgramsResponse;
-import org.icgc.argo.program_service.MembershipType;
-import org.icgc.argo.program_service.MembershipTypeValue;
-import org.icgc.argo.program_service.PrimarySite;
-import org.icgc.argo.program_service.Program;
+import org.icgc.argo.program_service.*;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -138,6 +131,10 @@ public interface ProgramConverter {
 
   default ListProgramsResponse programEntitiesToListProgramsResponse(Collection<ProgramEntity> programEntities){
     return programEntitiesToListProgramsResponse(0, programEntities);
+  }
+
+  default ListUserResponse usersToListUserResponse(Collection<User> users){
+    return ListUserResponse.newBuilder().addAllUsers(users).build();
   }
 
   default InviteUserResponse inviteIdToInviteUserResponse(@NonNull UUID inviteId){

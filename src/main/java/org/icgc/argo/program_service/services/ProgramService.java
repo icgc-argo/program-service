@@ -4,6 +4,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.Program;
+import org.icgc.argo.program_service.User;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
@@ -89,6 +90,11 @@ public class ProgramService {
         .setFetchCancers(true)
         .setFetchPrimarySites(true)
         .listAll());
+  }
+
+  public List<User> listUser(UUID programId){
+    val users = egoService.getUserByGroup(programId);
+    return users;
   }
 
   public UUID inviteUser(@NotNull ProgramEntity program,

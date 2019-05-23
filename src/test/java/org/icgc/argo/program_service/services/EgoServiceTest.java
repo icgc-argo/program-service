@@ -2,6 +2,7 @@ package org.icgc.argo.program_service.services;
 
 import lombok.val;
 import org.icgc.argo.program_service.Utils;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.properties.AppProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -17,7 +18,8 @@ class EgoServiceTest {
   void verifyKey() {
     val rsaPublicKey = (RSAPublicKey) Utils.getPublicKey(publickKey, "RSA");
 
-    val egoService = new EgoService(null, new AppProperties());
+    val egoService = new EgoService(null, new AppProperties(), new CommonConverter() {
+    });
     ReflectionTestUtils.setField(egoService, "egoPublicKey", rsaPublicKey);
 
     assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
