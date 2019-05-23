@@ -8,8 +8,14 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
@@ -23,11 +29,11 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import java.security.interfaces.RSAPublicKey;
@@ -44,16 +50,22 @@ public class EgoService {
 
   private final ProgramEgoGroupRepository programEgoGroupRepository;
   private RestTemplate restTemplate;
+  private final RetryTemplate simpleRetryTemplate;
 
   private RSAPublicKey egoPublicKey;
   private AppProperties appProperties;
 
   @Autowired
-  public EgoService(ProgramEgoGroupRepository programEgoGroupRepository, AppProperties appProperties) {
+  public EgoService(
+      @NonNull RetryTemplate simpleRetryTemplate,
+      @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
+      @NonNull AppProperties appProperties) {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.appProperties = appProperties;
+    this.simpleRetryTemplate = simpleRetryTemplate;
   }
 
+  //TODO: move to @Configuration class
   @Autowired
   private void setRestTemplate() {
     // TODO: Maybe jwt authentication
@@ -62,12 +74,14 @@ public class EgoService {
             .setConnectTimeout(Duration.ofSeconds(15)).build();
   }
 
+
+  //TODO: The ego endpoint could alternatively be called in a @Bean definition fo egoPublicKey()
   @Autowired
   private void setEgoPublicKey() {
     RSAPublicKey egoPublicKey = null;
     try {
       log.info("Start fetching ego public key");
-      val key = restTemplate.getForEntity(appProperties.getEgoUrl() + "/oauth/token/public_key", String.class).getBody();
+      val key = simpleRetryTemplate.execute(x -> restTemplate.getForEntity(appProperties.getEgoUrl() + "/oauth/token/public_key", String.class).getBody());
       log.info("Ego public key is fetched");
       egoPublicKey = (RSAPublicKey) Utils.getPublicKey(key, "RSA");
     } catch(RestClientException e) {
@@ -237,6 +251,7 @@ public class EgoService {
       }
     });
 
+    //TODO: create mini ego client with selected functionality instead of copy multiple requests
     val policy1 = getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {});
     val policy2 = getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-DATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {});
 

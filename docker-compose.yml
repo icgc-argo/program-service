@@ -1,0 +1,84 @@
+##################################################################################
+#  
+#  Copyright (c) 2019. Ontario Institute for Cancer Research
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Affero General Public License as
+#  published by the Free Software Foundation, either version 3 of the
+#  License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Affero General Public License for more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+##################################################################################
+version: '3.2'
+services:
+  api:
+    restart: always
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "9080:50051"
+    environment:
+      SERVER_PORT: 8080
+      MANAGEMENT_SERVER_PORT: 8081
+      SPRING_BOOT_ADMIN_CLIENT_URL: "http://admin:8080"
+      SPRING_PROFILES: auth
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/program_db?stringtype=unspecified
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: "classpath:flyway/sql"
+      APP_EGOURL: "http://ego-api:8080"
+      APP_EGOCLIENTID: "program-service"
+      APP_EGOCLIENTSECRET: "program-service-secret"
+      APP_GRPCENABLED: "false"
+    depends_on:
+      - postgres
+      - ego-api
+  postgres:
+    image: postgres:9.5
+    environment:
+      - POSTGRES_DB=program_db
+      - POSTGRES_PASSWORD=password
+    expose:
+      - "5432"
+  ego-api:
+    restart: always
+    image: "overture/ego:latest"
+    ports:
+      - "9082:8080"
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ego-postgres:5432/ego?stringtype=unspecified
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: "classpath:flyway/sql,classpath:db/migration"
+      SPRING_PROFILES: demo
+    command: java -jar /srv/ego/install/ego.jar
+    depends_on:
+      - ego-postgres
+  ego-postgres:
+    image: postgres:9.5
+    environment:
+      - POSTGRES_DB=ego
+      - POSTGRES_PASSWORD=password
+    expose:
+      - "5432"
+  admin:
+    image: "icgcargo/spring-boot-admin:e8779d3"
+    ports:
+      - "9081:8080"
+    environment:
+      SERVER_PORT: 8080
+    depends_on:
+      - api
+      - ego-api
+

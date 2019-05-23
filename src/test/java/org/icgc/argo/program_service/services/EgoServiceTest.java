@@ -3,21 +3,28 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.properties.AppProperties;
+import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.security.interfaces.RSAPublicKey;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
+import static org.mockito.Mockito.mock;
 
 class EgoServiceTest {
+
+
   @Test
   void verifyKey() {
     val rsaPublicKey = (RSAPublicKey) Utils.getPublicKey(publickKey, "RSA");
+    val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
 
-    val egoService = new EgoService(null, new AppProperties());
+    val retryTemplate = new RetryTemplate();
+    val egoService = new EgoService(retryTemplate,programEgoGroupRepository, new AppProperties());
     ReflectionTestUtils.setField(egoService, "egoPublicKey", rsaPublicKey);
 
     assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
