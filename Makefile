@@ -135,51 +135,47 @@ compile: _check_mvn_software_exists
 	@$(MVNW_EXE) clean compile
 	@echo $(DONE_MESSAGE)
 
-package: _check_mvn_software_exists
-	@echo $(YELLOW)$(INFO_HEADER) "Cleaning, compiling, testing, and packaging local project" $(END)
-	@$(MVNW_EXE) clean package
+verify: _check_mvn_software_exists
+	@echo $(YELLOW)$(INFO_HEADER) "Cleaning and verifying" $(END)
+	@$(MVNW_EXE) clean verify
 	@echo $(DONE_MESSAGE)
 
 #######################################
-docker-nuke: _check_docker_software_exists
-	@echo $(YELLOW)$(INFO_HEADER) "Killing all docker-compose containers"$(END)
-	@$(DOCKER_COMPOSE_COMMAND) down -v
+start-ego: _check_docker_software_exists
+	@echo $(YELLOW)$(INFO_HEADER) "Starting ego services"$(END)
+	@$(DOCKER_COMPOSE_COMMAND) up --no-deps -d ego-api ego-postgres admin
 	@echo $(DONE_MESSAGE)
 
-docker-dev-start: _check_docker_software_exists
-	@echo $(YELLOW)$(INFO_HEADER) "Starting services for developement"$(END)
-	@$(DOCKER_COMPOSE_COMMAND) up --no-deps -d postgres ego-postgres ego-api admin
+stop-ego: _check_docker_software_exists
+	@echo $(YELLOW)$(INFO_HEADER) "Killing ego services"$(END)
+	@$(DOCKER_COMPOSE_COMMAND) kill ego-api ego-postgres admin
 	@echo $(DONE_MESSAGE)
 
-docker-dev-restart: docker-dev-stop docker-dev-start
-
-docker-dev-ps: _check_docker_software_exists
-	@echo $(YELLOW)$(INFO_HEADER) "Check status of developement services"$(END)
-	@$(DOCKER_COMPOSE_COMMAND) ps postgres ego-postgres ego-api admin
-	@echo $(DONE_MESSAGE)
-
-docker-dev-stop: _check_docker_software_exists
-	@echo $(YELLOW)$(INFO_HEADER) "Kill services for developement and removing containers"$(END)
-	@$(DOCKER_COMPOSE_COMMAND) kill postgres ego-postgres ego-api admin
-	@$(DOCKER_COMPOSE_COMMAND) rm -f postgres ego-postgres ego-api admin
-	@echo $(DONE_MESSAGE)
-
-docker-start-all: docker-nuke
-	@echo $(YELLOW)$(INFO_HEADER) "Starting services for developement"$(END)
-	@$(DOCKER_COMPOSE_COMMAND) up --build -d
-	@echo $(DONE_MESSAGE)
-
-docker-logs: _check_docker_software_exists
-	@echo $(YELLOW)$(INFO_HEADER) "Show the logs for ego, the api and the database"$(END)
-	@$(DOCKER_COMPOSE_COMMAND) logs ego-api api postgres
-	@echo $(DONE_MESSAGE)
-
-run-int-test: _check_mvn_software_exists docker-dev-start
-	@echo $(YELLOW)$(INFO_HEADER) "Running integration tests" $(END)
-	@$(MVNW_EXE) -Dspring.profiles.active=int clean verify
-	@echo $(DONE_MESSAGE)
-
-run-unit-test: _check_mvn_software_exists docker-dev-start
+run-unit-test: _check_mvn_software_exists
 	@echo $(YELLOW)$(INFO_HEADER) "Running unit tests" $(END)
 	@$(MVNW_EXE) clean package
 	@echo $(DONE_MESSAGE)
+
+demo-up:
+	@echo $(YELLOW)$(INFO_HEADER) "Starting demo"$(END)
+	@$(DOCKER_COMPOSE_COMMAND) up --build -d
+	@echo $(DONE_MESSAGE)
+
+demo-ps:
+	@echo $(YELLOW)$(INFO_HEADER) "Showing running services for demo"$(END)
+	@$(DOCKER_COMPOSE_COMMAND) ps
+	@echo $(DONE_MESSAGE)
+
+demo-logs:
+	@echo $(YELLOW)$(INFO_HEADER) "Showing logs for demo services"$(END)
+	@$(DOCKER_COMPOSE_COMMAND) logs
+	@echo $(DONE_MESSAGE)
+
+demo-down:
+	@echo $(YELLOW)$(INFO_HEADER) "Stopping demo"$(END)
+	@$(DOCKER_COMPOSE_COMMAND) down -v
+	@echo $(DONE_MESSAGE)
+
+#doesnt work
+run-int-test:  start-ego verify stop-ego
+
