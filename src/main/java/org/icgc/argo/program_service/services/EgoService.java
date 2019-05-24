@@ -9,11 +9,13 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
@@ -41,8 +43,11 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static org.icgc.argo.program_service.services.EgoService.GroupName.createProgramGroupName;
 
 @Slf4j
 @Service
@@ -307,21 +312,48 @@ public class EgoService {
     return Stream.of(policy1, policy2)
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(Collectors.toList());
+            .collect(toList());
   }
 
   private Optional<Policy> createEgoPolicy(String policyName) {
     return createObject(new Policy(null, policyName), Policy.class, "/policies");
   }
 
-  private List<Group> createGroups(String programShortName) {
-    val groupNames = Stream.of(UserRole.values()).filter(role -> !role.equals(UserRole.UNRECOGNIZED)).map(UserRole::name).map(s -> "PROGRAM-" + programShortName + "-" + s);
+  @Value
+  @Builder
+  public static class GroupName{
 
-    return groupNames
-            .map(this::createGroup)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(Collectors.toList());
+    private static final String FORMAT = "%s-%s-%s";
+
+    @NonNull private final String contextName;
+    @NonNull private final String programShortName;
+    @NonNull private final UserRole role;
+
+    @Override
+    public String toString() {
+      return String.format(FORMAT, contextName, programShortName, role.name());
+    }
+
+    public static GroupName createProgramGroupName(String name, UserRole role){
+      return GroupName.builder()
+          .contextName("PROGRAM")
+          .programShortName(name)
+          .role(role)
+          .build();
+    }
+
+  }
+
+
+  private List<Group> createGroups(String programShortName) {
+    return Stream.of(UserRole.values())
+        .filter(role -> !role.equals(UserRole.UNRECOGNIZED))
+        .map(r -> createProgramGroupName(programShortName, r))
+        .map(GroupName::toString)
+        .map(this::createGroup)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(toUnmodifiableList());
   }
 
   private Optional<Group> createGroup(String groupName) {
