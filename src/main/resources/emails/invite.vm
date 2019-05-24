@@ -68,13 +68,13 @@
 			<table>
 				<tr>
 					<td align="center" class="masthead">
-						<h1>Join Program Invite</h1>
+						<h1>Invitation to Join Program</h1>
 					</td>
 				</tr>
 				<tr>
 					<td class="content">
 						<h2>Hi $firstName $lastName,</h2>
-						<p>You are invited to join program with inite $inviteId</p>
+						<p>You are invited to join program: $programShortName. </p>
 
 						<table>
 							<tr>
