@@ -1,12 +1,9 @@
 package org.icgc.argo.program_service.services;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mock;
@@ -36,6 +33,9 @@ class MailServiceIT {
   @Mock
   JoinProgramInvite invite;
 
+  @Mock
+  ProgramEntity mockProgramEntity;
+
   @Value("${spring.mail.host}")
   String mailhogHost;
 
@@ -48,6 +48,8 @@ class MailServiceIT {
     when(invite.getFirstName()).thenReturn("Albert");
     when(invite.getLastName()).thenReturn("Einstein");
     when(invite.getUserEmail()).thenReturn("it_test@program-service.com");
+    when(mockProgramEntity.getShortName()).thenReturn("TestProgram");
+    when(invite.getProgram()).thenReturn(mockProgramEntity);
     mailService.sendInviteEmail(invite);
     val messages = restTemplate.getForObject("https://" + mailhogHost + "/api/v2/search?kind=containing&query=" + uuid, JsonNode.class);
     assertThat(messages.at("/total").asInt()).isGreaterThan(0);

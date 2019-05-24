@@ -47,7 +47,7 @@ public class MailService {
       val ctx = new VelocityContext();
       ctx.put("firstName", invitation.getFirstName());
       ctx.put("lastName", invitation.getLastName());
-      ctx.put("inviteId", invitation.getId());
+      ctx.put("invitationId", invitation.getId());
       ctx.put("programShortName", invitation.getProgram().getShortName());
       // TODO: add join program link
       ctx.put("joinProgramLink", "#");

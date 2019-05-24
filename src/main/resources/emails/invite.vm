@@ -84,6 +84,11 @@
 									</p>
 								</td>
 							</tr>
+							<tr>
+								<td>
+                                	<p>If the button doesn't work, click this link : "frontend/joinProgram/$invitationId" to join!</p>
+								</td>
+							</tr>
 						</table>
 
 					</td>
