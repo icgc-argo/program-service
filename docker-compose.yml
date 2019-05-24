@@ -38,7 +38,7 @@ services:
       APP_EGOURL: "http://ego-api:8080"
       APP_EGOCLIENTID: "program-service"
       APP_EGOCLIENTSECRET: "program-service-secret"
-      APP_GRPCENABLED: "false"
+      APP_GRPCENABLED: "true"
     expose:
       - "50051"
     depends_on:

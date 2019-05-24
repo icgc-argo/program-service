@@ -115,5 +115,5 @@ app:
   egoUrl: "http://localhost:9082"
   egoClientId: "ps-clientid"
   egoClientSecret: "ps-clientsecret"
-  grpcEnabled: false
+  grpcEnabled: true
 

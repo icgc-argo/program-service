@@ -173,7 +173,7 @@ demo-logs:
 
 demo-down:
 	@echo $(YELLOW)$(INFO_HEADER) "Stopping demo"$(END)
-	@$(DOCKER_COMPOSE_COMMAND) down -v
+	@$(DOCKER_COMPOSE_COMMAND) down
 	@echo $(DONE_MESSAGE)
 
 #doesnt work
