@@ -18,6 +18,7 @@ public class ProgramServiceApplication {
     SpringApplication.run(ProgramServiceApplication.class, args);
   }
 
+  //TODO: should be in its own Configuration class
   @Bean
   public JavaMailSender getJavaMailSender() {
     val mailSender = new JavaMailSenderImpl();

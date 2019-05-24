@@ -99,9 +99,10 @@ spring:
       client:
         url: http://localhost:9081
   datasource:
-    url: jdbc:postgresql://localhost:9082/program_db
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:postgresql:9.5.13://localhost:5432/program_db
     username: postgres
-    password: password
+    password:
 
 server:
   port: 8080
@@ -111,7 +112,7 @@ management:
     port: 8081
 
 app:
-  egoUrl: "http://localhost:8080"
+  egoUrl: "http://localhost:9082"
   egoClientId: "ps-clientid"
   egoClientSecret: "ps-clientsecret"
   grpcEnabled: false
