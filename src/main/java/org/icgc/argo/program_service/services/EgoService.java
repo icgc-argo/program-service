@@ -20,6 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
+import org.icgc.argo.program_service.model.ego.Group;
+import org.icgc.argo.program_service.model.ego.PermissionRequest;
+import org.icgc.argo.program_service.model.ego.Policy;
+import org.icgc.argo.program_service.model.ego.User;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
@@ -155,54 +159,6 @@ public class EgoService {
   private Optional<UUID> getEgoGroupId(UUID programId, UserRole role) {
     val programEgoGroup = programEgoGroupRepository.findByProgramIdAndRole(programId, role);
     return programEgoGroup.map(v -> v.getProgram().getId());
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class Group {
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private UUID id;
-    @JsonProperty
-    private String name;
-    @JsonProperty
-    private String description;
-    @JsonProperty
-    private String status;
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class Policy {
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private UUID id;
-    @JsonProperty()
-    private String name;
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class PermissionRequest {
-    @JsonProperty
-    private String mask;
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class Permission {
-    @JsonProperty
-    private String accessLevel;
-    // etc
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class User {
-    @JsonProperty
-    private UUID id;
-
-    @JsonProperty
-    private String email;
-
-    @JsonProperty
-    private String firstName;
-
-    @JsonProperty
-    private String lastName;
   }
 
   @AllArgsConstructor @NoArgsConstructor @Data
