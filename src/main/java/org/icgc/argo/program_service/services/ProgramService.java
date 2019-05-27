@@ -23,6 +23,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -65,7 +66,10 @@ public class ProgramService {
   }
 
   //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
-  public ProgramEntity createProgram(@NonNull Program program) {
+  public ProgramEntity createProgram(@NonNull Program program, @NonNull Collection<String> emails) {
+
+
+    // Create Users if they dne, and add to group
     val programEntity = programConverter.programToProgramEntity(program);
 
     // Set the timestamps
@@ -74,7 +78,7 @@ public class ProgramService {
     programEntity.setUpdatedAt(now);
 
     programRepository.save(programEntity);
-    egoService.setUpProgram(programEntity);
+    egoService.setUpProgram(programEntity, emails);
     return programEntity;
   }
 

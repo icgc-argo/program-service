@@ -16,6 +16,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.argo.program_service.MembershipType.ASSOCIATE;
 import static org.icgc.argo.program_service.UtilsTest.int32Value;
@@ -62,7 +64,7 @@ class EgoServiceIT {
         .setRegions(stringValue("toronto"))
         .setDescription(stringValue(""))
         .build();
-    this.programEntity = programService.createProgram(program);
+    this.programEntity = programService.createProgram(program, List.of());
 
     // Policies are created
     assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.Policy>>() {}).isPresent()).isTrue();
