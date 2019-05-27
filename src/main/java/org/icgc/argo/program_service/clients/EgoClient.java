@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.icgc.argo.program_service.model.ego.Group;
 import org.icgc.argo.program_service.model.ego.PermissionRequest;
 import org.icgc.argo.program_service.model.ego.Policy;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collection;
@@ -13,9 +14,15 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class EgoClient {
 
-  private final RestTemplate restTemplate;
   private final String apiUrl;
+  private final RestTemplate restTemplate;
+  private final RetryTemplate restRetryTemplate;
+  private final RetryTemplate startupRetryTemplate;
 
+  //TODO: for each endpoint, try some how to recover. You can get the statusCode. Maybe as a starting point, just let the client deal with the exceptions.
+
+  // This guy should user startupRetryTemplate, which is a special retry, because it will retry regardless of "server not running" exception.
+  // Maybe for all of these methods, you dont retry, and then create a decorator that does the retry. That way you can do the retry in the configuration class and just call the concrete or non decorated client, and the other calls can call the decorated client
   public String getPublicKey(){
     return null;
   }
