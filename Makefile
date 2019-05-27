@@ -141,15 +141,24 @@ verify: _check_mvn_software_exists
 	@echo $(DONE_MESSAGE)
 
 #######################################
-start-ego: _check_docker_software_exists
-	@echo $(YELLOW)$(INFO_HEADER) "Starting ego services"$(END)
+dev-start: _check_docker_software_exists
+	@echo $(YELLOW)$(INFO_HEADER) "Starting DEV mode with ego and admin services"$(END)
 	@$(DOCKER_COMPOSE_COMMAND) up --no-deps -d ego-api ego-postgres admin
 	@echo $(DONE_MESSAGE)
 
-stop-ego: _check_docker_software_exists
-	@echo $(YELLOW)$(INFO_HEADER) "Killing ego services"$(END)
+dev-stop: _check_docker_software_exists
+	@echo $(YELLOW)$(INFO_HEADER) "Stopping DEV mode ego and admin services"$(END)
 	@$(DOCKER_COMPOSE_COMMAND) kill ego-api ego-postgres admin
+	@$(DOCKER_COMPOSE_COMMAND) rm -f ego-api ego-postgres admin
 	@echo $(DONE_MESSAGE)
+
+nuke-ego:_check_docker_software_exists
+	@echo $(YELLOW)$(INFO_HEADER) "Nuking ego data only"$(END)
+	@$(DOCKER_COMPOSE_COMMAND) kill ego-postgres
+	@$(DOCKER_COMPOSE_COMMAND) rm -f ego-postgres
+	@$(DOCKER_COMPOSE_COMMAND) up --no-deps -d ego-postgres
+	@echo $(DONE_MESSAGE)
+
 
 run-unit-test: _check_mvn_software_exists
 	@echo $(YELLOW)$(INFO_HEADER) "Running unit tests" $(END)
