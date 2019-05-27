@@ -91,7 +91,7 @@ spring:
 spring.profiles: int
 spring:
   profiles:
-    include: [auth]
+    include: [default]
   flyway:
     enabled: true
   boot:

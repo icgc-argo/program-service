@@ -65,6 +65,7 @@ public interface ProgramConverter {
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "mergeShortName", ignore = true)
   @Mapping(target = "mergeDescription", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
   @Mapping(target = "mergeName", ignore = true)
   @Mapping(target = "mergeMembershipType", ignore = true)
   @Mapping(target = "mergeCommitmentDonors", ignore = true)
