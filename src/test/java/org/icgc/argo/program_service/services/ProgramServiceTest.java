@@ -113,7 +113,7 @@ class ProgramServiceTest {
     assertThat(inputProgramEntity.getCreatedAt()).isNull();
     assertThat(inputProgramEntity.getUpdatedAt()).isNull();
     when(programConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
-    val outputEntity = programService.createProgram(program);
+    val outputEntity = programService.createProgram(program, List.of());
     assertThat(outputEntity.getCreatedAt()).isNotNull();
     assertThat(outputEntity.getUpdatedAt()).isNotNull();
     verify(programRepository).save(inputProgramEntity);
@@ -126,4 +126,9 @@ class ProgramServiceTest {
     val programs = programService.listPrograms();
     assertThat(programs).contains(programEntity);
   }
+
+  // T01 - create program, all existing emails
+  // T02 - create program, some existing emails
+  // T03 - create program, no existing emails
+
 }
