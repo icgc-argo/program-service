@@ -53,7 +53,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     //       (2) Set up the permissions, groups in EGO
     //       (3) Populate the lookup tables for program, role, group_id
     val program = request.getProgram();
-    val entity = programService.createProgram(program, request.getEmailsList());
+    val entity = programService.createProgram(program, request.getInitialAdminEmailsList());
     val response = programConverter.programEntityToCreateProgramResponse(entity);
     responseObserver.onNext(response);
     responseObserver.onCompleted();

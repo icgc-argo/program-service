@@ -257,9 +257,11 @@ public class EgoService {
     Integer offset;
   }
 
-  public void setUpProgram(@NonNull ProgramEntity program, @NonNull Collection<String> emails) {
+  //TODO: add transactional. If there are more programdb logic in the future and something fails, it will be able to roll back those changes.
+  public void setUpProgram(@NonNull ProgramEntity program, @NonNull Collection<String> initialAdminEmails) {
     val groups = createGroups(program.getShortName());
     createPolicies(program.getShortName(), groups);
+    initialAdminEmails.forEach(email -> initAdmin(email, program));
 
     groups.forEach(group ->{
       UserRole role;
@@ -285,10 +287,9 @@ public class EgoService {
       programEgoGroupRepository.save(programEgoGroup);
     });
 
-    emails.forEach(email -> initUser(email, program));
   }
 
-  private void initUser(String email, ProgramEntity programEntity){
+  private void initAdmin(String email, ProgramEntity programEntity){
     if (!joinProgram(email, programEntity, ADMIN)){
       Optional<User> egoUser = Optional.empty();
       try {
