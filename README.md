@@ -62,3 +62,5 @@ grpc_cli list localhost:50051
 grpc_cli call localhost:50051 CreateProgram "program: {name: 'programName', short_name: 'shortName'}"
 ```
 
+If you prefer GUI interfaces, try [bloomrpc](https://github.com/uw-labs/bloomrpc)
+
