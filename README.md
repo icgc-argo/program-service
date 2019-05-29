@@ -46,7 +46,7 @@ Set up database schema (although it could be done [automatically](https://github
 ```sh
 ./mvnw verify
 ```
-Note, the above command would run unit tests as well. It will use your local database and run tests against DEV/QA environment.
+Note, the above command run unit tests as well. It uses your local database and run tests against DEV/QA environment.
 
 ### Test the running instances at DEV/QA
 First, port forward the port which is serving grpc services (make sure you have access to the clusters).
