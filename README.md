@@ -55,9 +55,10 @@ First, port forward the port which is serving grpc services (make sure you have 
 kubectl port-forward --namespace qa svc/program-service-qa 50051
 ```
 
-Then, use your favorite grpc debugging tool to test individual services, for example, using [grpc_cli](https://github.com/grpc/grpc/blob/master/doc/command_line_tool.md) to list all services
+Then, use your favorite grpc debugging tool to test individual services, for example, using [grpc_cli](https://github.com/grpc/grpc/blob/master/doc/command_line_tool.md) to list all services and create program
 
 ```
 grpc_cli list localhost:50051
+grpc_cli call localhost:50051 CreateProgram "program: {name: 'programName', short_name: 'shortName'}"
 ```
 
