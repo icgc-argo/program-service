@@ -67,7 +67,6 @@ public class ProgramService {
 
   //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
   public ProgramEntity createProgram(@NonNull Program program, @NonNull Collection<String> initialAdminEmails) {
-    // Create Users if they dne, and add to group
     val programEntity = programConverter.programToProgramEntity(program);
 
     // Set the timestamps
