@@ -71,7 +71,7 @@ class EgoServiceIT {
 
     // Policies are created
     assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<Policy>>() {}).isPresent()).isTrue();
-    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-DATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<Policy>>() {}).isPresent()).isTrue();
+    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAMDATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<Policy>>() {}).isPresent()).isTrue();
 
     val bannedGroup = egoService.getGroup("PROGRAM-TestShortName-BANNED");
     val curatorGroup = egoService.getGroup("PROGRAM-TestShortName-CURATOR");

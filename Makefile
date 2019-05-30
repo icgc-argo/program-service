@@ -152,26 +152,28 @@ dev-stop: _check_docker_software_exists
 	@$(DOCKER_COMPOSE_COMMAND) rm -f ego-api ego-postgres admin
 	@echo $(DONE_MESSAGE)
 
-nuke-ego:_check_docker_software_exists
-	@echo $(YELLOW)$(INFO_HEADER) "Nuking ego data only"$(END)
-	@$(DOCKER_COMPOSE_COMMAND) kill ego-postgres
-	@$(DOCKER_COMPOSE_COMMAND) rm -f ego-postgres
-	@$(DOCKER_COMPOSE_COMMAND) up --no-deps -d ego-postgres
-	@echo $(DONE_MESSAGE)
+dev-ps: demo-ps
+dev-logs: demo-logs
 
+fresh-ego: _check_docker_software_exists
+	@echo $(YELLOW)$(INFO_HEADER) "Restarting a fresh empty instance of the ego service"$(END)
+	@$(DOCKER_COMPOSE_COMMAND) kill ego-postgres ego-api
+	@$(DOCKER_COMPOSE_COMMAND) rm -f ego-postgres ego-api
+	@$(DOCKER_COMPOSE_COMMAND) up --no-deps -d ego-postgres ego-api
+	@echo $(DONE_MESSAGE)
 
 run-unit-test: _check_mvn_software_exists
 	@echo $(YELLOW)$(INFO_HEADER) "Running unit tests" $(END)
 	@$(MVNW_EXE) clean package
 	@echo $(DONE_MESSAGE)
 
-demo-up:
+demo-start:
 	@echo $(YELLOW)$(INFO_HEADER) "Starting demo"$(END)
 	@$(DOCKER_COMPOSE_COMMAND) up --build -d
 	@echo $(DONE_MESSAGE)
 
 demo-ps:
-	@echo $(YELLOW)$(INFO_HEADER) "Showing running services for demo"$(END)
+	@echo $(YELLOW)$(INFO_HEADER) "Showing running services"$(END)
 	@$(DOCKER_COMPOSE_COMMAND) ps
 	@echo $(DONE_MESSAGE)
 
@@ -180,11 +182,8 @@ demo-logs:
 	@$(DOCKER_COMPOSE_COMMAND) logs
 	@echo $(DONE_MESSAGE)
 
-demo-down:
+demo-stop:
 	@echo $(YELLOW)$(INFO_HEADER) "Stopping demo"$(END)
 	@$(DOCKER_COMPOSE_COMMAND) down
 	@echo $(DONE_MESSAGE)
-
-#doesnt work
-run-int-test:  start-ego verify stop-ego
 

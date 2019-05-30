@@ -127,8 +127,4 @@ class ProgramServiceTest {
     assertThat(programs).contains(programEntity);
   }
 
-  // T01 - create program, all existing emails
-  // T02 - create program, some existing emails
-  // T03 - create program, no existing emails
-
 }

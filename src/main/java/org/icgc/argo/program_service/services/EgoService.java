@@ -8,7 +8,6 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.io.CharStreams;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
+import org.icgc.argo.program_service.model.ego.StatusType;
 import org.icgc.argo.program_service.model.ego.User;
+import org.icgc.argo.program_service.model.ego.UserType;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
@@ -32,11 +33,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpRequestExecution;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -44,8 +41,6 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.Collection;
@@ -82,30 +77,14 @@ public class EgoService {
     this.simpleRetryTemplate = simpleRetryTemplate;
   }
 
-  //TODO: move to @Configuration class
   @Autowired
   private void setRestTemplate() {
     // TODO: Maybe jwt authentication
     this.restTemplate = new RestTemplateBuilder()
-        .interceptors(new ClientHttpRequestInterceptor() {
-
-          @Override public ClientHttpResponse intercept(HttpRequest httpRequest, byte[] bytes,
-                  ClientHttpRequestExecution clientHttpRequestExecution) throws IOException {
-                val resp = clientHttpRequestExecution.execute(httpRequest, bytes);
-                if (resp.getStatusCode().isError()){
-                  log.error("HTTP Request: {}", httpRequest.getMethod(), httpRequest.getURI().toASCIIString());
-                  log.error("HTTP Request HEADER: {}", httpRequest.getHeaders().toString());
-                  log.error("HTTP Error[{}:{}] -- {}", resp.getStatusCode().name(), resp.getRawStatusCode(),
-                      CharStreams.toString(new InputStreamReader(resp.getBody())));
-                }
-                return resp;
-        }})
             .basicAuthentication(appProperties.getEgoClientId(), this.appProperties.getEgoClientSecret())
             .setConnectTimeout(Duration.ofSeconds(15)).build();
   }
 
-
-  //TODO: The ego endpoint could alternatively be called in a @Bean definition fo egoPublicKey()
   @Autowired
   private void setEgoPublicKey() {
     RSAPublicKey egoPublicKey = null;
@@ -215,14 +194,6 @@ public class EgoService {
     // etc
   }
 
-  static enum UserType{
-    USER,ADMIN;
-  }
-
-  static enum StatusType{
-    APPROVED;
-  }
-
   @AllArgsConstructor @NoArgsConstructor @Data
   public static class EgoCollection<T> {
     @JsonProperty
@@ -239,7 +210,6 @@ public class EgoService {
   public void setUpProgram(@NonNull ProgramEntity program, @NonNull Collection<String> initialAdminEmails) {
     val groups = createGroups(program.getShortName());
     createPolicies(program.getShortName(), groups);
-    initialAdminEmails.forEach(email -> initAdmin(email, program));
 
     groups.forEach(group ->{
       UserRole role;
@@ -264,7 +234,7 @@ public class EgoService {
           .setEgoGroupId(group.id);
       programEgoGroupRepository.save(programEgoGroup);
     });
-
+    initialAdminEmails.forEach(email -> initAdmin(email, program));
   }
 
   void initAdmin(String email, ProgramEntity programEntity){
