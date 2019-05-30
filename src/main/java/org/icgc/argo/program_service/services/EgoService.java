@@ -17,14 +17,10 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.Value;
-import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.model.ego.Group;
-import org.icgc.argo.program_service.model.ego.PermissionRequest;
-import org.icgc.argo.program_service.model.ego.Policy;
 import org.icgc.argo.program_service.model.ego.User;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -227,28 +223,6 @@ public class EgoService {
     APPROVED;
   }
 
-  @Accessors(chain = true)
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class User {
-    @JsonProperty
-    private UUID id;
-
-    @JsonProperty
-    private String email;
-
-    @JsonProperty
-    private String firstName;
-
-    @JsonProperty
-    private UserType type;
-
-    @JsonProperty
-    private StatusType status;
-
-    @JsonProperty
-    private String lastName;
-  }
-
   @AllArgsConstructor @NoArgsConstructor @Data
   public static class EgoCollection<T> {
     @JsonProperty
@@ -293,7 +267,7 @@ public class EgoService {
 
   }
 
-  private void initAdmin(String email, ProgramEntity programEntity){
+  void initAdmin(String email, ProgramEntity programEntity){
     if (!joinProgram(email, programEntity, ADMIN)){
       Optional<User> egoUser = Optional.empty();
       try {
@@ -320,7 +294,7 @@ public class EgoService {
 
     //TODO: create mini ego client with selected functionality instead of copy multiple requests
     val policy1 = getObject(format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {});
-    val policy2 = getObject(format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-DATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {});
+    val policy2 = getObject(format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAMDATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {});
 
     policy1.ifPresent(policy -> {
       restTemplate.delete(format("%s/policies/%s", appProperties.getEgoUrl(), policy.id));
@@ -334,7 +308,7 @@ public class EgoService {
   private List<Policy> createPolicies(String programShortName, List<Group> groups) {
     val policy1 = createEgoPolicy("PROGRAM-" + programShortName);
 
-    val policy2 = createEgoPolicy("PROGRAM-DATA-" + programShortName);
+    val policy2 = createEgoPolicy("PROGRAMDATA-" + programShortName);
 
     if (policy1.isPresent() && policy2.isPresent()) {
       groups.forEach(
@@ -377,11 +351,11 @@ public class EgoService {
             .collect(toList());
   }
 
-  private Optional<User> createEgoUser(String email) {
+  Optional<User> createEgoUser(String email) {
     val user = new User()
         .setEmail(email)
-        .setStatus(StatusType.APPROVED)
-        .setType(UserType.USER);
+        .setStatus(StatusType.APPROVED.toString())
+        .setType(UserType.USER.toString());
     return createObject(user, User.class, "/users");
   }
 
