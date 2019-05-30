@@ -38,6 +38,7 @@
 		<junit.common.version>1.4.1</junit.common.version>
 		<guava.version>27.1-jre</guava.version>
 		<mockito.version>2.25.1</mockito.version>
+		<velocity.version>1.7</velocity.version>
 
 		<!--Plugin Versions-->
 		<plugin.compiler.version>3.8.1</plugin.compiler.version>
@@ -239,6 +240,11 @@
 			<groupId>org.mapstruct</groupId>
 			<artifactId>mapstruct</artifactId>
 			<version>${mapstruct.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.velocity</groupId>
+			<artifactId>velocity</artifactId>
+			<version>${velocity.version}</version>
 		</dependency>
 	</dependencies>
 

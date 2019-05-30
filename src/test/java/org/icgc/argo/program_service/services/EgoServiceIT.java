@@ -3,11 +3,12 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.UserRole;
-import org.icgc.argo.program_service.model.ego.Permission;
-import org.icgc.argo.program_service.model.ego.Policy;
-import org.icgc.argo.program_service.model.ego.User;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
+import org.icgc.argo.program_service.services.EgoService.EgoCollection;
+import org.icgc.argo.program_service.services.EgoService.Permission;
+import org.icgc.argo.program_service.services.EgoService.Policy;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -19,8 +20,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.argo.program_service.MembershipType.ASSOCIATE;
 import static org.icgc.argo.program_service.UtilsTest.int32Value;
@@ -35,6 +38,7 @@ import static org.icgc.argo.program_service.UtilsTest.stringValue;
         "spring.datasource.driverClassName=org.postgresql.Driver",
 })
 class EgoServiceIT {
+
   @Autowired
   EgoService egoService;
 
@@ -44,7 +48,13 @@ class EgoServiceIT {
   @Autowired
   AppProperties appProperties;
 
+  @Autowired
+  CommonConverter commonConverter;
+
   ProgramEntity programEntity;
+
+  private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
+  private static final String COLLABORATOR_USER_EMAIL = "TestPS@dummy.com";
 
   @BeforeAll
   void setUp() {
@@ -70,8 +80,8 @@ class EgoServiceIT {
     this.programEntity = programService.createProgram(program, List.of());
 
     // Policies are created
-    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<Policy>>() {}).isPresent()).isTrue();
-    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAMDATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<Policy>>() {}).isPresent()).isTrue();
+    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {}).isPresent()).isTrue();
+    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAMDATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {}).isPresent()).isTrue();
 
     val bannedGroup = egoService.getGroup("PROGRAM-TestShortName-BANNED");
     val curatorGroup = egoService.getGroup("PROGRAM-TestShortName-CURATOR");
@@ -87,28 +97,28 @@ class EgoServiceIT {
     assertThat(adminGroup.isPresent()).isTrue();
 
     // Groups have permissions
-    val bannedPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), bannedGroup.get().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<Permission>>() {}).toArray(
+    val bannedPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), bannedGroup.get().getId()), new ParameterizedTypeReference<EgoCollection<Permission>>() {}).toArray(
         Permission[]::new);
     assertThat(bannedPermissions.length).isEqualTo(2);
     assertThat(bannedPermissions).allMatch(permission -> permission.getAccessLevel().equals("DENY"));
 
-    val curatorPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), curatorGroup.get().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<Permission>>() {}).toArray(
+    val curatorPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), curatorGroup.get().getId()), new ParameterizedTypeReference<EgoCollection<Permission>>() {}).toArray(
         Permission[]::new);
     assertThat(curatorPermissions.length).isEqualTo(2);
     assertThat(curatorPermissions).allMatch(permission -> permission.getAccessLevel().equals("WRITE"));
 
-    val collaboratorPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), collaboratorGroup.get().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<Permission>>() {}).toArray(
+    val collaboratorPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), collaboratorGroup.get().getId()), new ParameterizedTypeReference<EgoCollection<Permission>>() {}).toArray(
         Permission[]::new);
     assertThat(collaboratorPermissions.length).isEqualTo(2);
     assertThat(collaboratorPermissions).allMatch(permission -> permission.getAccessLevel().equals("READ"));
 
-    val submitterPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), submitterGroup.get().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<Permission>>() {}).toArray(
+    val submitterPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), submitterGroup.get().getId()), new ParameterizedTypeReference<EgoCollection<Permission>>() {}).toArray(
         Permission[]::new);
     assertThat(submitterPermissions.length).isEqualTo(2);
     assertThat(submitterPermissions).anyMatch(permission -> permission.getAccessLevel().equals("READ"));
     assertThat(submitterPermissions).anyMatch(permission -> permission.getAccessLevel().equals("WRITE"));
 
-    val adminPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), adminGroup.get().getId()), new ParameterizedTypeReference<EgoService.EgoCollection<Permission>>() {}).toArray(
+    val adminPermissions = egoService.getObjects(String.format("%s/groups/%s/permissions", appProperties.getEgoUrl(), adminGroup.get().getId()), new ParameterizedTypeReference<EgoCollection<Permission>>() {}).toArray(
         Permission[]::new);
     assertThat(adminPermissions.length).isEqualTo(2);
     assertThat(adminPermissions).allMatch(permission -> permission.getAccessLevel().equals("WRITE"));
@@ -122,9 +132,12 @@ class EgoServiceIT {
 
   @Test
   void getUser() {
-    val egoUser = egoService.getUser("d8660091@gmail.com");
-
-    assertThat(egoUser.isPresent()).isTrue();
+    val egoUser1 = egoService.getUser("d8660091@gmail.com");
+    val egoUser2 = egoService.getUser(ADMIN_USER_EMAIL);
+    val egoUser3 = egoService.getUser(COLLABORATOR_USER_EMAIL);
+    assertThat(egoUser1.isPresent()).isTrue();
+    assertThat(egoUser2.isPresent()).isTrue();
+    assertThat(egoUser3.isPresent()).isTrue();
   }
 
   @Test
@@ -134,13 +147,50 @@ class EgoServiceIT {
 
     val groupId = egoService.getGroup("PROGRAM-TestShortName-ADMIN").get().getId();
 
-    val user = egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoService.EgoCollection<User>>() {});
+    val user = egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoCollection<EgoService.EgoUser>>() {});
     assertThat(user.isPresent()).isTrue();
 
     egoService.leaveProgram("d8660091@gmail.com", programEntity.getId());
+    assertThat(egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoCollection<EgoService.EgoUser>>() {}).isPresent()).isFalse();
+  }
 
+  @Test
+  void listUser(){
+    List<String> expectedUsers = new ArrayList();
+    expectedUsers.add(ADMIN_USER_EMAIL);
+    expectedUsers.add(COLLABORATOR_USER_EMAIL);
 
-    assertThat(egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoService.EgoCollection<User>>() {}).isPresent()).isFalse();
+    val adminGroupId = egoService.getGroup("PROGRAM-TestShortName-ADMIN").get().getId();
+    val collaboratorGroupId = egoService.getGroup("PROGRAM-TestShortName-COLLABORATOR").get().getId();
+
+    val adminJoin = egoService.joinProgram(ADMIN_USER_EMAIL, programEntity, UserRole.ADMIN);
+    assertThat(adminJoin).as("Can add ADMIN user to TestProgram.").isTrue();
+
+    val collaboratorJoin = egoService.joinProgram(COLLABORATOR_USER_EMAIL, programEntity, UserRole.COLLABORATOR);
+    assertThat(collaboratorJoin).as("Can add COLLABORATOR user to TestProgram.").isTrue();
+
+    val users = egoService.getUserByGroup(programEntity.getId());
+    users.forEach( user ->
+            assertTrue(ifUserExists(commonConverter.unboxStringValue(user.getEmail()), expectedUsers)));
+
+    assertThat(egoService.leaveProgram(ADMIN_USER_EMAIL, programEntity.getId()))
+            .as("ADMIN user is removed from TestProgram.").isTrue();
+    assertThat(egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getId()))
+            .as("COLLABORATOR user is removed from TestProgram.").isTrue();
+
+    assertThat(egoService.getObject(
+                String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), adminGroupId, ADMIN_USER_EMAIL),
+                new ParameterizedTypeReference<EgoCollection<EgoService.EgoUser>>() {})
+        .isPresent()).isFalse();
+
+    assertThat(egoService.getObject(
+            String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), collaboratorGroupId, COLLABORATOR_USER_EMAIL),
+            new ParameterizedTypeReference<EgoCollection<EgoService.EgoUser>>() {})
+        .isPresent()).isFalse();
+  }
+
+  private boolean ifUserExists(String email, List<String> userList){
+    return userList.contains(email);
   }
 
   @AfterAll
@@ -155,7 +205,7 @@ class EgoServiceIT {
     assertThat(egoService.getGroup("PROGRAM-TestShortName-ADMIN").isPresent()).isFalse();
 
     // Policies are removed
-    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<Policy>>() {}).isPresent()).isFalse();
-    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-DATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoService.EgoCollection<Policy>>() {}).isPresent()).isFalse();
+    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {}).isPresent()).isFalse();
+    assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAMDATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {}).isPresent()).isFalse();
   }
 }

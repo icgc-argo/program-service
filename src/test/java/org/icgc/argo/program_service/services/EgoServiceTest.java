@@ -3,7 +3,7 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.model.ego.User;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mapstruct.factory.Mappers.getMapper;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -32,7 +33,8 @@ class EgoServiceTest {
     val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
 
     val retryTemplate = new RetryTemplate();
-    val egoService = new EgoService(retryTemplate,programEgoGroupRepository, new AppProperties());
+    val commonConverter = getMapper(CommonConverter.class);
+    val egoService = new EgoService(retryTemplate,programEgoGroupRepository, commonConverter, new AppProperties());
     ReflectionTestUtils.setField(egoService, "egoPublicKey", rsaPublicKey);
 
     assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
@@ -68,7 +70,7 @@ class EgoServiceTest {
 
     // Define behaviour for non-existing
     when(egoService1.joinProgram(nonExistingEmail, mockProgramEntity, UserRole.ADMIN)).thenReturn(false, true);
-    when(egoService1.createEgoUser(nonExistingEmail)).thenReturn(Optional.of(new User().setStatus("APPROVED").setType("USER").setEmail(nonExistingEmail)));
+    when(egoService1.createEgoUser(nonExistingEmail)).thenReturn(Optional.of(new EgoService.EgoUser().setStatus("APPROVED").setType("USER").setEmail(nonExistingEmail)));
 
     // Define behaviour for errored user
     when(egoService1.joinProgram(erroredEmail, mockProgramEntity, UserRole.ADMIN)).thenReturn(false, false);

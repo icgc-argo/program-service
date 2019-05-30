@@ -16,13 +16,13 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.Value;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.User;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.model.ego.StatusType;
-import org.icgc.argo.program_service.model.ego.User;
-import org.icgc.argo.program_service.model.ego.UserType;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
@@ -39,10 +39,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -66,15 +68,19 @@ public class EgoService {
 
   private RSAPublicKey egoPublicKey;
   private AppProperties appProperties;
+  private final CommonConverter commonConverter;
+
 
   @Autowired
   public EgoService(
       @NonNull RetryTemplate simpleRetryTemplate,
       @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
+	  @NonNull CommonConverter commonConverter,
       @NonNull AppProperties appProperties) {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.appProperties = appProperties;
     this.simpleRetryTemplate = simpleRetryTemplate;
+    this.commonConverter = commonConverter;
   }
 
   @Autowired
@@ -123,87 +129,9 @@ public class EgoService {
     }
   }
 
-  public static class EgoToken extends Context.User {
-    final DecodedJWT jwt;
-
-    EgoToken(@NotNull DecodedJWT jwt, @NotNull Context context) {
-      this.jwt = jwt;
-      BeanUtils.copyProperties(context.user, this);
-    }
-  }
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  @Setter @Getter
-  private static class Context {
-    //      public String[] scope;
-    User user;
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    @Setter @Getter
-    private static class User {
-      String name;
-      String email;
-      String status;
-      String firstName;
-      String lastName;
-      String test;
-      String createdAt;
-      String lastLogin;
-      String preferredLanguage;
-      String type;
-      String[] groups;
-      String[] permissions;
-    }
-  }
-
   private Optional<UUID> getEgoGroupId(UUID programId, UserRole role) {
     val programEgoGroup = programEgoGroupRepository.findByProgramIdAndRole(programId, role);
     return programEgoGroup.map(v -> v.getProgram().getId());
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class Group {
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private UUID id;
-    @JsonProperty
-    private String name;
-    @JsonProperty
-    private String description;
-    @JsonProperty
-    private String status;
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class Policy {
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private UUID id;
-    @JsonProperty()
-    private String name;
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class PermissionRequest {
-    @JsonProperty
-    private String mask;
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class Permission {
-    @JsonProperty
-    private String accessLevel;
-    // etc
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  public static class EgoCollection<T> {
-    @JsonProperty
-    List<T> resultSet;
-
-    @JsonProperty
-    Integer limit;
-
-    @JsonProperty
-    Integer offset;
   }
 
   //TODO: add transactional. If there are more programdb logic in the future and something fails, it will be able to roll back those changes.
@@ -239,7 +167,7 @@ public class EgoService {
 
   void initAdmin(String email, ProgramEntity programEntity){
     if (!joinProgram(email, programEntity, ADMIN)){
-      Optional<User> egoUser = Optional.empty();
+      Optional<EgoUser> egoUser = Optional.empty();
       try {
         egoUser = createEgoUser(email);
         val joinedProgram = egoUser
@@ -252,6 +180,40 @@ public class EgoService {
     }
   }
 
+  private User convertToUser(EgoUser egoUser){
+      if( egoUser == null){
+        return null;
+      }
+
+    return User.newBuilder()
+        .setEmail(commonConverter.boxString(egoUser.email))
+        .setFirstName(commonConverter.boxString(egoUser.firstName))
+        .setLastName(commonConverter.boxString(egoUser.lastName))
+        .setId(commonConverter.boxString(egoUser.id.toString()))
+        .build();
+  }
+
+  public List<User> getUserByGroup(UUID programId){
+    val userResults = new ArrayList();
+
+    programEgoGroupRepository.findAllByProgramId(programId).forEach( programEgoGroup -> {
+      val groupId = programEgoGroup.getEgoGroupId();
+      try {
+        val users = getObject(String.format("%s/groups/%s/users", appProperties.getEgoUrl(), groupId),
+                      new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
+        users.ifPresent( user -> {
+          val programUser = convertToUser(user);
+          userResults.add(programUser);
+        });
+      } catch (RestClientException e){
+        log.error("Fail to retrieve users from ego group: ", groupId);
+      }
+    });
+
+    return userResults;
+  }
+
+  @Transactional
   public void cleanUpProgram(ProgramEntity programEntity) {
     programEgoGroupRepository.findAllByProgramId(programEntity.getId()).forEach(programEgoGroup ->{
       val egoGroupId = programEgoGroup.getEgoGroupId();
@@ -321,12 +283,12 @@ public class EgoService {
             .collect(toList());
   }
 
-  Optional<User> createEgoUser(String email) {
-    val user = new User()
+  Optional<EgoUser> createEgoUser(String email) {
+    val user = new EgoUser()
         .setEmail(email)
         .setStatus(StatusType.APPROVED.toString())
         .setType(UserType.USER.toString());
-    return createObject(user, User.class, "/users");
+    return createObject(user, EgoUser.class, "/users");
   }
 
   private Optional<Policy> createEgoPolicy(String policyName) {
@@ -412,8 +374,8 @@ public class EgoService {
   }
 
 
-  Optional<User> getUser(@Email String email) {
-    return getObject(format("%s/users?query=%s", appProperties.getEgoUrl(), email), new ParameterizedTypeReference<EgoCollection<User>>() {});
+  Optional<EgoUser> getUser(@Email String email) {
+    return getObject(format("%s/users?query=%s", appProperties.getEgoUrl(), email), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
   }
 
   Boolean joinProgram(@Email String email, ProgramEntity programEntity, UserRole role) {
@@ -454,11 +416,122 @@ public class EgoService {
     groups.forEach(group -> {
       try {
         restTemplate.delete(appProperties.getEgoUrl() + format("/groups/%s/users/%s", group.getEgoGroupId(), userId));
+        log.info("User {} left group {}", userId, group.getEgoGroupId());
       } catch (RestClientException e) {
         log.info("Cannot remove user {} from group {}", userId, group.getRole());
       }
     });
     return true;
   }
+
+  @AllArgsConstructor @NoArgsConstructor @Data
+  static class Group {
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private UUID id;
+    @JsonProperty
+    private String name;
+    @JsonProperty
+    private String description;
+    @JsonProperty
+    private String status;
+  }
+
+  @AllArgsConstructor @NoArgsConstructor @Data
+  static class Policy {
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private UUID id;
+    @JsonProperty()
+    private String name;
+  }
+
+  @AllArgsConstructor @NoArgsConstructor @Data
+  static class PermissionRequest {
+    @JsonProperty
+    private String mask;
+  }
+
+  @AllArgsConstructor @NoArgsConstructor @Data
+  static class Permission {
+    @JsonProperty
+    private String accessLevel;
+    // etc
+  }
+
+  @AllArgsConstructor @NoArgsConstructor @Data
+  public static class EgoCollection<T> {
+    @JsonProperty
+    List<T> resultSet;
+
+    @JsonProperty
+    Integer limit;
+
+    @JsonProperty
+    Integer offset;
+  }
+
+
+  @Accessors(chain = true)
+  @AllArgsConstructor @NoArgsConstructor @Data
+  public static class EgoUser {
+    @JsonProperty
+    private UUID id;
+
+    @JsonProperty
+    private String email;
+
+    @JsonProperty
+    private String firstName;
+
+    @JsonProperty
+    private String type;
+
+    @JsonProperty
+    private String status;
+
+    @JsonProperty
+    private String lastName;
+  }
+
+  public enum StatusType {
+    APPROVED;
+  }
+
+  public enum UserType {
+    USER,ADMIN;
+  }
+
+  public static class EgoToken extends Context.User {
+    final DecodedJWT jwt;
+
+    EgoToken(@NotNull DecodedJWT jwt, @NotNull Context context) {
+      this.jwt = jwt;
+      BeanUtils.copyProperties(context.user, this);
+    }
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  @Setter @Getter
+  private static class Context {
+    //      public String[] scope;
+    User user;
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Setter @Getter
+    private static class User {
+      String name;
+      String email;
+      String status;
+      String firstName;
+      String lastName;
+      String test;
+      String createdAt;
+      String lastLogin;
+      String preferredLanguage;
+      String type;
+      String[] groups;
+      String[] permissions;
+    }
+  }
+
 }
 

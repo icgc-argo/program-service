@@ -13,12 +13,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.mail.MailSender;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
@@ -49,9 +48,6 @@ class ProgramServiceTest {
   private ProgramRepository programRepository;
 
   @Mock
-  private MailSender mailSender;
-
-  @Mock
   private JoinProgramInvite invitation;
 
   @Mock
@@ -60,10 +56,12 @@ class ProgramServiceTest {
   @Mock
   private EgoService egoService;
 
+  @Mock
+  private MailService mailService;
+
   @BeforeEach
   void init() {
-    this.programService = new ProgramService(invitationRepository, programRepository
-        , programConverter, mailSender, egoService);
+    this.programService = new ProgramService(invitationRepository, programRepository, programConverter, egoService, mailService);
   }
 
   @Test
@@ -90,13 +88,7 @@ class ProgramServiceTest {
     assertThat(ReflectionTestUtils.getField(invitation, "role"))
             .as("Role is admin").isEqualTo(UserRole.ADMIN);
 
-    val messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-    verify(mailSender).send(messageCaptor.capture());
-    val message = messageCaptor.getValue();
-    assertThat(message.getTo()).contains("user@example.com");
-    assertThat(invitation.getEmailSent())
-            .as("emailSent should have been set to true")
-            .isTrue();
+    verify(mailService).sendInviteEmail(ArgumentMatchers.any());
   }
 
   @Test

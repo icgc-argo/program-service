@@ -1,16 +1,24 @@
 package org.icgc.argo.program_service.model.entity;
 
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
+import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.UserRole;
-
+import org.icgc.argo.program_service.model.enums.Tables;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Entity
+@Data
+@Table(name = Tables.JOIN_PROGRAM_INVITE)
+@Accessors(chain = true)
+@FieldNameConstants
+@NoArgsConstructor
 public class JoinProgramInvite {
 
   public enum Status {PENDING, ACCEPTED, REVOKED};
