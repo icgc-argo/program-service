@@ -89,9 +89,9 @@ spring:
 
 ---
 ###############################################################################
-# Profile - "int"
+# Profile - "dev"
 ###############################################################################
-spring.profiles: int
+spring.profiles: dev
 spring:
   profiles:
     include: [default]
