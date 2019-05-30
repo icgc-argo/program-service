@@ -31,6 +31,8 @@ import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -71,18 +73,15 @@ public class ProgramService {
     this.mailService = mailService;
   }
 
-  //TODO: add existence check, and fail with not found
   public Optional<ProgramEntity> getProgram(@NonNull String name) {
     return programRepository.findByName(name);
   }
 
-  //TODO: add existence check, and fail with not found
   public Optional<ProgramEntity> getProgram(@NonNull UUID uuid) {
     return programRepository.findById(uuid);
   }
 
-  //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
-  public ProgramEntity createProgram(@NonNull Program program) {
+  public ProgramEntity createProgram(@NonNull Program program) throws DataIntegrityViolationException {
     val programEntity = programConverter.programToProgramEntity(program);
 
     // Set the timestamps
@@ -95,20 +94,13 @@ public class ProgramService {
     return programEntity;
   }
 
-  //TODO: add existence check, and fail with not found
   public void removeProgram(@NonNull ProgramEntity program) {
     egoService.cleanUpProgram(program);
     programRepository.deleteById(program.getId());
   }
 
-  public void removeProgram(UUID programId) {
-    val program = programRepository.findById(programId);
-    if (program.isPresent()) {
-      removeProgram(program.get());
-    } else {
-      //TODO: add proper error handling
-      log.error("Could not find program {}", programId);
-    }
+  public void removeProgram(UUID programId) throws EmptyResultDataAccessException {
+    programRepository.deleteById(programId);
   }
 
   public List<ProgramEntity> listPrograms() {
