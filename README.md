@@ -2,7 +2,6 @@
 
 The central point to create and manage programs and maintain their metadata. 
 
-
 ## Development
 
 ### Protocol buffers submodule
