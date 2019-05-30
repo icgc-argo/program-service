@@ -64,3 +64,6 @@ grpc_cli call localhost:50051 CreateProgram "program: {name: 'programName', shor
 
 If you prefer GUI interfaces, try [bloomrpc](https://github.com/uw-labs/bloomrpc)
 
+### Test email
+All emails sent are captured by [mailhog](https://mailhog.qa.cancercollaboratory.org) for both the developer's local machine or the Jenkins that run CI/CD.
+
