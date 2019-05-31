@@ -202,6 +202,7 @@ public class EgoService {
         checkState(joinedProgram, "Ego user '%s' was created but could not join the program '%s'", programEntity.getShortName());
       } catch(Throwable t){
         log.error("Could not create user: {}", t.getMessage());
+        throw t;
       }
     }
   }
