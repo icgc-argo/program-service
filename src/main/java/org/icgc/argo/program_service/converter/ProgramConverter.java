@@ -52,11 +52,17 @@ public interface ProgramConverter {
   PrimarySiteEntity primarySiteToPartialPrimarySiteEntity(PrimarySite p);
   Set<PrimarySiteEntity> primarySitesToPrimarySiteEntities(Collection<PrimarySite> primarySites);
 
-  @Mapping(target = "id", ignore = true)
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
   @Mapping(target = "egoGroups", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "shortName", ignore = true)
+  @Mapping(target = "programCancers", ignore = true)
+  @Mapping(target = "programPrimarySites", ignore = true)
+  @Mapping(target = "egoGroups", ignore = true)
+  void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
   @AfterMapping
   default void updateProgramRelationships(@NonNull Program p, @MappingTarget ProgramEntity programEntity){
@@ -96,6 +102,7 @@ public interface ProgramConverter {
   @Mapping(target = "cancerTypesBuilderList", ignore = true)
   @Mapping(target = "primarySitesOrBuilderList", ignore = true)
   @Mapping(target = "primarySitesBuilderList", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
   @Mapping(source = "programCancers", target = "cancerTypesList")
   @Mapping(source = "programPrimarySites", target = "primarySitesList")
   Program programEntityToProgram(ProgramEntity entity);
@@ -132,6 +139,15 @@ public interface ProgramConverter {
 	@Mapping(target = "mergeUnknownFields", ignore = true)
 	@Mapping(target = "allFields", ignore = true)
   CreateProgramResponse programEntityToCreateProgramResponse(ProgramEntity p);
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "mergeUpdatedAt", ignore = true)
+  UpdateProgramResponse programEntityToUpdateProgramResponse(ProgramEntity p);
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)

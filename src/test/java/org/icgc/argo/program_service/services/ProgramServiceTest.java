@@ -18,6 +18,7 @@
 
 package org.icgc.argo.program_service.services;
 
+import org.icgc.argo.program_service.converter.CommonConverter;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.Program;
@@ -25,7 +26,9 @@ import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
+import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,11 +37,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.internal.matchers.Any;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
-
+import org.springframework.mail.MailSender;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
@@ -67,6 +69,12 @@ class ProgramServiceTest {
   private ProgramRepository programRepository;
 
   @Mock
+  private CancerRepository cancerRepository;
+
+  @Mock
+  private MailSender mailSender;
+
+  @Mock
   private JoinProgramInvite invitation;
 
   @Mock
@@ -78,9 +86,15 @@ class ProgramServiceTest {
   @Mock
   private MailService mailService;
 
+  @Mock
+  private PrimarySiteRepository primarySiteRepository;
+
+  private CommonConverter commonConverter;
+
   @BeforeEach
   void init() {
-    this.programService = new ProgramService(invitationRepository, programRepository, programConverter, egoService, mailService);
+    this.programService = new ProgramService(invitationRepository, cancerRepository, programRepository, primarySiteRepository,
+            programConverter, mailService, mailSender, egoService, commonConverter);
   }
 
   @Test
