@@ -16,9 +16,7 @@
  */
 package org.icgc.argo.program_service.retry;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.retry.RetryCallback;
@@ -30,36 +28,29 @@ import org.springframework.web.client.ResourceAccessException;
 
 import java.net.ConnectException;
 
-import static lombok.AccessLevel.PRIVATE;
 import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
 
 @Slf4j
-@NoArgsConstructor
-@AllArgsConstructor
-@FieldDefaults(level = PRIVATE)
+@RequiredArgsConstructor
 public class DefaultRetryListener extends RetryListenerSupport {
 
-  ClientRetryListener clientRetryListener;
+  private final boolean retryOnAllErrors;
 
   @Override
   public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-    if (clientRetryListener != null) {
-      clientRetryListener.onError(context, callback, throwable);
-      if (!clientRetryListener.isRetry()) {
-        log.debug("The ClientRetryListener requested to disable retries. Skipping the default retry processing...");
+    if (retryOnAllErrors){
+      log.info("Retrying after detecting error: {}",throwable.getMessage());
+    } else {
+      if (isClientException(throwable)) {
+        log.debug("HTTP client related exception detected. Do nothing. The downstream will do the further processing.");
         return;
       }
-    }
 
-    if (isClientException(throwable)) {
-      log.debug("HTTP client related exception detected. Do nothing. The downstream will do the further processing.");
-      return;
-    }
-
-    if (!(isConnectionTimeout(throwable) || isServiceUnavailable(throwable))) {
-      log.info("Detected a connection exception, but it's not the connection timeoutMs or 503 Service Unavailabe. "
-          + "Do not retry.");
-      context.setExhaustedOnly();
+      if (!(isConnectionTimeout(throwable) || isServiceUnavailable(throwable))) {
+        log.info("Detected a connection exception, but it's not the connection timeoutMs or 503 Service Unavailable. "
+            + "Do not retry.");
+        context.setExhaustedOnly();
+      }
     }
   }
 

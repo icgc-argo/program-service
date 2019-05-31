@@ -3,9 +3,9 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.converter.CommonConverter;
+import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.properties.AppProperties;
+import org.icgc.argo.program_service.config.AppConfig;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.retry.support.RetryTemplate;
@@ -33,8 +33,8 @@ class EgoServiceTest {
     val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
 
     val retryTemplate = new RetryTemplate();
-    val commonConverter = getMapper(CommonConverter.class);
-    val egoService = new EgoService(retryTemplate,programEgoGroupRepository, commonConverter, new AppProperties());
+    val programConverter = getMapper(ProgramConverter.class);
+    val egoService = new EgoService(retryTemplate,retryTemplate,programEgoGroupRepository, programConverter, new AppConfig());
     ReflectionTestUtils.setField(egoService, "egoPublicKey", rsaPublicKey);
 
     assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");

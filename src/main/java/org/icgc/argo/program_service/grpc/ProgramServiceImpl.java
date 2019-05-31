@@ -36,6 +36,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
 
+  //TODO: need better error response. If a duplicate program is created, get "2 UNKNOWN" error. Should atleast have a message in it
   @Override
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {

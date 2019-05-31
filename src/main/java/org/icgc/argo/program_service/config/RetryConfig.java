@@ -17,12 +17,12 @@
 package org.icgc.argo.program_service.config;
 
 import lombok.val;
-import org.icgc.argo.program_service.retry.ClientRetryListener;
 import org.icgc.argo.program_service.retry.DefaultRetryListener;
 import org.icgc.argo.program_service.retry.RetryPolicies;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.retry.backoff.BackOffPolicy;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
@@ -37,36 +37,35 @@ public class RetryConfig {
   private static final int DEFAULT_MAX_RETRIES = 5;
   private static final long DEFAULT_INITIAL_BACKOFF_INTERVAL = SECONDS.toMillis(15L);
 
+  //TODO: [rtisma] replace with ConfigurationProperties
   @Value("${retry.connection.maxRetries}")
   private int maxRetries = DEFAULT_MAX_RETRIES;
+
   @Value("${retry.connection.initialBackoff}")
   private long initialBackoff = DEFAULT_INITIAL_BACKOFF_INTERVAL;
+
   @Value("${retry.connection.multiplier}")
   private double multiplier = DEFAULT_MULTIPLIER;
 
   @Bean
+  @Primary
   public RetryTemplate retryTemplate() {
+    return buildRetryTemplate(false);
+  }
+
+  @Bean
+  public RetryTemplate lenientRetryTemplate() {
+    return buildRetryTemplate(true);
+  }
+
+  private RetryTemplate buildRetryTemplate(boolean retryOnAllErrors){
     val result = new RetryTemplate();
     result.setBackOffPolicy(defineBackOffPolicy());
 
     result.setRetryPolicy(new SimpleRetryPolicy(maxRetries, RetryPolicies.getRetryableExceptions(), true));
-    result.registerListener(new DefaultRetryListener(clientRetryListener()));
+    result.registerListener(new DefaultRetryListener(retryOnAllErrors));
     return result;
-  }
 
-  @Bean
-  public RetryTemplate simpleRetryTemplate() {
-    val result = new RetryTemplate();
-    result.setBackOffPolicy(defineBackOffPolicy());
-
-    result.setRetryPolicy(new SimpleRetryPolicy(maxRetries, RetryPolicies.getRetryableExceptions(), true));
-    result.registerListener(clientRetryListener());
-    return result;
-  }
-
-  @Bean
-  public ClientRetryListener clientRetryListener() {
-    return new ClientRetryListener();
   }
 
   private BackOffPolicy defineBackOffPolicy() {

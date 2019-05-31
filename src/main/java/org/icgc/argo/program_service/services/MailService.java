@@ -1,5 +1,6 @@
 package org.icgc.argo.program_service.services;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.velocity.VelocityContext;
@@ -13,28 +14,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import javax.mail.MessagingException;
-import javax.validation.constraints.NotNull;
 import java.io.StringWriter;
 
+@Slf4j
 @Service
 @Validated
-@Slf4j
 public class MailService {
-  private JavaMailSender mailSender;
 
-  private VelocityEngine velocityEngine;
+  private final JavaMailSender mailSender;
+  private final VelocityEngine velocityEngine;
 
   @Autowired
-  public void setMailSender(JavaMailSender mailSender) {
+  public MailService(@NonNull JavaMailSender mailSender,
+      @NonNull VelocityEngine velocityEngine) {
     this.mailSender = mailSender;
-  }
-
-  @Autowired
-  public void setVelocityEngine(VelocityEngine velocityEngine) {
     this.velocityEngine = velocityEngine;
   }
 
-  boolean sendInviteEmail(@NotNull JoinProgramInvite invitation) {
+  public boolean sendInviteEmail(JoinProgramInvite invitation) {
     val msg = mailSender.createMimeMessage();
 
     try {

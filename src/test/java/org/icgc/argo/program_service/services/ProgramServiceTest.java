@@ -61,7 +61,8 @@ class ProgramServiceTest {
 
   @BeforeEach
   void init() {
-    this.programService = new ProgramService(invitationRepository, programRepository, programConverter, egoService, mailService);
+    this.programService = new ProgramService(invitationRepository, programRepository, programConverter, egoService,
+        mailService);
   }
 
   @Test

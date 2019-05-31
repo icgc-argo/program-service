@@ -2,12 +2,22 @@ package org.icgc.argo.program_service.converter;
 
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
-import org.icgc.argo.program_service.*;
+import org.icgc.argo.program_service.Cancer;
+import org.icgc.argo.program_service.CreateProgramResponse;
+import org.icgc.argo.program_service.InviteUserResponse;
+import org.icgc.argo.program_service.ListProgramsResponse;
+import org.icgc.argo.program_service.ListUserResponse;
+import org.icgc.argo.program_service.MembershipType;
+import org.icgc.argo.program_service.MembershipTypeValue;
+import org.icgc.argo.program_service.PrimarySite;
+import org.icgc.argo.program_service.Program;
+import org.icgc.argo.program_service.User;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
+import org.icgc.argo.program_service.services.EgoService;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
@@ -129,6 +139,19 @@ public interface ProgramConverter {
   //  https://github.com/mapstruct/mapstruct/issues/607#issuecomment-309547739
   @Mapping(target = "programsList", source = "programEntities")
   ListProgramsResponse programEntitiesToListProgramsResponse(Integer dummy, Collection<ProgramEntity> programEntities);
+
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  @Mapping(target = "mergeEmail", ignore = true)
+  @Mapping(target = "mergeFirstName", ignore = true)
+  @Mapping(target = "mergeLastName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  User egoUserToUser(EgoService.EgoUser egoUser);
 
   default ListProgramsResponse programEntitiesToListProgramsResponse(Collection<ProgramEntity> programEntities){
     return programEntitiesToListProgramsResponse(0, programEntities);

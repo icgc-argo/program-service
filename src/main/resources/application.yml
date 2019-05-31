@@ -43,6 +43,7 @@ app:
   egoClientSecret: "qa-program-service"
   grpcEnabled: true
   grpcPort: 50051
+  mail-enabled: true
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
 spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
@@ -106,6 +107,8 @@ spring:
     url: jdbc:tc:postgresql:9.5.13://localhost:5432/program_db
     username: postgres
     password:
+#  autoconfigure:
+#    exclude: org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
 
 server:
   port: 8080
@@ -119,4 +122,5 @@ app:
   egoClientId: "ps-clientid"
   egoClientSecret: "ps-clientsecret"
   grpcEnabled: true
+  mail-enabled: false
 
