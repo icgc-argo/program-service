@@ -11,9 +11,9 @@ Program Service
       * [Database](#database)
       * [Run Spring Boot](#run-spring-boot)
    * [Docker](#docker)
-      * [Getting started](#getting-started)
-      * [Additional commands](#additional-commands)
-      * [Useful services:](#useful-services)
+      * [Getting Started](#getting-started)
+      * [Additional Commands](#additional-commands)
+      * [Useful Services](#useful-services)
 * [Testing](#testing)
    * [Unit Testing](#unit-testing)
    * [Integration Testing](#integration-testing)
@@ -61,18 +61,18 @@ Set up database schema (although it could be done [automatically](https://github
 ./mvnw spring-boot:run
 ```
 ### Docker
-#### Getting started
+#### Getting Ctarted
 Since the EGO service is a dependency, having a local running docker instance can help the developement of unit tests and application code. Here are the steps for local developement:
 1. Run `make dev-start` to start all the services needed for developement. These services **DO NOT** have security enabled. 
 2. Run the program-service in the `dev` profile. This is already configured to listen to the ports forwarded by the previous step. To find the correct port forwarding, run `make dev-ps`. 
 
-#### Additional commands
+#### Additional Commands
 1. Run `make dev-ps` to see a list of all forwarded ports
 2. Run `make dev-logs` to see the logs of all the running dev services
 3. Run `make dev-stop` to kill all services and remove the containers
 4. Run `make fresh-ego` to restart a fresh and empty EGO service. Useful for when your EGO service contains alot of junk and you just want a clean slate.
 
-#### Useful services:
+#### Useful Services
 1. **Mail server**
 
     A mail server called `MailHog` is used to capture all email activity from the program service. The default url of the MailHog UI is http://localhost:9025. 
