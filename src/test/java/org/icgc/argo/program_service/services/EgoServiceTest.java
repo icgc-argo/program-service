@@ -3,9 +3,9 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
+import org.icgc.argo.program_service.config.AppConfig;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.config.AppConfig;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.retry.support.RetryTemplate;
@@ -16,7 +16,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mapstruct.factory.Mappers.getMapper;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -33,7 +32,7 @@ class EgoServiceTest {
     val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
 
     val retryTemplate = new RetryTemplate();
-    val programConverter = getMapper(ProgramConverter.class);
+    val programConverter = mock(ProgramConverter.class);
     val egoService = new EgoService(retryTemplate,retryTemplate,programEgoGroupRepository, programConverter, new AppConfig());
     ReflectionTestUtils.setField(egoService, "egoPublicKey", rsaPublicKey);
 

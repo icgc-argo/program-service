@@ -135,9 +135,9 @@ compile: _check_mvn_software_exists
 	@$(MVNW_EXE) clean compile
 	@echo $(DONE_MESSAGE)
 
-verify: _check_mvn_software_exists
-	@echo $(YELLOW)$(INFO_HEADER) "Cleaning and verifying" $(END)
-	@$(MVNW_EXE) clean verify
+package: _check_mvn_software_exists
+	@echo $(YELLOW)$(INFO_HEADER) "Cleaning and packaging" $(END)
+	@$(MVNW_EXE) clean package
 	@echo $(DONE_MESSAGE)
 
 #######################################

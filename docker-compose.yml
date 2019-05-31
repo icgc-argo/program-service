@@ -39,11 +39,22 @@ services:
       APP_EGOCLIENTID: "program-service"
       APP_EGOCLIENTSECRET: "program-service-secret"
       APP_GRPCENABLED: "true"
+      APP_MAILENABLED: "true"
+      SPRING_MAIL_HOST: "mail-server"
+      SPRING_MAIL_PORT: 1025
     expose:
       - "50051"
     depends_on:
       - postgres
       - ego-api
+      - mail-server
+  mail-server:
+    image: mailhog/mailhog:latest
+    expose:
+      - "8025"
+      - "1025"
+    ports:
+      - "9025:8025"
   postgres:
     image: postgres:9.5
     environment:
