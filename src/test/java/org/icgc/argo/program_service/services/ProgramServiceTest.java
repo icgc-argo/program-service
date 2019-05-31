@@ -89,6 +89,7 @@ class ProgramServiceTest {
   @Mock
   private PrimarySiteRepository primarySiteRepository;
 
+  @Mock
   private CommonConverter commonConverter;
 
   @BeforeEach
