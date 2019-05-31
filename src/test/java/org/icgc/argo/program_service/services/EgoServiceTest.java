@@ -32,6 +32,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -101,9 +102,9 @@ class EgoServiceTest {
     // Actually call the MUTs
     egoService1.initAdmin(existingEmail, mockProgramEntity);
     egoService1.initAdmin(nonExistingEmail, mockProgramEntity);
-
-    //TODO: find a way to catch the error. its not being thrown, even though this is a partial mock
-    egoService1.initAdmin(erroredEmail, mockProgramEntity);
+    assertThatExceptionOfType(IllegalStateException.class)
+        .isThrownBy(() -> egoService1.initAdmin(erroredEmail, mockProgramEntity))
+        .withMessageStartingWith("Could not create ego user");
 
     // Verify expected behaviour for existing user case
     verify(egoService1, times(1)).joinProgram(existingEmail, mockProgramEntity, UserRole.ADMIN);
