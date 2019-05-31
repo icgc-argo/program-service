@@ -207,7 +207,7 @@ public class EgoService {
       val groupId = programEgoGroup.getEgoGroupId();
       try {
         val egoUserStream = getObjects(format("%s/groups/%s/users", appConfiguration.getEgoUrl(), groupId), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
-        egoUserStream. map(programConverter::egoUserToUser)
+        egoUserStream.map(programConverter::egoUserToUser)
             .forEach(userResults::add);
       } catch (HttpClientErrorException | HttpServerErrorException e){
         log.error("Fail to retrieve users from ego group '{}': {}", groupId, e.getResponseBodyAsString());
