@@ -61,7 +61,7 @@ Set up database schema (although it could be done [automatically](https://github
 ./mvnw spring-boot:run
 ```
 ### Docker
-#### Getting Ctarted
+#### Getting Started
 Since the EGO service is a dependency, having a local running docker instance can help the developement of unit tests and application code. Here are the steps for local developement:
 1. Run `make dev-start` to start all the services needed for developement. These services **DO NOT** have security enabled. 
 2. Run the program-service in the `dev` profile. This is already configured to listen to the ports forwarded by the previous step. To find the correct port forwarding, run `make dev-ps`. 
