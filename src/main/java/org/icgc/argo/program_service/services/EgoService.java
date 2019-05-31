@@ -193,17 +193,10 @@ public class EgoService {
 
   void initAdmin(String email, ProgramEntity programEntity){
     if (!joinProgram(email, programEntity, ADMIN)){
-      Optional<EgoUser> egoUser = Optional.empty();
-      try {
-        egoUser = createEgoUser(email);
-        val joinedProgram = egoUser
-            .map(x -> joinProgram(email, programEntity, ADMIN))
-            .orElseThrow(() -> new IllegalStateException(format("Could not create ego user for: %s", email )));
-        checkState(joinedProgram, "Ego user '%s' was created but could not join the program '%s'", programEntity.getShortName());
-      } catch(Throwable t){
-        log.error("Could not create user: {}", t.getMessage());
-        throw t;
-      }
+      val egoUser = createEgoUser(email)
+          .orElseThrow(() -> new IllegalStateException(format("Could not create ego user for: %s", email )));
+      val joinedProgram = joinProgram(egoUser.getEmail(), programEntity, ADMIN);
+      checkState(joinedProgram, "Ego user '%s' was created but could not join the program '%s'", programEntity.getShortName());
     }
   }
 
