@@ -96,6 +96,7 @@ public interface ProgramConverter {
   @Mapping(target = "cancerTypesBuilderList", ignore = true)
   @Mapping(target = "primarySitesOrBuilderList", ignore = true)
   @Mapping(target = "primarySitesBuilderList", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
   @Mapping(source = "programCancers", target = "cancerTypesList")
   @Mapping(source = "programPrimarySites", target = "primarySitesList")
   Program programEntityToProgram(ProgramEntity entity);

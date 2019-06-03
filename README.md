@@ -5,13 +5,21 @@ The central point to create and manage programs and maintain their metadata.
 ## Development
 
 ### Protocol buffers submodule
+
 Protobuf files are stored at a [separate repository](https://github.com/icgc-argo/argo-proto), to init the submodule
 
 ```sh
 git submodule update --init
 ```
 
+### Generate Java source codes from protocal buffers files
+
+```sh
+./mvnw compile
+```
+
 ### Database
+
 Run postgres at port 5432
 
 ```sh
@@ -19,6 +27,7 @@ docker run --name postgres -d -p 5432:5432 postgres
 ```
 
 Create database program_db
+
 ```sh
 psql -h localhost -p 5432 -U postgres -c 'create database program_db'
 ```

@@ -28,9 +28,14 @@ import org.icgc.argo.program_service.*;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.services.EgoService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.NestedRuntimeException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -58,7 +63,15 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     val program = request.getProgram();
-    val entity = programService.createProgram(program);
+    ProgramEntity entity;
+
+    try {
+      entity = programService.createProgram(program);
+    } catch (DataIntegrityViolationException e) {
+      responseObserver.onError(Status.INVALID_ARGUMENT.withDescription(getExceptionMessage(e)).asRuntimeException());
+      return;
+    }
+
     val response = programConverter.programEntityToCreateProgramResponse(entity);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
@@ -70,7 +83,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val programResult = programService.getProgram(programId);
 
     if (programResult.isEmpty()) {
-      responseObserver.onError(new StatusException(Status.fromCode(Status.Code.NOT_FOUND)));
+      responseObserver.onError(Status.NOT_FOUND.withDescription(String.format("Cannot find program with programId: %s", programId.toString())).asRuntimeException());
       return;
     }
 
@@ -89,7 +102,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void joinProgram(JoinProgramRequest request,
                           StreamObserver<com.google.protobuf.Empty> responseObserver) {
-    val succeed = programService.acceptInvite( commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
+    val succeed = programService.acceptInvite(commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
     if (!succeed) {
       responseObserver.onError(new StatusException(Status.fromCode(Status.Code.UNKNOWN)));
       return;
@@ -126,10 +139,19 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
-    programService.removeProgram(commonConverter.stringToUUID(request.getProgramId()));
+    try {
+      programService.removeProgram(commonConverter.stringToUUID(request.getProgramId()));
+    } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
+      responseObserver.onError(Status.NOT_FOUND.withDescription(getExceptionMessage(e)).asRuntimeException());
+      return;
+    }
+
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
 
+  private String getExceptionMessage(NestedRuntimeException e) {
+    return e.getMostSpecificCause().getMessage();
+  }
 }
 
