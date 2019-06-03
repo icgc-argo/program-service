@@ -17,6 +17,9 @@ spring:
     url: jdbc:postgresql://localhost:5432/program_db
     username: postgres
     password: password
+  mail:
+    host: mailhog.qa.cancercollaboratory.org
+    port: 1025
 
 app:
   invitationUrlPrefix: "https://frontend/invite/"

@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2019. Ontario Institute for Cancer Research
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
@@ -13,12 +31,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.internal.matchers.Any;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.mail.MailSender;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
@@ -49,9 +67,6 @@ class ProgramServiceTest {
   private ProgramRepository programRepository;
 
   @Mock
-  private MailSender mailSender;
-
-  @Mock
   private JoinProgramInvite invitation;
 
   @Mock
@@ -60,10 +75,12 @@ class ProgramServiceTest {
   @Mock
   private EgoService egoService;
 
+  @Mock
+  private MailService mailService;
+
   @BeforeEach
   void init() {
-    this.programService = new ProgramService(invitationRepository, programRepository
-        , programConverter, mailSender, egoService);
+    this.programService = new ProgramService(invitationRepository, programRepository, programConverter, egoService, mailService);
   }
 
   @Test
@@ -90,13 +107,7 @@ class ProgramServiceTest {
     assertThat(ReflectionTestUtils.getField(invitation, "role"))
             .as("Role is admin").isEqualTo(UserRole.ADMIN);
 
-    val messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-    verify(mailSender).send(messageCaptor.capture());
-    val message = messageCaptor.getValue();
-    assertThat(message.getTo()).contains("user@example.com");
-    assertThat(invitation.getEmailSent())
-            .as("emailSent should have been set to true")
-            .isTrue();
+    verify(mailService).sendInviteEmail(ArgumentMatchers.any());
   }
 
   @Test

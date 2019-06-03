@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2019. Ontario Institute for Cancer Research
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package org.icgc.argo.program_service.services;
 
 import com.auth0.jwt.JWT;
@@ -10,8 +28,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.icgc.argo.program_service.User;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
@@ -44,11 +64,14 @@ public class EgoService {
 
   private RSAPublicKey egoPublicKey;
   private AppProperties appProperties;
+  private final CommonConverter commonConverter;
+
 
   @Autowired
-  public EgoService(ProgramEgoGroupRepository programEgoGroupRepository, AppProperties appProperties) {
+  public EgoService(ProgramEgoGroupRepository programEgoGroupRepository, AppProperties appProperties, CommonConverter commonConverter) {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.appProperties = appProperties;
+    this.commonConverter = commonConverter;
   }
 
   @Autowired
@@ -165,7 +188,7 @@ public class EgoService {
   }
 
   @AllArgsConstructor @NoArgsConstructor @Data
-  static class User {
+  static class EgoUser {
     @JsonProperty
     private UUID id;
 

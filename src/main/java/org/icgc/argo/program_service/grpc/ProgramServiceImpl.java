@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2019. Ontario Institute for Cancer Research
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package org.icgc.argo.program_service.grpc;
 
 import com.google.protobuf.Empty;
@@ -6,21 +24,18 @@ import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
 import lombok.NonNull;
 import lombok.val;
-import org.icgc.argo.program_service.CreateProgramRequest;
-import org.icgc.argo.program_service.CreateProgramResponse;
-import org.icgc.argo.program_service.InviteUserRequest;
-import org.icgc.argo.program_service.InviteUserResponse;
-import org.icgc.argo.program_service.JoinProgramRequest;
-import org.icgc.argo.program_service.ListProgramsResponse;
-import org.icgc.argo.program_service.ProgramServiceGrpc;
-import org.icgc.argo.program_service.RemoveProgramRequest;
-import org.icgc.argo.program_service.RemoveUserRequest;
+import org.icgc.argo.program_service.*;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.services.EgoService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.NestedRuntimeException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -37,11 +52,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   private final EgoService egoService;
 
   @Autowired
-  public ProgramServiceImpl(@NonNull ProgramService programService,
-     @NonNull ProgramConverter programConverter,
-	 @NonNull CommonConverter commonConverter,
-	 @NonNull EgoService egoService ) {
-      this.programService = programService;
+  public ProgramServiceImpl(@NonNull ProgramService programService, @NonNull ProgramConverter programConverter,
+                            @NonNull CommonConverter commonConverter, @NonNull EgoService egoService ) {
+    this.programService = programService;
     this.programConverter = programConverter;
     this.egoService = egoService;
     this.commonConverter = commonConverter;
@@ -52,17 +65,18 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     val program = request.getProgram();
+    ProgramEntity entity;
 
     try {
-      val result = programService.createProgram(program);
-      val response = programConverter.programEntityToCreateProgramResponse(result);
-      responseObserver.onNext(response);
-      responseObserver.onCompleted();
-    } catch(Error error) {
-      responseObserver.onError(error);
-      responseObserver.onCompleted();
+      entity = programService.createProgram(program);
+    } catch (DataIntegrityViolationException e) {
+      responseObserver.onError(Status.INVALID_ARGUMENT.withDescription(getExceptionMessage(e)).asRuntimeException());
+      return;
     }
 
+    val response = programConverter.programEntityToCreateProgramResponse(entity);
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
   }
 
   @Override
@@ -71,7 +85,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val programResult = programService.getProgram(programId);
 
     if (programResult.isEmpty()) {
-      responseObserver.onError(new StatusException(Status.fromCode(Status.Code.NOT_FOUND)));
+      responseObserver.onError(Status.NOT_FOUND.withDescription(String.format("Cannot find program with programId: %s", programId.toString())).asRuntimeException());
       return;
     }
 
@@ -90,7 +104,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void joinProgram(JoinProgramRequest request,
                           StreamObserver<com.google.protobuf.Empty> responseObserver) {
-    val succeed = programService.acceptInvite( commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
+    val succeed = programService.acceptInvite(commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
     if (!succeed) {
       responseObserver.onError(new StatusException(Status.fromCode(Status.Code.UNKNOWN)));
       return;
@@ -107,6 +121,15 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onCompleted();
   }
 
+  @Override
+  public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
+    val programId = request.getProgramId();
+    val users = programService.listUser(commonConverter.stringToUUID(programId));
+    val response = programConverter.usersToListUserResponse(users);
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
+
   // not tested
   @Override
   public void removeUser(RemoveUserRequest request,
@@ -118,19 +141,18 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
-    val uuid = commonConverter.stringToUUID(request.getProgramId());
-    val programEntity = programService.getProgram(uuid).get();
-
-    if (programEntity == null) {
-      responseObserver.onError(new Error("Not found"));
-      responseObserver.onCompleted();
+    try {
+      programService.removeProgram(commonConverter.stringToUUID(request.getProgramId()));
+    } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
+      responseObserver.onError(Status.NOT_FOUND.withDescription(getExceptionMessage(e)).asRuntimeException());
       return;
     }
-
-    programService.removeProgram(programEntity);
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
 
+  private String getExceptionMessage(NestedRuntimeException e) {
+    return e.getMostSpecificCause().getMessage();
+  }
 }
 

@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2019. Ontario Institute for Cancer Research
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package org.icgc.argo.program_service.grpc;
 
 import com.google.protobuf.Empty;
@@ -5,12 +23,7 @@ import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
-import org.icgc.argo.program_service.CreateProgramRequest;
-import org.icgc.argo.program_service.CreateProgramResponse;
-import org.icgc.argo.program_service.ListProgramsResponse;
-import org.icgc.argo.program_service.MembershipType;
-import org.icgc.argo.program_service.MembershipTypeValue;
-import org.icgc.argo.program_service.Program;
+import org.icgc.argo.program_service.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +31,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNull;
-import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
