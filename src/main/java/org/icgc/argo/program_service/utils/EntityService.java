@@ -31,7 +31,7 @@ public class EntityService {
     if(!nonExistingIds.isEmpty()) {
       throw new EmptyResultDataAccessException(
               String.format("Entities of entityType '%s' were not found for the following ids: '%s' .",
-                      resolveEntityTypeName(entityType), requestedIds),
+                      resolveEntityTypeName(entityType), nonExistingIds),
               requestedIds.size());
     }
 
