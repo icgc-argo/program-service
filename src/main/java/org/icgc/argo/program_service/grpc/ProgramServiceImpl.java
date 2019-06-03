@@ -78,6 +78,16 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
+  @EgoAuth(typesAllowed = {"ADMIN"})
+  public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver){
+    val program = request.getProgram();
+    val updatedProgram = programService.updateProgram(program);
+    val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
+
+  @Override
   public void inviteUser(InviteUserRequest request, StreamObserver<InviteUserResponse> responseObserver) {
     val programId = commonConverter.stringToUUID(request.getProgramId());
     val programResult = programService.getProgram(programId);
