@@ -128,33 +128,14 @@ public class ProgramService {
     }
   }
 
-  public ErrorOr<ProgramEntity> createProgram(@NonNull Program program) {
+  public ProgramEntity createProgram(@NonNull Program program) {
     val programEntity = programConverter.programToProgramEntity(program);
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
-
-    ProgramEntity saved;
-    try {
-      saved = programRepository.save(programEntity);
-    } catch(IOError error) {
-      return new ErrorOr(error);
-    } catch(NoSuchElementException e) {
-      return new ErrorOr(new RuntimeException("Could not save program"));
-    } catch(NullPointerException e) {
-      return new ErrorOr(new Error("Could not save program"));
-    }
-    if (saved == null) {
-      return new ErrorOr(new Error("Could not save program -- no idea why..."));
-    }
-
-    try {
-      egoService.setUpProgram(saved);
-    } catch(HttpClientErrorException error) {
-      return new ErrorOr(error);
-    }
-
-    return new ErrorOr(saved);
+    val saved = programRepository.save(programEntity);
+    egoService.setUpProgram(saved);
+    return(saved);
   }
 
 }

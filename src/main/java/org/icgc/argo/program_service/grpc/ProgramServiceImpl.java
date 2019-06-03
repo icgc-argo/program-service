@@ -52,19 +52,17 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     val program = request.getProgram();
-    val result = programService.createProgram(program);
-    
-    if (result.hasError()) {
-      responseObserver.onError(result.getError());
+
+    try {
+      val result = programService.createProgram(program);
+      val response = programConverter.programEntityToCreateProgramResponse(result);
+      responseObserver.onNext(response);
       responseObserver.onCompleted();
-      return;
+    } catch(Error error) {
+      responseObserver.onError(error);
+      responseObserver.onCompleted();
     }
 
-    val entity = result.getValue();
-   
-    val response = programConverter.programEntityToCreateProgramResponse(entity);
-    responseObserver.onNext(response);
-    responseObserver.onCompleted();
   }
 
   @Override

@@ -145,7 +145,7 @@ public class EgoService {
 
   @AllArgsConstructor @NoArgsConstructor @Data
   static class Policy {
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty()
     private UUID id;
     @JsonProperty()
     private String name;
@@ -247,7 +247,6 @@ public class EgoService {
     default:
       log.error("Unknown role " + role.name());
       return new PermissionRequest("DENY");
-
     }
   }
 
@@ -343,15 +342,14 @@ public class EgoService {
   }
 
  Optional<Group> getGroup(String groupName) {
-    return getObjects("/groups?name=" + groupName, Group.class).
+    return getObjects("/groups?query=" + groupName, Group.class).
       filter(group -> group.getName().equals(groupName)).findFirst();
  }
 
  public Optional<Policy> getPolicy(String policyName) {
     val policies = getObjects("/policies?query=" + policyName, Policy.class);
     return policies.
-      filter( o -> o.name.equals(policyName)).
-      findFirst();
+      filter( policy -> policy.name.equals(policyName)).findFirst();
   }
 
   Optional<User> getUser(@Email String email) {

@@ -59,7 +59,7 @@ class EgoServiceIT {
       .setRegions(stringValue("toronto"))
       .setDescription(stringValue(""))
       .build();
-    this.programEntity = programService.createProgram(program).getValue();
+    this.programEntity = programService.createProgram(program);
     assertThat(this.programEntity).isNotNull();
 
     // Policies are created
