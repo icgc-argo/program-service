@@ -90,9 +90,9 @@ spring:
 
 ---
 ###############################################################################
-# Profile - "dev"
+# Profile - "debug"
 ###############################################################################
-spring.profiles: dev
+spring.profiles: debug
 spring:
   profiles:
     include: [default]
@@ -107,8 +107,6 @@ spring:
     url: jdbc:tc:postgresql:9.5.13://localhost:5432/program_db
     username: postgres
     password:
-#  autoconfigure:
-#    exclude: org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
 
 server:
   port: 8080
