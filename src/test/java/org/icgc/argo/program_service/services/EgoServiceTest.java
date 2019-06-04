@@ -21,7 +21,7 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.config.AppConfig;
+import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
@@ -52,7 +52,7 @@ class EgoServiceTest {
 
     val retryTemplate = new RetryTemplate();
     val programConverter = mock(ProgramConverter.class);
-    val egoService = new EgoService(retryTemplate,retryTemplate,programEgoGroupRepository, programConverter, new AppConfig());
+    val egoService = new EgoService(retryTemplate,retryTemplate,programEgoGroupRepository, programConverter, new AppProperties());
     ReflectionTestUtils.setField(egoService, "egoPublicKey", rsaPublicKey);
 
     assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");

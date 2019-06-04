@@ -40,7 +40,7 @@ import lombok.val;
 import org.icgc.argo.program_service.User;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.config.AppConfig;
+import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -91,7 +91,7 @@ public class EgoService {
   private final ProgramConverter programConverter;
 
   private RSAPublicKey egoPublicKey;
-  private AppConfig appConfiguration;
+  private AppProperties appConfiguration;
 
 
   @Autowired
@@ -100,7 +100,7 @@ public class EgoService {
       @NonNull RetryTemplate retryTemplate,
       @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
 	  @NonNull ProgramConverter programConverter,
-      @NonNull AppConfig appConfiguration) {
+      @NonNull AppProperties appConfiguration) {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.appConfiguration = appConfiguration;
     this.lenientRetryTemplate = lenientRetryTemplate;

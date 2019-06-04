@@ -23,7 +23,7 @@ import org.icgc.argo.program_service.Program;
 import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.config.AppConfig;
+import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.services.EgoService.EgoCollection;
 import org.icgc.argo.program_service.services.EgoService.Permission;
 import org.icgc.argo.program_service.services.EgoService.Policy;
@@ -64,7 +64,7 @@ class EgoServiceIT {
   ProgramService programService;
 
   @Autowired
-  AppConfig appConfiguration;
+  AppProperties appConfiguration;
 
   @Autowired
   CommonConverter commonConverter;
