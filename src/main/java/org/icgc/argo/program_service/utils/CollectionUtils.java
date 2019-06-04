@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.stream.Collectors.toList;
@@ -45,6 +46,14 @@ public class CollectionUtils {
 
   public static <T, U> Set<U> mapToSet(Collection<T> collection, Function<T, U> mapper) {
     return collection.stream().map(mapper).collect(toSet());
+  }
+
+  public static <T> Collector<T, ImmutableSet.Builder<T>, ImmutableSet<T>> toImmutableSet() {
+    return Collector.of(
+            ImmutableSet.Builder::new,
+            ImmutableSet.Builder::add,
+            (b1, b2) -> b1.addAll(b2.build()),
+            ImmutableSet.Builder::build);
   }
 
   public static <T, U> Set<U> mapToImmutableSet(Collection<T> collection, Function<T, U> mapper) {
@@ -97,6 +106,8 @@ public class CollectionUtils {
     return range(0, numberOfCalls).boxed().map(x -> callback.get()).collect(toImmutableList());
   }
 
-
+  public static boolean nullOrEmpty(Collection collection){
+    return collection == null || collection.isEmpty();
+  }
 
 }

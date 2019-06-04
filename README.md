@@ -6,7 +6,8 @@ Program Service
 * [Objective](#objective)
 * [Development](#development)
    * [Protocol buffers submodule](#protocol-buffers-submodule)
-* [Setup](#setup)
+   * [Generate Protocol buffers Java files](#generate-protocol-buffers-java-files)
+* [Running the Service](#running-the-service)
    * [Local](#local)
       * [Database](#database)
       * [Run Spring Boot](#run-spring-boot)
@@ -29,10 +30,17 @@ The central point to create and manage programs and maintain their metadata.
 ## Development
 
 ### Protocol buffers submodule
+
 Protobuf files are stored at a [separate repository](https://github.com/icgc-argo/argo-proto), to init the submodule
 
 ```sh
 git submodule update --init
+```
+
+### Generate Protocol buffers Java files
+
+```sh
+./mvnw compile
 ```
 
 ## Running the Service
@@ -45,6 +53,7 @@ docker run --name postgres -d -p 5432:5432 postgres
 ```
 
 Create database program_db
+
 ```sh
 psql -h localhost -p 5432 -U postgres -c 'create database program_db'
 ```
