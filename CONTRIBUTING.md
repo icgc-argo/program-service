@@ -34,4 +34,5 @@ public class Person{
 }
 ```
 
-
+## 3. Use kebab-case for naming properties
+For example, in application.yml, avoid using `serverAuthPrefix`. Instead use `server-auth-prefix`

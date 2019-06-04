@@ -52,6 +52,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -105,7 +106,8 @@ public class ProgramService {
     return programRepository.findById(uuid);
   }
 
-  public ProgramEntity createProgram(@NonNull Program program) throws DataIntegrityViolationException {
+  //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
+  public ProgramEntity createProgram(@NonNull Program program, @NonNull Collection<String> adminEmails) throws DataIntegrityViolationException {
     val programEntity = programConverter.programToProgramEntity(program);
 
     // Set the timestamps
@@ -114,7 +116,7 @@ public class ProgramService {
     programEntity.setUpdatedAt(now);
 
     programRepository.save(programEntity);
-    egoService.setUpProgram(programEntity);
+    egoService.setUpProgram(programEntity, adminEmails);
     return programEntity;
   }
 
@@ -176,8 +178,7 @@ public class ProgramService {
   }
 
   public List<User> listUser(@NonNull UUID programId){
-    val users = egoService.getUserByGroup(programId);
-    return users;
+    return egoService.getUserByGroup(programId);
   }
 
   public UUID inviteUser(@NotNull ProgramEntity program,

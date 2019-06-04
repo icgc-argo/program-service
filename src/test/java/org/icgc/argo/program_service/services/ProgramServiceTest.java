@@ -32,6 +32,10 @@ import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
@@ -131,7 +135,7 @@ class ProgramServiceTest {
     assertThat(inputProgramEntity.getCreatedAt()).isNull();
     assertThat(inputProgramEntity.getUpdatedAt()).isNull();
     when(programConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
-    val outputEntity = programService.createProgram(program);
+    val outputEntity = programService.createProgram(program, List.of());
     assertThat(outputEntity.getCreatedAt()).isNotNull();
     assertThat(outputEntity.getUpdatedAt()).isNotNull();
     verify(programRepository).save(inputProgramEntity);
@@ -144,4 +148,5 @@ class ProgramServiceTest {
     val programs = programService.listPrograms();
     assertThat(programs).contains(programEntity);
   }
+
 }
