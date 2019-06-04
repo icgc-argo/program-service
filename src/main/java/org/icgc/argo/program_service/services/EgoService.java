@@ -161,7 +161,7 @@ public class EgoService {
   }
 
   //TODO: add transactional. If there are more programdb logic in the future and something fails, it will be able to roll back those changes.
-  public void setUpProgram(@NonNull ProgramEntity program, @NonNull Collection<String> initialAdminEmails) {
+  public void setUpProgram(@NonNull ProgramEntity program, @NonNull Collection<String> adminEmails) {
     val groups = createGroups(program.getShortName());
     createPolicies(program.getShortName(), groups);
 
@@ -188,13 +188,13 @@ public class EgoService {
           .setEgoGroupId(group.id);
       programEgoGroupRepository.save(programEgoGroup);
     });
-    initialAdminEmails.forEach(email -> initAdmin(email, program));
+    adminEmails.forEach(email -> initAdmin(email, program));
   }
 
-  void initAdmin(String email, ProgramEntity programEntity){
-    if (!joinProgram(email, programEntity, ADMIN)){
-      val egoUser = createEgoUser(email)
-          .orElseThrow(() -> new IllegalStateException(format("Could not create ego user for: %s", email )));
+  void initAdmin(String adminEmail, ProgramEntity programEntity){
+    if (!joinProgram(adminEmail, programEntity, ADMIN)){
+      val egoUser = createEgoUser(adminEmail)
+          .orElseThrow(() -> new IllegalStateException(format("Could not create ego user for: %s", adminEmail )));
       val joinedProgram = joinProgram(egoUser.getEmail(), programEntity, ADMIN);
       checkState(joinedProgram, "Ego user '%s' was created but could not join the program '%s'", programEntity.getShortName());
     }

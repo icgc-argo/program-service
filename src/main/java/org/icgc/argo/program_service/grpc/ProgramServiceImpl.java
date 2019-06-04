@@ -59,7 +59,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     val program = request.getProgram();
-    val entity = programService.createProgram(program, request.getInitialAdminEmailsList());
+    val entity = programService.createProgram(program, request.getAdminEmailsList());
     val response = programConverter.programEntityToCreateProgramResponse(entity);
     responseObserver.onNext(response);
     responseObserver.onCompleted();

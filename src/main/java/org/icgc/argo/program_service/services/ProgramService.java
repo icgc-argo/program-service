@@ -83,7 +83,7 @@ public class ProgramService {
   }
 
   //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
-  public ProgramEntity createProgram(@NonNull Program program, @NonNull Collection<String> initialAdminEmails) {
+  public ProgramEntity createProgram(@NonNull Program program, @NonNull Collection<String> adminEmails) {
     val programEntity = programConverter.programToProgramEntity(program);
 
     // Set the timestamps
@@ -92,7 +92,7 @@ public class ProgramService {
     programEntity.setUpdatedAt(now);
 
     programRepository.save(programEntity);
-    egoService.setUpProgram(programEntity, initialAdminEmails);
+    egoService.setUpProgram(programEntity, adminEmails);
     return programEntity;
   }
 
