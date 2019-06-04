@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Validated
@@ -115,7 +116,7 @@ public class ProgramService {
 
   public List<User> listUser(UUID programId){
     val users = egoService.getUserByGroup(programId);
-    return users;
+    return users.collect(Collectors.toList());
   }
 
   public UUID inviteUser(@NotNull ProgramEntity program,

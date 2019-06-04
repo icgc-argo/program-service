@@ -377,15 +377,20 @@ public class EgoService {
 
   Optional<User> getUser(@Email String email) {
     return getObjects("/users?query=" + email, User.class).
-      filter( user -> user.email.equals(email)).
+      filter( user -> user.getEmail().equals(email)).
       findFirst();
   }
 
   Optional<User> getGroupUser(UUID groupId, @Email String email) {
     val url = String.format("/groups/%s/users?query=%s", groupId, email);
     return getObjects(url, User.class).
-      filter( user -> user.email.equals(email)).
+      filter( user -> user.getEmail().equals(email)).
       findFirst();
+  }
+
+  Stream<User> getUserByGroup(UUID groupId) {
+    val url = String.format("/groups/%s/users", groupId);
+    return getObjects(url, User.class);
   }
 
   Boolean joinProgram(@Email String email, ProgramEntity programEntity, UserRole role) {
@@ -413,14 +418,15 @@ public class EgoService {
     }
   }
 
-  void leaveProgram(@Email String email, UUID programId) {
+  boolean leaveProgram(@Email String email, UUID programId) {
     val user = getUser(email);
     if (user.isEmpty()) {
       log.error("Cannot find user with email {}", email);
-      throw new Error("User not found, email=" + email);
-    } else {
-      leaveProgram(user.get().getId(), programId);
+      return false;
     }
+
+    leaveProgram(UUID.fromString(user.get().getId().getValue()), programId);
+    return true;
   }
 
   private void removeUserFromGroup(UUID userId, ProgramEgoGroupEntity group) {

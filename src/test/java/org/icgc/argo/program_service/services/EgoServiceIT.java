@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -154,7 +155,8 @@ class EgoServiceIT {
     assertThat(user.isPresent()).isTrue();
 
     egoService.leaveProgram("d8660091@gmail.com", programEntity.getId());
-    assertThat(egoService.getObject(String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.EgoUser>>() {}).isPresent()).isFalse();
+    assertThat(egoService.getObject(String.format("%s/groups/%s/users?query=%s",
+      appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), EgoService.EgoCollection.class).isPresent()).isFalse();
   }
 
   @Test
@@ -183,12 +185,12 @@ class EgoServiceIT {
 
     assertThat(egoService.getObject(
                 String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), adminGroupId, ADMIN_USER_EMAIL),
-                new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.EgoUser>>() {})
+                EgoService.class)
         .isPresent()).isFalse();
 
     assertThat(egoService.getObject(
             String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), collaboratorGroupId, COLLABORATOR_USER_EMAIL),
-            new ParameterizedTypeReference<EgoService.EgoCollection<EgoService.EgoUser>>() {})
+            EgoService.class)
         .isPresent()).isFalse();
   }
 
