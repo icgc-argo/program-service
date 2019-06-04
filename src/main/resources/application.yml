@@ -27,10 +27,10 @@ retry:
   connection:
 
     # Max number of retries
-    maxRetries: 7
+    max-retries: 5
 
     # Initial timeoutMs before the first retry. In milliseconds.
-    initial-backoff: 15001
+    initial-backoff: 15000
 
     # Multiplier that defines value of consequent timeouts before the next retry.
     # E.g. TIMEOUT(n) = TIMEOUT(n-1) * MULTIPLIER

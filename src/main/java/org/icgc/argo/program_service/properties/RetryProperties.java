@@ -37,14 +37,13 @@ import javax.validation.constraints.PositiveOrZero;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.springframework.retry.backoff.ExponentialBackOffPolicy.DEFAULT_MULTIPLIER;
 
-
 @Getter
 @Setter
 @Component
 @ConfigurationProperties("retry")
 public class RetryProperties {
 
-  private Connection connection;// = new Connection();
+  private final Retry connection = new Retry();
 
   @Bean
   @Primary
@@ -77,7 +76,7 @@ public class RetryProperties {
   @Getter
   @Setter
   @Validated
-  public static class Connection{
+  public static class Retry {
 
     private static final int DEFAULT_MAX_RETRIES = 5;
     private static final long DEFAULT_INITIAL_BACKOFF_INTERVAL = SECONDS.toMillis(15L);
@@ -93,6 +92,7 @@ public class RetryProperties {
     @NotNull
     @PositiveOrZero
     private Double multiplier = DEFAULT_MULTIPLIER;
+
   }
 
 }
