@@ -18,15 +18,9 @@
 
 package org.icgc.argo.program_service.services;
 
-import static org.icgc.argo.program_service.utils.CollectionUtils.*;
-import static org.icgc.argo.program_service.utils.EntityService.*;
-
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.Program;
-import org.icgc.argo.program_service.User;
-import org.icgc.argo.program_service.UserRole;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
@@ -36,6 +30,9 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
+import org.icgc.argo.program_service.proto.Program;
+import org.icgc.argo.program_service.proto.User;
+import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
@@ -47,6 +44,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.mail.MailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -57,6 +55,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static org.icgc.argo.program_service.utils.CollectionUtils.convertToIds;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToImmutableSet;
+import static org.icgc.argo.program_service.utils.CollectionUtils.nullOrEmpty;
+import static org.icgc.argo.program_service.utils.EntityService.getManyEntities;
 
 @Service
 @Validated

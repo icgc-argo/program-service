@@ -76,7 +76,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @NotNull
   @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.MEMBERSHIPTYPE)
-  private org.icgc.argo.program_service.MembershipType membershipType;
+  private org.icgc.argo.program_service.proto.MembershipType membershipType;
 
   @NotNull
   @Column(name = SqlFields.COMMITMENTDONORS)

@@ -19,8 +19,8 @@
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
-import org.icgc.argo.program_service.Program;
-import org.icgc.argo.program_service.UserRole;
+import org.icgc.argo.program_service.proto.Program;
+import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
@@ -43,7 +43,7 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.argo.program_service.MembershipType.ASSOCIATE;
+import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
 import static org.icgc.argo.program_service.UtilsTest.int32Value;
 import static org.icgc.argo.program_service.UtilsTest.membershipTypeValue;
 import static org.icgc.argo.program_service.UtilsTest.stringValue;
