@@ -20,6 +20,10 @@ package org.icgc.argo.program_service;
 
 import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
+import org.icgc.argo.program_service.proto.MembershipType;
+import org.icgc.argo.program_service.proto.MembershipTypeValue;
+import org.icgc.argo.program_service.proto.UserRole;
+import org.icgc.argo.program_service.proto.UserRoleValue;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;

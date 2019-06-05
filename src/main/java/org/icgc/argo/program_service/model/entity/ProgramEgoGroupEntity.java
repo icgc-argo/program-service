@@ -22,7 +22,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-import org.icgc.argo.program_service.UserRole;
+import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.model.enums.Tables;
 
 import javax.persistence.Column;

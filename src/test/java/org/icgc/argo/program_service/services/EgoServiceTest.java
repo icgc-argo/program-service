@@ -19,7 +19,7 @@
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
-import org.icgc.argo.program_service.UserRole;
+import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.converter.ProgramConverter;

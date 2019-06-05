@@ -23,7 +23,7 @@ import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
-import org.icgc.argo.program_service.*;
+import org.icgc.argo.program_service.proto.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
