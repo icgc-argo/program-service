@@ -81,7 +81,7 @@ spec:
                         sh 'helm init --client-only'
                         sh 'helm ls'
                         sh 'helm repo add argo  https://icgc-argo.github.io/charts/'
-                        sh "helm upgrade program-service-qa argo/program-service --reuse-values --set image.tag=${commit}"
+                        sh "helm upgrade program-service-qa argo/program-service --reuse-values --set-string image.tag=${commit}"
                     }
                 }
             }
