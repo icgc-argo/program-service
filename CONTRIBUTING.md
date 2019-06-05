@@ -122,7 +122,7 @@ Since all values in a proto3 message are optional, if a primitive value is not e
       ```
     
 ### 4. Enum values should be uppercase only
-### 5. Pull Requests involving this repository, require **atleast 2 reviewers**
+### 5. Pull Requests involving changes to the proto file, require **atleast 2 reviewers**
 
 
 ## Server Code
