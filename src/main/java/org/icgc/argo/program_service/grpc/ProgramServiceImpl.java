@@ -29,6 +29,7 @@ import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.services.EgoService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -142,8 +143,24 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   // not tested
   @Override
   public void removeUser(RemoveUserRequest request,
-                         StreamObserver<com.google.protobuf.Empty> responseObserver) {
+                         StreamObserver<Empty> responseObserver) {
     egoService.leaveProgram(commonConverter.stringToUUID(request.getUserId()), commonConverter.stringToUUID(request.getProgramId()));
+    responseObserver.onNext(Empty.getDefaultInstance());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void updateUser(UpdateUserRequest request, StreamObserver<Empty> responseObserver) {
+    val userId = commonConverter.stringToUUID(request.getUserId());
+    val role = request.getRole().getValue();
+    val programId = commonConverter.stringToUUID(request.getProgramId());
+    try {
+      egoService.updateUserRole(userId, programId, role);
+    } catch (NotFoundException e){
+      responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (RuntimeException e){
+      responseObserver.onError(Status.INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
+    }
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }

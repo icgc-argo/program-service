@@ -69,10 +69,11 @@ class EgoServiceIT {
   @Autowired
   CommonConverter commonConverter;
 
-  ProgramEntity programEntity;
+  private ProgramEntity programEntity;
 
   private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
   private static final String COLLABORATOR_USER_EMAIL = "TestPS@dummy.com";
+  private static final String UPDATE_USER_TEST_EMAIL = "Test_update_user_PS@dummy.com";
 
   @BeforeAll
   void setUp() {
@@ -140,6 +141,34 @@ class EgoServiceIT {
         Permission[]::new);
     assertThat(adminPermissions.length).isEqualTo(2);
     assertThat(adminPermissions).allMatch(permission -> permission.getAccessLevel().equals("WRITE"));
+  }
+
+  @Test
+  public void updateUser(){
+    val user = egoService.getUser("Test_update_user_PS@dummy.com");
+    assertThat(user.isPresent()).isTrue();
+
+    // add user to COLLABORATOR group
+    assertThat(egoService.joinProgram(UPDATE_USER_TEST_EMAIL, programEntity, UserRole.COLLABORATOR)).isTrue();
+
+    val groupBefore = egoService.getGroupsFromUser(user.get().getId());
+    assertThat(groupBefore.isEmpty()).isFalse();
+    assertThat(groupBefore.size()).isEqualTo(1);
+    groupBefore.forEach(group -> assertThat(group.getName()).isEqualTo("PROGRAM-TestShortName-COLLABORATOR"));
+
+    // expected group is ADMIN group
+    egoService.updateUserRole(user.get().getId(), programEntity.getId(), UserRole.ADMIN);
+    val adminGroupName = "PROGRAM-TestShortName-ADMIN";
+    val adminGroupId = egoService.getGroup(adminGroupName).get().getId();
+
+    // verify if user role is updated to ADMIN
+    val groupAfter = egoService.getGroupsFromUser(user.get().getId());
+    assertThat(groupAfter.isEmpty()).isFalse();
+    assertThat(groupAfter.size()).isEqualTo(1);
+    groupAfter.forEach(group -> assertThat(group.getId()).isEqualTo(adminGroupId));
+
+    // remove test user from admin group
+    assertThat(egoService.leaveProgram(user.get().getId(), programEntity.getId())).isTrue();
   }
 
   @Test

@@ -19,12 +19,14 @@
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
+import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -44,15 +46,14 @@ import static org.mockito.Mockito.when;
 
 class EgoServiceTest {
 
-
   @Test
   void verifyKey() {
     val rsaPublicKey = (RSAPublicKey) Utils.getPublicKey(publickKey, "RSA");
     val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
-
     val retryTemplate = new RetryTemplate();
     val programConverter = mock(ProgramConverter.class);
-    val egoService = new EgoService(retryTemplate,retryTemplate,programEgoGroupRepository, programConverter, new AppProperties());
+    val programRepository = mock(ProgramRepository.class);
+    val egoService = new EgoService(retryTemplate, retryTemplate, programEgoGroupRepository, programRepository, programConverter, new AppProperties(), new CommonConverter() {});
     ReflectionTestUtils.setField(egoService, "egoPublicKey", rsaPublicKey);
 
     assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
