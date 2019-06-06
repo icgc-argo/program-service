@@ -155,8 +155,7 @@ class EgoServiceIT {
     assertThat(user.isPresent()).isTrue();
 
     egoService.leaveProgram("d8660091@gmail.com", programEntity.getId());
-    assertThat(egoService.getObject(String.format("%s/groups/%s/users?query=%s",
-      appProperties.getEgoUrl(), groupId, "d8660091@gmail.com"), EgoService.EgoCollection.class).isPresent()).isFalse();
+    assertThat(egoService.getGroupUser(groupId, "d8660091@gmail.com").isPresent()).isFalse();
   }
 
   @Test
@@ -183,15 +182,8 @@ class EgoServiceIT {
     assertThat(egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getId()))
             .as("COLLABORATOR user is removed from TestProgram.").isTrue();
 
-    assertThat(egoService.getObject(
-                String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), adminGroupId, ADMIN_USER_EMAIL),
-                EgoService.class)
-        .isPresent()).isFalse();
-
-    assertThat(egoService.getObject(
-            String.format("%s/groups/%s/users?query=%s", appProperties.getEgoUrl(), collaboratorGroupId, COLLABORATOR_USER_EMAIL),
-            EgoService.class)
-        .isPresent()).isFalse();
+    assertThat(egoService.getGroupUser(adminGroupId, ADMIN_USER_EMAIL).isPresent()).isFalse();
+    assertThat(egoService.getGroupUser(collaboratorGroupId, COLLABORATOR_USER_EMAIL).isPresent()).isFalse();
   }
 
   private boolean ifUserExists(String email, List<String> userList){

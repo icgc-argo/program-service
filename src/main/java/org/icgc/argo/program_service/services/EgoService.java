@@ -45,6 +45,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -294,7 +295,8 @@ public class EgoService {
 
   public Stream<Permission> getGroupPermissions(UUID groupId) {
     val url = String.format("/groups/%s/permissions", groupId);
-    return getObjects(url, Permission.class);
+    val permissionsType=new ParameterizedTypeReference<EgoCollection<Permission>>(){};
+    return getObjects(url, permissionsType);
   }
 
   private String groupName(ProgramEntity program, UserRole role) {
@@ -328,27 +330,26 @@ public class EgoService {
     return createObject(new Group(null, groupName, null, "APPROVED"), Group.class, "/groups");
   }
 
-  <T> Optional<T> getObject(String url, Class<T> type) {
-    return getObjects(url, type).findFirst();
-  }
-
-  <T> Stream<T> getObjects(String url, Class<T> type) {
-    val typeReference = new ParameterizedTypeReference<EgoCollection<T>>() {};
-    val full_url = appProperties.getEgoUrl() + url;
-    try {
-      ResponseEntity<EgoCollection<T>> responseEntity =
-        restTemplate.exchange(full_url, HttpMethod.GET, null,
-        typeReference);
-      val collection = responseEntity.getBody();
-      if (collection != null) {
-        return collection.getResultSet().stream();
-      }
-      return Stream.empty();
-    } catch (HttpClientErrorException e) {
-      log.error("Cannot get ego object of type {}", type.getTypeName(), e);
-      throw e;
+     <T> Optional<T> getObject(String url, ParameterizedTypeReference<EgoCollection<T>> typeReference) {
+      return getObjects(url, typeReference).findFirst();
     }
-  }
+
+    <T> Stream<T> getObjects(String url, ParameterizedTypeReference<EgoCollection<T>> typeReference) {
+      try {
+        //ResponseEntity<EgoCollection<T>> responseEntity = retry(() -> restTemplate.exchange(url, HttpMethod.GET, null, typeReference));
+        ResponseEntity<EgoCollection<T>> responseEntity = restTemplate.exchange(appProperties.getEgoUrl()+url,
+          HttpMethod.GET, null, typeReference);
+
+        val collection = responseEntity.getBody();
+        if (collection != null) {
+          return collection.getResultSet().stream();
+        }
+        return Stream.empty();
+      } catch(HttpClientErrorException | HttpServerErrorException e) {
+        log.error("Cannot get ego object {}", typeReference.getType(), e);
+        return Stream.empty();
+      }
+    }
 
   private <T> T createObject(Object egoObject, Class<T> egoObjectType, String path) {
     try {
@@ -365,32 +366,37 @@ public class EgoService {
   }
 
  Optional<Group> getGroup(String groupName) {
-    return getObjects("/groups?query=" + groupName, Group.class).
+    val groupType=new ParameterizedTypeReference<EgoCollection<Group>>(){};
+    return getObjects("/groups?query=" + groupName, groupType).
       filter(group -> group.getName().equals(groupName)).findFirst();
  }
 
  public Optional<Policy> getPolicy(String policyName) {
-    val policies = getObjects("/policies?query=" + policyName, Policy.class);
+    val policyType = new ParameterizedTypeReference<EgoCollection<Policy>>(){};
+    val policies = getObjects("/policies?query=" + policyName, policyType);
     return policies.
       filter( policy -> policy.name.equals(policyName)).findFirst();
   }
 
   Optional<User> getUser(@Email String email) {
-    return getObjects("/users?query=" + email, User.class).
+    val userType = new ParameterizedTypeReference<EgoCollection<User>>(){};
+    return getObjects("/users?query=" + email, userType).
       filter( user -> user.getEmail().equals(email)).
       findFirst();
   }
 
   Optional<User> getGroupUser(UUID groupId, @Email String email) {
     val url = String.format("/groups/%s/users?query=%s", groupId, email);
-    return getObjects(url, User.class).
+    val userType = new ParameterizedTypeReference<EgoCollection<User>>(){};
+    return getObjects(url, userType).
       filter( user -> user.getEmail().equals(email)).
       findFirst();
   }
 
   Stream<User> getUserByGroup(UUID groupId) {
     val url = String.format("/groups/%s/users", groupId);
-    return getObjects(url, User.class);
+    val userType = new ParameterizedTypeReference<EgoCollection<User>>(){};
+    return getObjects(url, userType);
   }
 
   Boolean joinProgram(@Email String email, ProgramEntity programEntity, UserRole role) {
