@@ -26,7 +26,6 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.dockerjava.api.exception.ConflictException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,7 +37,6 @@ import lombok.Value;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.hibernate.usertype.UserType;
 import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.Utils;
@@ -73,8 +71,6 @@ import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.icgc.argo.program_service.proto.UserRole.ADMIN;
 import static org.icgc.argo.program_service.services.EgoService.GroupName.createProgramGroupName;
 
@@ -154,11 +150,6 @@ public class EgoService {
     }
   }
 
-  private Optional<UUID> getEgoGroupId(UUID programId, UserRole role) {
-    val programEgoGroup = programEgoGroupRepository.findByProgramIdAndRole(programId, role);
-    return programEgoGroup.map(v -> v.getProgram().getId());
-  }
-
   //TODO: add transactional. If there are more programdb logic in the future and something fails, it will be able to roll back those changes.
   public void setUpProgram(@NonNull ProgramEntity program, @NonNull Collection<String> adminEmails) {
     val programPolicy = createEgoPolicy("PROGRAM-" + program.getShortName());
@@ -168,7 +159,7 @@ public class EgoService {
       .filter(role -> !role.equals(UserRole.UNRECOGNIZED))
       .forEach(
         role -> {
-          val group = ensureGroup(program, role);
+          val group = ensureGroupExists(program, role);
           assignPermission(group, programPolicy, getProgramMask(role));
           assignPermission(group, dataPolicy, getDataMask(role));
           saveGroupIdForProgramAndRole(program, role, group.id);
@@ -179,7 +170,7 @@ public class EgoService {
     adminEmails.forEach(email -> initAdmin(email, program));
   }
 
-  String getProgramMask(UserRole role) {
+  private String getProgramMask(UserRole role) {
     switch(role) {
     case ADMIN: return "WRITE"; // return ADMIN
     case CURATOR: return "WRITE"; // check this with spec
@@ -190,7 +181,7 @@ public class EgoService {
     }
   }
 
-  String getDataMask(UserRole role) {
+  private String getDataMask(UserRole role) {
     switch(role) {
     case ADMIN: // return "ADMIN";
     case CURATOR: // return "ADMIN";
@@ -201,16 +192,16 @@ public class EgoService {
     }
   }
 
-  void assignPermission(Group group, Policy policy, String mask) {
+  private void assignPermission(Group group, Policy policy, String mask) {
     val url = format(appProperties.getEgoUrl() + "/policies/%s/permission/group/%s", policy.id, group.id);
     retry(() -> restTemplate.postForObject(url, new HttpEntity<>(new PermissionRequest(mask)), PermissionRequest.class));
   }
 
-  Group ensureGroup(ProgramEntity program, UserRole role) {
+  private Group ensureGroupExists(ProgramEntity program, UserRole role) {
     return ensureGroupExists(createProgramGroupName(program.getShortName(), role).toString());
   }
 
-  void saveGroupIdForProgramAndRole(ProgramEntity program, UserRole role,  UUID groupId ) {
+  private void saveGroupIdForProgramAndRole(ProgramEntity program, UserRole role,  UUID groupId ) {
     val programEgoGroup = new ProgramEgoGroupEntity()
       .setProgram(program)
       .setRole(role)
@@ -321,15 +312,6 @@ public class EgoService {
     }
   }
 
-  private List<Group> createGroups(String programShortName) {
-    return Stream.of(UserRole.values())
-        .filter(role -> !role.equals(UserRole.UNRECOGNIZED))
-        .map(r -> createProgramGroupName(programShortName, r))
-        .map(GroupName::toString)
-        .map(this::ensureGroupExists)
-        .collect(toUnmodifiableList());
-  }
-
   private Group ensureGroupExists(String groupName) {
     val g = getGroup(groupName);
     if (g.isPresent()) {
@@ -352,7 +334,12 @@ public class EgoService {
       return Stream.empty();
     } catch(HttpClientErrorException | HttpServerErrorException e) {
       log.error("Cannot get ego object {}", typeReference.getType(), e);
-      return Stream.empty();
+      if (e.getStatusCode() == HttpStatus.CONFLICT) {
+        throw new ConflictException(format("Can't get ego object : %s",
+           e.getResponseBodyAsString()));
+      }
+
+      throw new EgoException(e.getResponseBodyAsString());
     }
   }
 
@@ -363,8 +350,7 @@ public class EgoService {
   private <T> T createObject(T egoObject, Class<T> egoObjectType, String path) {
     try {
       val request = new HttpEntity<>(egoObject);
-      val obj = retry(() -> restTemplate.postForObject(appProperties.getEgoUrl() + path, request, egoObjectType));
-      return obj;
+      return retry(() -> restTemplate.postForObject(appProperties.getEgoUrl() + path, request, egoObjectType));
     } catch(HttpClientErrorException | HttpServerErrorException e) {
       log.error("Cannot create ego object: {}", e.getResponseBodyAsString());
 
