@@ -303,6 +303,9 @@ public class EgoService {
     val user = new EgoUser()
         .setEmail(email)
         .setStatus(StatusType.APPROVED.toString())
+        //NOTE: for ticket PS-88 (https://github.com/icgc-argo/program-service/issues/88)
+        .setFirstName("")
+        .setLastName("")
         .setType(UserType.USER.toString());
     return createObject(user, EgoUser.class, "/users");
   }
