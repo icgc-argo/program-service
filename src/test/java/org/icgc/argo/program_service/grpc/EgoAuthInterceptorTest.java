@@ -30,7 +30,7 @@ import org.icgc.argo.program_service.proto.ProgramServiceGrpc;
 import org.icgc.argo.program_service.proto.ProgramServiceGrpc.ProgramServiceImplBase;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.services.EgoService;
-import org.icgc.argo.program_service.services.EgoService.EgoToken;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

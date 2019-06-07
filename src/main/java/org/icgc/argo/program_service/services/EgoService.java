@@ -24,114 +24,66 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.Setter;
-import lombok.Value;
-import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
-import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
-import org.springframework.beans.BeanUtils;
+import org.icgc.argo.program_service.services.ego.model.entity.*;
+import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotNull;
 import java.security.interfaces.RSAPublicKey;
-import java.time.Duration;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static org.icgc.argo.program_service.proto.UserRole.ADMIN;
-import static org.icgc.argo.program_service.services.EgoService.GroupName.createProgramGroupName;
+import static org.icgc.argo.program_service.services.ego.GroupName.createProgramGroupName;
 
 //TODO [rtisma]: refactor into service and client
 @Slf4j
 @Service
 public class EgoService {
-
+  private final EgoRESTClient egoClient;
   private final ProgramEgoGroupRepository programEgoGroupRepository;
-  private RestTemplate restTemplate;
-  private final RetryTemplate lenientRetryTemplate;
-  private final RetryTemplate retryTemplate;
   private final ProgramConverter programConverter;
-
   private RSAPublicKey egoPublicKey;
-  private AppProperties appProperties;
-
 
   @Autowired
   public EgoService(
-      @Qualifier("lenientRetryTemplate") @NonNull RetryTemplate lenientRetryTemplate,
-      @NonNull RetryTemplate retryTemplate,
       @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
 	  @NonNull ProgramConverter programConverter,
-      @NonNull AppProperties appProperties) {
+    @NonNull EgoRESTClient restClient
+      ) {
     this.programEgoGroupRepository = programEgoGroupRepository;
-    this.appProperties = appProperties;
-    this.lenientRetryTemplate = lenientRetryTemplate;
     this.programConverter = programConverter;
-    this.retryTemplate = retryTemplate;
-  }
-
-  @Autowired
-  private void setRestTemplate() {
-    // TODO: Maybe jwt authentication
-    this.restTemplate = new RestTemplateBuilder()
-            .basicAuthentication(appProperties.getEgoClientId(), this.appProperties.getEgoClientSecret())
-            .setConnectTimeout(Duration.ofSeconds(15)).build();
+    this.egoClient = restClient;
   }
 
   @Autowired
   private void setEgoPublicKey() {
-    RSAPublicKey egoPublicKey = null;
-    try {
-      log.info("Start fetching ego public key");
-      val key = lenientRetryTemplate
-          .execute(x -> restTemplate.getForEntity(appProperties.getEgoUrl() + "/oauth/token/public_key", String.class).getBody());
-      log.info("Ego public key is fetched");
-      egoPublicKey = (RSAPublicKey) Utils.getPublicKey(key, "RSA");
-    } catch(HttpClientErrorException | HttpServerErrorException e) {
-      log.error("Cannot get public key of ego: {}", e.getResponseBodyAsString());
-    }
-    this.egoPublicKey = egoPublicKey;
+    this.egoPublicKey = egoClient.getPublicKey();
   }
+
 
   public Optional<EgoToken> verifyToken(String jwtToken) {
     try {
       Algorithm algorithm = Algorithm.RSA256(this.egoPublicKey, null);
       JWTVerifier verifier = JWT.require(algorithm)
-              .withIssuer("ego")
-              .build(); //Reusable verifier instance
+        .withIssuer("ego")
+        .build(); //Reusable verifier instance
       val jwt = verifier.verify(jwtToken);
       return parseToken(jwt);
     } catch (JWTVerificationException | NullPointerException e) {
@@ -140,7 +92,7 @@ public class EgoService {
     }
   }
 
-  private Optional<EgoToken> parseToken(DecodedJWT jwt) {
+  public Optional<EgoToken> parseToken(DecodedJWT jwt) {
     try {
       EgoToken egoToken = new EgoToken(jwt, jwt.getClaim("context").as(Context.class));
       return Optional.of(egoToken);
@@ -150,19 +102,20 @@ public class EgoService {
     }
   }
 
+
   //TODO: add transactional. If there are more programdb logic in the future and something fails, it will be able to roll back those changes.
   public void setUpProgram(@NonNull ProgramEntity program, @NonNull Collection<String> adminEmails) {
-    val programPolicy = createEgoPolicy("PROGRAM-" + program.getShortName());
-    val dataPolicy = createEgoPolicy("PROGRAMDATA-" + program.getShortName());
+    val programPolicy = egoClient.createEgoPolicy("PROGRAM-" + program.getShortName());
+    val dataPolicy = egoClient.createEgoPolicy("PROGRAMDATA-" + program.getShortName());
 
     Stream.of(UserRole.values())
       .filter(role -> !role.equals(UserRole.UNRECOGNIZED))
       .forEach(
         role -> {
           val group = ensureGroupExists(program, role);
-          assignPermission(group, programPolicy, getProgramMask(role));
-          assignPermission(group, dataPolicy, getDataMask(role));
-          saveGroupIdForProgramAndRole(program, role, group.id);
+          egoClient.assignPermission(group, programPolicy, getProgramMask(role));
+          egoClient.assignPermission(group, dataPolicy, getDataMask(role));
+          saveGroupIdForProgramAndRole(program, role, group.getId());
 
         }
       );
@@ -170,7 +123,7 @@ public class EgoService {
     adminEmails.forEach(email -> initAdmin(email, program));
   }
 
-  private String getProgramMask(UserRole role) {
+  public String getProgramMask(UserRole role) {
     switch(role) {
     case ADMIN: return "WRITE"; // return ADMIN
     case CURATOR: return "WRITE"; // check this with spec
@@ -181,7 +134,7 @@ public class EgoService {
     }
   }
 
-  private String getDataMask(UserRole role) {
+  public String getDataMask(UserRole role) {
     switch(role) {
     case ADMIN: // return "ADMIN";
     case CURATOR: // return "ADMIN";
@@ -192,13 +145,9 @@ public class EgoService {
     }
   }
 
-  private void assignPermission(Group group, Policy policy, String mask) {
-    val url = format(appProperties.getEgoUrl() + "/policies/%s/permission/group/%s", policy.id, group.id);
-    retry(() -> restTemplate.postForObject(url, new HttpEntity<>(new PermissionRequest(mask)), PermissionRequest.class));
-  }
 
-  private Group ensureGroupExists(ProgramEntity program, UserRole role) {
-    return ensureGroupExists(createProgramGroupName(program.getShortName(), role).toString());
+  private EgoGroup ensureGroupExists(ProgramEntity program, UserRole role) {
+    return egoClient.ensureGroupExists(createProgramGroupName(program.getShortName(), role).toString());
   }
 
   private void saveGroupIdForProgramAndRole(ProgramEntity program, UserRole role,  UUID groupId ) {
@@ -209,11 +158,11 @@ public class EgoService {
     programEgoGroupRepository.save(programEgoGroup);
   }
 
-  void initAdmin(String adminEmail, ProgramEntity programEntity){
+  public void initAdmin(String adminEmail, ProgramEntity programEntity){
     if (!joinProgram(adminEmail, programEntity, ADMIN)){
       EgoUser egoUser;
       try {
-        egoUser = createEgoUser(adminEmail);
+        egoUser = egoClient.createEgoUser(adminEmail);
       } catch(EgoException e) {
         throw new IllegalStateException(format("Could not create ego user for: %s", adminEmail ));
       }
@@ -222,13 +171,13 @@ public class EgoService {
     }
   }
 
-  public List<User> getUserByGroup(UUID programId){
+  public List<User> getUsersInGroup(UUID programId){
     val userResults = new ArrayList<User>();
 
     programEgoGroupRepository.findAllByProgramId(programId).forEach( programEgoGroup -> {
       val groupId = programEgoGroup.getEgoGroupId();
       try {
-        val egoUserStream = getObjects(format("%s/groups/%s/users", appProperties.getEgoUrl(), groupId), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
+        val egoUserStream = egoClient.getUsersByGroup(groupId);
         egoUserStream.map(programConverter::egoUserToUser)
             .forEach(userResults::add);
       } catch (HttpClientErrorException | HttpServerErrorException e){
@@ -244,130 +193,19 @@ public class EgoService {
     programEgoGroupRepository.findAllByProgramId(programEntity.getId()).forEach(programEgoGroup ->{
       val egoGroupId = programEgoGroup.getEgoGroupId();
       try {
-        retryRunnable(() -> restTemplate.delete(appProperties.getEgoUrl() + format("/groups/%s", egoGroupId)));
+        egoClient.deleteGroup(egoGroupId);
       } catch (HttpClientErrorException | HttpServerErrorException e) {
         log.error("Cannot remove group {} in ego: {}", egoGroupId, e.getResponseBodyAsString());
       }
     });
 
     //TODO: create mini ego client with selected functionality instead of copy multiple requests
-    val policy1 = getObject(format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {});
-    val policy2 = getObject(format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAMDATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {});
-
-    policy1.ifPresent(policy -> {
-      retryRunnable(() -> restTemplate.delete(format("%s/policies/%s", appProperties.getEgoUrl(), policy.id)));
-    });
-
-    policy2.ifPresent(policy -> {
-      retryRunnable(() -> restTemplate.delete(format("%s/policies/%s", appProperties.getEgoUrl(), policy.id)));
-    });
-  }
-
-  private <T> T retry(Supplier<T> supplier){
-    return retryTemplate.execute(r -> supplier.get());
-  }
-
-  private void retryRunnable(Runnable runnable){
-    retryTemplate.execute(r -> {
-      runnable.run();
-      return r;
-    });
-  }
-
-
-
-  EgoUser createEgoUser(String email) {
-    val user = new EgoUser()
-        .setEmail(email)
-        .setStatus(StatusType.APPROVED.toString())
-        //NOTE: for ticket PS-88 (https://github.com/icgc-argo/program-service/issues/88)
-        .setFirstName("")
-        .setLastName("")
-        .setType(UserType.USER.toString());
-    return createObject(user, EgoUser.class, "/users");
-  }
-
-  private Policy createEgoPolicy(String policyName) {
-    return createObject(new Policy(null, policyName), Policy.class, "/policies");
-  }
-
-  @Value
-  @Builder
-  public static class GroupName{
-
-    private static final String FORMAT = "%s-%s-%s";
-
-    @NonNull private final String contextName;
-    @NonNull private final String programShortName;
-    @NonNull private final UserRole role;
-
-    @Override
-    public String toString() {
-      return format(FORMAT, contextName, programShortName, role.name());
-    }
-
-    public static GroupName createProgramGroupName(String name, UserRole role){
-      return GroupName.builder()
-          .contextName("PROGRAM")
-          .programShortName(name)
-          .role(role)
-          .build();
-    }
-  }
-
-  private Group ensureGroupExists(String groupName) {
-    val g = getGroup(groupName);
-    if (g.isPresent()) {
-      return g.get();
-    }
-    return createObject(new Group(null, groupName, null, "APPROVED"), Group.class, "/groups");
-  }
-
-  <T> Optional<T> getObject(String url, ParameterizedTypeReference<EgoCollection<T>> typeReference) {
-    return getObjects(url, typeReference).findFirst();
-  }
-
-  <T> Stream<T> getObjects(String url, ParameterizedTypeReference<EgoCollection<T>> typeReference) {
-    try {
-      ResponseEntity<EgoCollection<T>> responseEntity = retry(() -> restTemplate.exchange(url, HttpMethod.GET, null, typeReference));
-      val collection = responseEntity.getBody();
-      if (collection != null) {
-        return collection.getResultSet().stream();
-      }
-      return Stream.empty();
-    } catch(HttpClientErrorException | HttpServerErrorException e) {
-      log.error("Cannot get ego object {}", typeReference.getType(), e);
-      throw new EgoException(e.getResponseBodyAsString());
-    }
-  }
-
-  Optional<Group> getGroup(String groupName) {
-    return getObject(format("%s/groups?query=%s", appProperties.getEgoUrl(), groupName), new ParameterizedTypeReference<EgoCollection<Group>>() {});
-  }
-
-  private <T> T createObject(T egoObject, Class<T> egoObjectType, String path) {
-    try {
-      val request = new HttpEntity<>(egoObject);
-      return retry(() -> restTemplate.postForObject(appProperties.getEgoUrl() + path, request, egoObjectType));
-    } catch(HttpClientErrorException | HttpServerErrorException e) {
-      log.error("Cannot create ego object: {}", e.getResponseBodyAsString());
-
-      if (e.getStatusCode() == HttpStatus.CONFLICT) {
-        throw new ConflictException(format("Can't create %s : %s",
-          egoObject, e.getResponseBodyAsString()));
-      }
-
-      throw new EgoException(e.getResponseBodyAsString());
-    }
-  }
-
-
-  Optional<EgoUser> getUser(@Email String email) {
-    return getObject(format("%s/users?query=%s", appProperties.getEgoUrl(), email), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
+    egoClient.removePolicyByName("PROGRAM-" + programEntity.getShortName());
+    egoClient.removePolicyByName("PROGRAMDATA-" + programEntity.getShortName());
   }
 
   Boolean joinProgram(@Email String email, ProgramEntity programEntity, UserRole role) {
-    val user = getUser(email).orElse(null);
+    val user = egoClient.getUser(email).orElse(null);
     if (user == null) {
       log.error("Cannot find user with email {}", email);
       return false;
@@ -378,11 +216,11 @@ public class EgoService {
       return false;
     }
     val egoGroupId = programEgoGroup.map(ProgramEgoGroupEntity::getEgoGroupId).get();
-    val body = List.of(user.getId());
-    val request = new HttpEntity<>(body);
+
     //TODO: [rtisma] need to check if the user ids are already associated with the group, to avoid conflicts
     try {
-      retry(() -> restTemplate.exchange(appProperties.getEgoUrl() + format("/groups/%s/users", egoGroupId), HttpMethod.POST, request, String.class));
+      egoClient.addUserToGroup(egoGroupId, user.getId());
+
       log.info("{} joined program {}", email, programEntity.getName());
     } catch (HttpClientErrorException | HttpServerErrorException e) {
       log.error("Cannot {} joined program {}: {}", email, programEntity.getName(), e.getResponseBodyAsString());
@@ -391,7 +229,7 @@ public class EgoService {
   }
 
   Boolean leaveProgram(@Email String email, UUID programId) {
-    val user = getUser(email).orElse(null);
+    val user = egoClient.getUser(email).orElse(null);
     if (user == null) {
       log.error("Cannot find user with email {}", email);
       return false;
@@ -403,8 +241,8 @@ public class EgoService {
     val groups = programEgoGroupRepository.findAllByProgramId(programId);
     groups.forEach(group -> {
       try {
-        retryRunnable(() -> restTemplate.delete(
-            appProperties.getEgoUrl() + format("/groups/%s/users/%s", group.getEgoGroupId(), userId)));
+        egoClient.removeUserFromGroup(group.getEgoGroupId(), userId);
+
         log.info("User {} left group {}", userId, group.getEgoGroupId());
       } catch (HttpClientErrorException | HttpServerErrorException e) {
         log.info("Cannot remove user {} from group {}: {}", userId, group.getRole(), e.getResponseBodyAsString());
@@ -413,121 +251,5 @@ public class EgoService {
     return true;
   }
 
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class Group {
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private UUID id;
-    @JsonProperty
-    private String name;
-    @JsonProperty
-    private String description;
-    @JsonProperty
-    private String status;
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class Policy {
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private UUID id;
-    @JsonProperty()
-    private String name;
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class PermissionRequest {
-    @JsonProperty
-    private String mask;
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  static class Permission {
-    @JsonProperty
-    private String accessLevel;
-    // etc
-  }
-
-  @AllArgsConstructor @NoArgsConstructor @Data
-  public static class EgoCollection<T> {
-    @JsonProperty
-    List<T> resultSet;
-
-    @JsonProperty
-    Integer limit;
-
-    @JsonProperty
-    Integer offset;
-  }
-
-
-  @Accessors(chain = true)
-  @AllArgsConstructor @NoArgsConstructor @Data
-  public static class EgoUser {
-    @JsonProperty
-    private UUID id;
-
-    @JsonProperty
-    private String email;
-
-    @JsonProperty
-    private String firstName;
-
-    @JsonProperty
-    private String type;
-
-    @JsonProperty
-    private String status;
-
-    @JsonProperty
-    private String lastName;
-  }
-
-  public enum StatusType {
-    APPROVED;
-  }
-
-  public enum UserType {
-    USER,ADMIN;
-  }
-
-  public static class EgoToken extends Context.User {
-    final DecodedJWT jwt;
-
-    EgoToken(@NotNull DecodedJWT jwt, @NotNull Context context) {
-      this.jwt = jwt;
-      BeanUtils.copyProperties(context.user, this);
-    }
-  }
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  @Setter @Getter
-  private static class Context {
-    //      public String[] scope;
-    User user;
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    @Setter @Getter
-    private static class User {
-      String name;
-      String email;
-      String status;
-      String firstName;
-      String lastName;
-      String test;
-      String createdAt;
-      String lastLogin;
-      String preferredLanguage;
-      String type;
-      String[] groups;
-      String[] permissions;
-    }
-  }
-
-  public static class EgoException extends RuntimeException {
-    public EgoException(@NonNull String message) {super(message);}
-  }
-
-  public static class ConflictException extends RuntimeException {
-    public ConflictException(@NonNull String message) {super(message);};
-  }
 }
 

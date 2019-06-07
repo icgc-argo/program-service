@@ -24,7 +24,7 @@ import com.google.protobuf.StringValue;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
 import org.icgc.argo.program_service.proto.*;
-import org.icgc.argo.program_service.services.EgoService;
+import org.icgc.argo.program_service.services.ego.model.exceptions.ConflictException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,7 +121,7 @@ public class ProgramServiceImplIT {
     val resultObserver = new TestObserver<CreateProgramResponse>();
     try {
       programService.createProgram(details, resultObserver);
-    } catch(EgoService.ConflictException e) {
+    } catch(ConflictException e) {
 
     }
     // assertTrue(resultObserver.completed);

@@ -21,17 +21,19 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.security.interfaces.RSAPublicKey;
-import java.util.Optional;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,8 +45,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class EgoServiceTest {
-
-
+  @Autowired RestTemplate restTemplate;
   @Test
   void verifyKey() {
     val rsaPublicKey = (RSAPublicKey) Utils.getPublicKey(publickKey, "RSA");
@@ -52,8 +53,9 @@ class EgoServiceTest {
 
     val retryTemplate = new RetryTemplate();
     val programConverter = mock(ProgramConverter.class);
-    val egoService = new EgoService(retryTemplate,retryTemplate,programEgoGroupRepository, programConverter, new AppProperties());
-    ReflectionTestUtils.setField(egoService, "egoPublicKey", rsaPublicKey);
+    val egoClient = mock(EgoRESTClient.class);
+    val egoService = new EgoService(programEgoGroupRepository, programConverter, egoClient);
+    ReflectionTestUtils.setField(egoService,"egoPublicKey", rsaPublicKey);
 
     assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
     assertFalse(egoService.verifyToken(expiredToken).isPresent(), "Expired token should return empty ego token");
@@ -77,6 +79,9 @@ class EgoServiceTest {
   @Test
   void initAdmin_allExistingEmails_success(){
     val egoService1 = mock(EgoService.class);
+    val egoClient1 = mock(EgoRESTClient.class);
+    ReflectionTestUtils.setField(egoService1,"egoClient", egoClient1);
+
     val mockProgramEntity = new ProgramEntity();
 
     val existingEmail = "jon.snow@example.com";
@@ -88,11 +93,11 @@ class EgoServiceTest {
 
     // Define behaviour for non-existing
     when(egoService1.joinProgram(nonExistingEmail, mockProgramEntity, UserRole.ADMIN)).thenReturn(false, true);
-    when(egoService1.createEgoUser(nonExistingEmail)).thenReturn(new EgoService.EgoUser().setStatus("APPROVED").setType("USER").setEmail(nonExistingEmail));
+    when(egoClient1.createEgoUser(nonExistingEmail)).thenReturn(new EgoUser().setStatus("APPROVED").setType("USER").setEmail(nonExistingEmail));
 
     // Define behaviour for errored user
     when(egoService1.joinProgram(erroredEmail, mockProgramEntity, UserRole.ADMIN)).thenReturn(false, false);
-    when(egoService1.createEgoUser(erroredEmail)).thenThrow(new EgoService.EgoException("Couldn't create user"));
+    when(egoClient1.createEgoUser(erroredEmail)).thenThrow(new IllegalStateException(format("Could not create ego user for: %s", erroredEmail )));
 
     // Indicate the plan to call the real "initAdmin" MUT (method under test) that uses the internal mocked methods
     doCallRealMethod().when(egoService1).initAdmin(existingEmail, mockProgramEntity);
@@ -102,20 +107,21 @@ class EgoServiceTest {
     // Actually call the MUTs
     egoService1.initAdmin(existingEmail, mockProgramEntity);
     egoService1.initAdmin(nonExistingEmail, mockProgramEntity);
+
     assertThatExceptionOfType(IllegalStateException.class)
         .isThrownBy(() -> egoService1.initAdmin(erroredEmail, mockProgramEntity))
         .withMessageStartingWith("Could not create ego user");
 
     // Verify expected behaviour for existing user case
     verify(egoService1, times(1)).joinProgram(existingEmail, mockProgramEntity, UserRole.ADMIN);
-    verify(egoService1, never()).createEgoUser(existingEmail);
+    verify(egoClient1, never()).createEgoUser(existingEmail);
 
     // Verify expected behaviour for non-existing user case
     verify(egoService1, times(2)).joinProgram(nonExistingEmail, mockProgramEntity, UserRole.ADMIN);
-    verify(egoService1, times(1)).createEgoUser(nonExistingEmail);
+    verify(egoClient1, times(1)).createEgoUser(nonExistingEmail);
 
     // Verify expected behaviour for errored user case
     verify(egoService1, times(1)).joinProgram(erroredEmail, mockProgramEntity, UserRole.ADMIN);
-    verify(egoService1, times(1)).createEgoUser(erroredEmail);
+    verify(egoClient1, times(1)).createEgoUser(erroredEmail);
   }
 }

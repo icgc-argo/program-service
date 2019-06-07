@@ -28,6 +28,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.icgc.argo.program_service.services.EgoService;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -47,7 +48,7 @@ public class EgoAuthInterceptor implements AuthInterceptor {
 
   private final EgoService egoService;
 
-  public static final Context.Key<EgoService.EgoToken> EGO_TOKEN
+  public static final Context.Key<EgoToken> EGO_TOKEN
           = Context.key("egoToken");
 
   public static final Metadata.Key<String> JWT_METADATA_KEY = Metadata.Key.of("jwt", ASCII_STRING_MARSHALLER);
