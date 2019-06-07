@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.app.VelocityEngine;
-import org.icgc.argo.program_service.services.EgoRESTClient;
+import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.utils.NoOpJavaMailSender;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;

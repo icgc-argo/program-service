@@ -16,7 +16,7 @@
  *
  */
 
-package org.icgc.argo.program_service.services;
+package org.icgc.argo.program_service.services.ego;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -27,7 +27,6 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.converter.ProgramConverter;
@@ -145,12 +144,11 @@ public class EgoService {
     }
   }
 
-
-  private EgoGroup ensureGroupExists(ProgramEntity program, UserRole role) {
+  public EgoGroup ensureGroupExists(ProgramEntity program, UserRole role) {
     return egoClient.ensureGroupExists(createProgramGroupName(program.getShortName(), role).toString());
   }
 
-  private void saveGroupIdForProgramAndRole(ProgramEntity program, UserRole role,  UUID groupId ) {
+  public void saveGroupIdForProgramAndRole(ProgramEntity program, UserRole role,  UUID groupId ) {
     val programEgoGroup = new ProgramEgoGroupEntity()
       .setProgram(program)
       .setRole(role)
@@ -204,7 +202,7 @@ public class EgoService {
     egoClient.removePolicyByName("PROGRAMDATA-" + programEntity.getShortName());
   }
 
-  Boolean joinProgram(@Email String email, ProgramEntity programEntity, UserRole role) {
+  public Boolean joinProgram(@Email String email, ProgramEntity programEntity, UserRole role) {
     val user = egoClient.getUser(email).orElse(null);
     if (user == null) {
       log.error("Cannot find user with email {}", email);
@@ -228,7 +226,7 @@ public class EgoService {
     return true;
   }
 
-  Boolean leaveProgram(@Email String email, UUID programId) {
+  public Boolean leaveProgram(@Email String email, UUID programId) {
     val user = egoClient.getUser(email).orElse(null);
     if (user == null) {
       log.error("Cannot find user with email {}", email);

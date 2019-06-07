@@ -1,4 +1,4 @@
-package org.icgc.argo.program_service.services;
+package org.icgc.argo.program_service.services.ego;
 
 import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoPermission;
