@@ -1,4 +1,4 @@
-package org.icgc.argo.program_service.services.ego.model.entity;
+package org.icgc.argo.program_service.services.ego;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
