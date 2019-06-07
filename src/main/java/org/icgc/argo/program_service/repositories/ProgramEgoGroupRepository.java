@@ -18,7 +18,7 @@
 
 package org.icgc.argo.program_service.repositories;
 
-import org.icgc.argo.program_service.UserRole;
+import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 

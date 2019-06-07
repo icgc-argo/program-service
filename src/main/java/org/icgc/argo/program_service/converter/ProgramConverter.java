@@ -20,12 +20,23 @@ package org.icgc.argo.program_service.converter;
 
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
-import org.icgc.argo.program_service.*;
+import org.icgc.argo.program_service.proto.Cancer;
+import org.icgc.argo.program_service.proto.CreateProgramResponse;
+import org.icgc.argo.program_service.proto.InviteUserResponse;
+import org.icgc.argo.program_service.proto.ListProgramsResponse;
+import org.icgc.argo.program_service.proto.ListUserResponse;
+import org.icgc.argo.program_service.proto.MembershipType;
+import org.icgc.argo.program_service.proto.MembershipTypeValue;
+import org.icgc.argo.program_service.proto.PrimarySite;
+import org.icgc.argo.program_service.proto.Program;
+import org.icgc.argo.program_service.proto.UpdateProgramResponse;
+import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
+import org.icgc.argo.program_service.services.EgoService;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
@@ -52,11 +63,17 @@ public interface ProgramConverter {
   PrimarySiteEntity primarySiteToPartialPrimarySiteEntity(PrimarySite p);
   Set<PrimarySiteEntity> primarySitesToPrimarySiteEntities(Collection<PrimarySite> primarySites);
 
-  @Mapping(target = "id", ignore = true)
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
   @Mapping(target = "egoGroups", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "shortName", ignore = true)
+  @Mapping(target = "programCancers", ignore = true)
+  @Mapping(target = "programPrimarySites", ignore = true)
+  @Mapping(target = "egoGroups", ignore = true)
+  void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
   @AfterMapping
   default void updateProgramRelationships(@NonNull Program p, @MappingTarget ProgramEntity programEntity){
@@ -137,6 +154,15 @@ public interface ProgramConverter {
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "mergeUpdatedAt", ignore = true)
+  UpdateProgramResponse programEntityToUpdateProgramResponse(ProgramEntity p);
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
   @Mapping(target = "removePrograms", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
@@ -147,6 +173,19 @@ public interface ProgramConverter {
   //  https://github.com/mapstruct/mapstruct/issues/607#issuecomment-309547739
   @Mapping(target = "programsList", source = "programEntities")
   ListProgramsResponse programEntitiesToListProgramsResponse(Integer dummy, Collection<ProgramEntity> programEntities);
+
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  @Mapping(target = "mergeEmail", ignore = true)
+  @Mapping(target = "mergeFirstName", ignore = true)
+  @Mapping(target = "mergeLastName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  User egoUserToUser(EgoService.EgoUser egoUser);
 
   default ListProgramsResponse programEntitiesToListProgramsResponse(Collection<ProgramEntity> programEntities){
     return programEntitiesToListProgramsResponse(0, programEntities);

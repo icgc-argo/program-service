@@ -24,7 +24,7 @@ import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
 import lombok.NonNull;
 import lombok.val;
-import org.icgc.argo.program_service.*;
+import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
@@ -61,6 +61,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
 
+  //TODO: need better error response. If a duplicate program is created, get "2 UNKNOWN" error. Should atleast have a message in it
   @Override
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
@@ -68,13 +69,26 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     ProgramEntity entity;
 
     try {
-      entity = programService.createProgram(program);
+      entity = programService.createProgram(program, request.getAdminEmailsList());
     } catch (DataIntegrityViolationException e) {
       responseObserver.onError(Status.INVALID_ARGUMENT.withDescription(getExceptionMessage(e)).asRuntimeException());
+      return;
+    } catch (EgoService.EgoException egoException) {
+      responseObserver.onError(egoException);
       return;
     }
 
     val response = programConverter.programEntityToCreateProgramResponse(entity);
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  @EgoAuth(typesAllowed = {"ADMIN"})
+  public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver){
+    val program = request.getProgram();
+    val updatedProgram = programService.updateProgram(program);
+    val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }

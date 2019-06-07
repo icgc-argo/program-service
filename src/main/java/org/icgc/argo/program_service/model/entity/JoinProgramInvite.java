@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-import org.icgc.argo.program_service.UserRole;
+import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.model.enums.Tables;
 import javax.persistence.*;
 import java.time.LocalDateTime;

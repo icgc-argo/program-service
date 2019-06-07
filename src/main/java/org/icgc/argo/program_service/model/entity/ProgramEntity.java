@@ -76,7 +76,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @NotNull
   @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.MEMBERSHIPTYPE)
-  private org.icgc.argo.program_service.MembershipType membershipType;
+  private org.icgc.argo.program_service.proto.MembershipType membershipType;
 
   @NotNull
   @Column(name = SqlFields.COMMITMENTDONORS)
@@ -151,14 +151,19 @@ public class ProgramEntity implements NameableEntity<UUID> {
 
   public void associateCancer(@NonNull CancerEntity c){
     val pc = createProgramCancer(this, c);
-    this.getProgramCancers().add(pc);
-    c.getProgramCancers().add(pc);
+
+    pc.ifPresent( programCancer -> {
+      this.getProgramCancers().add(programCancer);
+      c.getProgramCancers().add(programCancer);
+    });
   }
 
   public void associatePrimarySite(@NonNull PrimarySiteEntity ps){
     val pps = createProgramPrimarySite(this, ps);
-    this.getProgramPrimarySites().add(pps);
-    ps.getProgramPrimarySites().add(pps);
+    pps.ifPresent( programPrimarySite -> {
+      this.getProgramPrimarySites().add(programPrimarySite);
+      ps.getProgramPrimarySites().add(programPrimarySite);
+    });
   }
 
   public void associateEgoGroup(@NonNull ProgramEgoGroupEntity e){

@@ -18,15 +18,16 @@
 
 package org.icgc.argo.program_service.grpc;
 
+import com.google.protobuf.ProtocolStringList;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
 import org.assertj.core.api.Assertions;
-import org.icgc.argo.program_service.CreateProgramRequest;
-import org.icgc.argo.program_service.Program;
-import org.icgc.argo.program_service.RemoveProgramRequest;
+import org.icgc.argo.program_service.proto.CreateProgramRequest;
+import org.icgc.argo.program_service.proto.Program;
+import org.icgc.argo.program_service.proto.RemoveProgramRequest;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.services.EgoService;
@@ -42,7 +43,11 @@ import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.util.UUID;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceImplTest {
@@ -65,10 +70,13 @@ class ProgramServiceImplTest {
   void createProgram() {
     val request = mock(CreateProgramRequest.class);
     val program = mock(Program.class);
+    val adminEmails = mock(ProtocolStringList.class);
     val responseObserver = mock(StreamObserver.class);
 
     when(request.getProgram()).thenReturn(program);
-    when(programService.createProgram(program)).thenThrow(new DataIntegrityViolationException("test error"));
+    when(request.getAdminEmailsList()).thenReturn(adminEmails);
+    when(programService.createProgram(program, adminEmails))
+        .thenThrow(new DataIntegrityViolationException("test error"));
 
     programServiceImpl.createProgram(request, responseObserver);
     val argument = ArgumentCaptor.forClass(Exception.class);

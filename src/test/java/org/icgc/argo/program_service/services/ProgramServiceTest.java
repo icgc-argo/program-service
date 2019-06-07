@@ -18,27 +18,29 @@
 
 package org.icgc.argo.program_service.services;
 
+import org.icgc.argo.program_service.converter.CommonConverter;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
-import org.icgc.argo.program_service.Program;
-import org.icgc.argo.program_service.UserRole;
+import org.icgc.argo.program_service.proto.Program;
+import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
+import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.internal.matchers.Any;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
-
+import org.springframework.mail.MailSender;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
@@ -52,6 +54,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceTest {
+
+  @InjectMocks
   private ProgramService programService;
 
   @Mock
@@ -67,6 +71,12 @@ class ProgramServiceTest {
   private ProgramRepository programRepository;
 
   @Mock
+  private CancerRepository cancerRepository;
+
+  @Mock
+  private MailSender mailSender;
+
+  @Mock
   private JoinProgramInvite invitation;
 
   @Mock
@@ -78,10 +88,11 @@ class ProgramServiceTest {
   @Mock
   private MailService mailService;
 
-  @BeforeEach
-  void init() {
-    this.programService = new ProgramService(invitationRepository, programRepository, programConverter, egoService, mailService);
-  }
+  @Mock
+  private PrimarySiteRepository primarySiteRepository;
+
+  @Mock
+  private CommonConverter commonConverter;
 
   @Test
   void inviteUser() {
@@ -124,7 +135,7 @@ class ProgramServiceTest {
     assertThat(inputProgramEntity.getCreatedAt()).isNull();
     assertThat(inputProgramEntity.getUpdatedAt()).isNull();
     when(programConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
-    val outputEntity = programService.createProgram(program);
+    val outputEntity = programService.createProgram(program, List.of());
     assertThat(outputEntity.getCreatedAt()).isNotNull();
     assertThat(outputEntity.getUpdatedAt()).isNotNull();
     verify(programRepository).save(inputProgramEntity);
@@ -137,4 +148,5 @@ class ProgramServiceTest {
     val programs = programService.listPrograms();
     assertThat(programs).contains(programEntity);
   }
+
 }

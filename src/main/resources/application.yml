@@ -6,6 +6,7 @@ spring:
     name: program-service
   flyway:
     enabled: false
+    locations: "classpath:flyway/sql"
   # url for spring boot admin client service
   boot:
     admin:
@@ -21,6 +22,20 @@ spring:
     host: mailhog.qa.cancercollaboratory.org
     port: 1025
 
+retry:
+  # Connection retries in case of connection failure
+  connection:
+
+    # Max number of retries
+    max-retries: 5
+
+    # Initial timeoutMs before the first retry. In milliseconds.
+    initial-backoff: 15000
+
+    # Multiplier that defines value of consequent timeouts before the next retry.
+    # E.g. TIMEOUT(n) = TIMEOUT(n-1) * MULTIPLIER
+    multiplier: 2.0
+
 app:
   invitationUrlPrefix: "https://frontend/invite/"
   egoUrl: "https://ego.qa.cancercollaboratory.org/api"
@@ -28,6 +43,7 @@ app:
   egoClientSecret: "qa-program-service"
   grpcEnabled: true
   grpcPort: 50051
+  mail-enabled: true
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
 spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
@@ -71,4 +87,38 @@ app:
 ###############################################################################
 spring:
   profiles: auth
+
+---
+###############################################################################
+# Profile - "debug"
+###############################################################################
+spring.profiles: debug
+spring:
+  profiles:
+    include: [default]
+  flyway:
+    enabled: true
+  boot:
+    admin:
+      client:
+        url: http://localhost:9081
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:postgresql:9.5.13://localhost:5432/program_db
+    username: postgres
+    password:
+
+server:
+  port: 8080
+
+management:
+  server:
+    port: 8081
+
+app:
+  egoUrl: "http://localhost:9082"
+  egoClientId: "ps-clientid"
+  egoClientSecret: "ps-clientsecret"
+  grpcEnabled: true
+  mail-enabled: false
 
