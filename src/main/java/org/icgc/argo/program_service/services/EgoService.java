@@ -334,11 +334,6 @@ public class EgoService {
       return Stream.empty();
     } catch(HttpClientErrorException | HttpServerErrorException e) {
       log.error("Cannot get ego object {}", typeReference.getType(), e);
-      if (e.getStatusCode() == HttpStatus.CONFLICT) {
-        throw new ConflictException(format("Can't get ego object : %s",
-           e.getResponseBodyAsString()));
-      }
-
       throw new EgoException(e.getResponseBodyAsString());
     }
   }
