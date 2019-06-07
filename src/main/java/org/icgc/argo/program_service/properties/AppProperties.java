@@ -3,6 +3,7 @@ package org.icgc.argo.program_service.properties;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.velocity.app.VelocityEngine;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.utils.NoOpJavaMailSender;
@@ -15,6 +16,7 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import javax.validation.constraints.NotNull;
 import java.time.Duration;
@@ -95,13 +97,12 @@ public class AppProperties {
 
   @Bean
   public RestTemplate RestTemplate() {
-    return new RestTemplateBuilder()
+    val t = new RestTemplateBuilder()
       .basicAuthentication(getEgoClientId(), getEgoClientSecret())
-      .setConnectTimeout(Duration.ofSeconds(15)).build();
-  }
-  @Bean
-  public EgoRESTClient egoRestClientBean(RetryTemplate retryTemplate, RestTemplate restClient) {
-    return new EgoRESTClient(retryTemplate, retryTemplate, getEgoUrl(), restClient);
+      .setConnectTimeout(Duration.ofSeconds(15)).
+        build();
+    t.setUriTemplateHandler(new DefaultUriBuilderFactory(getEgoUrl()));
+    return t;
   }
 }
 

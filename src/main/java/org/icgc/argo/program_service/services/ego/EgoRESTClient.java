@@ -12,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.support.RetryTemplate;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -27,22 +28,19 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 
 @Slf4j
-//@Service
+@Service
 public class EgoRESTClient implements EgoClient {
   private RestTemplate restTemplate;
   private final RetryTemplate lenientRetryTemplate;
   private final RetryTemplate retryTemplate;
-  private String baseUrl;
 
   public EgoRESTClient(
     RetryTemplate lenientRetryTemplate,
     RetryTemplate retryTemplate,
-    String baseUrl,
     RestTemplate restTemplate
     ) {
     this.lenientRetryTemplate = lenientRetryTemplate;
     this.retryTemplate = retryTemplate;
-    this.baseUrl = baseUrl;
     this.restTemplate = restTemplate;
   }
 
@@ -51,7 +49,7 @@ public class EgoRESTClient implements EgoClient {
     try {
       log.info("Start fetching ego public key");
       val key = lenientRetryTemplate
-        .execute(x -> restTemplate.getForEntity(baseUrl + "/oauth/token/public_key", String.class).getBody());
+        .execute(x -> restTemplate.getForEntity("/oauth/token/public_key", String.class).getBody());
       log.info("Ego public key is fetched");
       egoPublicKey = (RSAPublicKey) Utils.getPublicKey(key, "RSA");
       return egoPublicKey;
@@ -60,7 +58,6 @@ public class EgoRESTClient implements EgoClient {
       throw new EgoException(e.getResponseBodyAsString());
     }
   }
-
 
   private <T> T retry(Supplier<T> supplier){
     return retryTemplate.execute(r -> supplier.get());
@@ -74,7 +71,7 @@ public class EgoRESTClient implements EgoClient {
   }
 
   @Override public void assignPermission(EgoGroup group, EgoPolicy policy, String mask) {
-    val url = format(baseUrl + "/policies/%s/permission/group/%s", policy.getId(), group.getId());
+    val url = format("/policies/%s/permission/group/%s", policy.getId(), group.getId());
     retry(() -> restTemplate.postForObject(url, new HttpEntity<>(new EgoPermissionRequest(mask)), EgoPermissionRequest.class));
   }
 
@@ -94,7 +91,7 @@ public class EgoRESTClient implements EgoClient {
   }
 
   @Override public EgoGroup ensureGroupExists(String groupName) {
-    val g = getGroup(groupName);
+    val g = getGroupByName(groupName);
     if (g.isPresent()) {
       return g.get();
     }
@@ -119,14 +116,14 @@ public class EgoRESTClient implements EgoClient {
     }
   }
 
-  @Override public Optional<EgoGroup> getGroup(String groupName) {
-    return getObject(format("%s/groups?query=%s", baseUrl, groupName), new ParameterizedTypeReference<EgoCollection<EgoGroup>>() {});
+  @Override public Optional<EgoGroup> getGroupByName(String groupName) {
+    return getObject(format("/groups?query=%s", groupName), new ParameterizedTypeReference<EgoCollection<EgoGroup>>() {});
   }
 
   private <T> T createObject(T egoObject, Class<T> egoObjectType, String path) {
     try {
       val request = new HttpEntity<>(egoObject);
-      return retry(() -> restTemplate.postForObject(baseUrl + path, request, egoObjectType));
+      return retry(() -> restTemplate.postForObject(path, request, egoObjectType));
     } catch(HttpClientErrorException | HttpServerErrorException e) {
       log.error("Cannot create ego object: {}", e.getResponseBodyAsString());
 
@@ -139,25 +136,24 @@ public class EgoRESTClient implements EgoClient {
     }
   }
 
-
   @Override public Optional<EgoUser> getUser(@Email String email) {
-    return getObject(format("%s/users?query=%s", baseUrl, email), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
+    return getObject(format("/users?query=%s", email), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
   }
 
-  @Override public Stream<EgoUser> getUsersByGroup(UUID groupId) {
-    return getObjects(format("%s/groups/%s/users", baseUrl, groupId), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
+  @Override public Stream<EgoUser> getUsersByGroupId(UUID groupId) {
+    return getObjects(format("/groups/%s/users", groupId), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
   }
 
   @Override public void deleteGroup(UUID egoGroupId) {
-    retryRunnable(() -> restTemplate.delete(baseUrl + format("/groups/%s", egoGroupId)));
+    retryRunnable(() -> restTemplate.delete(format("/groups/%s", egoGroupId)));
   }
 
   @Override public void deletePolicy(UUID policyId) {
-    retryRunnable(() -> restTemplate.delete(format("%s/policies/%s", baseUrl, policyId)));
+    retryRunnable(() -> restTemplate.delete(format("/policies/%s",policyId)));
   }
 
   @Override public Optional<EgoPolicy> getPolicyByName(String name) {
-    return getObject(format("%s/policies?name=%s", baseUrl, name),
+    return getObject(format("/policies?name=%s", name),
       new ParameterizedTypeReference<EgoCollection<EgoPolicy>>() {});
   }
 
@@ -168,22 +164,23 @@ public class EgoRESTClient implements EgoClient {
   @Override public void addUserToGroup(UUID egoGroupId, UUID egoUserId) {
     val body = List.of(egoUserId);
     val request = new HttpEntity<>(body);
-    retry(() -> restTemplate.exchange(baseUrl + format("/groups/%s/users", egoGroupId),
+    retry(() -> restTemplate.exchange(format("/groups/%s/users", egoGroupId),
       HttpMethod.POST, request, String.class));
   }
 
   @Override public void removeUserFromGroup(UUID egoGroupId, UUID userId) {
     retryRunnable(() -> restTemplate.delete(
-      baseUrl + format("/groups/%s/users/%s", egoGroupId, userId)));
+      format("/groups/%s/users/%s", egoGroupId, userId)));
   }
 
   @Override public boolean isMember(UUID groupId, String email) {
-    val user = getObject(String.format("%s/groups/%s/users?query=%s", baseUrl, groupId, email ), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
+    val user = getObject(String.format("/groups/%s/users?query=%s", groupId, email ),
+      new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
     return user.isPresent();
   }
 
   @Override public EgoPermission[] getGroupPermissions(UUID groupId) {
-    return getObjects(String.format("%s/groups/%s/permissions", baseUrl, groupId),
+    return getObjects(String.format("/groups/%s/permissions", groupId),
       new ParameterizedTypeReference<EgoCollection<EgoPermission>>() {}).toArray(EgoPermission[]::new);
   }
 }

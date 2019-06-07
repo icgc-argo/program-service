@@ -127,7 +127,7 @@ class EgoServiceIT {
     val user = client.getUser(TEST_EMAIL);
     assertThat(user.isPresent()).isTrue();
 
-    val groupId = client.getGroup("PROGRAM-TestShortName-ADMIN").get().getId();
+    val groupId = client.getGroupByName("PROGRAM-TestShortName-ADMIN").get().getId();
     assertThat(client.isMember(groupId, TEST_EMAIL)).isTrue();
 
     egoService.leaveProgram(TEST_EMAIL, programEntity.getId());
@@ -140,8 +140,8 @@ class EgoServiceIT {
     expectedUsers.add(ADMIN_USER_EMAIL);
     expectedUsers.add(COLLABORATOR_USER_EMAIL);
 
-    val adminGroupId = client.getGroup("PROGRAM-TestShortName-ADMIN").get().getId();
-    val collaboratorGroupId = client.getGroup("PROGRAM-TestShortName-COLLABORATOR").get().getId();
+    val adminGroupId = client.getGroupByName("PROGRAM-TestShortName-ADMIN").get().getId();
+    val collaboratorGroupId = client.getGroupByName("PROGRAM-TestShortName-COLLABORATOR").get().getId();
 
     val adminJoin = egoService.joinProgram(ADMIN_USER_EMAIL, programEntity, UserRole.ADMIN);
     assertThat(adminJoin).as("Can add ADMIN user to TestProgram.").isTrue();

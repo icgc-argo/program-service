@@ -22,11 +22,11 @@ public interface EgoClient {
 
   EgoGroup ensureGroupExists(String groupName);
 
-  Optional<EgoGroup> getGroup(String groupName);
+  Optional<EgoGroup> getGroupByName(String groupName);
 
   Optional<EgoUser> getUser(@Email String email);
 
-  Stream<EgoUser> getUsersByGroup(UUID groupId);
+  Stream<EgoUser> getUsersByGroupId(UUID groupId);
 
   void deleteGroup(UUID egoGroupId);
 

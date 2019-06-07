@@ -114,7 +114,7 @@ class ProgramServiceIT {
   void verifyRole(UserRole role, String shortName) {
     System.err.println("verifying role" + role);
     val name = format("PROGRAM-%s-%s", shortName, role.toString());
-    val group = client.getGroup(name);
+    val group = client.getGroupByName(name);
     assertThat(group.isPresent()).isTrue();
 
     val permissions = client.getGroupPermissions(group.get().getId());
@@ -128,11 +128,11 @@ class ProgramServiceIT {
     programService.removeProgram(programEntity);
 
     // Groups are removed
-    assertThat(client.getGroup("PROGRAM-TestShortName-BANNED").isPresent()).isFalse();
-    assertThat(client.getGroup("PROGRAM-TestShortName-CURATOR").isPresent()).isFalse();
-    assertThat(client.getGroup("PROGRAM-TestShortName-COLLABORATOR").isPresent()).isFalse();
-    assertThat(client.getGroup("PROGRAM-TestShortName-SUBMITTER").isPresent()).isFalse();
-    assertThat(client.getGroup("PROGRAM-TestShortName-ADMIN").isPresent()).isFalse();
+    assertThat(client.getGroupByName("PROGRAM-TestShortName-BANNED").isPresent()).isFalse();
+    assertThat(client.getGroupByName("PROGRAM-TestShortName-CURATOR").isPresent()).isFalse();
+    assertThat(client.getGroupByName("PROGRAM-TestShortName-COLLABORATOR").isPresent()).isFalse();
+    assertThat(client.getGroupByName("PROGRAM-TestShortName-SUBMITTER").isPresent()).isFalse();
+    assertThat(client.getGroupByName("PROGRAM-TestShortName-ADMIN").isPresent()).isFalse();
 
     // Policies are removed
     assertThat(client.getPolicyByName("PROGRAM-" + programEntity.getShortName()).isPresent()).isFalse();

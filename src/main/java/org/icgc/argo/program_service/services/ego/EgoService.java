@@ -62,7 +62,7 @@ public class EgoService {
 
   @Autowired
   public EgoService(
-      @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
+    @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
 	  @NonNull ProgramConverter programConverter,
     @NonNull EgoRESTClient restClient
       ) {
@@ -175,7 +175,7 @@ public class EgoService {
     programEgoGroupRepository.findAllByProgramId(programId).forEach( programEgoGroup -> {
       val groupId = programEgoGroup.getEgoGroupId();
       try {
-        val egoUserStream = egoClient.getUsersByGroup(groupId);
+        val egoUserStream = egoClient.getUsersByGroupId(groupId);
         egoUserStream.map(programConverter::egoUserToUser)
             .forEach(userResults::add);
       } catch (HttpClientErrorException | HttpServerErrorException e){
