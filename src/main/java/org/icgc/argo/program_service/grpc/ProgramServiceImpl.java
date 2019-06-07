@@ -38,6 +38,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
 
@@ -70,6 +72,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       entity = programService.createProgram(program, request.getAdminEmailsList());
     } catch (DataIntegrityViolationException e) {
       responseObserver.onError(Status.INVALID_ARGUMENT.withDescription(getExceptionMessage(e)).asRuntimeException());
+      return;
+    } catch (EgoService.EgoException egoException) {
+      responseObserver.onError(egoException);
       return;
     }
 
@@ -156,7 +161,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onError(Status.NOT_FOUND.withDescription(getExceptionMessage(e)).asRuntimeException());
       return;
     }
-
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }

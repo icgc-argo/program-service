@@ -88,11 +88,11 @@ class EgoServiceTest {
 
     // Define behaviour for non-existing
     when(egoService1.joinProgram(nonExistingEmail, mockProgramEntity, UserRole.ADMIN)).thenReturn(false, true);
-    when(egoService1.createEgoUser(nonExistingEmail)).thenReturn(Optional.of(new EgoService.EgoUser().setStatus("APPROVED").setType("USER").setEmail(nonExistingEmail)));
+    when(egoService1.createEgoUser(nonExistingEmail)).thenReturn(new EgoService.EgoUser().setStatus("APPROVED").setType("USER").setEmail(nonExistingEmail));
 
     // Define behaviour for errored user
     when(egoService1.joinProgram(erroredEmail, mockProgramEntity, UserRole.ADMIN)).thenReturn(false, false);
-    when(egoService1.createEgoUser(erroredEmail)).thenReturn(Optional.empty());
+    when(egoService1.createEgoUser(erroredEmail)).thenThrow(new EgoService.EgoException("Couldn't create user"));
 
     // Indicate the plan to call the real "initAdmin" MUT (method under test) that uses the internal mocked methods
     doCallRealMethod().when(egoService1).initAdmin(existingEmail, mockProgramEntity);
