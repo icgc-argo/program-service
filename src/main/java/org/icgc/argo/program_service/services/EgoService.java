@@ -55,6 +55,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
@@ -68,18 +69,13 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.icgc.argo.program_service.proto.UserRole.ADMIN;
 import static org.icgc.argo.program_service.services.EgoService.GroupName.createProgramGroupName;
@@ -166,46 +162,73 @@ public class EgoService {
     }
   }
 
-  private Optional<UUID> getEgoGroupId(UUID programId, UserRole role) {
-    val programEgoGroup = programEgoGroupRepository.findByProgramIdAndRole(programId, role);
-    return programEgoGroup.map(v -> v.getProgram().getId());
-  }
-
   //TODO: add transactional. If there are more programdb logic in the future and something fails, it will be able to roll back those changes.
   public void setUpProgram(@NonNull ProgramEntity program, @NonNull Collection<String> adminEmails) {
-    val groups = createGroups(program.getShortName());
-    createPolicies(program.getShortName(), groups);
+    val programPolicy = createEgoPolicy("PROGRAM-" + program.getShortName());
+    val dataPolicy = createEgoPolicy("PROGRAMDATA-" + program.getShortName());
 
-    groups.forEach(group ->{
-      UserRole role;
-      if (group.name.contains(UserRole.COLLABORATOR.toString())) {
-        role = UserRole.COLLABORATOR;
-      } else if (group.name.contains(UserRole.SUBMITTER.toString())) {
-        role = UserRole.SUBMITTER;
-      } else if (group.name.contains(UserRole.CURATOR.toString())) {
-        role = UserRole.CURATOR;
-      } else if (group.name.contains(ADMIN.toString())) {
-        role = ADMIN;
-      } else if (group.name.contains(UserRole.BANNED.toString())) {
-        role = UserRole.BANNED;
-      } else {
-        log.error("Unrecognized group name: {}", group.name);
-        return;
-      }
+    Stream.of(UserRole.values())
+      .filter(role -> !role.equals(UserRole.UNRECOGNIZED))
+      .forEach(
+        role -> {
+          val group = ensureGroupExists(program, role);
+          assignPermission(group, programPolicy, getProgramMask(role));
+          assignPermission(group, dataPolicy, getDataMask(role));
+          saveGroupIdForProgramAndRole(program, role, group.id);
 
-      val programEgoGroup = new ProgramEgoGroupEntity()
-          .setProgram(program)
-          .setRole(role)
-          .setEgoGroupId(group.id);
-      programEgoGroupRepository.save(programEgoGroup);
-    });
+        }
+      );
+
     adminEmails.forEach(email -> initAdmin(email, program));
+  }
+
+  private String getProgramMask(UserRole role) {
+    switch(role) {
+    case ADMIN: return "WRITE"; // return ADMIN
+    case CURATOR: return "WRITE"; // check this with spec
+    case SUBMITTER: return "READ";
+    case COLLABORATOR: return "READ";
+    case BANNED: return "DENY";
+    default: throw new IllegalArgumentException("Invalid role " + role.toString());
+    }
+  }
+
+  private String getDataMask(UserRole role) {
+    switch(role) {
+    case ADMIN: // return "ADMIN";
+    case CURATOR: // return "ADMIN";
+    case SUBMITTER:return "WRITE";
+    case COLLABORATOR: return "READ";
+    case BANNED: return "DENY";
+    default: throw new IllegalArgumentException("Invalid role " + role.toString());
+    }
+  }
+
+  private void assignPermission(Group group, Policy policy, String mask) {
+    val url = format(appProperties.getEgoUrl() + "/policies/%s/permission/group/%s", policy.id, group.id);
+    retry(() -> restTemplate.postForObject(url, new HttpEntity<>(new PermissionRequest(mask)), PermissionRequest.class));
+  }
+
+  private Group ensureGroupExists(ProgramEntity program, UserRole role) {
+    return ensureGroupExists(createProgramGroupName(program.getShortName(), role).toString());
+  }
+
+  private void saveGroupIdForProgramAndRole(ProgramEntity program, UserRole role,  UUID groupId ) {
+    val programEgoGroup = new ProgramEgoGroupEntity()
+      .setProgram(program)
+      .setRole(role)
+      .setEgoGroupId(groupId);
+    programEgoGroupRepository.save(programEgoGroup);
   }
 
   void initAdmin(String adminEmail, ProgramEntity programEntity){
     if (!joinProgram(adminEmail, programEntity, ADMIN)){
-      val egoUser = createEgoUser(adminEmail)
-          .orElseThrow(() -> new IllegalStateException(format("Could not create ego user for: %s", adminEmail )));
+      EgoUser egoUser;
+      try {
+        egoUser = createEgoUser(adminEmail);
+      } catch(EgoException e) {
+        throw new IllegalStateException(format("Could not create ego user for: %s", adminEmail ));
+      }
       val joinedProgram = joinProgram(egoUser.getEmail(), programEntity, ADMIN);
       checkState(joinedProgram, "Ego user '%s' was created but could not join the program '%s'", programEntity.getShortName());
     }
@@ -264,63 +287,19 @@ public class EgoService {
   }
 
 
-  private List<Policy> createPolicies(String programShortName, List<Group> groups) {
-    val policy1 = createEgoPolicy("PROGRAM-" + programShortName);
 
-    val policy2 = createEgoPolicy("PROGRAMDATA-" + programShortName);
-
-    if (policy1.isPresent() && policy2.isPresent()) {
-      groups.forEach(
-              group -> {
-                HttpEntity<PermissionRequest> request = null;
-                val url1 = format(appProperties.getEgoUrl() + "/policies/%s/permission/group/%s", policy1.get().id, group.id);
-                val url2 = format(appProperties.getEgoUrl() + "/policies/%s/permission/group/%s", policy2.get().id, group.id);
-                try {
-                  if (group.name.contains("COLLABORATOR")) {
-                    retry(() -> restTemplate.postForObject(url1, new HttpEntity<>(new PermissionRequest("READ")), PermissionRequest.class));
-                    retry(() -> restTemplate.postForObject(url2, new HttpEntity<>(new PermissionRequest("READ")), PermissionRequest.class));
-                  } else if (group.name.contains("SUBMITTER")) {
-                    retry(() -> restTemplate.postForObject(url1, new HttpEntity<>(new PermissionRequest("READ")), PermissionRequest.class));
-                    retry(() -> restTemplate.postForObject(url2, new HttpEntity<>(new PermissionRequest("WRITE")), PermissionRequest.class));
-                  } else if (group.name.contains("CURATOR")) {
-                    retry(() -> restTemplate.postForObject(url1, new HttpEntity<>(new PermissionRequest("WRITE")), PermissionRequest.class));
-                    retry(() -> restTemplate.postForObject(url2, new HttpEntity<>(new PermissionRequest("WRITE")), PermissionRequest.class));
-                  } else if (group.name.contains("ADMIN")) {
-                    // TODO: change to admin when ego implement it
-                    retry(() -> restTemplate.postForObject(url1, new HttpEntity<>(new PermissionRequest("WRITE")), PermissionRequest.class));
-                    retry(() -> restTemplate.postForObject(url2, new HttpEntity<>(new PermissionRequest("WRITE")), PermissionRequest.class));
-                  } else if (group.name.contains("BANNED")) {
-                    retry(() -> restTemplate.postForObject(url1, new HttpEntity<>(new PermissionRequest("DENY")), PermissionRequest.class));
-                    retry(() -> restTemplate.postForObject(url2, new HttpEntity<>(new PermissionRequest("DENY")), PermissionRequest.class));
-                  } else  {
-                    log.error("Unrecognized group name: {}", group.name);
-                    return;
-                  }
-
-                } catch (HttpClientErrorException | HttpServerErrorException e) {
-                  log.error("Cannot create permission: {}", e.getResponseBodyAsString());
-                }
-              }
-      );
-    }
-
-    return Stream.of(policy1, policy2)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(toList());
-  }
-
-  Optional<EgoUser> createEgoUser(String email) {
+  EgoUser createEgoUser(String email) {
     val user = new EgoUser()
         .setEmail(email)
         .setStatus(StatusType.APPROVED.toString())
+        //NOTE: for ticket PS-88 (https://github.com/icgc-argo/program-service/issues/88)
         .setFirstName("")
         .setLastName("")
         .setType(UserType.USER.toString());
     return createObject(user, EgoUser.class, "/users");
   }
 
-  private Optional<Policy> createEgoPolicy(String policyName) {
+  private Policy createEgoPolicy(String policyName) {
     return createObject(new Policy(null, policyName), Policy.class, "/policies");
   }
 
@@ -346,26 +325,14 @@ public class EgoService {
           .role(role)
           .build();
     }
-
   }
 
-  private List<Group> createGroups(String programShortName) {
-    return Stream.of(UserRole.values())
-        .filter(role -> !role.equals(UserRole.UNRECOGNIZED))
-        .map(r -> createProgramGroupName(programShortName, r))
-        .map(GroupName::toString)
-        .map(this::createGroup)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .collect(toUnmodifiableList());
-  }
-
-  private Optional<Group> createGroup(String groupName) {
-    val group = createObject(new Group(null, groupName, null, "APPROVED"), Group.class, "/groups");
-    if (group.isEmpty()) {
-      return getGroup(groupName);
+  private Group ensureGroupExists(String groupName) {
+    val g = getGroup(groupName);
+    if (g.isPresent()) {
+      return g.get();
     }
-    return group;
+    return createObject(new Group(null, groupName, null, "APPROVED"), Group.class, "/groups");
   }
 
   <T> Optional<T> getObject(String url, ParameterizedTypeReference<EgoCollection<T>> typeReference) {
@@ -382,7 +349,7 @@ public class EgoService {
       return Stream.empty();
     } catch(HttpClientErrorException | HttpServerErrorException e) {
       log.error("Cannot get ego object {}", typeReference.getType(), e);
-      return Stream.empty();
+      throw new EgoException(e.getResponseBodyAsString());
     }
   }
 
@@ -390,14 +357,19 @@ public class EgoService {
     return getObject(format("%s/groups?query=%s", appProperties.getEgoUrl(), groupName), new ParameterizedTypeReference<EgoCollection<Group>>() {});
   }
 
-  private <T> Optional<T> createObject(T egoObject, Class<T> egoObjectType, String path) {
+  private <T> T createObject(T egoObject, Class<T> egoObjectType, String path) {
     try {
       val request = new HttpEntity<>(egoObject);
-      val obj = retry(() -> restTemplate.postForObject(appProperties.getEgoUrl() + path, request, egoObjectType));
-      return Optional.ofNullable(obj);
+      return retry(() -> restTemplate.postForObject(appProperties.getEgoUrl() + path, request, egoObjectType));
     } catch(HttpClientErrorException | HttpServerErrorException e) {
       log.error("Cannot create ego object: {}", e.getResponseBodyAsString());
-      return Optional.empty();
+
+      if (e.getStatusCode() == HttpStatus.CONFLICT) {
+        throw new ConflictException(format("Can't create %s : %s",
+          egoObject, e.getResponseBodyAsString()));
+      }
+
+      throw new EgoException(e.getResponseBodyAsString());
     }
   }
 
@@ -688,5 +660,12 @@ public class EgoService {
     }
   }
 
+  public static class EgoException extends RuntimeException {
+    public EgoException(@NonNull String message) {super(message);}
+  }
+
+  public static class ConflictException extends RuntimeException {
+    public ConflictException(@NonNull String message) {super(message);};
+  }
 }
 

@@ -72,6 +72,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     } catch (DataIntegrityViolationException e) {
       responseObserver.onError(Status.INVALID_ARGUMENT.withDescription(getExceptionMessage(e)).asRuntimeException());
       return;
+    } catch (EgoService.EgoException egoException) {
+      responseObserver.onError(egoException);
+      return;
     }
 
     val response = programConverter.programEntityToCreateProgramResponse(entity);

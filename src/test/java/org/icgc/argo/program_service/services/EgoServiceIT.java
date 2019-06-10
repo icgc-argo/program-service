@@ -148,7 +148,7 @@ class EgoServiceIT {
   }
 
   public void setUpUser(){
-    testUpdateUser = egoService.createEgoUser(UPDATE_USER_TEST_EMAIL).get();
+    testUpdateUser = egoService.createEgoUser(UPDATE_USER_TEST_EMAIL);
   }
 
   @Test
