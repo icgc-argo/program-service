@@ -37,6 +37,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,13 +71,16 @@ class EgoServiceIT {
   CommonConverter commonConverter;
 
   private ProgramEntity programEntity;
-
+  private EgoService.EgoUser testUpdateUser;
   private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
   private static final String COLLABORATOR_USER_EMAIL = "TestPS@dummy.com";
   private static final String UPDATE_USER_TEST_EMAIL = "Test_update_user_PS@dummy.com";
 
   @BeforeAll
   void setUp() {
+
+    setUpUser();
+
     val p = programService.getProgram("TestProgram");
     if (p.isPresent()) {
       this.programEntity = p.get();
@@ -143,9 +147,13 @@ class EgoServiceIT {
     assertThat(adminPermissions).allMatch(permission -> permission.getAccessLevel().equals("WRITE"));
   }
 
+  public void setUpUser(){
+    testUpdateUser = egoService.createEgoUser(UPDATE_USER_TEST_EMAIL).get();
+  }
+
   @Test
   public void updateUser(){
-    val user = egoService.getUser("Test_update_user_PS@dummy.com");
+    val user = egoService.getUser(UPDATE_USER_TEST_EMAIL);
     assertThat(user.isPresent()).isTrue();
 
     // add user to COLLABORATOR group
@@ -169,6 +177,10 @@ class EgoServiceIT {
 
     // remove test user from admin group
     assertThat(egoService.leaveProgram(user.get().getId(), programEntity.getId())).isTrue();
+
+    //verify if the user is removed from a admin group
+    val groupsLeft = egoService.getGroupsFromUser(user.get().getId());
+    assertThat(groupsLeft.isEmpty()).isTrue();
   }
 
   @Test
@@ -254,5 +266,10 @@ class EgoServiceIT {
     // Policies are removed
     assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAM-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {}).isPresent()).isFalse();
     assertThat(egoService.getObject(String.format("%s/policies?name=%s", appProperties.getEgoUrl(), "PROGRAMDATA-" + programEntity.getShortName()), new ParameterizedTypeReference<EgoCollection<Policy>>() {}).isPresent()).isFalse();
+
+    // delete test user
+    egoService.deleteUser(testUpdateUser.getId());
+    assertThat(egoService.getUser(UPDATE_USER_TEST_EMAIL).isPresent()).isFalse();
   }
+
 }

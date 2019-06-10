@@ -159,7 +159,7 @@ public class EgoService {
   private Optional<EgoToken> parseToken(DecodedJWT jwt) {
     try {
       EgoToken egoToken = new EgoToken(jwt, jwt.getClaim("context").as(Context.class));
-      return Optional.of(egoToken);
+      return Optional.ofNullable(egoToken);
     } catch (JWTDecodeException exception){
       //Invalid token
       return Optional.empty();
@@ -314,6 +314,8 @@ public class EgoService {
     val user = new EgoUser()
         .setEmail(email)
         .setStatus(StatusType.APPROVED.toString())
+        .setFirstName("")
+        .setLastName("")
         .setType(UserType.USER.toString());
     return createObject(user, EgoUser.class, "/users");
   }
@@ -346,7 +348,6 @@ public class EgoService {
     }
 
   }
-
 
   private List<Group> createGroups(String programShortName) {
     return Stream.of(UserRole.values())
@@ -401,31 +402,41 @@ public class EgoService {
   }
 
 
-  public void updateUserRole(@NonNull UUID userId, @NonNull UUID programId, @NonNull UserRole role) throws NotFoundException, RuntimeException {
+  public void updateUserRole(@NonNull UUID userId, @NonNull UUID programId, @NonNull UserRole role) {
     getUserById(userId);
     val program = findProgramById(programId);
     val shortname = program.getShortName();
 
     val groups = getGroupsFromUser(userId);
-    if(groups.isEmpty()){
-      throw new NotFoundException(String.format("No groups found for user id %s.", userId));
-    }
+    NotFoundException.checkNotFound(!groups.isEmpty(), format("No groups found for user id %s.", userId));
+
     // determine the current group
     for(val group : groups){
-      if(group.getName().toLowerCase().contains(shortname.toLowerCase())) {
+      if(isCorrectGroupName(group, shortname)) {
         if(!isSameRole(role, group.getName())){
           removeUserFromCurrentGroup(group, userId);
         } else {
-          throw new RuntimeException(format("Cannot update user role %s, new role is the same as current role.", role.toString()));
+          log.error(format("Cannot update user role to %s, new role is the same as current role.", role.toString()));
         }
       }
     }
-    val programEgoGroup = programEgoGroupRepository.findByProgramIdAndRole(programId, role);
-    val egoGroupId = programEgoGroup.get().getEgoGroupId();
+    val programEgoGroup = getProgramEgoGroup(programId, role);
+    val egoGroupId = programEgoGroup.getEgoGroupId();
     addUserToGroup(userId, egoGroupId);
   }
 
-  private boolean isSameRole(@NonNull UserRole role, @NonNull String groupName) throws RuntimeException {
+  boolean isCorrectGroupName(Group g, String shortname){
+    return g.getName().toLowerCase().contains(shortname.toLowerCase());
+  }
+
+  ProgramEgoGroupEntity getProgramEgoGroup(UUID programId, UserRole role){
+    return programEgoGroupRepository.findByProgramIdAndRole(programId, role)
+            .orElseThrow(() -> {
+              throw new NotFoundException(format("Cannot find ProgramEgoGroupEntity for programId %s and user role %s. ",
+              programId, role.toString()));});
+  }
+
+  boolean isSameRole(@NonNull UserRole role, @NonNull String groupName) throws RuntimeException {
     UserRole currentRole = UserRole.UNRECOGNIZED;
     if (groupName.contains(UserRole.COLLABORATOR.toString())) {
       currentRole = UserRole.COLLABORATOR;
@@ -439,24 +450,26 @@ public class EgoService {
       currentRole = UserRole.BANNED;
     } else {
       log.error("Unrecognized role {}.", currentRole.toString());
-      throw new RuntimeException("Unrecognized role!");
+      throw new IllegalArgumentException("Unrecognized role!");
     }
     return currentRole.toString().equalsIgnoreCase(role.toString());
   }
 
-  private void removeUserFromCurrentGroup(@Nonnull Group group, @NonNull UUID userId){
+  boolean removeUserFromCurrentGroup(@Nonnull Group group, @NonNull UUID userId){
       try {
-        restTemplate.delete(appProperties.getEgoUrl() + String.format("/users/%s/groups/%s", userId, group.getId()));
+        restTemplate.delete(appProperties.getEgoUrl() + format("/users/%s/groups/%s", userId, group.getId()));
         log.info("User {} is removed from ego group with id: {}, name: {}.", userId, group.getId(), group.getName());
+        return true;
       } catch (RestClientException e) {
         log.info("Cannot remove user {} from ego group: {}", userId, group.getName());
+        return false;
       }
   }
 
-  private void addUserToGroup(UUID userId, UUID egoGroupId){
+  void addUserToGroup(UUID userId, UUID egoGroupId){
     try {
       val body = singletonList(userId);
-      restTemplate.postForObject(appProperties.getEgoUrl() + String.format("/groups/%s/users", egoGroupId),
+      restTemplate.postForObject(appProperties.getEgoUrl() + format("/groups/%s/users", egoGroupId),
               new HttpEntity<>(body), Group.class);
       log.info("User {} is added to ego group with id {}.", userId, egoGroupId);
     } catch (RestClientException e) {
@@ -464,10 +477,10 @@ public class EgoService {
     }
   }
 
-  private ProgramEntity findProgramById(UUID programId) throws NotFoundException {
+  ProgramEntity findProgramById(UUID programId) throws NotFoundException {
     return programRepository.findById(programId)
             .orElseThrow(() -> {
-              throw new NotFoundException(String.format("Program %s cannot be found.", commonConverter.uuidToString(programId)));
+              throw new NotFoundException(format("Program %s cannot be found.", commonConverter.uuidToString(programId)));
             });
   }
 
@@ -476,21 +489,29 @@ public class EgoService {
   }
 
   public EgoUser getUserById(UUID userId) {
-    val egoUser = getFrom(String.format("%s/users/%s", appProperties.getEgoUrl(), userId),
+    val egoUser = getFrom(format("%s/users/%s", appProperties.getEgoUrl(), userId),
             new ParameterizedTypeReference<EgoUser>() {})
             .orElseThrow(() -> {
-              throw new NotFoundException(String.format("User %s cannot be found.", commonConverter.uuidToString(userId)));
+              throw new NotFoundException(format("User %s cannot be found.", commonConverter.uuidToString(userId)));
             });
     return egoUser;
   }
 
+  public boolean deleteUser(UUID userId){
+    try {
+      retryRunnable(() -> restTemplate.delete(
+              appProperties.getEgoUrl() + format("/users/%s", userId)));
+      log.info("User {} is deleted.");
+    } catch (HttpClientErrorException | HttpServerErrorException e) {
+      log.info("Cannot remove user {}. ", userId, e.getResponseBodyAsString());
+      return false;
+    }
+    return true;
+  }
+
   List<Group> getGroupsFromUser(UUID userId){
-    val groups = getObjects(String.format("%s/users/%s/groups", appProperties.getEgoUrl(), userId), new ParameterizedTypeReference<EgoCollection<Group>>() {});
-    val result = new ArrayList<Group>();
-    groups.forEach(group -> {
-      result.add(group);
-    });
-    return result;
+    val groupStream = getObjects(format("%s/users/%s/groups", appProperties.getEgoUrl(), userId), new ParameterizedTypeReference<EgoCollection<Group>>() {});
+    return groupStream.collect(toUnmodifiableList());
   }
 
   <T> Optional<T> getFrom(String url, ParameterizedTypeReference<T> typeReference) {
@@ -502,11 +523,11 @@ public class EgoService {
       ResponseEntity<T> responseEntity = restTemplate.exchange(url, HttpMethod.GET, null, typeReference);
       val response = responseEntity.getBody();
       if (response != null) {
-        return Optional.of(response);
+        return Optional.ofNullable(response);
       }
       return Optional.empty();
     } catch(RestClientException e) {
-      log.error("Cannot get ego object {}", typeReference.getType(), e);
+      log.error("Cannot get ego object {}, cause: {}.", typeReference.getType(), e.getCause());
       return Optional.empty();
     }
   }
