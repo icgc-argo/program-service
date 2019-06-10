@@ -21,6 +21,7 @@ package org.icgc.argo.program_service.services;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.hibernate.Hibernate;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
@@ -106,7 +107,31 @@ public class ProgramService {
   }
 
   public Optional<ProgramEntity> getProgram(@NonNull UUID uuid) {
-    return programRepository.findById(uuid);
+    log.error("Looking for program with uuid" + uuid);
+    val entity = programRepository.findById(uuid);
+
+    if (entity.isPresent()) {
+      log.debug("Found a result");
+      // make sure Hibernate lazy-loads these values by
+      // explicitly requesting them here...
+      val program = entity.get();
+      log.error("Got program" + entity.get().toString());
+
+      //Hibernate.initialize(program.getProgramCancers());
+      //Hibernate.initialize(program.getProgramPrimarySites());
+      log.error("I think it's not getting here...");
+      val cancers = entity.get().getProgramCancers();
+
+      if (cancers == null) {
+        log.error("cancers field is NULL"); }
+      else {
+        log.error("Cancers field is ** NOT ** NULLL");
+        log.error("cancers=" + cancers);
+      };
+    } else {
+      log.error("Couldn't find a program for uuid" + uuid);
+    }
+    return entity;
   }
 
   //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict

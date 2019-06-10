@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface CancerRepository extends JpaRepository<CancerEntity, UUID> {
-
   Optional<CancerEntity> getCancerByName(String name);
 
 }

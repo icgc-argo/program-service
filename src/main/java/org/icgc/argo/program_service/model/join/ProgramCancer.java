@@ -48,14 +48,14 @@ public class ProgramCancer implements IdentifiableEntity<ProgramCancerId> {
   @ToString.Exclude
   @MapsId(value = ProgramCancerId.Fields.programId)
   @JoinColumn(name = SqlFields.PROGRAMID_JOIN)
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   private ProgramEntity program;
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
   @MapsId(value = ProgramCancerId.Fields.cancerId)
   @JoinColumn(name = SqlFields.CANCERID_JOIN)
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   private CancerEntity cancer;
 
   public static Optional<ProgramCancer> createProgramCancer(@NonNull ProgramEntity p, @NonNull CancerEntity c){
