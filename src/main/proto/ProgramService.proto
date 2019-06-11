@@ -20,6 +20,7 @@ package program_service;
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "CancerType.proto";
 
 option java_multiple_files = true;
 option java_package = "org.icgc.argo.program_service.proto";
@@ -27,7 +28,6 @@ option java_outer_classname = "ProgramServiceProto";
 option objc_class_prefix = "PSP";
 
 service ProgramService {
-
   rpc CreateProgram(CreateProgramRequest) returns (CreateProgramResponse);
   rpc RemoveProgram(RemoveProgramRequest) returns (google.protobuf.Empty);
   rpc UpdateProgram(UpdateProgramRequest) returns (UpdateProgramResponse);
@@ -55,17 +55,8 @@ message Program {
   google.protobuf.StringValue institutions = 9;
   google.protobuf.StringValue countries = 10;
   google.protobuf.StringValue regions = 11;
-
-  //TODO: should be a list of cancer_type_names
-  repeated Cancer cancer_types = 12;
-  //TODO: should be a list of primary_site_names
+  repeated CancerType cancer_types = 12;
   repeated PrimarySite primary_sites = 13;
-
-  // TODO: should not be here. This should be handled by the service. Should not be able to allow user to defined own create or update time.
-  google.protobuf.Timestamp created_at = 14;
-  google.protobuf.Timestamp updated_at = 15;
-
-  google.protobuf.StringValue id = 16;
 }
 
 enum MembershipType {
@@ -89,16 +80,6 @@ message UserRoleValue {
   UserRole value = 1;
 }
 
-message Cancer {
-  google.protobuf.StringValue id = 1;
-  google.protobuf.StringValue name = 2;
-}
-
-message PrimarySite {
-  google.protobuf.StringValue id = 1;
-  google.protobuf.StringValue name = 2;
-}
-
 message User {
   google.protobuf.StringValue id = 1;
   google.protobuf.StringValue email = 2;
@@ -117,23 +98,33 @@ message CreateProgramResponse {
 }
 
 message UpdateProgramRequest {
-  google.protobuf.StringValue id = 1;
   Program program = 2;
 }
 message UpdateProgramResponse {
   google.protobuf.Timestamp updated_at = 1;
 }
 
+message ProgramDetails {
+  Program program = 1;
+  Metadata metadata = 2;
+}
+
+message Metadata {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp updated_at = 2;
+  google.protobuf.StringValue program_id = 3;
+}
+
 message GetProgramRequest {
-  google.protobuf.StringValue id = 1;
+  google.protobuf.StringValue short_name = 1;
 }
 
 message GetProgramResponse {
-  Program program = 1;
+  ProgramDetails program = 1;
 }
 
 message ListProgramsResponse {
-  repeated Program programs = 1;
+  repeated ProgramDetails programs = 1;
 }
 
 message RemoveUserRequest {

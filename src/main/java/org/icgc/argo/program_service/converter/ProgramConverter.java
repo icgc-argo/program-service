@@ -20,24 +20,10 @@ package org.icgc.argo.program_service.converter;
 
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
-import org.icgc.argo.program_service.proto.Cancer;
-import org.icgc.argo.program_service.proto.CreateProgramResponse;
-import org.icgc.argo.program_service.proto.InviteUserResponse;
-import org.icgc.argo.program_service.proto.ListProgramsResponse;
-import org.icgc.argo.program_service.proto.ListUserResponse;
-import org.icgc.argo.program_service.proto.MembershipType;
-import org.icgc.argo.program_service.proto.MembershipTypeValue;
-import org.icgc.argo.program_service.proto.PrimarySite;
-import org.icgc.argo.program_service.proto.Program;
-import org.icgc.argo.program_service.proto.UpdateProgramResponse;
-import org.icgc.argo.program_service.proto.User;
-import org.icgc.argo.program_service.model.entity.CancerEntity;
-import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
+import lombok.val;
+import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.model.join.ProgramCancer;
-import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.services.EgoService;
-import org.mapstruct.AfterMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -55,14 +41,9 @@ public interface ProgramConverter {
    * From Proto Converters
    */
 
-  @Mapping(target = "programCancers", ignore = true)
-  CancerEntity cancerToPartialCancerEntity(Cancer c);
-  Set<CancerEntity> cancersToCancerEntities(Collection<Cancer> cancers);
-
-  @Mapping(target = "programPrimarySites", ignore = true)
-  PrimarySiteEntity primarySiteToPartialPrimarySiteEntity(PrimarySite p);
-  Set<PrimarySiteEntity> primarySitesToPrimarySiteEntities(Collection<PrimarySite> primarySites);
-
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
   @Mapping(target = "egoGroups", ignore = true)
@@ -75,15 +56,14 @@ public interface ProgramConverter {
   @Mapping(target = "egoGroups", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
-  @AfterMapping
-  default void updateProgramRelationships(@NonNull Program p, @MappingTarget ProgramEntity programEntity){
-    cancersToCancerEntities(programToCancers(p))
-        .forEach(programEntity::associateCancer);
-
-    primarySitesToPrimarySiteEntities(programToPrimarySites(p))
-        .forEach(programEntity::associatePrimarySite);
-  }
-
+//  @AfterMapping
+//  default void updateProgramRelationships(@NonNull Program p, @MappingTarget ProgramEntity programEntity){
+//    cancersToCancerEntities(programToCancers(p))
+//        .forEach(programEntity::associateCancer);
+//
+//    primarySitesToPrimarySiteEntities(programToPrimarySites(p))
+//        .forEach(programEntity::associatePrimarySite);
+//  }
 
   /**
    * To Proto Converters
@@ -102,20 +82,13 @@ public interface ProgramConverter {
   @Mapping(target = "mergeInstitutions", ignore = true)
   @Mapping(target = "mergeCountries", ignore = true)
   @Mapping(target = "mergeRegions", ignore = true)
-  @Mapping(target = "removeCancerTypes", ignore = true)
-  @Mapping(target = "removePrimarySites", ignore = true)
-  @Mapping(target = "mergeCreatedAt", ignore = true)
-  @Mapping(target = "mergeUpdatedAt", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "cancerTypesOrBuilderList", ignore = true)
-  @Mapping(target = "cancerTypesBuilderList", ignore = true)
-  @Mapping(target = "primarySitesOrBuilderList", ignore = true)
-  @Mapping(target = "primarySitesBuilderList", ignore = true)
-  @Mapping(target = "mergeId", ignore = true)
-  @Mapping(source = "programCancers", target = "cancerTypesList")
-  @Mapping(source = "programPrimarySites", target = "primarySitesList")
+  @Mapping(target = "cancerTypesList", ignore = true)
+  @Mapping(target = "cancerTypesValueList", ignore = true)
+  @Mapping(target = "primarySitesList", ignore = true)
+  @Mapping(target = "primarySitesValueList", ignore = true)
   Program programEntityToProgram(ProgramEntity entity);
 
   @InheritConfiguration
@@ -124,31 +97,11 @@ public interface ProgramConverter {
 	@Mapping(target = "mergeFrom", ignore = true)
 	@Mapping(target = "clearField", ignore = true)
 	@Mapping(target = "clearOneof", ignore = true)
-	@Mapping(target = "mergeId", ignore = true)
-	@Mapping(target = "mergeName", ignore = true)
 	@Mapping(target = "unknownFields", ignore = true)
 	@Mapping(target = "mergeUnknownFields", ignore = true)
 	@Mapping(target = "allFields", ignore = true)
-  Cancer cancerEntityToCancer(CancerEntity c);
-
-  @Mapping(target = "mergeFrom", ignore = true)
-  @Mapping(target = "clearField", ignore = true)
-  @Mapping(target = "clearOneof", ignore = true)
   @Mapping(target = "mergeId", ignore = true)
-  @Mapping(target = "mergeName", ignore = true)
-  @Mapping(target = "unknownFields", ignore = true)
-  @Mapping(target = "mergeUnknownFields", ignore = true)
-  @Mapping(target = "allFields", ignore = true)
-  PrimarySite primarySiteEntityToPrimarySite(PrimarySiteEntity c);
-
-	@Mapping(target = "mergeFrom", ignore = true)
-	@Mapping(target = "clearField", ignore = true)
-	@Mapping(target = "clearOneof", ignore = true)
-	@Mapping(target = "mergeId", ignore = true)
-	@Mapping(target = "mergeCreatedAt", ignore = true)
-	@Mapping(target = "unknownFields", ignore = true)
-	@Mapping(target = "mergeUnknownFields", ignore = true)
-	@Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeCreatedAt", ignore = true)
   CreateProgramResponse programEntityToCreateProgramResponse(ProgramEntity p);
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -159,6 +112,13 @@ public interface ProgramConverter {
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "mergeUpdatedAt", ignore = true)
   UpdateProgramResponse programEntityToUpdateProgramResponse(ProgramEntity p);
+
+  default ProgramDetails map(ProgramEntity value) {
+    return ProgramDetails.newBuilder().
+      setProgram(programEntityToProgram(value)).
+      setMetadata(programEntityToMetadata(value)).
+      build();
+  }
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
@@ -173,6 +133,18 @@ public interface ProgramConverter {
   //  https://github.com/mapstruct/mapstruct/issues/607#issuecomment-309547739
   @Mapping(target = "programsList", source = "programEntities")
   ListProgramsResponse programEntitiesToListProgramsResponse(Integer dummy, Collection<ProgramEntity> programEntities);
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeProgramId", ignore = true)
+  @Mapping(target = "mergeCreatedAt", ignore = true)
+  @Mapping(target = "mergeUpdatedAt", ignore=true)
+  @Mapping(target = "programId", source = "id")
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  Metadata programEntityToMetadata(ProgramEntity programEntity);
 
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -201,26 +173,6 @@ public interface ProgramConverter {
         .build();
   }
 
-  /**
-   * JoinEntity Converters
-   */
-  //TODO [rtisma]: what is the mapstruct way of doing this?
-  default CancerEntity programCancerToCancerEntity(@NonNull ProgramCancer c){
-    return c.getCancer();
-  }
-
-  default Collection<Cancer> programToCancers(@NonNull Program p){
-    return p.getCancerTypesList();
-  }
-
-  default PrimarySiteEntity programPrimarySiteToPrimarySiteEntity(@NonNull ProgramPrimarySite c){
-    return c.getPrimarySite();
-  }
-
-  default Collection<PrimarySite> programToPrimarySites(@NonNull Program p){
-    return p.getPrimarySitesList();
-  }
-
 
   /**
    *  Enum Boxing Converters
@@ -232,7 +184,4 @@ public interface ProgramConverter {
   default MembershipType unboxMembershipTypeValue(@NonNull MembershipTypeValue v){
     return v.getValue();
   }
-
-
-
 }

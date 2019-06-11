@@ -1,0 +1,86 @@
+// Copyright (c) 2019. Ontario Institute for Cancer Research
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+syntax = "proto3";
+
+package program_service;
+option java_multiple_files = true;
+option java_package = "org.icgc.argo.program_service.proto";
+
+
+enum CancerType {
+  Invalid_cancer_type = 0;
+  Renal_cancer = 1;
+  Blood_cancer = 2;
+  Liver_cancer = 3;
+  Prostate_cancer = 4;
+  Breast_cancer = 5;
+  Pancreatic_cancer = 6;
+  Brain_cancer = 7;
+  Lung_cancer = 8;
+  Bone_cancer = 9;
+  Gastric_cancer = 10;
+  Ovarian_cancer = 11;
+  Biliary_Tract_cancer = 12;
+  Bladder_cancer = 13;
+  Esophageal_cancer = 14;
+  Head_and_Neck_cancer = 15;
+  Skin_cancer = 16;
+  Soft_Tissue_cancer = 17;
+  Thyroid_cancer = 18;
+  Cervical_cancer = 19;
+  Chronic_Lymphocytic_Leukemia = 20;
+  Chronic_Myeloid_Disorders = 21;
+  Colon_cancer = 22;
+  Colorectal_cancer = 23;
+  Endometrial_cancer = 24;
+  Lymphoproliferative_Syndrome = 25;
+  Malignant_Lymphoma = 26;
+  Melanoma = 27;
+  Nasopharyngeal_cancer = 28;
+  Oral_cancer = 29;
+  Pediatric_Brain_Tumor = 30;
+  Pediatric_Brain_Tumors = 31;
+  Pediatric_Solid_Tumor = 32;
+  Rare_Pancreatic_Tumors = 33;
+  Rectal_cancer = 34;
+  Uterine_cancer = 35;
+}
+
+enum PrimarySite {
+  Invalid_Primary_Site=0;
+  Blood = 1;
+  Kidney = 2;
+  Liver = 3;
+  Brain = 4;
+  Pancreas = 5;
+  Prostate = 6;
+  Breast = 7;
+  Head_and_neck = 8;
+  Lung = 9;
+  Bone = 10;
+  Colorectal = 11;
+  Ovary = 12;
+  Skin = 13;
+  Stomach = 14;
+  Bladder = 15;
+  Esophagus = 16;
+  Gall_Bladder = 17;
+  Mesenchymal = 18;
+  Uterus = 19;
+  Cervix = 20;
+  Nasopharynx = 21;
+  Nervous_System = 22;
+}

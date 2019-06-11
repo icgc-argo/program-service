@@ -26,9 +26,7 @@ import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,9 +69,6 @@ class ProgramServiceTest {
   private ProgramRepository programRepository;
 
   @Mock
-  private CancerRepository cancerRepository;
-
-  @Mock
   private MailSender mailSender;
 
   @Mock
@@ -87,9 +82,6 @@ class ProgramServiceTest {
 
   @Mock
   private MailService mailService;
-
-  @Mock
-  private PrimarySiteRepository primarySiteRepository;
 
   @Mock
   private CommonConverter commonConverter;
