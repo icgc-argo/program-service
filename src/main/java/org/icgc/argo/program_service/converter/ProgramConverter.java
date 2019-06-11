@@ -20,17 +20,7 @@ package org.icgc.argo.program_service.converter;
 
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
-import org.icgc.argo.program_service.proto.Cancer;
-import org.icgc.argo.program_service.proto.CreateProgramResponse;
-import org.icgc.argo.program_service.proto.InviteUserResponse;
-import org.icgc.argo.program_service.proto.ListProgramsResponse;
-import org.icgc.argo.program_service.proto.ListUserResponse;
-import org.icgc.argo.program_service.proto.MembershipType;
-import org.icgc.argo.program_service.proto.MembershipTypeValue;
-import org.icgc.argo.program_service.proto.PrimarySite;
-import org.icgc.argo.program_service.proto.Program;
-import org.icgc.argo.program_service.proto.UpdateProgramResponse;
-import org.icgc.argo.program_service.proto.User;
+import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -73,7 +63,27 @@ public interface ProgramConverter {
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
   @Mapping(target = "egoGroups", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
+
+  @Mapping(target = "id", source = "programId")
+  @Mapping(target = "shortName", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "programCancers", ignore = true)
+  @Mapping(target = "programPrimarySites", ignore = true)
+  @Mapping(target = "egoGroups", ignore = true)
+  ProgramEntity updateProgramRequestToProgramEntity(@NonNull UpdateProgramRequest request);
+
+  @AfterMapping
+  default void updateProgramRelationships(@MappingTarget ProgramEntity programEntity, @NonNull UpdateProgramRequest request){
+    cancersToCancerEntities(getCancerFromRequest(request))
+            .forEach(programEntity :: associateCancer);
+
+    primarySitesToPrimarySiteEntities(getPrimarySiteFromRequest(request))
+            .forEach(programEntity :: associatePrimarySite);
+  }
 
   @AfterMapping
   default void updateProgramRelationships(@NonNull Program p, @MappingTarget ProgramEntity programEntity){
@@ -211,6 +221,14 @@ public interface ProgramConverter {
 
   default Collection<Cancer> programToCancers(@NonNull Program p){
     return p.getCancerTypesList();
+  }
+
+  default Collection<Cancer> getCancerFromRequest(@NonNull UpdateProgramRequest request){
+    return request.getCancerTypesList();
+  }
+
+  default Collection<PrimarySite> getPrimarySiteFromRequest(@NonNull UpdateProgramRequest request){
+    return request.getPrimarySitesList();
   }
 
   default PrimarySiteEntity programPrimarySiteToPrimarySiteEntity(@NonNull ProgramPrimarySite c){
