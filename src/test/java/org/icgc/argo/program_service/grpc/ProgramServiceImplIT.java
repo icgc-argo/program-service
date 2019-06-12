@@ -31,9 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.testcontainers.shaded.org.bouncycastle.math.ec.custom.sec.SecT113Field;
 
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.*;
@@ -88,35 +86,35 @@ public class ProgramServiceImplIT {
     val programs = programList.stream().map(p -> p.getProgram().toString()).
       collect(Collectors.toUnmodifiableSet());
     assertEquals("Two programs", 2, programList.size());
-    assertThat(programs).contains(p1.toString(),p2.toString());
+    assertThat(programs).contains(p1.toString(), p2.toString());
   }
 
   public Program buildProgram(String name,
-     String shortName,
-     String description,
-     String membershipType,
-     int commitmentDonors,
-     int submittedDonors,
-     int genomicDonors,
-     String website
+    String shortName,
+    String description,
+    String membershipType,
+    int commitmentDonors,
+    int submittedDonors,
+    int genomicDonors,
+    String website
   ) {
     val p = Program
-        .newBuilder()
-        .setName(StringValue.of(name))
-        .setShortName(StringValue.of(shortName))
-        .setDescription(StringValue.of(description))
-        .setMembershipType(MembershipTypeValue.newBuilder()
-            .setValue( MembershipType.valueOf(membershipType))
-            .build())
-        .setCommitmentDonors(Int32Value.of(commitmentDonors))
-        .setSubmittedDonors(Int32Value.of(submittedDonors))
-        .setGenomicDonors(Int32Value.of(genomicDonors))
-        .setWebsite(StringValue.of(website))
-        .setCountries(StringValue.of("Canada"))
-        .addCancerTypes(StringValue.of("Blood_cancer"))
-        .addCancerTypes(StringValue.of("Brain_cancer"))
-        .addPrimarySites(StringValue.of("Blood"))
-        .addPrimarySites(StringValue.of("Brain"))
+      .newBuilder()
+      .setName(StringValue.of(name))
+      .setShortName(StringValue.of(shortName))
+      .setDescription(StringValue.of(description))
+      .setMembershipType(MembershipTypeValue.newBuilder()
+        .setValue(MembershipType.valueOf(membershipType))
+        .build())
+      .setCommitmentDonors(Int32Value.of(commitmentDonors))
+      .setSubmittedDonors(Int32Value.of(submittedDonors))
+      .setGenomicDonors(Int32Value.of(genomicDonors))
+      .setWebsite(StringValue.of(website))
+      .setCountries(StringValue.of("Canada"))
+      .addCancerTypes(StringValue.of("Blood_cancer"))
+      .addCancerTypes(StringValue.of("Brain_cancer"))
+      .addPrimarySites(StringValue.of("Blood"))
+      .addPrimarySites(StringValue.of("Brain"))
       .build();
     return p;
   }
@@ -130,7 +128,7 @@ public class ProgramServiceImplIT {
     val resultObserver = new TestObserver<CreateProgramResponse>();
     try {
       programService.createProgram(details, resultObserver);
-    } catch(EgoService.ConflictException e) {
+    } catch (EgoService.ConflictException e) {
 
     }
     // assertTrue(resultObserver.completed);

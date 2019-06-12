@@ -18,27 +18,26 @@
 
 package org.icgc.argo.program_service.services;
 
-import org.icgc.argo.program_service.converter.CommonConverter;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
-import org.icgc.argo.program_service.proto.Program;
-import org.icgc.argo.program_service.proto.UserRole;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.proto.Program;
+import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.mail.MailSender;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
@@ -96,19 +95,19 @@ class ProgramServiceTest {
     assertThat(ReflectionTestUtils.getField(invitation, "program")).isEqualTo(programEntity);
     assertThat(ReflectionTestUtils.getField(invitation, "userEmail")).isEqualTo("user@example.com");
     assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "createdAt"))
-            .as("Creation time is within 5 seconds")
-            .isCloseTo(LocalDateTime.now(ZoneOffset.UTC), within(5, ChronoUnit.SECONDS));
+      .as("Creation time is within 5 seconds")
+      .isCloseTo(LocalDateTime.now(ZoneOffset.UTC), within(5, ChronoUnit.SECONDS));
     assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "expiredAt"))
-            .as("Expire time should be after 47 hours")
-            .isAfter(LocalDateTime.now(ZoneOffset.UTC).plusHours(47));
+      .as("Expire time should be after 47 hours")
+      .isAfter(LocalDateTime.now(ZoneOffset.UTC).plusHours(47));
     assertThat(ReflectionTestUtils.getField(invitation, "status"))
-            .as("Status is appending").isEqualTo(JoinProgramInvite.Status.PENDING);
+      .as("Status is appending").isEqualTo(JoinProgramInvite.Status.PENDING);
     assertThat(ReflectionTestUtils.getField(invitation, "firstName"))
-            .as("First name is first").isEqualTo("First");
+      .as("First name is first").isEqualTo("First");
     assertThat(ReflectionTestUtils.getField(invitation, "lastName"))
-            .as("Last name is first").isEqualTo("Last");
+      .as("Last name is first").isEqualTo("Last");
     assertThat(ReflectionTestUtils.getField(invitation, "role"))
-            .as("Role is admin").isEqualTo(UserRole.ADMIN);
+      .as("Role is admin").isEqualTo(UserRole.ADMIN);
 
     verify(mailService).sendInviteEmail(ArgumentMatchers.any());
   }
@@ -136,7 +135,7 @@ class ProgramServiceTest {
   @Test
   void listPrograms() {
     when(programRepository.findAll())
-        .thenReturn(List.of(programEntity));
+      .thenReturn(List.of(programEntity));
     val programs = programService.listPrograms();
     assertThat(programs).contains(programEntity);
   }
