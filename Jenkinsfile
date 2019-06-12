@@ -56,6 +56,7 @@ spec:
                 }
             }
         }
+
         stage('Build') {
             steps {
                 container('docker') {
@@ -73,7 +74,8 @@ spec:
                 }
             }
         }
-        stage('Deploy') {
+
+        stage('Deploy qa - deprecated') {
             when { branch 'master' }
             steps {
                 container('helm') {
@@ -86,6 +88,16 @@ spec:
                 }
             }
         }
+
+        stage('Deploy to argo QA') {
+            when { branch 'master' }
+            steps {
+                withCredentials([file(credentialsId:'JENKINS_TOKEN', variable: 'JENKINS_TOKEN')]) {
+                    sh "wget https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/provision/job/program-service/buildWithParameters?token=$JENKINS_TOKEN&AP_ARGO_ENV=qa&AP_ARGS_LINE=--set image.tag=${commit}"
+                }
+            }
+        }
+
     }
     post {
         always {
