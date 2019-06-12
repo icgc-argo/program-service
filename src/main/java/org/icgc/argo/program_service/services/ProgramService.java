@@ -124,15 +124,13 @@ public class ProgramService {
     return programEntity;
   }
 
-  public ProgramEntity updateProgram(@NonNull Program program) {
+  public ProgramEntity updateProgram(@NonNull ProgramEntity updatingProgram) throws NotFoundException, EmptyResultDataAccessException {
     val programToUpdate = programRepository
-            .findById(commonConverter.stringToUUID(program.getId()))
+            .findById(updatingProgram.getId())
             .orElseThrow(
-                    () -> new NotFoundException(String.format("The program with id: {} is not found.",
-                                                      commonConverter.unboxStringValue(program.getId()))));
+                    () -> new NotFoundException(String.format("The program with id: {} is not found.", updatingProgram.getId())));
 
-    val updatingProgram = programConverter.programToProgramEntity(program);
-
+    //update associations
     processCancers(programToUpdate, updatingProgram);
     processPrimarySites(programToUpdate, updatingProgram);
 
@@ -142,7 +140,8 @@ public class ProgramService {
     return programToUpdate;
   }
 
-  private void processCancers(ProgramEntity programToUpdate, ProgramEntity updatingProgram){
+  private void processCancers(@NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram)
+          throws EmptyResultDataAccessException {
     if( !nullOrEmpty(updatingProgram.getProgramCancers())){
       val updatingCancers = mapToImmutableSet(updatingProgram.getProgramCancers(), ProgramCancer ::getCancer);
       val updatingCancerIds = convertToIds(updatingCancers);
@@ -153,7 +152,8 @@ public class ProgramService {
     }
   }
 
-  private void processPrimarySites(ProgramEntity programToUpdate, ProgramEntity updatingProgram){
+  private void processPrimarySites(@NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram)
+          throws EmptyResultDataAccessException {
     if( !nullOrEmpty(updatingProgram.getProgramPrimarySites())){
       val updatingPrimarySites = mapToImmutableSet(updatingProgram.getProgramPrimarySites(), ProgramPrimarySite::getPrimarySite);
       val updatingPrimarySiteIds = convertToIds(updatingPrimarySites);
