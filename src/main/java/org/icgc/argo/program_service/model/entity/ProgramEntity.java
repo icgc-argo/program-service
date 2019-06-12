@@ -25,22 +25,17 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import lombok.val;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.proto.CancerType;
 import org.icgc.argo.program_service.proto.PrimarySite;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import org.springframework.data.util.Lazy;
+
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -114,26 +109,18 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @Column(name = SqlFields.DESCRIPTION)
   private String description;
 
-//  @ToString.Exclude
-//  @EqualsAndHashCode.Exclude
-//  @OneToMany(
-//          mappedBy = ProgramCancer.Fields.program,
-//          cascade = CascadeType.ALL,
-//          fetch = FetchType.LAZY,
-//          orphanRemoval = true
-//  )
-  @OneToMany
+  @CollectionTable(name = "program_cancer_type",
+    joinColumns = @JoinColumn(name = "program_id")
+  )
+  @Column(name = "cancer_type")
+  @JoinColumn(name = "program_id")
+  @ElementCollection
   private Set<CancerType> programCancers = newHashSet();
 
-//  @ToString.Exclude
-//  @EqualsAndHashCode.Exclude
-//  @OneToMany(
-//          mappedBy = ProgramPrimarySite.Fields.program,
-//          cascade = CascadeType.ALL,
-//          fetch = FetchType.LAZY,
-//          orphanRemoval = true
-//  )
-  @OneToMany
+  @CollectionTable(name = "program_primary_site",
+    joinColumns = @JoinColumn(name = "program_id"))
+  @Column(name = "primary_site")
+  @ElementCollection
   private Set<PrimarySite> programPrimarySites = newHashSet();
 
   @EqualsAndHashCode.Exclude

@@ -52,7 +52,6 @@ public class ProgramServiceImplIT {
     programService.listPrograms(request, programsObserver);
     assertTrue(programsObserver.completed);
     assertNull(programsObserver.thrown);
-
     val p1 = buildProgram("Alice Bob and Charlie's Test Program Name",
       "ABC",
       "A test project. Fix this description later.",
@@ -83,8 +82,7 @@ public class ProgramServiceImplIT {
     val programList = programsObserver.result.getProgramsList();
 
     assertEquals("Two programs", 2, programList.size());
-
-    assertThat(programList).usingElementComparatorOnFields("shortName", "description", "name", "commitmentDonors", "submittedDonors", "genomicDonors", "website", "membershipType").contains(p1, p2);
+    assertThat(programList.stream().map(ProgramDetails::getProgram)).contains(p1, p2);
   }
 
   public Program buildProgram(String name,
@@ -109,7 +107,11 @@ public class ProgramServiceImplIT {
         .setGenomicDonors(Int32Value.of(genomicDonors))
         .setWebsite(StringValue.of(website))
         .setCountries(StringValue.of("Canada"))
-        .build();
+        .addCancerTypes(CancerType.Brain_cancer)
+        .addCancerTypes(CancerType.Blood_cancer)
+        .addPrimarySites(PrimarySite.Brain)
+        .addPrimarySites(PrimarySite.Blood)
+      .build();
     return p;
   }
 
@@ -117,6 +119,7 @@ public class ProgramServiceImplIT {
     val details = CreateProgramRequest
       .newBuilder()
       .setProgram(p)
+      .addAdminEmails("test@gmailcom")
       .build();
     val resultObserver = new TestObserver<CreateProgramResponse>();
     try {

@@ -135,7 +135,7 @@ class ProgramServiceTest {
 
   @Test
   void listPrograms() {
-    when(programRepository.findAll((Specification<ProgramEntity>)Mockito.any()))
+    when(programRepository.findAll())
         .thenReturn(List.of(programEntity));
     val programs = programService.listPrograms();
     assertThat(programs).contains(programEntity);

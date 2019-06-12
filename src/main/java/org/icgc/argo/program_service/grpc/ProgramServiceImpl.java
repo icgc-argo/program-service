@@ -24,6 +24,7 @@ import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
 import lombok.NonNull;
 import lombok.val;
+import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
@@ -38,6 +39,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -66,19 +68,58 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     val program = request.getProgram();
-    ProgramEntity entity;
+    val adminEmails = request.getAdminEmailsList();
+    ProgramEntity programEntity;
 
     try {
-      entity = programService.createProgram(program, request.getAdminEmailsList());
+      programEntity = programService.createProgram(program, adminEmails);
     } catch (DataIntegrityViolationException e) {
       responseObserver.onError(Status.INVALID_ARGUMENT.withDescription(getExceptionMessage(e)).asRuntimeException());
       return;
+    }
+
+    try {
+      egoService.setUpProgram(programEntity, adminEmails);
     } catch (EgoService.EgoException egoException) {
       responseObserver.onError(egoException);
       return;
     }
 
-    val response = programConverter.programEntityToCreateProgramResponse(entity);
+    val response = programConverter.programEntityToCreateProgramResponse(programEntity);
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void getProgram(GetProgramRequest request,  StreamObserver<GetProgramResponse> responseObserver) {
+    Optional<ProgramEntity> programEntity;
+    val shortName=request.getShortName().getValue();
+
+    try {
+       programEntity = programService.getProgram(shortName);
+    } catch(Throwable t) {
+      responseObserver.onError(t);
+      return;
+    }
+
+    if (programEntity.isEmpty()) {
+      val ex = Status.fromCode(Status.Code.NOT_FOUND).
+        augmentDescription("Program with short name " + shortName + "was not found.").
+        asRuntimeException();
+      responseObserver.onError(ex);
+      responseObserver.onCompleted();
+      return;
+    }
+
+    val entity = programEntity.get();
+
+    val programDetails = ProgramDetails.newBuilder().
+      setProgram(programConverter.programEntityToProgram(entity)).
+      setMetadata(programConverter.programEntityToMetadata(entity)).
+      build();
+
+    val response = GetProgramResponse.newBuilder().setProgram(programDetails).build();
+
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }

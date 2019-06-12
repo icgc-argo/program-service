@@ -43,10 +43,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Validated
@@ -98,9 +95,9 @@ public class ProgramService {
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
-
+    programEntity.setProgramCancers(new HashSet<>(program.getCancerTypesList()));
+    programEntity.setProgramPrimarySites(new HashSet<>(program.getPrimarySitesList()));
     programRepository.save(programEntity);
-    egoService.setUpProgram(programEntity, adminEmails);
     return programEntity;
   }
 
