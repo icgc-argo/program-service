@@ -21,10 +21,10 @@ package org.icgc.argo.program_service.grpc;
 import com.google.protobuf.Empty;
 import io.grpc.Status;
 import io.grpc.StatusException;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.NonNull;
 import lombok.val;
-import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
@@ -40,7 +40,6 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
@@ -74,14 +73,16 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     try {
       programEntity = programService.createProgram(program, adminEmails);
     } catch (DataIntegrityViolationException e) {
-      responseObserver.onError(Status.INVALID_ARGUMENT.withDescription(getExceptionMessage(e)).asRuntimeException());
+      responseObserver.onError(
+        status(Status.INVALID_ARGUMENT,
+          getExceptionMessage(e)));
       return;
     }
 
     try {
       egoService.setUpProgram(programEntity, adminEmails);
     } catch (EgoService.EgoException egoException) {
-      responseObserver.onError(egoException);
+      responseObserver.onError(status(egoException));
       return;
     }
 
@@ -98,23 +99,22 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     try {
        programEntity = programService.getProgram(shortName);
     } catch(Throwable t) {
-      responseObserver.onError(t);
+      responseObserver.onError(status(t));
       return;
     }
 
     if (programEntity.isEmpty()) {
-      val ex = Status.fromCode(Status.Code.NOT_FOUND).
-        augmentDescription("Program with short name " + shortName + "was not found.").
-        asRuntimeException();
-      responseObserver.onError(ex);
-      responseObserver.onCompleted();
+      responseObserver.onError(
+        status(Status.NOT_FOUND,
+        "Program with short name " + shortName + "was not found"));
       return;
     }
 
     val entity = programEntity.get();
+    val program = programConverter.programEntityToProgram(entity);
 
     val programDetails = ProgramDetails.newBuilder().
-      setProgram(programConverter.programEntityToProgram(entity)).
+      setProgram(program).
       setMetadata(programConverter.programEntityToMetadata(entity)).
       build();
 
@@ -123,7 +123,17 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
-
+  StatusRuntimeException status(Status code, String message) {
+    return code.
+      augmentDescription(message).
+      asRuntimeException();
+  }
+  StatusRuntimeException status(Throwable throwable) {
+    return Status.UNKNOWN.
+      withCause(throwable).
+      augmentDescription(throwable.getMessage()).
+      asRuntimeException();
+  }
   @Override
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver){
@@ -202,6 +212,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onError(Status.NOT_FOUND.withDescription(getExceptionMessage(e)).asRuntimeException());
       return;
     }
+
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
@@ -210,4 +221,3 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     return e.getMostSpecificCause().getMessage();
   }
 }
-

@@ -95,8 +95,6 @@ public class ProgramService {
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
-    programEntity.setProgramCancers(new HashSet<>(program.getCancerTypesList()));
-    programEntity.setProgramPrimarySites(new HashSet<>(program.getPrimarySitesList()));
     programRepository.save(programEntity);
     return programEntity;
   }
@@ -115,28 +113,6 @@ public class ProgramService {
     programRepository.save(programToUpdate);
     return programToUpdate;
   }
-
-//  private void processCancers(ProgramEntity programToUpdate, ProgramEntity updatingProgram){
-//    if( !nullOrEmpty(updatingProgram.getProgramCancers())){
-//      val updatingCancers = mapToImmutableSet(updatingProgram.getProgramCancers(), ProgramCancer ::getCancer);
-//      val updatingCancerIds = convertToIds(updatingCancers);
-//      getManyEntities(CancerEntity.class, cancerRepository, updatingCancerIds);
-//      programToUpdate.setProgramCancers(updatingProgram.getProgramCancers());
-//    } else {
-//      programToUpdate.setProgramCancers(Collections.emptySet());
-//    }
-//  }
-//
-//  private void processPrimarySites(ProgramEntity programToUpdate, ProgramEntity updatingProgram){
-//    if( !nullOrEmpty(updatingProgram.getProgramPrimarySites())){
-//      val updatingPrimarySites = mapToImmutableSet(updatingProgram.getProgramPrimarySites(), ProgramPrimarySite::getPrimarySite);
-//      val updatingPrimarySiteIds = convertToIds(updatingPrimarySites);
-//      getManyEntities(PrimarySiteEntity.class, primarySiteRepository, updatingPrimarySiteIds);
-//      programToUpdate.setProgramPrimarySites(updatingProgram.getProgramPrimarySites());
-//    } else {
-//      programToUpdate.setProgramPrimarySites(Collections.emptySet());
-//    }
-//  }
 
   //TODO: add existence check, and fail with not found
   public void removeProgram(@NonNull ProgramEntity program) {

@@ -44,15 +44,15 @@ public interface ProgramConverter {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "programCancers", ignore = true)
-  @Mapping(target = "programPrimarySites", ignore = true)
+  @Mapping(target = "cancerTypes", source= "cancerTypesList")
+  @Mapping(target = "primarySites", source = "primarySitesList")
   @Mapping(target = "egoGroups", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "shortName", ignore = true)
-  @Mapping(target = "programCancers", ignore = true)
-  @Mapping(target = "programPrimarySites", ignore = true)
+  @Mapping(target = "cancerTypes", source= "cancerTypes")
+  //@Mapping(target = "primarySites", ignore = true)
   @Mapping(target = "egoGroups", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
@@ -85,9 +85,9 @@ public interface ProgramConverter {
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "cancerTypesList", ignore = true)
+  @Mapping(target = "cancerTypesList", source = "cancerTypes")
   @Mapping(target = "cancerTypesValueList", ignore = true)
-  @Mapping(target = "primarySitesList", ignore = true)
+  @Mapping(target = "primarySitesList", source = "primarySites")
   @Mapping(target = "primarySitesValueList", ignore = true)
   Program programEntityToProgram(ProgramEntity entity);
 

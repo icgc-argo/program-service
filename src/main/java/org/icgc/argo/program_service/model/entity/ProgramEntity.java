@@ -115,13 +115,13 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @Column(name = "cancer_type")
   @JoinColumn(name = "program_id")
   @ElementCollection
-  private Set<CancerType> programCancers = newHashSet();
+  private Set<CancerType> cancerTypes = newHashSet();
 
   @CollectionTable(name = "program_primary_site",
     joinColumns = @JoinColumn(name = "program_id"))
   @Column(name = "primary_site")
   @ElementCollection
-  private Set<PrimarySite> programPrimarySites = newHashSet();
+  private Set<PrimarySite> primarySites = newHashSet();
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
