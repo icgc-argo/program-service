@@ -113,10 +113,10 @@ public class ProgramServiceImplIT {
         .setGenomicDonors(Int32Value.of(genomicDonors))
         .setWebsite(StringValue.of(website))
         .setCountries(StringValue.of("Canada"))
-        .addCancerTypes(CancerType.Blood_cancer)
-        .addCancerTypes(CancerType.Brain_cancer)
-        .addPrimarySites(PrimarySite.Blood)
-        .addPrimarySites(PrimarySite.Brain)
+        .addCancerTypes(StringValue.of("Blood_cancer"))
+        .addCancerTypes(StringValue.of("Brain_cancer"))
+        .addPrimarySites(StringValue.of("Blood"))
+        .addPrimarySites(StringValue.of("Brain"))
       .build();
     return p;
   }

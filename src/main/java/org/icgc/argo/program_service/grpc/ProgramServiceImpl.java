@@ -25,6 +25,8 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.NonNull;
 import lombok.val;
+import org.icgc.argo.program_service.model.exceptions.NotFoundException;
+import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
@@ -137,11 +139,17 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver){
-    val program = request.getProgram();
-    val updatedProgram = programService.updateProgram(program);
-    val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
-    responseObserver.onNext(response);
-    responseObserver.onCompleted();
+     val updatingProgram = programConverter.updateProgramRequestToProgramEntity(request);
+    try {
+      val updatedProgram = programService.updateProgram(updatingProgram);
+      val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (NotFoundException | EmptyResultDataAccessException e){
+      responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch(RuntimeException e){
+      responseObserver.onError(Status.UNKNOWN.withDescription(e.getMessage()).asRuntimeException());
+    }
   }
 
   @Override

@@ -31,8 +31,6 @@ import org.hibernate.annotations.GenericGenerator;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.proto.MembershipType;
-import org.icgc.argo.program_service.proto.CancerType;
-import org.icgc.argo.program_service.proto.PrimarySite;
 import org.springframework.data.util.Lazy;
 
 import javax.persistence.*;
@@ -116,15 +114,9 @@ public class ProgramEntity implements NameableEntity<UUID> {
     joinColumns = @JoinColumn(name = "program_id")
 
   )
-  @Column(name = "cancer_type")
-  @ElementCollection(fetch = FetchType.EAGER)
-  private Set<CancerType> cancerTypes = newTreeSet();
 
-  @CollectionTable(name = "program_primary_site",
-    joinColumns = @JoinColumn(name = "program_id"))
-  @Column(name = "primary_site")
-  @ElementCollection(fetch = FetchType.EAGER)
-  private Set<PrimarySite> primarySites = newTreeSet();
+  private Set<String> cancerTypes = newTreeSet();
+  private Set<String> primarySites = newTreeSet();
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude

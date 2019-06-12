@@ -20,7 +20,6 @@ package program_service;
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
-import "CancerType.proto";
 
 option java_multiple_files = true;
 option java_package = "org.icgc.argo.program_service.proto";
@@ -55,8 +54,8 @@ message Program {
   google.protobuf.StringValue institutions = 9;
   google.protobuf.StringValue countries = 10;
   google.protobuf.StringValue regions = 11;
-  repeated CancerType cancer_types = 12;
-  repeated PrimarySite primary_sites = 13;
+  repeated google.protobuf.StringValue cancer_types = 12;
+  repeated google.protobuf.StringValue primary_sites = 13;
 }
 
 enum MembershipType {
@@ -96,8 +95,22 @@ message CreateProgramResponse {
 }
 
 message UpdateProgramRequest {
-  Program program = 1;
+  google.protobuf.StringValue request_id = 1;
+  google.protobuf.StringValue program_id = 2;
+  google.protobuf.StringValue description = 3;
+  google.protobuf.StringValue name = 4;
+  MembershipTypeValue membership_type = 5;
+  google.protobuf.Int32Value commitment_donors = 6;
+  google.protobuf.Int32Value submitted_donors = 7;
+  google.protobuf.Int32Value genomic_donors = 8;
+  google.protobuf.StringValue website = 9;
+  google.protobuf.StringValue institutions = 10;
+  google.protobuf.StringValue countries = 11;
+  google.protobuf.StringValue regions = 12;
+  repeated google.protobuf.StringValue cancer_types = 13;
+  repeated google.protobuf.StringValue primary_sites = 14;
 }
+
 message UpdateProgramResponse {
   google.protobuf.Timestamp updated_at = 1;
 }

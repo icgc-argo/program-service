@@ -21,12 +21,11 @@ package org.icgc.argo.program_service.converter;
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
 import org.icgc.argo.program_service.proto.*;
+import org.icgc.argo.program_service.model.entity.CancerEntity;
+import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.services.EgoService;
-import org.mapstruct.InheritConfiguration;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -50,7 +49,19 @@ public interface ProgramConverter {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "shortName", ignore = true)
   @Mapping(target = "egoGroups", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
+
+  @Mapping(target = "id", source = "programId")
+  @Mapping(target = "shortName", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "cancerTypes", ignore = true)
+  @Mapping(target = "primarySites", ignore = true)
+  @Mapping(target = "egoGroups", ignore = true)
+  ProgramEntity updateProgramRequestToProgramEntity(@NonNull UpdateProgramRequest request);
+
 
   /**
    * To Proto Converters
@@ -73,9 +84,13 @@ public interface ProgramConverter {
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "cancerTypesList", source = "cancerTypes")
-  @Mapping(target = "cancerTypesValueList", ignore = true)
   @Mapping(target = "primarySitesList", source = "primarySites")
-  @Mapping(target = "primarySitesValueList", ignore = true)
+  @Mapping(target = "removeCancerTypes", ignore = true)
+  @Mapping(target = "removePrimarySites", ignore = true)
+  @Mapping(target = "cancerTypesOrBuilderList", ignore = true)
+  @Mapping(target = "cancerTypesBuilderList", ignore = true)
+  @Mapping(target = "primarySitesOrBuilderList", ignore = true)
+  @Mapping(target = "primarySitesBuilderList", ignore = true)
   Program programEntityToProgram(ProgramEntity entity);
 
   @InheritConfiguration
@@ -160,7 +175,9 @@ public interface ProgramConverter {
         .build();
   }
 
-
+  /**
+   * JoinEntity Converters
+   */
   /**
    *  Enum Boxing Converters
    */

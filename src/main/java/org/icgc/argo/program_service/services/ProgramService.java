@@ -24,13 +24,17 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
+import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
+import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
+import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -38,6 +42,10 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.mail.MailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import static org.icgc.argo.program_service.utils.CollectionUtils.convertToIds;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToImmutableSet;
+import static org.icgc.argo.program_service.utils.CollectionUtils.nullOrEmpty;
+import static org.icgc.argo.program_service.utils.EntityService.getManyEntities;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -56,6 +64,8 @@ public class ProgramService {
    */
   private final JoinProgramInviteRepository invitationRepository;
   private final ProgramRepository programRepository;
+  private final CancerRepository cancerRepository;
+  private final PrimarySiteRepository primarySiteRepository;
   private final ProgramConverter programConverter;
   private final EgoService egoService;
   private final MailService mailService;
@@ -64,6 +74,8 @@ public class ProgramService {
   public ProgramService (
       @NonNull JoinProgramInviteRepository invitationRepository,
       @NonNull ProgramRepository programRepository,
+      @NonNull CancerRepository cancerRepository,
+      @NonNull PrimarySiteRepository primarySiteRepository,
       @NonNull ProgramConverter programConverter,
       @NonNull MailService mailService,
       @NonNull MailSender mailSender,
@@ -71,6 +83,8 @@ public class ProgramService {
       @NonNull CommonConverter commonConverter) {
     this.invitationRepository = invitationRepository;
     this.programRepository = programRepository;
+    this.cancerRepository = cancerRepository;
+    this.primarySiteRepository = primarySiteRepository;
     this.programConverter = programConverter;
     this.mailService = mailService;
     this.egoService = egoService;
@@ -98,9 +112,12 @@ public class ProgramService {
     return programEntity;
   }
 
-  public ProgramEntity updateProgram(@NonNull Program program) {
-    val programToUpdate = getProgram(program.getShortName().getValue());
-    val updatingProgram = programConverter.programToProgramEntity(program);
+  public ProgramEntity updateProgram(@NonNull ProgramEntity updatingProgram) throws NotFoundException, EmptyResultDataAccessException {
+    val programToUpdate = getProgram(updatingProgram.getShortName());
+
+    //update associations
+    processCancers(programToUpdate, updatingProgram);
+    processPrimarySites(programToUpdate, updatingProgram);
 
     // update basic info program
     programConverter.updateProgram(updatingProgram, programToUpdate);
@@ -108,6 +125,43 @@ public class ProgramService {
     return programToUpdate;
   }
 
+  private Optional<UUID> getIdForCancerType(String cancerType) {
+    val result = cancerRepository.getCancerByName(cancerType);
+    if (result.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(result.get().getId());
+  }
+
+  private Optional<UUID> getIdforPrimarySite(String primarySite) {
+    val result = cancerRepository.getCancerByName(primarySite);
+    if (result.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(result.get().getId());
+  }
+
+  private void processCancers(@NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram)
+          throws EmptyResultDataAccessException {
+
+    if( !nullOrEmpty(updatingProgram.getCancerTypes())) {
+      programToUpdate.setCancerTypes(updatingProgram.getCancerTypes());
+    } else {
+      programToUpdate.setCancerTypes(Collections.emptySet());
+    }
+  }
+
+  private void processPrimarySites(@NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram)
+          throws EmptyResultDataAccessException {
+
+    if( !nullOrEmpty(updatingProgram.getPrimarySites())){
+      programToUpdate.setPrimarySites(updatingProgram.getPrimarySites());
+    } else {
+      programToUpdate.setPrimarySites(Collections.emptySet());
+    }
+  }
+
+  //TODO: add existence check, and fail with not found
   public void removeProgram(@NonNull ProgramEntity program) {
     egoService.cleanUpProgram(program);
     programRepository.deleteById(program.getId());
