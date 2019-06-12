@@ -39,9 +39,12 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static com.google.common.collect.Sets.newTreeSet;
+
 @Entity
 @Table(name = Tables.PROGRAM)
 @Data
@@ -111,17 +114,17 @@ public class ProgramEntity implements NameableEntity<UUID> {
 
   @CollectionTable(name = "program_cancer_type",
     joinColumns = @JoinColumn(name = "program_id")
+
   )
   @Column(name = "cancer_type")
-  @JoinColumn(name = "program_id")
-  @ElementCollection
-  private Set<CancerType> cancerTypes = newHashSet();
+  @ElementCollection(fetch = FetchType.EAGER)
+  private Set<CancerType> cancerTypes = newTreeSet();
 
   @CollectionTable(name = "program_primary_site",
     joinColumns = @JoinColumn(name = "program_id"))
   @Column(name = "primary_site")
-  @ElementCollection
-  private Set<PrimarySite> primarySites = newHashSet();
+  @ElementCollection(fetch = FetchType.EAGER)
+  private Set<PrimarySite> primarySites = newTreeSet();
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude

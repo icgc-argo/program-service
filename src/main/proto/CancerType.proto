@@ -19,7 +19,6 @@ package program_service;
 option java_multiple_files = true;
 option java_package = "org.icgc.argo.program_service.proto";
 
-
 enum CancerType {
   Invalid_cancer_type = 0;
   Renal_cancer = 1;

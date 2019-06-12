@@ -58,13 +58,14 @@ class ProgramServiceImplClientIT {
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
 
     val response = blockingStub.createProgram(createProgramRequest);
-    assertThat(response.getId().getValue()).isNotEmpty();
+    assertThat(response.getCreatedAt().toString()).isNotEmpty();
   }
 
   @Test
   void joinAndLeaveProgram() {
+    val name = stringValue(RandomString.make(10));
     val program = Program.newBuilder()
-        .setShortName(stringValue(RandomString.make(10)))
+        .setShortName( name)
         .setMembershipType(membershipTypeValue(ASSOCIATE))
         .setWebsite(stringValue(""))
         .setInstitutions(stringValue("oicr"))
@@ -78,14 +79,13 @@ class ProgramServiceImplClientIT {
 
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
     val response = blockingStub.createProgram(createProgramRequest);
-    val programId = response.getId();
 
     val inviteUserRequest = InviteUserRequest.newBuilder()
         .setFirstName(stringValue("First"))
         .setLastName(stringValue("Last"))
         .setEmail(stringValue("user@example.com"))
         .setRole(userRoleValue(UserRole.ADMIN))
-        .setProgramId(programId)
+        .setProgramShortName(name)
         .build();
     val inviteUserResponse = blockingStub.inviteUser(inviteUserRequest);
     assertThat(inviteUserResponse.getInviteId().getValue()).isNotEmpty();

@@ -20,7 +20,6 @@ package org.icgc.argo.program_service.converter;
 
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
-import lombok.val;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.services.EgoService;
@@ -31,7 +30,6 @@ import org.mapstruct.MappingTarget;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
@@ -51,19 +49,8 @@ public interface ProgramConverter {
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "shortName", ignore = true)
-  @Mapping(target = "cancerTypes", source= "cancerTypes")
-  //@Mapping(target = "primarySites", ignore = true)
   @Mapping(target = "egoGroups", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
-
-//  @AfterMapping
-//  default void updateProgramRelationships(@NonNull Program p, @MappingTarget ProgramEntity programEntity){
-//    cancersToCancerEntities(programToCancers(p))
-//        .forEach(programEntity::associateCancer);
-//
-//    primarySitesToPrimarySiteEntities(programToPrimarySites(p))
-//        .forEach(programEntity::associatePrimarySite);
-//  }
 
   /**
    * To Proto Converters
@@ -100,7 +87,6 @@ public interface ProgramConverter {
 	@Mapping(target = "unknownFields", ignore = true)
 	@Mapping(target = "mergeUnknownFields", ignore = true)
 	@Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "mergeId", ignore = true)
   @Mapping(target = "mergeCreatedAt", ignore = true)
   CreateProgramResponse programEntityToCreateProgramResponse(ProgramEntity p);
 
@@ -137,10 +123,10 @@ public interface ProgramConverter {
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
-  @Mapping(target = "mergeProgramId", ignore = true)
+  //@Mapping(target = "mergeProgramId", ignore = true)
   @Mapping(target = "mergeCreatedAt", ignore = true)
   @Mapping(target = "mergeUpdatedAt", ignore=true)
-  @Mapping(target = "programId", source = "id")
+  //@Mapping(target = "programId", source = "id")
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
@@ -150,7 +136,8 @@ public interface ProgramConverter {
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
-  @Mapping(target = "mergeId", ignore = true)
+  //@Mapping(target = "programId", ignore = true)
+  //@Mapping(target = "mergeProgramId", ignore = true)
   @Mapping(target = "mergeEmail", ignore = true)
   @Mapping(target = "mergeFirstName", ignore = true)
   @Mapping(target = "mergeLastName", ignore = true)

@@ -31,6 +31,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.testcontainers.shaded.org.bouncycastle.math.ec.custom.sec.SecT113Field;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,8 +85,10 @@ public class ProgramServiceImplIT {
 
     val programList = programsObserver.result.getProgramsList();
 
+    val programs = programList.stream().map(p -> p.getProgram().toString()).
+      collect(Collectors.toUnmodifiableSet());
     assertEquals("Two programs", 2, programList.size());
-    assertThat(programList.stream().map(ProgramDetails::getProgram)).contains(p1, p2);
+    assertThat(programs).contains(p1.toString(),p2.toString());
   }
 
   public Program buildProgram(String name,
@@ -107,10 +113,10 @@ public class ProgramServiceImplIT {
         .setGenomicDonors(Int32Value.of(genomicDonors))
         .setWebsite(StringValue.of(website))
         .setCountries(StringValue.of("Canada"))
-        .addCancerTypes(CancerType.Brain_cancer)
         .addCancerTypes(CancerType.Blood_cancer)
-        .addPrimarySites(PrimarySite.Brain)
+        .addCancerTypes(CancerType.Brain_cancer)
         .addPrimarySites(PrimarySite.Blood)
+        .addPrimarySites(PrimarySite.Brain)
       .build();
     return p;
   }

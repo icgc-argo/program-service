@@ -228,11 +228,14 @@ public class EgoService {
     programEgoGroupRepository.findAllByProgramId(programId).forEach( programEgoGroup -> {
       val groupId = programEgoGroup.getEgoGroupId();
       try {
-        val egoUserStream = getObjects(format("%s/groups/%s/users", appProperties.getEgoUrl(), groupId), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
+        val egoUserStream = getObjects(format("%s/groups/%s/users",
+          appProperties.getEgoUrl(), groupId),
+          new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
         egoUserStream.map(programConverter::egoUserToUser)
             .forEach(userResults::add);
       } catch (HttpClientErrorException | HttpServerErrorException e){
-        log.error("Fail to retrieve users from ego group '{}': {}", groupId, e.getResponseBodyAsString());
+        log.error("Fail to retrieve users from ego group '{}': {}",
+          groupId, e.getResponseBodyAsString());
       }
     });
 
@@ -390,7 +393,7 @@ public class EgoService {
     return true;
   }
 
-  Boolean leaveProgram(@Email String email, UUID programId) {
+  public Boolean leaveProgram(@Email String email, UUID programId) {
     val user = getUser(email).orElse(null);
     if (user == null) {
       log.error("Cannot find user with email {}", email);
@@ -399,7 +402,7 @@ public class EgoService {
     return this.leaveProgram(user.getId(), programId);
   }
 
-  public Boolean leaveProgram(UUID userId, UUID programId) {
+  private Boolean leaveProgram(UUID userId, UUID programId) {
     val groups = programEgoGroupRepository.findAllByProgramId(programId);
     groups.forEach(group -> {
       try {

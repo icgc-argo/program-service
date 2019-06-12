@@ -87,13 +87,12 @@ class ProgramServiceImplTest {
   @Test
   void removeProgram() {
     val request = mock(RemoveProgramRequest.class);
-    when(request.getProgramId()).thenReturn(StringValue.of("program-id"));
-    when(commonConverter.stringToUUID(any(StringValue.class))).thenReturn(UUID.randomUUID());
+    when(request.getProgramShortName()).thenReturn(StringValue.of("TEST-XYZ123"));
     val responseObserver = mock(StreamObserver.class);
 
     doAnswer(invocation -> {
       throw new EmptyResultDataAccessException(1);
-    }).when(programService).removeProgram(any(UUID.class));
+    }).when(programService).removeProgram(any(String.class));
 
     programServiceImpl.removeProgram(request, responseObserver);
 

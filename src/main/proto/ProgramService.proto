@@ -81,10 +81,9 @@ message UserRoleValue {
 }
 
 message User {
-  google.protobuf.StringValue id = 1;
-  google.protobuf.StringValue email = 2;
-  google.protobuf.StringValue first_name = 3;
-  google.protobuf.StringValue last_name = 4;
+  google.protobuf.StringValue email = 1;
+  google.protobuf.StringValue first_name = 2;
+  google.protobuf.StringValue last_name = 3;
 }
 
 message CreateProgramRequest {
@@ -93,12 +92,11 @@ message CreateProgramRequest {
 }
 
 message CreateProgramResponse {
-  google.protobuf.StringValue id = 1;
-  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp created_at = 1;
 }
 
 message UpdateProgramRequest {
-  Program program = 2;
+  Program program = 1;
 }
 message UpdateProgramResponse {
   google.protobuf.Timestamp updated_at = 1;
@@ -112,7 +110,6 @@ message ProgramDetails {
 message Metadata {
   google.protobuf.Timestamp created_at = 1;
   google.protobuf.Timestamp updated_at = 2;
-  google.protobuf.StringValue program_id = 3;
 }
 
 message GetProgramRequest {
@@ -128,12 +125,12 @@ message ListProgramsResponse {
 }
 
 message RemoveUserRequest {
-  google.protobuf.StringValue user_id = 1;
-  google.protobuf.StringValue program_id = 2;
+  google.protobuf.StringValue user_email = 1;
+  google.protobuf.StringValue program_short_name = 2;
 }
 
 message ListUserRequest {
-  google.protobuf.StringValue program_id = 1;
+  google.protobuf.StringValue program_short_name = 1;
 }
 
 message ListUserResponse {
@@ -149,7 +146,7 @@ message UpdateUserResponse {
 }
 
 message InviteUserRequest {
-  google.protobuf.StringValue program_id = 1;
+  google.protobuf.StringValue program_short_name = 1;
   google.protobuf.StringValue first_name = 2;
   google.protobuf.StringValue last_name = 3;
   google.protobuf.StringValue email = 4;
@@ -182,5 +179,5 @@ message JoinProgramRequest {
 }
 
 message RemoveProgramRequest {
-  google.protobuf.StringValue program_id = 2;
+  google.protobuf.StringValue program_short_name = 1;
 }

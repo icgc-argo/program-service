@@ -18,6 +18,8 @@
 
 package org.icgc.argo.program_service.services;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import lombok.val;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.UserRole;
@@ -76,11 +78,22 @@ class EgoServiceIT {
 
   @BeforeAll
   void setUp() {
-    val p = programService.getProgram("TestProgram");
-    if (p.isPresent()) {
-      this.programEntity = p.get();
-      return;
+
+    try {
+      programService.getProgram("TestProgram");
+      System.err.println("Test program is already set up...");
+    } catch (Exception e) {
+      if (e instanceof StatusRuntimeException){
+        if (((StatusRuntimeException) e).getStatus() == Status.NOT_FOUND){
+          setupProgram();
+          return;
+        }
+      }
+      System.err.println("Caught exception during setup" + e.getMessage());
     }
+  }
+
+  private void setupProgram() {
 
     val program = Program.newBuilder()
         .setName(stringValue("TestProgram"))
@@ -95,6 +108,7 @@ class EgoServiceIT {
         .setRegions(stringValue("toronto"))
         .setDescription(stringValue(""))
         .build();
+
     this.programEntity = programService.createProgram(program, List.of());
 
     // Policies are created
@@ -213,8 +227,11 @@ class EgoServiceIT {
 
   @AfterAll
   void cleanUp() {
-    programService.removeProgram(this.programEntity);
-
+    try {
+      programService.removeProgram(this.programEntity);
+    } catch(Throwable throwable) {
+      System.err.println("Remove program threw" + throwable.getMessage());
+    }
     // Groups are removed
     assertThat(egoService.getGroup("PROGRAM-TestShortName-BANNED").isPresent()).isFalse();
     assertThat(egoService.getGroup("PROGRAM-TestShortName-CURATOR").isPresent()).isFalse();

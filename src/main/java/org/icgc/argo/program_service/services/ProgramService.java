@@ -18,6 +18,7 @@
 
 package org.icgc.argo.program_service.services;
 
+import io.grpc.Status;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -56,10 +57,8 @@ public class ProgramService {
   private final JoinProgramInviteRepository invitationRepository;
   private final ProgramRepository programRepository;
   private final ProgramConverter programConverter;
-  private final MailSender mailSender;
   private final EgoService egoService;
   private final MailService mailService;
-  private final CommonConverter commonConverter;
 
   @Autowired
   public ProgramService (
@@ -74,17 +73,17 @@ public class ProgramService {
     this.programRepository = programRepository;
     this.programConverter = programConverter;
     this.mailService = mailService;
-    this.mailSender = mailSender;
     this.egoService = egoService;
-    this.commonConverter = commonConverter;
   }
 
-  public Optional<ProgramEntity> getProgram(@NonNull String name) {
-    return programRepository.findByShortName(name);
-  }
-
-  public Optional<ProgramEntity> getProgram(@NonNull UUID uuid) {
-    return programRepository.findById(uuid);
+  public ProgramEntity getProgram(@NonNull String name) {
+     val program = programRepository.findByShortName(name);
+     if (program.isEmpty()) {
+       throw Status.NOT_FOUND.
+         withDescription("Program '" + name + "' not found").
+         asRuntimeException();
+     }
+     return program.get();
   }
 
   //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
@@ -100,12 +99,7 @@ public class ProgramService {
   }
 
   public ProgramEntity updateProgram(@NonNull Program program) {
-    val programToUpdate = programRepository
-            .findByShortName(program.getShortName().toString())
-            .orElseThrow(
-                    () -> new NotFoundException(String.format("The program with short name: {} is not found.",
-                                                      commonConverter.unboxStringValue(program.getShortName()))));
-
+    val programToUpdate = getProgram(program.getShortName().getValue());
     val updatingProgram = programConverter.programToProgramEntity(program);
 
     // update basic info program
@@ -114,22 +108,18 @@ public class ProgramService {
     return programToUpdate;
   }
 
-  //TODO: add existence check, and fail with not found
   public void removeProgram(@NonNull ProgramEntity program) {
     egoService.cleanUpProgram(program);
     programRepository.deleteById(program.getId());
   }
 
-  public void removeProgram(UUID programId) throws EmptyResultDataAccessException {
-    programRepository.deleteById(programId);
+  public void removeProgram(String name) throws EmptyResultDataAccessException {
+    val p = getProgram(name);
+    removeProgram(p);
   }
 
   public List<ProgramEntity> listPrograms() {
     return programRepository.findAll();
-  }
-
-  public List<User> listUser(@NonNull UUID programId){
-    return egoService.getUserByGroup(programId);
   }
 
   public UUID inviteUser(@NotNull ProgramEntity program,
