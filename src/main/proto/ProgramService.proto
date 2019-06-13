@@ -39,7 +39,7 @@ service ProgramService {
 
   rpc RemoveUser(RemoveUserRequest) returns (google.protobuf.Empty);
   rpc ListUser(ListUserRequest) returns (ListUserResponse);
-  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (google.protobuf.Empty);
 
 }
 
@@ -164,10 +164,9 @@ message ListUserResponse {
 
 message UpdateUserRequest {
   google.protobuf.StringValue user_id = 1;
-}
-
-message UpdateUserResponse {
-  User user = 1;
+  google.protobuf.StringValue program_id = 2;
+  UserRoleValue role = 3;
+  google.protobuf.StringValue short_name = 4;
 }
 
 message InviteUserRequest {

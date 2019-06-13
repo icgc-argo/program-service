@@ -38,8 +38,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
-
+import java.util.Optional;
 import java.util.UUID;
+import java.util.ArrayList;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
@@ -145,7 +146,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
     val programId = request.getProgramId();
-    val users = programService.listUser(commonConverter.stringToUUID(programId));
+    val egoUserList = egoService.getUserByGroup(commonConverter.stringToUUID(programId));
+    val users = new ArrayList<User>();
+    egoUserList.stream().map(programConverter::egoUserToUser).forEach(users::add);
     val response = programConverter.usersToListUserResponse(users);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
@@ -154,8 +157,25 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   // not tested
   @Override
   public void removeUser(RemoveUserRequest request,
-                         StreamObserver<com.google.protobuf.Empty> responseObserver) {
+                         StreamObserver<Empty> responseObserver) {
     egoService.leaveProgram(commonConverter.stringToUUID(request.getUserId()), commonConverter.stringToUUID(request.getProgramId()));
+    responseObserver.onNext(Empty.getDefaultInstance());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void updateUser(UpdateUserRequest request, StreamObserver<Empty> responseObserver) {
+    val userId = commonConverter.stringToUUID(request.getUserId());
+    val role = request.getRole().getValue();
+    val programId = commonConverter.stringToUUID(request.getProgramId());
+    val shortname = commonConverter.unboxStringValue(request.getShortName());
+    try {
+      egoService.updateUserRole(userId, shortname, programId, role);
+    } catch (NotFoundException e){
+      responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (RuntimeException e){
+      responseObserver.onError(Status.UNKNOWN.withDescription(e.getMessage()).asRuntimeException());
+    }
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
