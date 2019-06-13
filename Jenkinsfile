@@ -93,7 +93,7 @@ spec:
             when { branch 'feature/update-pipeline' }
             steps {
                 sh "env"
-                withCredentials([file(credentialsId:'REMOTE_BUILD_TOKEN', variable: 'REMOTE_BUILD_TOKEN')]) {
+                withCredentials([string(credentialsId:'REMOTE_BUILD_TOKEN', variable: 'REMOTE_BUILD_TOKEN')]) {
                     sh "echo $REMOTE_BUILD_TOKEN"
                     sh "curl -v https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/provision/job/program-service/buildWithParameters?token=$REMOTE_BUILD_TOKEN&AP_ARGO_ENV=qa&AP_ARGS_LINE=--set%20image.tag%3D${commit}"
                 }
