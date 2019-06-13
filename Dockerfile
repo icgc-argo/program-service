@@ -1,7 +1,7 @@
 FROM openjdk:11-jdk
 WORKDIR /usr/src/app
 ADD . .
-RUN ./mvnw package
+RUN ./mvnw package -DskipTests
 
 FROM openjdk:11-jre-slim
 COPY --from=0 /usr/src/app/target/program-service-*-SNAPSHOT.jar /usr/bin/program-service.jar
