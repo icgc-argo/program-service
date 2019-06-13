@@ -189,10 +189,6 @@ public class ProgramService {
         .listAll());
   }
 
-  public List<User> listUser(@NonNull UUID programId){
-    return egoService.getUserByGroup(programId);
-  }
-
   public UUID inviteUser(@NotNull ProgramEntity program,
                          @Email @NotNull String userEmail,
                          @NotBlank @NotNull String firstName,

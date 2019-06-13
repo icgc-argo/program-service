@@ -37,7 +37,8 @@ import lombok.Value;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.proto.User;
+import org.icgc.argo.program_service.converter.CommonConverter;
+import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.properties.AppProperties;
@@ -58,8 +59,9 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
+import javax.annotation.Nonnull;
 import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
@@ -71,6 +73,8 @@ import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.icgc.argo.program_service.proto.UserRole.ADMIN;
 import static org.icgc.argo.program_service.services.EgoService.GroupName.createProgramGroupName;
 
@@ -83,7 +87,7 @@ public class EgoService {
   private RestTemplate restTemplate;
   private final RetryTemplate lenientRetryTemplate;
   private final RetryTemplate retryTemplate;
-  private final ProgramConverter programConverter;
+  private final CommonConverter commonConverter;
 
   private RSAPublicKey egoPublicKey;
   private AppProperties appProperties;
@@ -94,13 +98,13 @@ public class EgoService {
       @Qualifier("lenientRetryTemplate") @NonNull RetryTemplate lenientRetryTemplate,
       @NonNull RetryTemplate retryTemplate,
       @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
-	  @NonNull ProgramConverter programConverter,
-      @NonNull AppProperties appProperties) {
+      @NonNull AppProperties appProperties,
+      @NonNull CommonConverter commonConverter) {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.appProperties = appProperties;
     this.lenientRetryTemplate = lenientRetryTemplate;
-    this.programConverter = programConverter;
     this.retryTemplate = retryTemplate;
+    this.commonConverter = commonConverter;
   }
 
   @Autowired
@@ -143,7 +147,7 @@ public class EgoService {
   private Optional<EgoToken> parseToken(DecodedJWT jwt) {
     try {
       EgoToken egoToken = new EgoToken(jwt, jwt.getClaim("context").as(Context.class));
-      return Optional.of(egoToken);
+      return Optional.ofNullable(egoToken);
     } catch (JWTDecodeException exception){
       //Invalid token
       return Optional.empty();
@@ -222,15 +226,14 @@ public class EgoService {
     }
   }
 
-  public List<User> getUserByGroup(UUID programId){
-    val userResults = new ArrayList<User>();
+  public List<EgoUser> getUserByGroup(UUID programId){
+    val userResults = new ArrayList<EgoUser>();
 
     programEgoGroupRepository.findAllByProgramId(programId).forEach( programEgoGroup -> {
       val groupId = programEgoGroup.getEgoGroupId();
       try {
         val egoUserStream = getObjects(format("%s/groups/%s/users", appProperties.getEgoUrl(), groupId), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
-        egoUserStream.map(programConverter::egoUserToUser)
-            .forEach(userResults::add);
+        egoUserStream.forEach(userResults::add);
       } catch (HttpClientErrorException | HttpServerErrorException e){
         log.error("Fail to retrieve users from ego group '{}': {}", groupId, e.getResponseBodyAsString());
       }
@@ -362,8 +365,123 @@ public class EgoService {
   }
 
 
+  public void updateUserRole(@NonNull UUID userId, @NonNull String shortname, @NonNull UUID programId, @NonNull UserRole role) {
+    getUserById(userId);
+    val groups = getGroupsFromUser(userId);
+    NotFoundException.checkNotFound(!groups.isEmpty(), format("No groups found for user id %s.", userId));
+
+    groups.stream()
+            .filter(g -> isCorrectGroupName(g, shortname))
+            .forEach(g -> processUserWithGroup(role, g, userId));
+
+    val programEgoGroup = getProgramEgoGroup(programId, role);
+    val egoGroupId = programEgoGroup.getEgoGroupId();
+    addUserToGroup(userId, egoGroupId);
+  }
+
+  void processUserWithGroup(UserRole role, Group group, UUID userId){
+    if(!isSameRole(role, group.getName())){
+      removeUserFromCurrentGroup(group, userId);
+    } else {
+      log.error("Cannot update user role to {}, new role is the same as current role.", role);
+    }
+  }
+
+  boolean isCorrectGroupName(Group g, String shortname){
+    return g.getName().toLowerCase().contains(shortname.toLowerCase());
+  }
+
+  ProgramEgoGroupEntity getProgramEgoGroup(UUID programId, UserRole role){
+    return programEgoGroupRepository.findByProgramIdAndRole(programId, role)
+            .orElseThrow(() -> {
+              throw new NotFoundException(format("Cannot find ProgramEgoGroupEntity for programId %s and user role %s. ",
+              programId, role.toString()));});
+  }
+
+  boolean isSameRole(@NonNull UserRole role, @NonNull String groupName) throws RuntimeException {
+    UserRole currentRole = UserRole.UNRECOGNIZED;
+    if (groupName.contains(UserRole.COLLABORATOR.toString())) {
+      currentRole = UserRole.COLLABORATOR;
+    } else if (groupName.contains(UserRole.SUBMITTER.toString())) {
+      currentRole = UserRole.SUBMITTER;
+    } else if (groupName.contains(UserRole.CURATOR.toString())) {
+      currentRole = UserRole.CURATOR;
+    } else if (groupName.contains(ADMIN.toString())) {
+      currentRole = ADMIN;
+    } else if (groupName.contains(UserRole.BANNED.toString())) {
+      currentRole = UserRole.BANNED;
+    } else {
+      log.error("Unrecognized role {}.", currentRole.toString());
+      throw new IllegalArgumentException("Unrecognized role!");
+    }
+    return currentRole.toString().equalsIgnoreCase(role.toString());
+  }
+
+  boolean removeUserFromCurrentGroup(@Nonnull Group group, @NonNull UUID userId){
+      try {
+        restTemplate.delete(appProperties.getEgoUrl() + format("/users/%s/groups/%s", userId, group.getId()));
+        log.info("User {} is removed from ego group with id: {}, name: {}.", userId, group.getId(), group.getName());
+        return true;
+      } catch (RestClientException e) {
+        log.info("Cannot remove user {} from ego group: {}", userId, group.getName());
+        return false;
+      }
+  }
+
+  void addUserToGroup(UUID userId, UUID egoGroupId){
+    try {
+      val body = singletonList(userId);
+      restTemplate.postForObject(appProperties.getEgoUrl() + format("/groups/%s/users", egoGroupId),
+              new HttpEntity<>(body), Group.class);
+      log.info("User {} is added to ego group with id {}.", userId, egoGroupId);
+    } catch (RestClientException e) {
+      log.info("Cannot add user {} to ego group {}.", userId, egoGroupId);
+    }
+  }
+
   Optional<EgoUser> getUser(@Email String email) {
     return getObject(format("%s/users?query=%s", appProperties.getEgoUrl(), email), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
+  }
+
+  public EgoUser getUserById(UUID userId) {
+    val egoUser = getFrom(format("%s/users/%s", appProperties.getEgoUrl(), userId),
+            new ParameterizedTypeReference<EgoUser>() {})
+            .orElseThrow(() -> {
+              throw new NotFoundException(format("User %s cannot be found.", commonConverter.uuidToString(userId)));
+            });
+    return egoUser;
+  }
+
+  public boolean deleteUser(UUID userId){
+    try {
+      retryRunnable(() -> restTemplate.delete(
+              appProperties.getEgoUrl() + format("/users/%s", userId)));
+      log.info("User {} is deleted.");
+    } catch (HttpClientErrorException | HttpServerErrorException e) {
+      log.info("Cannot remove user {}. ", userId, e.getResponseBodyAsString());
+      return false;
+    }
+    return true;
+  }
+
+  List<Group> getGroupsFromUser(UUID userId){
+    val groupStream = getObjects(format("%s/users/%s/groups", appProperties.getEgoUrl(), userId), new ParameterizedTypeReference<EgoCollection<Group>>() {});
+    return groupStream.collect(toUnmodifiableList());
+  }
+
+  <T> Optional<T> getFrom(String url, ParameterizedTypeReference<T> typeReference) {
+    return get(url, typeReference);
+  }
+
+  <T> Optional<T> get(String url, ParameterizedTypeReference<T> typeReference) {
+    try {
+      ResponseEntity<T> responseEntity = restTemplate.exchange(url, HttpMethod.GET, null, typeReference);
+      val response = responseEntity.getBody();
+      return Optional.ofNullable(response);
+    } catch(RestClientException e) {
+      log.error("Cannot get ego object {}, cause: {}.", typeReference.getType(), e.getCause());
+      return Optional.empty();
+    }
   }
 
   Boolean joinProgram(@Email String email, ProgramEntity programEntity, UserRole role) {
