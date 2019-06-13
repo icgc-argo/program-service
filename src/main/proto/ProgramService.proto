@@ -153,6 +153,7 @@ message UpdateUserRequest {
   google.protobuf.StringValue user_id = 1;
   google.protobuf.StringValue program_id = 2;
   UserRoleValue role = 3;
+  google.protobuf.StringValue short_name = 4;
 }
 
 message InviteUserRequest {

@@ -39,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
-import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.properties.AppProperties;
@@ -47,7 +46,6 @@ import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
-import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -86,11 +84,9 @@ import static org.icgc.argo.program_service.services.EgoService.GroupName.create
 public class EgoService {
 
   private final ProgramEgoGroupRepository programEgoGroupRepository;
-  private ProgramRepository programRepository;
   private RestTemplate restTemplate;
   private final RetryTemplate lenientRetryTemplate;
   private final RetryTemplate retryTemplate;
-  private final ProgramConverter programConverter;
   private final CommonConverter commonConverter;
 
   private RSAPublicKey egoPublicKey;
@@ -102,16 +98,12 @@ public class EgoService {
       @Qualifier("lenientRetryTemplate") @NonNull RetryTemplate lenientRetryTemplate,
       @NonNull RetryTemplate retryTemplate,
       @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
-      @NonNull ProgramRepository programRepository,
-      @NonNull ProgramConverter programConverter,
       @NonNull AppProperties appProperties,
       @NonNull CommonConverter commonConverter) {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.appProperties = appProperties;
     this.lenientRetryTemplate = lenientRetryTemplate;
-    this.programConverter = programConverter;
     this.retryTemplate = retryTemplate;
-    this.programRepository = programRepository;
     this.commonConverter = commonConverter;
   }
 
@@ -234,15 +226,14 @@ public class EgoService {
     }
   }
 
-  public List<User> getUserByGroup(UUID programId){
-    val userResults = new ArrayList<User>();
+  public List<EgoUser> getUserByGroup(UUID programId){
+    val userResults = new ArrayList<EgoUser>();
 
     programEgoGroupRepository.findAllByProgramId(programId).forEach( programEgoGroup -> {
       val groupId = programEgoGroup.getEgoGroupId();
       try {
         val egoUserStream = getObjects(format("%s/groups/%s/users", appProperties.getEgoUrl(), groupId), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
-        egoUserStream.map(programConverter::egoUserToUser)
-            .forEach(userResults::add);
+        egoUserStream.forEach(userResults::add);
       } catch (HttpClientErrorException | HttpServerErrorException e){
         log.error("Fail to retrieve users from ego group '{}': {}", groupId, e.getResponseBodyAsString());
       }
@@ -374,11 +365,8 @@ public class EgoService {
   }
 
 
-  public void updateUserRole(@NonNull UUID userId, @NonNull UUID programId, @NonNull UserRole role) {
+  public void updateUserRole(@NonNull UUID userId, @NonNull String shortname, @NonNull UUID programId, @NonNull UserRole role) {
     getUserById(userId);
-    val program = findProgramById(programId);
-    val shortname = program.getShortName();
-
     val groups = getGroupsFromUser(userId);
     NotFoundException.checkNotFound(!groups.isEmpty(), format("No groups found for user id %s.", userId));
 
@@ -447,13 +435,6 @@ public class EgoService {
     } catch (RestClientException e) {
       log.info("Cannot add user {} to ego group {}.", userId, egoGroupId);
     }
-  }
-
-  ProgramEntity findProgramById(UUID programId) throws NotFoundException {
-    return programRepository.findById(programId)
-            .orElseThrow(() -> {
-              throw new NotFoundException(format("Program %s cannot be found.", commonConverter.uuidToString(programId)));
-            });
   }
 
   Optional<EgoUser> getUser(@Email String email) {

@@ -37,8 +37,6 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestTemplate;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -165,7 +163,8 @@ class EgoServiceIT {
     groupBefore.forEach(group -> assertThat(group.getName()).isEqualTo("PROGRAM-TestShortName-COLLABORATOR"));
 
     // expected group is ADMIN group
-    egoService.updateUserRole(user.get().getId(), programEntity.getId(), UserRole.ADMIN);
+    val shortname = "TestShortName";
+    egoService.updateUserRole(user.get().getId(), shortname, programEntity.getId(), UserRole.ADMIN);
     val adminGroupName = "PROGRAM-TestShortName-ADMIN";
     val adminGroupId = egoService.getGroup(adminGroupName).get().getId();
 
@@ -230,7 +229,7 @@ class EgoServiceIT {
 
     val users = egoService.getUserByGroup(programEntity.getId());
     users.forEach( user ->
-            assertTrue(ifUserExists(commonConverter.unboxStringValue(user.getEmail()), expectedUsers)));
+            assertTrue(ifUserExists(user.getEmail(), expectedUsers)));
 
     assertThat(egoService.leaveProgram(ADMIN_USER_EMAIL, programEntity.getId()))
             .as("ADMIN user is removed from TestProgram.").isTrue();

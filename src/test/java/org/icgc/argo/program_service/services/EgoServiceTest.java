@@ -54,8 +54,7 @@ class EgoServiceTest {
     val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
     val retryTemplate = new RetryTemplate();
     val programConverter = mock(ProgramConverter.class);
-    val programRepository = mock(ProgramRepository.class);
-    val egoService = new EgoService(retryTemplate, retryTemplate, programEgoGroupRepository, programRepository, programConverter, new AppProperties(), new CommonConverter() {});
+    val egoService = new EgoService(retryTemplate, retryTemplate, programEgoGroupRepository, new AppProperties(), new CommonConverter() {});
     ReflectionTestUtils.setField(egoService, "egoPublicKey", rsaPublicKey);
 
     assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
@@ -149,15 +148,14 @@ class EgoServiceTest {
 
     when(egoService.getUserById(userId)).thenReturn(
             new EgoService.EgoUser().setStatus("APPROVED").setType("USER").setEmail(email).setId(userId));
-    when(egoService.findProgramById(programId)).thenReturn(mockProgramEntity);
     when(egoService.getGroupsFromUser(userId)).thenReturn(groupList);
     when(egoService.isCorrectGroupName(currentGroup, shortname)).thenReturn(true);
     when(egoService.isSameRole(newRole, currentGroup.getName())).thenReturn(false);
     when(egoService.removeUserFromCurrentGroup(currentGroup, userId)).thenReturn(true);
     when(egoService.getProgramEgoGroup(programId, newRole)).thenReturn(mockProgramEgoGroup.get());
 
-    doCallRealMethod().when(egoService).updateUserRole(userId, programId, newRole);
-    egoService.updateUserRole(userId, programId, newRole);
+    doCallRealMethod().when(egoService).updateUserRole(userId, shortname, programId, newRole);
+    egoService.updateUserRole(userId, shortname, programId, newRole);
 
     verify(egoService, times(1)).addUserToGroup(userId, collabGroupId);
   }
