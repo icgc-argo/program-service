@@ -124,7 +124,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @OneToMany(
           mappedBy = ProgramCancer.Fields.program,
           cascade = CascadeType.ALL,
-          fetch = FetchType.EAGER,
+          fetch = FetchType.LAZY,
           orphanRemoval = true
   )
   private Set<ProgramCancer> programCancers = newHashSet();
@@ -144,7 +144,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @OneToMany(
           mappedBy = ProgramEgoGroupEntity.Fields.program,
           cascade = CascadeType.ALL,
-          fetch = FetchType.LAZY,
+          fetch = FetchType.EAGER,
           orphanRemoval = true
   )
   private Set<ProgramEgoGroupEntity> egoGroups = newHashSet();
