@@ -92,8 +92,10 @@ spec:
         stage('Deploy to argo QA') {
             when { branch 'feature/update-pipeline' }
             steps {
-                withCredentials([file(credentialsId:'REMOTE_BUILD_TOKEN', variable: 'REMOTE_BUILD_TOKEN')]) {
-                    sh "curl https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/provision/job/program-service/buildWithParameters?token=$REMOTE_BUILD_TOKEN&AP_ARGO_ENV=qa&AP_ARGS_LINE=--set%20image.tag%3D${commit}"
+                container('java') {
+                    withCredentials([file(credentialsId:'REMOTE_BUILD_TOKEN', variable: 'REMOTE_BUILD_TOKEN')]) {
+                        sh "curl https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/provision/job/program-service/buildWithParameters?token=$REMOTE_BUILD_TOKEN&AP_ARGO_ENV=qa&AP_ARGS_LINE=--set%20image.tag%3D${commit}"
+                    }
                 }
             }
         }
