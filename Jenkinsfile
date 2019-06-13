@@ -33,6 +33,7 @@ spec:
     env:
     - name: POSTGRES_DB
       value: program_db
+
   - name: curl
     image: pstauffer/curl
     tty: true
