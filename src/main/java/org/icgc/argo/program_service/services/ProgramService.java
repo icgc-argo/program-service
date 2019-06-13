@@ -21,6 +21,7 @@ package org.icgc.argo.program_service.services;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.hibernate.Hibernate;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
@@ -37,6 +38,8 @@ import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
+import org.icgc.argo.program_service.repositories.query.CancerSpecification;
+import org.icgc.argo.program_service.repositories.query.PrimarySiteSpecification;
 import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -50,11 +53,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.icgc.argo.program_service.utils.CollectionUtils.convertToIds;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToImmutableSet;
@@ -106,7 +105,17 @@ public class ProgramService {
   }
 
   public Optional<ProgramEntity> getProgram(@NonNull UUID uuid) {
-    return programRepository.findById(uuid);
+    val entity = programRepository.findById(uuid);
+    if (entity.isPresent()) {
+      val program = entity.get();
+      val primarySiteList = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(uuid));
+      val cancerList = cancerRepository.findAll(CancerSpecification.containsProgram(uuid));
+      primarySiteList.forEach(program::associatePrimarySite);
+      cancerList.forEach(program::associateCancer);
+    } else {
+      log.error("Couldn't find a program for uuid" + uuid);
+    }
+    return entity;
   }
 
   //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
@@ -123,15 +132,13 @@ public class ProgramService {
     return programEntity;
   }
 
-  public ProgramEntity updateProgram(@NonNull Program program) {
+  public ProgramEntity updateProgram(@NonNull ProgramEntity updatingProgram) throws NotFoundException, EmptyResultDataAccessException {
     val programToUpdate = programRepository
-            .findById(commonConverter.stringToUUID(program.getId()))
+            .findById(updatingProgram.getId())
             .orElseThrow(
-                    () -> new NotFoundException(String.format("The program with id: {} is not found.",
-                                                      commonConverter.unboxStringValue(program.getId()))));
+                    () -> new NotFoundException(String.format("The program with id: {} is not found.", updatingProgram.getId())));
 
-    val updatingProgram = programConverter.programToProgramEntity(program);
-
+    //update associations
     processCancers(programToUpdate, updatingProgram);
     processPrimarySites(programToUpdate, updatingProgram);
 
@@ -141,7 +148,8 @@ public class ProgramService {
     return programToUpdate;
   }
 
-  private void processCancers(ProgramEntity programToUpdate, ProgramEntity updatingProgram){
+  private void processCancers(@NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram)
+          throws EmptyResultDataAccessException {
     if( !nullOrEmpty(updatingProgram.getProgramCancers())){
       val updatingCancers = mapToImmutableSet(updatingProgram.getProgramCancers(), ProgramCancer ::getCancer);
       val updatingCancerIds = convertToIds(updatingCancers);
@@ -152,7 +160,8 @@ public class ProgramService {
     }
   }
 
-  private void processPrimarySites(ProgramEntity programToUpdate, ProgramEntity updatingProgram){
+  private void processPrimarySites(@NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram)
+          throws EmptyResultDataAccessException {
     if( !nullOrEmpty(updatingProgram.getProgramPrimarySites())){
       val updatingPrimarySites = mapToImmutableSet(updatingProgram.getProgramPrimarySites(), ProgramPrimarySite::getPrimarySite);
       val updatingPrimarySiteIds = convertToIds(updatingPrimarySites);

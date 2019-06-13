@@ -24,12 +24,12 @@ import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
 import lombok.NonNull;
 import lombok.val;
+import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.services.EgoService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
-
+import java.util.Optional;
+import java.util.UUID;
 import java.util.ArrayList;
 
 @Component
@@ -85,13 +86,42 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-  @EgoAuth(typesAllowed = {"ADMIN"})
-  public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver){
-    val program = request.getProgram();
-    val updatedProgram = programService.updateProgram(program);
-    val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
+  public void getProgram(GetProgramRequest request,  StreamObserver<GetProgramResponse> responseObserver) {
+    Optional<ProgramEntity> programEntity;
+    GetProgramResponse response;
+    val programId=UUID.fromString(request.getId().getValue());
+
+    try {
+       programEntity = programService
+        .getProgram(programId);
+    } catch(Throwable t) {
+      responseObserver.onError(t);
+      return;
+    }
+
+    if (programEntity.isEmpty()) {
+      responseObserver.onError(new NotFoundException("Program with uuid " + programId + "was not found."));
+      return;
+    }
+
+    response  = programConverter.programEntityToGetProgramResponse(programEntity.get());
     responseObserver.onNext(response);
     responseObserver.onCompleted();
+  }
+
+  @EgoAuth(typesAllowed = {"ADMIN"})
+  public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver){
+     val updatingProgram = programConverter.updateProgramRequestToProgramEntity(request);
+    try {
+      val updatedProgram = programService.updateProgram(updatingProgram);
+      val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (NotFoundException | EmptyResultDataAccessException e){
+      responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch(RuntimeException e){
+      responseObserver.onError(Status.UNKNOWN.withDescription(e.getMessage()).asRuntimeException());
+    }
   }
 
   @Override
@@ -115,7 +145,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onCompleted();
   }
 
-  // not testedl
+  // not tested
   @Override
   public void joinProgram(JoinProgramRequest request,
                           StreamObserver<com.google.protobuf.Empty> responseObserver) {
@@ -181,7 +211,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onError(Status.NOT_FOUND.withDescription(getExceptionMessage(e)).asRuntimeException());
       return;
     }
-
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }

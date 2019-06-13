@@ -41,16 +41,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.mail.MailSender;
+
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceTest {
@@ -139,6 +142,31 @@ class ProgramServiceTest {
     assertThat(outputEntity.getCreatedAt()).isNotNull();
     assertThat(outputEntity.getUpdatedAt()).isNotNull();
     verify(programRepository).save(inputProgramEntity);
+  }
+
+  @Test
+  void getProgram() {
+    val id1 = UUID.randomUUID();
+    val id2 = UUID.randomUUID();
+    val id3 = UUID.randomUUID();
+
+    // test success (id found)
+    when(programRepository.findById(id1))
+      .thenReturn(Optional.of(programEntity));
+    val result1 = programService.getProgram(id1);
+    assertThat(result1.isPresent()).isTrue();
+    assertThat(result1.get()).isEqualTo(programEntity);
+
+    // test failure (id not found)
+    when(programRepository.findById(id2))
+      .thenReturn(Optional.empty());
+    val result2 = programService.getProgram(id2);
+    assertThat(result2.isPresent()).isFalse();
+
+    // test repository failure (exception condition)
+    when(programRepository.findById(id3))
+      .thenThrow(new RuntimeException("Repository error"));
+    assertThrows(RuntimeException.class, () -> { programService.getProgram(id3); });
   }
 
   @Test
