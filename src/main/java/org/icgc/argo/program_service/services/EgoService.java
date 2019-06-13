@@ -383,7 +383,7 @@ public class EgoService {
     if(!isSameRole(role, group.getName())){
       removeUserFromCurrentGroup(group, userId);
     } else {
-      log.error("Cannot update user role to %s, new role is the same as current role.", role.toString());
+      log.error("Cannot update user role to {}, new role is the same as current role.", role);
     }
   }
 
