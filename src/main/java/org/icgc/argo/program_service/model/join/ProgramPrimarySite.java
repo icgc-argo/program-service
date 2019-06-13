@@ -48,14 +48,14 @@ public class ProgramPrimarySite implements IdentifiableEntity<ProgramPrimarySite
   @ToString.Exclude
   @MapsId(value = ProgramPrimarySiteId.Fields.programId)
   @JoinColumn(name = SqlFields.PROGRAMID_JOIN)
-  @ManyToOne(fetch = FetchType.EAGER)
+  @ManyToOne(fetch = FetchType.LAZY)
   private ProgramEntity program;
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
   @MapsId(value = ProgramPrimarySiteId.Fields.primarySiteId)
   @JoinColumn(name = SqlFields.SITEID_JOIN)
-  @ManyToOne(fetch = FetchType.EAGER)
+  @ManyToOne(fetch = FetchType.LAZY)
   private PrimarySiteEntity primarySite;
 
   public static Optional<ProgramPrimarySite> createProgramPrimarySite(@NonNull ProgramEntity p, @NonNull PrimarySiteEntity ps){

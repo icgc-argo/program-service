@@ -66,7 +66,7 @@ public class CancerEntity implements NameableEntity<UUID> {
   @OneToMany(
           mappedBy = ProgramCancer.Fields.cancer,
           cascade = CascadeType.ALL,
-          fetch = FetchType.EAGER,
+          fetch = FetchType.LAZY,
           orphanRemoval = true)
   private Set<ProgramCancer> programCancers = newHashSet();
 

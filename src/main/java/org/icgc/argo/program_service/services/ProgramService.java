@@ -38,6 +38,8 @@ import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
+import org.icgc.argo.program_service.repositories.query.CancerSpecification;
+import org.icgc.argo.program_service.repositories.query.PrimarySiteSpecification;
 import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -51,11 +53,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.icgc.argo.program_service.utils.CollectionUtils.convertToIds;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToImmutableSet;
@@ -107,27 +105,13 @@ public class ProgramService {
   }
 
   public Optional<ProgramEntity> getProgram(@NonNull UUID uuid) {
-    log.error("Looking for program with uuid" + uuid);
     val entity = programRepository.findById(uuid);
-
     if (entity.isPresent()) {
-      log.debug("Found a result");
-      // make sure Hibernate lazy-loads these values by
-      // explicitly requesting them here...
       val program = entity.get();
-      log.error("Got program" + entity.get().toString());
-
-      //Hibernate.initialize(program.getProgramCancers());
-      //Hibernate.initialize(program.getProgramPrimarySites());
-      log.error("I think it's not getting here...");
-      val cancers = entity.get().getProgramCancers();
-
-      if (cancers == null) {
-        log.error("cancers field is NULL"); }
-      else {
-        log.error("Cancers field is ** NOT ** NULLL");
-        log.error("cancers=" + cancers);
-      };
+      val primarySiteList = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(uuid));
+      val cancerList = cancerRepository.findAll(CancerSpecification.containsProgram(uuid));
+      primarySiteList.forEach(program::associatePrimarySite);
+      cancerList.forEach(program::associateCancer);
     } else {
       log.error("Couldn't find a program for uuid" + uuid);
     }

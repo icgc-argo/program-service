@@ -66,7 +66,7 @@ public class PrimarySiteEntity implements NameableEntity<UUID> {
   @OneToMany(
           mappedBy = ProgramPrimarySite.Fields.primarySite,
           cascade = CascadeType.ALL,
-          fetch = FetchType.EAGER,
+          fetch = FetchType.LAZY,
           orphanRemoval = true)
   private Set<ProgramPrimarySite> programPrimarySites = newHashSet();
 
