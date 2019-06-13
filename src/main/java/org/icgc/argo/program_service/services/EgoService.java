@@ -370,19 +370,21 @@ public class EgoService {
     val groups = getGroupsFromUser(userId);
     NotFoundException.checkNotFound(!groups.isEmpty(), format("No groups found for user id %s.", userId));
 
-    // determine the current group
-    for(val group : groups){
-      if(isCorrectGroupName(group, shortname)) {
-        if(!isSameRole(role, group.getName())){
-          removeUserFromCurrentGroup(group, userId);
-        } else {
-          log.error(format("Cannot update user role to %s, new role is the same as current role.", role.toString()));
-        }
-      }
-    }
+    groups.stream()
+            .filter(g -> isCorrectGroupName(g, shortname))
+            .forEach(g -> processUserWithGroup(role, g, userId));
+
     val programEgoGroup = getProgramEgoGroup(programId, role);
     val egoGroupId = programEgoGroup.getEgoGroupId();
     addUserToGroup(userId, egoGroupId);
+  }
+
+  void processUserWithGroup(UserRole role, Group group, UUID userId){
+    if(!isSameRole(role, group.getName())){
+      removeUserFromCurrentGroup(group, userId);
+    } else {
+      log.error("Cannot update user role to %s, new role is the same as current role.", role.toString());
+    }
   }
 
   boolean isCorrectGroupName(Group g, String shortname){
@@ -475,10 +477,7 @@ public class EgoService {
     try {
       ResponseEntity<T> responseEntity = restTemplate.exchange(url, HttpMethod.GET, null, typeReference);
       val response = responseEntity.getBody();
-      if (response != null) {
-        return Optional.ofNullable(response);
-      }
-      return Optional.empty();
+      return Optional.ofNullable(response);
     } catch(RestClientException e) {
       log.error("Cannot get ego object {}, cause: {}.", typeReference.getType(), e.getCause());
       return Optional.empty();
