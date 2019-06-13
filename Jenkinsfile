@@ -33,6 +33,10 @@ spec:
     env:
     - name: POSTGRES_DB
       value: program_db
+  - name: curl
+    image: pstauffer/curl
+    tty: true
+
   - name: dind-daemon
     image: docker:18.06-dind
     securityContext:
@@ -94,21 +98,20 @@ spec:
         stage('Deploy to argo QA') {
             when { branch 'feature/update-pipeline' }
             steps {
-                sh "env"
-                withCredentials([string(credentialsId:'REMOTE_BUILD_TOKEN', variable: 'REMOTE_BUILD_TOKEN')]) {
-                    script {
-                        def get = new URL("https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/provision/job/program-service/buildWithParameters?token=${REMOTE_BUILD_TOKEN}&AP_ARGO_ENV=qa&AP_ARGS_LINE=--set%20image.tag%3D${commit}").openConnection();
-                        def getRC = get.getResponseCode();
-                        println(getRC);
+                container('curl') {
+                    sh "env"
+                    withCredentials([string(credentialsId:'REMOTE_BUILD_TOKEN', variable: 'REMOTE_BUILD_TOKEN')]) {
+                            sh "curl -v https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/provision/job/program-service/buildWithParameters?token=${REMOTE_BUILD_TOKEN}&AP_ARGO_ENV=qa&AP_ARGS_LINE=--set%20image.tag%3D${commit}"
                     }
                 }
             }
         }
-
     }
+
+    /*
     post {
         always {
             junit "**/TEST-*.xml"
         }
-    }
+    }*/
 }
