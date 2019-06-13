@@ -45,10 +45,10 @@ public class EgoRESTClient implements EgoClient {
   }
 
   @Override public RSAPublicKey getPublicKey() {
-    RSAPublicKey egoPublicKey = null;
+    RSAPublicKey egoPublicKey;
     try {
       log.info("Start fetching ego public key");
-      val key = lenientRetryTemplate
+      String key = lenientRetryTemplate
         .execute(x -> restTemplate.getForEntity("/oauth/token/public_key", String.class).getBody());
       log.info("Ego public key is fetched");
       egoPublicKey = (RSAPublicKey) Utils.getPublicKey(key, "RSA");
