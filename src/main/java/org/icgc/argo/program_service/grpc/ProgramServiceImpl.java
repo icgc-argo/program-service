@@ -39,6 +39,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -85,6 +86,29 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
+  public void getProgram(GetProgramRequest request,  StreamObserver<GetProgramResponse> responseObserver) {
+    Optional<ProgramEntity> programEntity;
+    GetProgramResponse response;
+    val programId=UUID.fromString(request.getId().getValue());
+
+    try {
+       programEntity = programService
+        .getProgram(programId);
+    } catch(Throwable t) {
+      responseObserver.onError(t);
+      return;
+    }
+
+    if (programEntity.isEmpty()) {
+      responseObserver.onError(new NotFoundException("Program with uuid " + programId + "was not found."));
+      return;
+    }
+
+    response  = programConverter.programEntityToGetProgramResponse(programEntity.get());
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
+
   @EgoAuth(typesAllowed = {"ADMIN"})
   public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver){
      val updatingProgram = programConverter.updateProgramRequestToProgramEntity(request);
