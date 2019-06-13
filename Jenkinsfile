@@ -98,10 +98,12 @@ spec:
         stage('Deploy to argo QA') {
             when { branch 'feature/update-pipeline' }
             steps {
-                container('curl') {
+                container('docker') {
                     script {
                         commit = sh(returnStdout: true, script: 'git describe --always').trim()
                     }
+                }
+                container('curl') {
                     sh "env"
                     withCredentials([string(credentialsId:'REMOTE_BUILD_TOKEN', variable: 'REMOTE_BUILD_TOKEN')]) {
                             sh "curl -v https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/provision/job/program-service/buildWithParameters?AP_ARGO_ENV=qa&AP_ARGS_LINE=--set%20image.tag%3D${commit}&token=${REMOTE_BUILD_TOKEN}"
