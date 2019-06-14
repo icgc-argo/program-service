@@ -52,6 +52,8 @@ spec:
         }
     }
     stages {
+
+    /*
         stage('Test') {
             // TODO: integration test
             steps {
@@ -106,11 +108,19 @@ spec:
                 }
             }
         }
+    */
+
+        stage('Deploy to argoQA') {
+            steps {
+                build("/ARGO/provision/program-service")
+            }
+        }
+
     }
 
-    post {
-        always {
-            junit "**/TEST-*.xml"
-       }
-    }
+    //post {
+    //    always {
+    //        junit "**/TEST-*.xml"
+    //   }
+    //}
 }
