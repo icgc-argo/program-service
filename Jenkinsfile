@@ -71,7 +71,7 @@ spec:
                     // DNS error if --network is default
                     sh "docker build --network=host . -t icgcargo/program-service:${commit}"
 
-                    sh "docker push overture/program-service:${commit}"
+                    sh "docker push icgcargo/program-service:${commit}"
                 }
             }
         }
