@@ -33,6 +33,7 @@ spec:
     env:
     - name: POSTGRES_DB
       value: program_db
+
   - name: dind-daemon
     image: docker:18.06-dind
     securityContext:
@@ -56,6 +57,7 @@ spec:
                 }
             }
         }
+
         stage('Build') {
             steps {
                 container('docker') {
@@ -73,7 +75,8 @@ spec:
                 }
             }
         }
-        stage('Deploy') {
+
+        stage('Deploy qa - deprecated') {
             when { branch 'master' }
             steps {
                 container('helm') {
@@ -86,10 +89,22 @@ spec:
                 }
             }
         }
+
+        stage('Deploy to argo-qa') {
+            when { branch 'master' }
+            steps {
+                build(job: "/ARGO/provision/program-service", parameters: [
+                     [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'qa' ],
+                     [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set image.tag=${commit}" ]
+                ])
+            }
+        }
+
     }
+
     post {
         always {
             junit "**/TEST-*.xml"
-        }
+       }
     }
 }
