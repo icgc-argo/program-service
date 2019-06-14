@@ -113,6 +113,9 @@ spec:
         stage('Deploy to argoQA') {
             when { branch 'feature/update-pipeline' }
             steps {
+                script {
+                    commit = sh(returnStdout: true, script: 'git describe --always').trim()
+                }
                 build(job: "/ARGO/provision/program-service", parameters: [
                      [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'qa' ],
                      [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set image.tag=${commit}" ]
