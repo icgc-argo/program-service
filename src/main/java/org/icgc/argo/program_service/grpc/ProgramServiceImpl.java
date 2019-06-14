@@ -31,6 +31,7 @@ import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.*;
+import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,17 +51,19 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
    * Dependencies
    */
   private final ProgramService programService;
+  private final InvitationService invitationService;
   private final ProgramConverter programConverter;
   private final CommonConverter commonConverter;
   private final EgoService egoService;
 
   @Autowired
   public ProgramServiceImpl(@NonNull ProgramService programService, @NonNull ProgramConverter programConverter,
-    @NonNull CommonConverter commonConverter, @NonNull EgoService egoService) {
+    @NonNull CommonConverter commonConverter, @NonNull EgoService egoService,InvitationService invitationService) {
     this.programService = programService;
     this.programConverter = programConverter;
     this.egoService = egoService;
     this.commonConverter = commonConverter;
+    this.invitationService = invitationService;
   }
 
   //TODO: need better error response. If a duplicate program is created, get "2 UNKNOWN" error. Should atleast have a message in it
@@ -72,7 +75,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     ProgramEntity programEntity;
 
     try {
-      programEntity = programService.createProgram(program, adminEmails);
+      programEntity = programService.createProgram(program);
     } catch (DataIntegrityViolationException e) {
       responseObserver.onError(
         status(Status.INVALID_ARGUMENT,
@@ -156,7 +159,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
     UUID inviteId;
     try {
-      inviteId = programService.inviteUser(programResult,
+      inviteId = invitationService.inviteUser(programResult,
         request.getEmail().getValue(),
         request.getFirstName().getValue(),
         request.getLastName().getValue(),
@@ -177,7 +180,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void joinProgram(JoinProgramRequest request, StreamObserver<Empty> responseObserver) {
     boolean succeed;
     try {
-      succeed = programService.acceptInvite(commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
+      succeed = invitationService.acceptInvite(commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
     } catch (Throwable t) {
       responseObserver.onError(t);
       return;
@@ -187,6 +190,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onError(new StatusException(Status.fromCode(Status.Code.UNKNOWN)));
       return;
     }
+
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
@@ -266,7 +270,11 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
+    ProgramEntity programEntity;
+    val programName = request.getProgramShortName().getValue();
     try {
+      programEntity = programService.getProgram(programName);
+      egoService.cleanUpProgram(programEntity);
       programService.removeProgram(request.getProgramShortName().getValue());
     } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
       responseObserver.onError(Status.NOT_FOUND.withDescription(getExceptionMessage(e)).asRuntimeException());

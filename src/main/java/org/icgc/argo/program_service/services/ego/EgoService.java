@@ -29,12 +29,16 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
+import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
+import org.icgc.argo.program_service.services.MailService;
+import org.icgc.argo.program_service.services.ProgramService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
@@ -46,6 +50,8 @@ import org.springframework.web.client.HttpServerErrorException;
 
 import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.security.interfaces.RSAPublicKey;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -63,17 +69,22 @@ public class EgoService {
   private final EgoClient egoClient;
   private final ProgramEgoGroupRepository programEgoGroupRepository;
   private final ProgramConverter programConverter;
+  private final MailService mailService;
   private RSAPublicKey egoPublicKey;
-
+  private final JoinProgramInviteRepository invitationRepository;
   @Autowired
   public EgoService(
     @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
     @NonNull ProgramConverter programConverter,
-    @NonNull EgoClient restClient
+    @NonNull EgoClient restClient,
+    @NonNull MailService mailService,
+    @NonNull JoinProgramInviteRepository invitationRepository
   ) {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.programConverter = programConverter;
     this.egoClient = restClient;
+    this.mailService = mailService;
+    this.invitationRepository = invitationRepository;
     setEgoPublicKey();
   }
 
@@ -315,6 +326,10 @@ public class EgoService {
       }
     });
     return true;
+  }
+
+  public List<User> listUser(@NonNull UUID programId) {
+    return getUsersInGroup(programId);
   }
 
 }

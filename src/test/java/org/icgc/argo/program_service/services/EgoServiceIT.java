@@ -27,6 +27,7 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.UserRole;
+import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
@@ -62,12 +63,16 @@ import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
 class EgoServiceIT {
   @Autowired
   EgoRESTClient client;
-  EgoService egoService;
 
   @Autowired
   ProgramEgoGroupRepository repository;
   @Autowired
   ProgramConverter converter;
+  @Autowired
+  MailService mailService;
+  @Autowired
+  JoinProgramInviteRepository inviteRepository;
+
   @Autowired
   ProgramService programService;
 
@@ -78,17 +83,17 @@ class EgoServiceIT {
   CommonConverter commonConverter;
 
   ProgramEntity programEntity;
+  EgoService egoService;
 
   private static final String TEST_EMAIL = "d8660091@gmail.com";
-  private EgoUser testUpdateUser;
   private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
   private static final String COLLABORATOR_USER_EMAIL = "TestPS@dummy.com";
   private static final String UPDATE_USER_TEST_EMAIL = "Test_update_user_PS@dummy.com";
 
   @BeforeAll
   void setUp() {
-    egoService = new EgoService(repository, converter, client);
-    testUpdateUser = setUpUser();
+    egoService = new EgoService(repository, converter, client, mailService, inviteRepository);
+    setUpUser();
     programEntity = setupProgram();
   }
 
@@ -118,7 +123,7 @@ class EgoServiceIT {
       .setDescription(stringValue(""))
       .build();
 
-    return programService.createProgram(program, List.of());
+    return programService.createProgram(program);
   }
 
   private boolean isNotFoundException(Exception e) {
@@ -134,7 +139,6 @@ class EgoServiceIT {
     val user = egoService.getEgoClient().getUser(UPDATE_USER_TEST_EMAIL);
     if (user.isPresent()) {
       return user.get();
-
     }
     return egoService.getEgoClient().createEgoUser(UPDATE_USER_TEST_EMAIL);
   }
@@ -239,7 +243,8 @@ class EgoServiceIT {
   void cleanUp() {
     val ego = egoService.getEgoClient();
     try {
-      programService.removeProgram(this.programEntity);
+      egoService.cleanUpProgram(this.programEntity);
+      programService.removeProgram(this.programEntity.getShortName());
     } catch (Throwable throwable) {
       System.err.println("Remove program threw" + throwable.getMessage());
     }

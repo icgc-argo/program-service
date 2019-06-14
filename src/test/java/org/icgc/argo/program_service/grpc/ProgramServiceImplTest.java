@@ -75,7 +75,7 @@ class ProgramServiceImplTest {
 
     when(request.getProgram()).thenReturn(program);
     when(request.getAdminEmailsList()).thenReturn(adminEmails);
-    when(programService.createProgram(program, adminEmails))
+    when(programService.createProgram(program))
         .thenThrow(new DataIntegrityViolationException("test error"));
 
     programServiceImpl.createProgram(request, responseObserver);

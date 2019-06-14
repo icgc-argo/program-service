@@ -21,7 +21,6 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.converter.CommonConverter;
-import org.icgc.argo.program_service.converter.ConverterConfig;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.converter.ProgramConverterImpl;
 import org.icgc.argo.program_service.model.entity.*;
@@ -36,32 +35,22 @@ import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 
-import org.junit.Before;
-
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.MailSender;
 
 import org.springframework.test.util.ReflectionTestUtils;
 
-
-
-import java.io.IOException;
-
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
 import java.util.*;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -72,7 +61,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceTest {
@@ -86,9 +74,6 @@ class ProgramServiceTest {
   private ProgramEntity programEntity;
 
   @Mock
-  private JoinProgramInviteRepository invitationRepository;
-
-  @Mock
   private ProgramRepository programRepository;
 
   @Mock
@@ -97,11 +82,6 @@ class ProgramServiceTest {
   @Mock
   private PrimarySiteRepository primarySiteRepository;
 
-  @Mock
-  private MailSender mailSender;
-
-  @Mock
-  private JoinProgramInvite invitation;
 
   @Mock
   private ProgramConverter programConverter;
@@ -152,40 +132,6 @@ class ProgramServiceTest {
     return Optional.of(new PrimarySiteEntity().setId(UUID.randomUUID()).setName(name));
   }
 
-  @Test
-  void inviteUser() {
-    programService.inviteUser(programEntity, "user@example.com", "First", "Last", UserRole.ADMIN);
-    val invitationCaptor = ArgumentCaptor.forClass(JoinProgramInvite.class);
-    verify(invitationRepository).save(invitationCaptor.capture());
-
-    val invitation = invitationCaptor.getValue();
-    assertThat(ReflectionTestUtils.getField(invitation, "program")).isEqualTo(programEntity);
-    assertThat(ReflectionTestUtils.getField(invitation, "userEmail")).isEqualTo("user@example.com");
-    assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "createdAt"))
-      .as("Creation time is within 5 seconds")
-      .isCloseTo(LocalDateTime.now(ZoneOffset.UTC), within(5, ChronoUnit.SECONDS));
-    assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "expiredAt"))
-      .as("Expire time should be after 47 hours")
-      .isAfter(LocalDateTime.now(ZoneOffset.UTC).plusHours(47));
-    assertThat(ReflectionTestUtils.getField(invitation, "status"))
-      .as("Status is appending").isEqualTo(JoinProgramInvite.Status.PENDING);
-    assertThat(ReflectionTestUtils.getField(invitation, "firstName"))
-      .as("First name is first").isEqualTo("First");
-    assertThat(ReflectionTestUtils.getField(invitation, "lastName"))
-      .as("Last name is first").isEqualTo("Last");
-    assertThat(ReflectionTestUtils.getField(invitation, "role"))
-      .as("Role is admin").isEqualTo(UserRole.ADMIN);
-
-    verify(mailService).sendInviteEmail(ArgumentMatchers.any());
-  }
-
-  @Test
-  void acceptInvitation() {
-    when(invitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
-    programService.acceptInvite(invitation.getId());
-    verify(egoService).joinProgram(invitation.getUserEmail(), invitation.getProgram(), invitation.getRole());
-    verify(invitation).accept();
-  }
 
   @Test
   void createProgram() {
@@ -195,7 +141,7 @@ class ProgramServiceTest {
     assertThat(inputProgramEntity.getCreatedAt()).isNull();
     assertThat(inputProgramEntity.getUpdatedAt()).isNull();
     when(programConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
-    val outputEntity = programService.createProgram(program, List.of());
+    val outputEntity = programService.createProgram(program);
     assertThat(outputEntity.getCreatedAt()).isNotNull();
     assertThat(outputEntity.getUpdatedAt()).isNotNull();
     verify(programRepository).save(inputProgramEntity);

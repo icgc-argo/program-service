@@ -24,16 +24,14 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.converter.ProgramConverterImpl;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
-import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.proto.Program;
-import org.icgc.argo.program_service.proto.User;
-import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
@@ -49,15 +47,11 @@ import org.springframework.mail.MailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.icgc.argo.program_service.utils.CollectionUtils.*;
@@ -71,32 +65,22 @@ public class ProgramService {
   /**
    * Dependencies
    */
-  private final JoinProgramInviteRepository invitationRepository;
   private final ProgramRepository programRepository;
   private final CancerRepository cancerRepository;
   private final PrimarySiteRepository primarySiteRepository;
   private final ProgramConverter programConverter;
-  private final EgoService egoService;
-  private final MailService mailService;
 
   @Autowired
   public ProgramService(
-    @NonNull JoinProgramInviteRepository invitationRepository,
     @NonNull ProgramRepository programRepository,
     @NonNull CancerRepository cancerRepository,
     @NonNull PrimarySiteRepository primarySiteRepository,
-    @NonNull ProgramConverter programConverter,
-    @NonNull MailService mailService,
-    @NonNull MailSender mailSender,
-    @NonNull EgoService egoService,
-    @NonNull CommonConverter commonConverter) {
-    this.invitationRepository = invitationRepository;
+    @NonNull ProgramConverter programConverter
+    ) {
     this.programRepository = programRepository;
     this.cancerRepository = cancerRepository;
     this.primarySiteRepository = primarySiteRepository;
     this.programConverter = programConverter;
-    this.mailService = mailService;
-    this.egoService = egoService;
   }
 
   public ProgramEntity getProgram(@NonNull String name) {
@@ -116,7 +100,7 @@ public class ProgramService {
   }
 
   //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
-  public ProgramEntity createProgram(@NonNull Program program, @NonNull Collection<String> adminEmails)
+  public ProgramEntity createProgram(@NonNull Program program)
     throws DataIntegrityViolationException {
     val programEntity = programConverter.programToProgramEntity(program);
     // Set the timestamps
@@ -202,15 +186,9 @@ public class ProgramService {
     }
   }
 
-  //TODO: add existence check, and fail with not found
-  public void removeProgram(@NonNull ProgramEntity program) {
-    egoService.cleanUpProgram(program);
-    programRepository.deleteById(program.getId());
-  }
-
   public void removeProgram(String name) throws EmptyResultDataAccessException {
     val p = getProgram(name);
-    removeProgram(p);
+    programRepository.deleteById(p.getId());
   }
 
   public List<ProgramEntity> listPrograms() {
@@ -220,32 +198,4 @@ public class ProgramService {
       .listAll());
   }
 
-  public List<User> listUser(@NonNull UUID programId) {
-    return egoService.getUsersInGroup(programId);
-  }
-
-  public UUID inviteUser(@NotNull ProgramEntity program,
-    @Email @NotNull String userEmail,
-    @NotBlank @NotNull String firstName,
-    @NotBlank @NotNull String lastName,
-    @NotNull UserRole role) {
-    val invitation = new JoinProgramInvite(program, userEmail, firstName, lastName, role);
-    invitationRepository.save(invitation);
-    mailService.sendInviteEmail(invitation);
-    return invitation.getId();
-  }
-
-  public boolean acceptInvite(UUID invitationId) {
-    val invitation = invitationRepository.findById(invitationId);
-    if (invitation.isPresent()) {
-      val i = invitation.get();
-      i.accept();
-      val email = invitation.get().getUserEmail();
-      egoService.joinProgram(email, i.getProgram(), i.getRole());
-      invitationRepository.save(invitation.get());
-      return true;
-    } else {
-      return false;
-    }
-  }
 }

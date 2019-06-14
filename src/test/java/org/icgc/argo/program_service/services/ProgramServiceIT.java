@@ -27,6 +27,7 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.UserRole;
+import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
@@ -63,6 +64,12 @@ class ProgramServiceIT {
   ProgramService programService;
 
   @Autowired
+  MailService mailService;
+
+  @Autowired
+  JoinProgramInviteRepository inviteRepository;
+
+  @Autowired
   AppProperties appProperties;
 
   @Autowired
@@ -73,14 +80,14 @@ class ProgramServiceIT {
 
   @BeforeAll
   void setUp() {
-    egoService = new EgoService(repository, converter, client);
+    egoService = new EgoService(repository, converter, client, mailService, inviteRepository);
 
     ProgramEntity p=null;
     try {
       p = programService.getProgram("TestProgram");
-    } catch(Exception e) {
-      if (!isNotFoundException(e)) {
-        throw e;
+    } catch(Throwable t) {
+      if (!isNotFoundException(t)) {
+        throw t;
       }
 
     }
@@ -90,9 +97,9 @@ class ProgramServiceIT {
     }
   }
 
-  private boolean isNotFoundException(Exception e) {
-    if (e instanceof StatusRuntimeException) {
-      if (((StatusRuntimeException) e).getStatus() == Status.NOT_FOUND) {
+  private boolean isNotFoundException(Throwable t) {
+    if (t instanceof StatusRuntimeException) {
+      if (((StatusRuntimeException) t).getStatus() == Status.NOT_FOUND) {
         return true;
       }
     }
@@ -116,7 +123,7 @@ class ProgramServiceIT {
         .setDescription(stringValue(""))
         .build();
 
-    val programEntity = programService.createProgram(program, List.of());
+    val programEntity = programService.createProgram(program);
 
     // Policies are created
     assertThat(client.getPolicyByName("PROGRAM-" + programEntity.getShortName()).isPresent()).isTrue();
@@ -144,7 +151,8 @@ class ProgramServiceIT {
 
 
   public void test_removeProgram(ProgramEntity programEntity) {
-    programService.removeProgram(programEntity);
+    egoService.cleanUpProgram(programEntity);
+    programService.removeProgram(programEntity.getShortName());
 
     // Groups are removed
     assertThat(client.getGroupByName("PROGRAM-TestShortName-BANNED").isPresent()).isFalse();
