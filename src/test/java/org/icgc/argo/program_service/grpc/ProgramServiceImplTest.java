@@ -30,7 +30,7 @@ import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.RemoveProgramRequest;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.services.EgoService;
+import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

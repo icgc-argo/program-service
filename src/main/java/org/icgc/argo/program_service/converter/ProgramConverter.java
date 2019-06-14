@@ -18,23 +18,23 @@
 
 package org.icgc.argo.program_service.converter;
 
-import com.google.protobuf.ProtocolStringList;
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
-import lombok.val;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.proto.*;
-import org.icgc.argo.program_service.services.EgoService;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ProgramConverter {
@@ -145,6 +145,16 @@ public interface ProgramConverter {
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "mergeProgram", ignore = true)
+  @Mapping(target = "program", source = "p")
+  GetProgramResponse programEntityToGetProgramResponse(ProgramEntity p);
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
   @Mapping(target = "removePrograms", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
@@ -179,7 +189,7 @@ public interface ProgramConverter {
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
-  User egoUserToUser(EgoService.EgoUser egoUser);
+  User egoUserToUser(EgoUser egoUser);
 
   default ListProgramsResponse programEntitiesToListProgramsResponse(Collection<ProgramEntity> programEntities) {
     return programEntitiesToListProgramsResponse(0, programEntities);

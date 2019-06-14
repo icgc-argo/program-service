@@ -35,7 +35,10 @@ import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
+
 import org.junit.Before;
+
+import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
@@ -44,17 +47,32 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.MailSender;
+
 import org.springframework.test.util.ReflectionTestUtils;
+
+
+
+import java.io.IOException;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceTest {
@@ -258,6 +276,23 @@ class ProgramServiceTest {
     return sites;
   }
 
+
+  void getProgram() {
+    val id1 ="Program One";
+    val id2 = "Program Two";
+    val id3 = "Program Three";
+
+    // test success (id found)
+    when(programRepository.findByShortName(programEntity.getShortName()))
+      .thenReturn(Optional.of(programEntity));
+    val result1 = programService.getProgram(id1);
+    assertThat(result1).isEqualTo(programEntity);
+
+    // test repository failure (not found/exception condition)
+    when(programRepository.findByShortName(id3))
+      .thenThrow(new RuntimeException("Repository error"));
+    assertThrows(RuntimeException.class, () -> { programService.getProgram(id3); });
+  }
 
   @Test
   void listPrograms() {

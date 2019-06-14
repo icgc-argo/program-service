@@ -22,9 +22,10 @@ import com.google.protobuf.Empty;
 import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import io.grpc.stub.StreamObserver;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.proto.*;
-import org.icgc.argo.program_service.services.EgoService;
+import org.icgc.argo.program_service.services.ego.model.exceptions.ConflictException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +43,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles({ "test", "default" })
+
 @ComponentScan(lazyInit = true)
+
+@Slf4j
+
 public class ProgramServiceImplIT {
 
   @Autowired
@@ -121,7 +126,7 @@ public class ProgramServiceImplIT {
     return p;
   }
 
-  public void createProgram(Program p) {
+  private void createProgram(Program p) {
     val details = CreateProgramRequest
       .newBuilder()
       .setProgram(p)
@@ -130,11 +135,9 @@ public class ProgramServiceImplIT {
     val resultObserver = new TestObserver<CreateProgramResponse>();
     try {
       programService.createProgram(details, resultObserver);
-    } catch (EgoService.ConflictException e) {
-
+    } catch (ConflictException e) {
+      log.warn("program already exists");
     }
-    // assertTrue(resultObserver.completed);
-    //assertNull(resultObserver.thrown);
   }
 }
 

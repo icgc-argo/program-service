@@ -31,9 +31,11 @@ import org.icgc.argo.program_service.proto.MembershipType;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
@@ -109,10 +111,10 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-    mappedBy = ProgramCancer.Fields.program,
-    cascade = CascadeType.ALL,
-    fetch = FetchType.LAZY,
-    orphanRemoval = true
+          mappedBy = ProgramCancer.Fields.program,
+          cascade = CascadeType.ALL,
+          fetch = FetchType.EAGER,
+          orphanRemoval = true
   )
   private Set<ProgramCancer> programCancers = new TreeSet<>();
 
@@ -121,7 +123,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @OneToMany(
     mappedBy = ProgramPrimarySite.Fields.program,
     cascade = CascadeType.ALL,
-    fetch = FetchType.LAZY,
+    fetch = FetchType.EAGER,
     orphanRemoval = true
   )
   private Set<ProgramPrimarySite> programPrimarySites = new TreeSet<>();
@@ -157,5 +159,13 @@ public class ProgramEntity implements NameableEntity<UUID> {
       this.getProgramPrimarySites().add(programPrimarySite);
       ps.getProgramPrimarySites().add(programPrimarySite);
     });
+  }
+
+  public List<String> listCancerTypes() {
+    return getProgramCancers().stream().map(c->c.getCancer().getName()).collect(Collectors.toList());
+  }
+
+  public List<String> listPrimarySites() {
+    return getProgramCancers().stream().map(p->p.getCancer().getName()).collect(Collectors.toList());
   }
 }
