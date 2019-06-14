@@ -54,8 +54,8 @@ message Program {
   google.protobuf.StringValue institutions = 9;
   google.protobuf.StringValue countries = 10;
   google.protobuf.StringValue regions = 11;
-  repeated google.protobuf.StringValue cancer_types = 12;
-  repeated google.protobuf.StringValue primary_sites = 13;
+  repeated string cancer_types = 12;
+  repeated string primary_sites = 13;
 }
 
 enum MembershipType {
@@ -107,8 +107,8 @@ message UpdateProgramRequest {
   google.protobuf.StringValue institutions = 10;
   google.protobuf.StringValue countries = 11;
   google.protobuf.StringValue regions = 12;
-  repeated google.protobuf.StringValue cancer_types = 13;
-  repeated google.protobuf.StringValue primary_sites = 14;
+  repeated string cancer_types = 13;
+  repeated string primary_sites = 14;
 }
 
 message UpdateProgramResponse {

@@ -29,6 +29,8 @@ import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
+import org.icgc.argo.program_service.model.join.ProgramCancer;
+import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
@@ -36,23 +38,27 @@ import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
+import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.mail.MailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-import static org.icgc.argo.program_service.utils.CollectionUtils.convertToIds;
-import static org.icgc.argo.program_service.utils.CollectionUtils.mapToImmutableSet;
-import static org.icgc.argo.program_service.utils.CollectionUtils.nullOrEmpty;
-import static org.icgc.argo.program_service.utils.EntityService.getManyEntities;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.icgc.argo.program_service.utils.CollectionUtils.*;
+import static org.icgc.argo.program_service.utils.EntityService.getManyEntities;
 
 @Service
 @Validated
@@ -103,13 +109,34 @@ public class ProgramService {
   //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
   public ProgramEntity createProgram(@NonNull Program program, @NonNull Collection<String> adminEmails) throws DataIntegrityViolationException {
     val programEntity = programConverter.programToProgramEntity(program);
+    val id = UUID.randomUUID();
+    programEntity.setId(id);
+
+    val cancers = getCancers(program.getCancerTypesList());
+    val primarySites = getPrimarySites(program.getPrimarySitesList());
+
+    cancers.forEach(programEntity::associateCancer);
+    primarySites.forEach(programEntity::associatePrimarySite);
 
     // Set the timestamps
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
+
     programRepository.save(programEntity);
     return programEntity;
+  }
+
+  private List<CancerEntity> getCancers(List<String> cancerTypesList) {
+    return cancerTypesList.stream().
+      map(this::getCancer).
+      collect(Collectors.toList());
+  }
+
+  private List<PrimarySiteEntity> getPrimarySites(List<String> primarySitesList) {
+    return primarySitesList.stream().
+      map(this::getPrimarySite).
+      collect(Collectors.toList());
   }
 
   public ProgramEntity updateProgram(@NonNull ProgramEntity updatingProgram) throws NotFoundException, EmptyResultDataAccessException {
@@ -125,39 +152,44 @@ public class ProgramService {
     return programToUpdate;
   }
 
-  private Optional<UUID> getIdForCancerType(String cancerType) {
+  private CancerEntity getCancer(String cancerType) {
     val result = cancerRepository.getCancerByName(cancerType);
     if (result.isEmpty()) {
-      return Optional.empty();
+      throw Status.INVALID_ARGUMENT.augmentDescription("Invalid cancer type '" + cancerType+"'").asRuntimeException();
     }
-    return Optional.of(result.get().getId());
+    return result.get();
   }
 
-  private Optional<UUID> getIdforPrimarySite(String primarySite) {
-    val result = cancerRepository.getCancerByName(primarySite);
+  private PrimarySiteEntity getPrimarySite(String primarySite) {
+    val result = primarySiteRepository.getPrimarySiteByName(primarySite);
     if (result.isEmpty()) {
-      return Optional.empty();
+      throw Status.INVALID_ARGUMENT.augmentDescription("Invalid primary site" + primarySite).asRuntimeException();
     }
-    return Optional.of(result.get().getId());
+    return result.get();
   }
 
   private void processCancers(@NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram)
           throws EmptyResultDataAccessException {
-
-    if( !nullOrEmpty(updatingProgram.getCancerTypes())) {
-      programToUpdate.setCancerTypes(updatingProgram.getCancerTypes());
+    if( !nullOrEmpty(updatingProgram.getProgramCancers())) {
+      val updatingCancers = mapToImmutableSet(updatingProgram.getProgramCancers(), ProgramCancer::getCancer);
+      val updatingCancerIds = convertToIds(updatingCancers);
+      getManyEntities(CancerEntity.class, cancerRepository, updatingCancerIds);
+      programToUpdate.setProgramCancers(updatingProgram.getProgramCancers());
     } else {
-      programToUpdate.setCancerTypes(Collections.emptySet());
+      programToUpdate.setProgramCancers(Collections.emptySet());
     }
   }
 
   private void processPrimarySites(@NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram)
           throws EmptyResultDataAccessException {
 
-    if( !nullOrEmpty(updatingProgram.getPrimarySites())){
-      programToUpdate.setPrimarySites(updatingProgram.getPrimarySites());
-    } else {
-      programToUpdate.setPrimarySites(Collections.emptySet());
+    if( !nullOrEmpty(updatingProgram.getProgramPrimarySites())){
+      val updatingPrimarySites = mapToImmutableSet(updatingProgram.getProgramPrimarySites(), ProgramPrimarySite::getPrimarySite);
+      val updatingPrimarySiteIds = convertToIds(updatingPrimarySites);
+      getManyEntities(PrimarySiteEntity.class, primarySiteRepository, updatingPrimarySiteIds);
+      programToUpdate.setProgramPrimarySites(updatingProgram.getProgramPrimarySites());
+     } else {
+      programToUpdate.setProgramPrimarySites(Collections.emptySet());
     }
   }
 
@@ -173,7 +205,14 @@ public class ProgramService {
   }
 
   public List<ProgramEntity> listPrograms() {
-    return programRepository.findAll();
+    return programRepository.findAll(new ProgramSpecificationBuilder()
+      .setFetchCancers(true)
+      .setFetchPrimarySites(true)
+      .listAll());
+  }
+
+  public List<User> listUser(@NonNull UUID programId) {
+    return egoService.getUserByGroup(programId);
   }
 
   public UUID inviteUser(@NotNull ProgramEntity program,

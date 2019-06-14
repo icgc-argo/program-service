@@ -26,6 +26,7 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
+import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -58,4 +59,13 @@ public class PrimarySiteEntity implements NameableEntity<UUID> {
   @NotNull
   @Column(name = SqlFields.NAME)
   private String name;
+  
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
+  @OneToMany(
+              mappedBy = ProgramPrimarySite.Fields.primarySite,
+              cascade = CascadeType.ALL,
+              fetch = FetchType.LAZY,
+              orphanRemoval = true)
+  private Set<ProgramPrimarySite> programPrimarySites = newHashSet();
 }

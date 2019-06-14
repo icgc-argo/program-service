@@ -22,19 +22,22 @@ import lombok.val;
 import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
+import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.UserRole;
+import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
+import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.MailSender;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -43,6 +46,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
@@ -68,6 +72,12 @@ class ProgramServiceTest {
   private ProgramRepository programRepository;
 
   @Mock
+  private CancerRepository cancerRepository;
+
+  @Mock
+  private PrimarySiteRepository primarySiteRepository;
+
+  @Mock
   private MailSender mailSender;
 
   @Mock
@@ -84,6 +94,43 @@ class ProgramServiceTest {
 
   @Mock
   private CommonConverter commonConverter;
+
+  void setup() {
+    program = Program.newBuilder().
+      addAllCancerTypes(List.of("Blood cancer", "Brain cancer")).
+      addAllPrimarySites(List.of("Blood", "Brain")).
+      build();
+
+    setupCancerRepository();
+    setupPrimarySiteRepository();
+
+  }
+
+  void setupCancerRepository() {
+    for (val name: List.of("Blood cancer", "Brain cancer")) {
+      val entity = createCancerEntity(name);
+      when(cancerRepository.getCancerByName(name)).thenReturn(entity);
+    }
+
+    ReflectionTestUtils.setField(programService, "cancerRepository", cancerRepository);
+  }
+
+  void setupPrimarySiteRepository() {
+    for (val name: List.of("Blood", "Brain")) {
+      val entity = createPrimarySite(name);
+        when(primarySiteRepository.getPrimarySiteByName(name)).thenReturn(entity);
+    }
+
+    ReflectionTestUtils.setField(programService, "primarySiteRepository", primarySiteRepository);
+  }
+
+  private Optional<CancerEntity> createCancerEntity(String name) {
+    return Optional.of(new CancerEntity().setId(UUID.randomUUID()).setName(name));
+  }
+
+  private Optional<PrimarySiteEntity> createPrimarySite(String name) {
+    return Optional.of(new PrimarySiteEntity().setId(UUID.randomUUID()).setName(name));
+  }
 
   @Test
   void inviteUser() {
@@ -122,6 +169,8 @@ class ProgramServiceTest {
 
   @Test
   void createProgram() {
+    setup();
+
     val inputProgramEntity = new ProgramEntity().setName(RandomString.make(10)).setShortName(RandomString.make(33));
     assertThat(inputProgramEntity.getCreatedAt()).isNull();
     assertThat(inputProgramEntity.getUpdatedAt()).isNull();
@@ -134,7 +183,7 @@ class ProgramServiceTest {
 
   @Test
   void listPrograms() {
-    when(programRepository.findAll())
+    when(programRepository.findAll((Specification<ProgramEntity>) Mockito.any()))
       .thenReturn(List.of(programEntity));
     val programs = programService.listPrograms();
     assertThat(programs).contains(programEntity);

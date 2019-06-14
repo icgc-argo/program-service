@@ -37,11 +37,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProgramPrimarySiteId implements Serializable {
-
   @Column(name = SqlFields.PROGRAMID_JOIN)
   private UUID programId;
 
   @Column(name = SqlFields.SITEID_JOIN)
   private UUID primarySiteId;
-
 }
