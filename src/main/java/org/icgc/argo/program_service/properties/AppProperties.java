@@ -3,16 +3,23 @@ package org.icgc.argo.program_service.properties;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.velocity.app.VelocityEngine;
+import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.utils.NoOpJavaMailSender;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import javax.validation.constraints.NotNull;
+import java.time.Duration;
 import java.util.Properties;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -86,6 +93,16 @@ public class AppProperties {
     props.put("resource.loader", "class");
     props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
     return new VelocityEngine(props);
+  }
+
+  @Bean
+  public RestTemplate RestTemplate() {
+    val t = new RestTemplateBuilder()
+      .basicAuthentication(getEgoClientId(), getEgoClientSecret())
+      .setConnectTimeout(Duration.ofSeconds(15)).
+        build();
+    t.setUriTemplateHandler(new DefaultUriBuilderFactory(getEgoUrl()));
+    return t;
   }
 }
 

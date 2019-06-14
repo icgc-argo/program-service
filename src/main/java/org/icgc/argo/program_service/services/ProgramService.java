@@ -41,6 +41,7 @@ import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.icgc.argo.program_service.repositories.query.CancerSpecification;
 import org.icgc.argo.program_service.repositories.query.PrimarySiteSpecification;
 import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
+import org.icgc.argo.program_service.services.ego.EgoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -187,6 +188,10 @@ public class ProgramService {
         .setFetchCancers(true)
         .setFetchPrimarySites(true)
         .listAll());
+  }
+
+  public List<User> listUser(@NonNull UUID programId){
+    return egoService.getUsersInGroup(programId);
   }
 
   public UUID inviteUser(@NotNull ProgramEntity program,

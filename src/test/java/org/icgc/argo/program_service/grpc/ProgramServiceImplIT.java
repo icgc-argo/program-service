@@ -22,9 +22,10 @@ import com.google.protobuf.Empty;
 import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import io.grpc.stub.StreamObserver;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.proto.*;
-import org.icgc.argo.program_service.services.EgoService;
+import org.icgc.argo.program_service.services.ego.model.exceptions.ConflictException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,10 +36,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static junit.framework.TestCase.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
+
 // TODO: program service is already running at the phase of pre-integration-test, use the existing running 50051 port
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles({ "test", "default" })
+@Slf4j
 public class ProgramServiceImplIT {
 
   @Autowired
@@ -87,7 +90,7 @@ public class ProgramServiceImplIT {
     assertThat(programList).usingElementComparatorOnFields("shortName", "description", "name", "commitmentDonors", "submittedDonors", "genomicDonors", "website", "membershipType").contains(p1, p2);
   }
 
-  public Program buildProgram(String name,
+  private Program buildProgram(String name,
      String shortName,
      String description,
      String membershipType,
@@ -96,7 +99,7 @@ public class ProgramServiceImplIT {
      int genomicDonors,
      String website
   ) {
-    val p = Program
+    return Program
         .newBuilder()
         .setName(StringValue.of(name))
         .setShortName(StringValue.of(shortName))
@@ -110,10 +113,9 @@ public class ProgramServiceImplIT {
         .setWebsite(StringValue.of(website))
         .setCountries(StringValue.of("Canada"))
         .build();
-    return p;
   }
 
-  public void createProgram(Program p) {
+  private void createProgram(Program p) {
     val details = CreateProgramRequest
       .newBuilder()
       .setProgram(p)
@@ -121,11 +123,9 @@ public class ProgramServiceImplIT {
     val resultObserver = new TestObserver<CreateProgramResponse>();
     try {
       programService.createProgram(details, resultObserver);
-    } catch(EgoService.ConflictException e) {
-
+    } catch(ConflictException e) {
+      log.warn("program already exists");
     }
-    // assertTrue(resultObserver.completed);
-    //assertNull(resultObserver.thrown);
   }
 }
 
