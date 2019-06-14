@@ -21,11 +21,14 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.converter.CommonConverter;
+import org.icgc.argo.program_service.converter.ConverterConfig;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.model.entity.CancerEntity;
-import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
-import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.converter.ProgramConverterImpl;
+import org.icgc.argo.program_service.model.entity.*;
+import org.icgc.argo.program_service.model.join.ProgramCancer;
+import org.icgc.argo.program_service.model.join.ProgramCancerId;
+import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
+import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.CancerRepository;
@@ -35,27 +38,26 @@ import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.MailSender;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceTest {
-
   @InjectMocks
   private ProgramService programService;
 
@@ -180,6 +182,82 @@ class ProgramServiceTest {
     assertThat(outputEntity.getUpdatedAt()).isNotNull();
     verify(programRepository).save(inputProgramEntity);
   }
+
+  @Test
+  void testMappingProgramEntityToProgram() {
+    val entity = new ProgramEntity().
+      setCommitmentDonors(1000).
+      setCountries("Canada").
+      setCreatedAt(LocalDateTime.now()).
+      setDescription("Test Program").
+      setGenomicDonors(1000).
+      setId(UUID.randomUUID()).
+      setInstitutions("Institute of Institutions").
+      setMembershipType(MembershipType.ASSOCIATE).
+      setName("Program One").
+
+      setShortName("P1").
+      setSubmittedDonors(1000).
+      setUpdatedAt(LocalDateTime.now()).
+      setWebsite("http://test.org");
+
+    val egoGroups = getEgoGroups(entity);
+    val cancers = getCancerTypes(entity);
+    val sites = getSites(entity);
+
+    entity.setProgramCancers(cancers);
+    entity.setProgramPrimarySites(sites);
+    entity.setEgoGroups(egoGroups);
+
+    val mapper = new ProgramConverterImpl(CommonConverter.INSTANCE);
+    val details = mapper.map(entity);
+    val program = details.getProgram();
+    val metadata = details.getMetadata();
+    assertThat(program.getCancerTypesList()).contains("Blood cancer");
+  }
+
+  Set<ProgramEgoGroupEntity> getEgoGroups(ProgramEntity entity) {
+    val egoGroups = new TreeSet<ProgramEgoGroupEntity>();
+    for(val role: UserRole.values()) {
+      if (role == UserRole.UNRECOGNIZED) {
+        continue;
+      }
+      egoGroups.add(createGroup(entity, role));
+    }
+    return egoGroups;
+  }
+
+  ProgramEgoGroupEntity createGroup(ProgramEntity entity, UserRole role) {
+    return new ProgramEgoGroupEntity().
+      setId(UUID.randomUUID()).
+      setRole(role).
+      setEgoGroupId(UUID.randomUUID()).
+      setProgram(entity);
+  }
+
+  Set<ProgramCancer> getCancerTypes(ProgramEntity entity) {
+    val cancers = new TreeSet<ProgramCancer>();
+    val bloodCancer = new CancerEntity().setId(UUID.randomUUID());
+    bloodCancer.setName("Blood cancer");
+    val c1_id = new ProgramCancerId();
+    c1_id.setCancerId(bloodCancer.getId());
+    c1_id.setProgramId(entity.getId());
+
+    val c1 = new ProgramCancer();
+    c1.setProgram(entity);
+    c1.setCancer(bloodCancer);
+    c1.setId(c1_id);
+
+    bloodCancer.setProgramCancers(Set.of(c1));
+
+    return cancers;
+  }
+
+  Set<ProgramPrimarySite> getSites(ProgramEntity entity) {
+    val sites = new TreeSet<ProgramPrimarySite>();
+    return sites;
+  }
+
 
   @Test
   void listPrograms() {

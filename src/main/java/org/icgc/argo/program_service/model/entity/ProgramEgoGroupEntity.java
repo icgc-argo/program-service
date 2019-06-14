@@ -42,7 +42,7 @@ import java.util.UUID;
 @FieldNameConstants
 @Accessors(chain = true)
 @Table(name = Tables.PROGRAM_EGO_GROUP)
-public class ProgramEgoGroupEntity {
+public class ProgramEgoGroupEntity implements Comparable<ProgramEgoGroupEntity>{
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
@@ -58,6 +58,9 @@ public class ProgramEgoGroupEntity {
   @Column(nullable = false, updatable = false)
   private UUID egoGroupId;
 
+  public int compareTo(ProgramEgoGroupEntity o) {
+    return this.role.compareTo(o.role);
+  }
 }
 
 

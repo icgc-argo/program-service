@@ -18,8 +18,10 @@
 
 package org.icgc.argo.program_service.converter;
 
+import com.google.protobuf.ProtocolStringList;
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
+import lombok.val;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -27,12 +29,12 @@ import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.EgoService;
-import org.mapstruct.*;
+import org.mapstruct.InheritConfiguration;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ProgramConverter {
@@ -65,25 +67,24 @@ public interface ProgramConverter {
   @Mapping(target = "egoGroups", ignore = true)
   ProgramEntity updateProgramRequestToProgramEntity(@NonNull UpdateProgramRequest request);
 
-//  @AfterMapping
-//  default void updateProgramRelationships(@MappingTarget ProgramEntity programEntity,
-//    @NonNull UpdateProgramRequest request) {
-//    cancersToCancerEntities(getCancerFromRequest(request))
-//      .forEach(programEntity::associateCancer);
-//
-//    primarySitesToPrimarySiteEntities(getPrimarySiteFromRequest(request))
-//      .forEach(programEntity::associatePrimarySite);
-//  }
+  //  @AfterMapping
+  //  default void updateProgramRelationships(@MappingTarget ProgramEntity programEntity,
+  //    @NonNull UpdateProgramRequest request) {
+  //    cancersToCancerEntities(getCancerFromRequest(request))
+  //      .forEach(programEntity::associateCancer);
+  //
+  //    primarySitesToPrimarySiteEntities(getPrimarySiteFromRequest(request))
+  //      .forEach(programEntity::associatePrimarySite);
+  //  }
 
-//  @AfterMapping
-//  default void updateProgramRelationships(@NonNull Program p, @MappingTarget ProgramEntity programEntity) {
-//    cancersToCancerEntities(programToCancers(p))
-//      .forEach(programEntity::associateCancer);
-//
-//    primarySitesToPrimarySiteEntities(programToPrimarySites(p))
-//      .forEach(programEntity::associatePrimarySite);
-//  }
-
+  //  @AfterMapping
+  //  default void updateProgramRelationships(@NonNull Program p, @MappingTarget ProgramEntity programEntity) {
+  //    cancersToCancerEntities(programToCancers(p))
+  //      .forEach(programEntity::associateCancer);
+  //
+  //    primarySitesToPrimarySiteEntities(programToPrimarySites(p))
+  //      .forEach(programEntity::associatePrimarySite);
+  //  }
 
   /**
    * To Proto Converters
@@ -105,19 +106,23 @@ public interface ProgramConverter {
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "cancerTypesList",  ignore = true)
+  @Mapping(target = "cancerTypesList", ignore = true)
   @Mapping(target = "primarySitesList", ignore = true)
   Program programEntityToProgram(ProgramEntity entity);
+
+  default String programCancersToString(ProgramCancer programCancer) {
+    return programCancer.getCancer().getName();
+  }
 
   @InheritConfiguration
   List<Program> programEntitiesToPrograms(Collection<ProgramEntity> entities);
 
-	@Mapping(target = "mergeFrom", ignore = true)
-	@Mapping(target = "clearField", ignore = true)
-	@Mapping(target = "clearOneof", ignore = true)
-	@Mapping(target = "unknownFields", ignore = true)
-	@Mapping(target = "mergeUnknownFields", ignore = true)
-	@Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "mergeCreatedAt", ignore = true)
   CreateProgramResponse programEntityToCreateProgramResponse(ProgramEntity p);
 
@@ -156,13 +161,12 @@ public interface ProgramConverter {
   @Mapping(target = "clearOneof", ignore = true)
   //@Mapping(target = "mergeProgramId", ignore = true)
   @Mapping(target = "mergeCreatedAt", ignore = true)
-  @Mapping(target = "mergeUpdatedAt", ignore=true)
+  @Mapping(target = "mergeUpdatedAt", ignore = true)
   //@Mapping(target = "programId", source = "id")
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   Metadata programEntityToMetadata(ProgramEntity programEntity);
-
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
@@ -177,18 +181,18 @@ public interface ProgramConverter {
   @Mapping(target = "allFields", ignore = true)
   User egoUserToUser(EgoService.EgoUser egoUser);
 
-  default ListProgramsResponse programEntitiesToListProgramsResponse(Collection<ProgramEntity> programEntities){
+  default ListProgramsResponse programEntitiesToListProgramsResponse(Collection<ProgramEntity> programEntities) {
     return programEntitiesToListProgramsResponse(0, programEntities);
   }
 
-  default ListUserResponse usersToListUserResponse(Collection<User> users){
+  default ListUserResponse usersToListUserResponse(Collection<User> users) {
     return ListUserResponse.newBuilder().addAllUsers(users).build();
   }
 
-  default InviteUserResponse inviteIdToInviteUserResponse(@NonNull UUID inviteId){
+  default InviteUserResponse inviteIdToInviteUserResponse(@NonNull UUID inviteId) {
     return InviteUserResponse.newBuilder()
-        .setInviteId(StringValue.of(inviteId.toString()))
-        .build();
+      .setInviteId(StringValue.of(inviteId.toString()))
+      .build();
   }
 
   /**
@@ -196,38 +200,38 @@ public interface ProgramConverter {
    */
 
   //TODO [rtisma]: what is the mapstruct way of doing this?
-    default CancerEntity programCancerToCancerEntity(@NonNull ProgramCancer c){
-        return c.getCancer();
-    }
+  default CancerEntity programCancerToCancerEntity(@NonNull ProgramCancer c) {
+    return c.getCancer();
+  }
 
-    default Collection<String> programToCancers(@NonNull Program p){
-        return p.getCancerTypesList();
-    }
+  default Collection<String> programToCancers(@NonNull Program p) {
+    return p.getCancerTypesList();
+  }
 
-    default Collection<String> getCancerFromRequest(@NonNull UpdateProgramRequest request){
-        return request.getCancerTypesList();
-      }
+  default Collection<String> getCancerFromRequest(@NonNull UpdateProgramRequest request) {
+    return request.getCancerTypesList();
+  }
 
-    default Collection<String> getPrimarySiteFromRequest(@NonNull UpdateProgramRequest request){
-        return request.getPrimarySitesList();
-      }
+  default Collection<String> getPrimarySiteFromRequest(@NonNull UpdateProgramRequest request) {
+    return request.getPrimarySitesList();
+  }
 
-    default PrimarySiteEntity programPrimarySiteToPrimarySiteEntity(@NonNull ProgramPrimarySite c){
-        return c.getPrimarySite();
-      }
+  default PrimarySiteEntity programPrimarySiteToPrimarySiteEntity(@NonNull ProgramPrimarySite c) {
+    return c.getPrimarySite();
+  }
 
-    default Collection<String> programToPrimarySites(@NonNull Program p){
-        return p.getPrimarySitesList();
-      }
+  default Collection<String> programToPrimarySites(@NonNull Program p) {
+    return p.getPrimarySitesList();
+  }
 
   /**
-   *  Enum Boxing Converters
+   * Enum Boxing Converters
    */
-  default MembershipTypeValue boxMembershipType(MembershipType m){
+  default MembershipTypeValue boxMembershipType(MembershipType m) {
     return MembershipTypeValue.newBuilder().setValue(m).build();
   }
 
-  default MembershipType unboxMembershipTypeValue(@NonNull MembershipTypeValue v){
+  default MembershipType unboxMembershipTypeValue(@NonNull MembershipTypeValue v) {
     return v.getValue();
   }
 }

@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -57,6 +58,7 @@ import static org.icgc.argo.program_service.UtilsTest.stringValue;
         "spring.datasource.url=jdbc:postgresql://localhost:5432/program_db",
         "spring.datasource.driverClassName=org.postgresql.Driver",
 })
+@ComponentScan(lazyInit = true)
 class EgoServiceIT {
 
   @Autowired

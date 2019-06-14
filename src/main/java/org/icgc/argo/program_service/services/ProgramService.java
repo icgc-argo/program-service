@@ -109,21 +109,19 @@ public class ProgramService {
   //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
   public ProgramEntity createProgram(@NonNull Program program, @NonNull Collection<String> adminEmails) throws DataIntegrityViolationException {
     val programEntity = programConverter.programToProgramEntity(program);
-    val id = UUID.randomUUID();
-    programEntity.setId(id);
-
-    val cancers = getCancers(program.getCancerTypesList());
-    val primarySites = getPrimarySites(program.getPrimarySitesList());
-
-    cancers.forEach(programEntity::associateCancer);
-    primarySites.forEach(programEntity::associatePrimarySite);
-
     // Set the timestamps
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
 
     programRepository.save(programEntity);
+    val cancers = getCancers(program.getCancerTypesList());
+    val primarySites = getPrimarySites(program.getPrimarySitesList());
+
+    cancers.forEach(programEntity::associateCancer);
+    primarySites.forEach(programEntity::associatePrimarySite);
+
+
     return programEntity;
   }
 
