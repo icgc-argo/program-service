@@ -34,10 +34,6 @@ spec:
     - name: POSTGRES_DB
       value: program_db
 
-  - name: curl
-    image: pstauffer/curl
-    tty: true
-
   - name: dind-daemon
     image: docker:18.06-dind
     securityContext:
@@ -52,8 +48,6 @@ spec:
         }
     }
     stages {
-
-    /*
         stage('Test') {
             // TODO: integration test
             steps {
@@ -96,38 +90,21 @@ spec:
             }
         }
 
-        stage('Deploy to argo QA') {
-            when { branch 'feature/update-pipeline' }
+        stage('Deploy to argo-qa') {
+            when { branch 'master' }
             steps {
-                container('curl') {
-                    sh "env"
-                    withCredentials([string(credentialsId:'JenkisApiToken', variable: 'JenkisApiToken'),
-                                    string(credentialsId:'REMOTE_BUILD_TOKEN', variable: 'REMOTE_BUILD_TOKEN')]) {
-                        sh "curl -u 'jenkins-bot:${JenkisApiToken}' -v -X POST 'https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/provision/job/program-service/buildWithParameters?AP_ARGO_ENV=qa&AP_ARGS_LINE=--set%20image.tag%3D${commit}&token=${REMOTE_BUILD_TOKEN}'"
-                    }
-                }
-            }
-        }
-    */
-
-        stage('Deploy to argoQA') {
-            when { branch 'feature/update-pipeline' }
-            steps {
-                script {
-                    commit = sh(returnStdout: true, script: 'git describe --always').trim()
-                }
                 build(job: "/ARGO/provision/program-service", parameters: [
                      [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'qa' ],
                      [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set image.tag=${commit}" ]
-                 ])
+                ])
             }
         }
 
     }
 
-    //post {
-    //    always {
-    //        junit "**/TEST-*.xml"
-    //   }
-    //}
+    post {
+        always {
+            junit "**/TEST-*.xml"
+       }
+    }
 }
