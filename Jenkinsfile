@@ -91,10 +91,10 @@ spec:
         }
 
         stage('Deploy to argo-qa') {
-            when { branch 'PR-104' }
+            when { branch 'master' }
             steps {
                 build(job: "/ARGO/provision/program-service", parameters: [
-                     [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'rere' ],
+                     [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'qa' ],
                      [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set image.tag=${commit}" ]
                 ])
             }
