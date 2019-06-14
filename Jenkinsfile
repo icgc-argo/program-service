@@ -111,8 +111,12 @@ spec:
     */
 
         stage('Deploy to argoQA') {
+            when { branch 'feature/update-pipeline' }
             steps {
-                build("/ARGO/provision/program-service")
+                build("/ARGO/provision/program-service", parameters: [
+                     [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'qa' ],
+                     [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', "--set image.tag=${commit}" ]
+                 ])
             }
         }
 
