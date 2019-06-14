@@ -40,13 +40,12 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.argo.program_service.UtilsTest.*;
 import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
-import static org.icgc.argo.program_service.UtilsTest.int32Value;
-import static org.icgc.argo.program_service.UtilsTest.membershipTypeValue;
-import static org.icgc.argo.program_service.UtilsTest.stringValue;
 
 @SpringBootTest
 @ActiveProfiles({ "test", "default" })
@@ -84,7 +83,7 @@ class EgoServiceIT {
   @BeforeAll
   void setUp() {
     egoService = new EgoService(repository, converter, client);
-    setUpUser();
+    testUpdateUser = setUpUser();
 
     val p = programService.getProgram("TestProgram");
     if (p.isPresent()) {
@@ -110,8 +109,13 @@ class EgoServiceIT {
   }
 
 
-  public void setUpUser(){
-    testUpdateUser = egoService.getEgoClient().createEgoUser(UPDATE_USER_TEST_EMAIL);
+  public EgoUser setUpUser(){
+    val user = egoService.getEgoClient().getUser(UPDATE_USER_TEST_EMAIL);
+    if (user.isPresent()) {
+      return user.get();
+
+    }
+    return egoService.getEgoClient().createEgoUser(UPDATE_USER_TEST_EMAIL);
   }
 
   @Test
@@ -122,8 +126,9 @@ class EgoServiceIT {
     // add user to COLLABORATOR group
     assertThat(egoService.joinProgram(UPDATE_USER_TEST_EMAIL, programEntity, UserRole.COLLABORATOR)).isTrue();
 
-    val groupBefore = egoService.getEgoClient().getGroupsByUserId(user.get().getId());
-    assertThat(groupBefore.count()).isEqualTo(1);
+    val groupBefore = egoService.getEgoClient().getGroupsByUserId(user.get().getId()).
+      collect(Collectors.toUnmodifiableList());
+    assertThat(groupBefore.size()).isEqualTo(1);
     groupBefore.forEach(group -> assertThat(group.getName()).isEqualTo("PROGRAM-TestShortName-COLLABORATOR"));
 
     // expected group is ADMIN group
@@ -133,21 +138,20 @@ class EgoServiceIT {
     val adminGroupId = egoService.getEgoClient().getGroupByName(adminGroupName).get().getId();
 
     // verify if user role is updated to ADMIN
-    val groupAfter = egoService.getEgoClient().getGroupsByUserId(user.get().getId());
-    assertThat(groupAfter.count()).isEqualTo(1);
+    val groupAfter = egoService.getEgoClient().getGroupsByUserId(user.get().getId()).collect(Collectors.toUnmodifiableList());
+    assertThat(groupAfter.size()).isEqualTo(1);
     groupAfter.forEach(group -> assertThat(group.getId()).isEqualTo(adminGroupId));
 
     // remove test user from admin group
     assertThat(egoService.leaveProgram(user.get().getId(), programEntity.getId())).isTrue();
 
     //verify if the user is removed from a admin group
-    val groupsLeft = egoService.getEgoClient().getGroupsByUserId(user.get().getId());
-    assertThat(groupsLeft.count()).isEqualTo(0);
+    val groupsLeft = egoService.getEgoClient().getGroupsByUserId(user.get().getId()).collect(Collectors.toUnmodifiableList());
+    assertThat(groupsLeft.size()).isEqualTo(0);
   }
 
   @Test
   void egoServiceInitialization() {
-    assertThat(ReflectionTestUtils.getField(egoService, "restTemplate")).isNotNull();
     assertThat(ReflectionTestUtils.getField(egoService, "egoPublicKey")).isNotNull();
   }
 

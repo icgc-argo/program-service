@@ -74,6 +74,7 @@ public class EgoService {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.programConverter = programConverter;
     this.egoClient = restClient;
+    setEgoPublicKey();
   }
 
   @Autowired
