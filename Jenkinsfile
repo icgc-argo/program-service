@@ -91,7 +91,7 @@ spec:
         }
 
         stage('Deploy to argo-qa') {
-            when { branch 'feature/update-pipeline' }
+            when { branch 'PR-104' }
             steps {
                 build(job: "/ARGO/provision/program-service", parameters: [
                      [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'rere' ],
