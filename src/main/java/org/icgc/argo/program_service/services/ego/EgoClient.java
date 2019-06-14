@@ -25,11 +25,12 @@ public interface EgoClient {
   Optional<EgoGroup> getGroupByName(String groupName);
 
   Optional<EgoUser> getUser(@Email String email);
+  EgoUser getUserById(UUID userId);
 
   Stream<EgoUser> getUsersByGroupId(UUID groupId);
+  Stream <EgoGroup> getGroupsByUserId(UUID userId);
 
   void deleteGroup(UUID egoGroupId);
-
   void deletePolicy(UUID policyId);
 
   Optional<EgoPolicy> getPolicyByName(String name);
@@ -37,7 +38,6 @@ public interface EgoClient {
   void removePolicyByName(String name);
 
   void addUserToGroup(UUID egoGroupId, UUID egoUserId);
-
   void removeUserFromGroup(UUID egoGroupId, UUID userId);
 
   boolean isMember(UUID groupId, String email);

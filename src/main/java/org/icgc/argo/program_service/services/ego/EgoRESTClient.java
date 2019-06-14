@@ -3,6 +3,8 @@ package org.icgc.argo.program_service.services.ego;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.Utils;
+import org.icgc.argo.program_service.converter.CommonConverter;
+import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.services.ego.model.entity.*;
 import org.icgc.argo.program_service.services.ego.model.exceptions.ConflictException;
 import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
@@ -33,15 +35,17 @@ public class EgoRESTClient implements EgoClient {
   private RestTemplate restTemplate;
   private final RetryTemplate lenientRetryTemplate;
   private final RetryTemplate retryTemplate;
-
+  private final CommonConverter commonConverter;
   public EgoRESTClient(
     RetryTemplate lenientRetryTemplate,
     RetryTemplate retryTemplate,
-    RestTemplate restTemplate
+    RestTemplate restTemplate,
+    CommonConverter commonConverter
     ) {
     this.lenientRetryTemplate = lenientRetryTemplate;
     this.retryTemplate = retryTemplate;
     this.restTemplate = restTemplate;
+    this.commonConverter = commonConverter;
   }
 
   @Override public RSAPublicKey getPublicKey() {
@@ -140,10 +144,25 @@ public class EgoRESTClient implements EgoClient {
     return getObject(format("/users?query=%s", email), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
   }
 
+  @Override
+  public EgoUser getUserById(UUID userId) {
+    val egoUser = getObject(format("/users/%s", userId),
+      new ParameterizedTypeReference<EgoCollection<EgoUser>>() {})
+      .orElseThrow(() -> {
+        throw new NotFoundException(format("User %s cannot be found.",
+          commonConverter.uuidToString(userId)));
+      });
+    return egoUser;
+  }
+
   @Override public Stream<EgoUser> getUsersByGroupId(UUID groupId) {
     return getObjects(format("/groups/%s/users", groupId), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
   }
 
+  @Override
+  public Stream <EgoGroup> getGroupsByUserId(UUID userId){
+    return getObjects(format("/users/%s/groups", userId), new ParameterizedTypeReference<EgoCollection<EgoGroup>>() {});
+  }
   @Override public void deleteGroup(UUID egoGroupId) {
     retryRunnable(() -> restTemplate.delete(format("/groups/%s", egoGroupId)));
   }

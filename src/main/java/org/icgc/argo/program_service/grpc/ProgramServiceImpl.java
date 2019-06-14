@@ -39,10 +39,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
+
 import java.util.Optional;
 import java.util.UUID;
+import java.util.ArrayList;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
@@ -190,6 +191,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
     val programId = request.getProgramId();
+
     List<User> users;
     try {
       users = programService.listUser(commonConverter.stringToUUID(programId));
@@ -197,6 +199,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onError(t);
       return;
     }
+
     val response = programConverter.usersToListUserResponse(users);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
@@ -211,6 +214,24 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     } catch(Throwable t) {
       responseObserver.onError(t);
       return;
+    }
+
+    responseObserver.onNext(Empty.getDefaultInstance());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void updateUser(UpdateUserRequest request, StreamObserver<Empty> responseObserver) {
+    val userId = commonConverter.stringToUUID(request.getUserId());
+    val role = request.getRole().getValue();
+    val programId = commonConverter.stringToUUID(request.getProgramId());
+    val shortname = commonConverter.unboxStringValue(request.getShortName());
+    try {
+      egoService.updateUserRole(userId, shortname, programId, role);
+    } catch (NotFoundException e){
+      responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (RuntimeException e){
+      responseObserver.onError(Status.UNKNOWN.withDescription(e.getMessage()).asRuntimeException());
     }
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();

@@ -28,6 +28,7 @@ import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-
+import org.springframework.test.util.ReflectionTestUtils;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,7 +58,6 @@ import static org.icgc.argo.program_service.UtilsTest.stringValue;
 class EgoServiceIT {
   @Autowired
   EgoRESTClient client;
-
   EgoService egoService;
 
   @Autowired
@@ -76,14 +76,15 @@ class EgoServiceIT {
   ProgramEntity programEntity;
 
   private static final String TEST_EMAIL = "d8660091@gmail.com";
+  private EgoUser testUpdateUser;
   private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
   private static final String COLLABORATOR_USER_EMAIL = "TestPS@dummy.com";
+  private static final String UPDATE_USER_TEST_EMAIL = "Test_update_user_PS@dummy.com";
 
   @BeforeAll
   void setUp() {
-    //val retryTemplate = new RetryTemplate();
-    //client = new EgoRESTClient(retryTemplate, retryTemplate, appProperties);
     egoService = new EgoService(repository, converter, client);
+    setUpUser();
 
     val p = programService.getProgram("TestProgram");
     if (p.isPresent()) {
@@ -108,6 +109,47 @@ class EgoServiceIT {
     this.programEntity = programService.createProgram(program, List.of());
   }
 
+
+  public void setUpUser(){
+    testUpdateUser = egoService.getEgoClient().createEgoUser(UPDATE_USER_TEST_EMAIL);
+  }
+
+  @Test
+  public void updateUser(){
+    val user = egoService.getEgoClient().getUser(UPDATE_USER_TEST_EMAIL);
+    assertThat(user.isPresent()).isTrue();
+
+    // add user to COLLABORATOR group
+    assertThat(egoService.joinProgram(UPDATE_USER_TEST_EMAIL, programEntity, UserRole.COLLABORATOR)).isTrue();
+
+    val groupBefore = egoService.getEgoClient().getGroupsByUserId(user.get().getId());
+    assertThat(groupBefore.count()).isEqualTo(1);
+    groupBefore.forEach(group -> assertThat(group.getName()).isEqualTo("PROGRAM-TestShortName-COLLABORATOR"));
+
+    // expected group is ADMIN group
+    val shortname = "TestShortName";
+    egoService.updateUserRole(user.get().getId(), shortname, programEntity.getId(), UserRole.ADMIN);
+    val adminGroupName = "PROGRAM-TestShortName-ADMIN";
+    val adminGroupId = egoService.getEgoClient().getGroupByName(adminGroupName).get().getId();
+
+    // verify if user role is updated to ADMIN
+    val groupAfter = egoService.getEgoClient().getGroupsByUserId(user.get().getId());
+    assertThat(groupAfter.count()).isEqualTo(1);
+    groupAfter.forEach(group -> assertThat(group.getId()).isEqualTo(adminGroupId));
+
+    // remove test user from admin group
+    assertThat(egoService.leaveProgram(user.get().getId(), programEntity.getId())).isTrue();
+
+    //verify if the user is removed from a admin group
+    val groupsLeft = egoService.getEgoClient().getGroupsByUserId(user.get().getId());
+    assertThat(groupsLeft.count()).isEqualTo(0);
+  }
+
+  @Test
+  void egoServiceInitialization() {
+    assertThat(ReflectionTestUtils.getField(egoService, "restTemplate")).isNotNull();
+    assertThat(ReflectionTestUtils.getField(egoService, "egoPublicKey")).isNotNull();
+  }
 
   @Test
   void getUser() {
@@ -151,7 +193,7 @@ class EgoServiceIT {
 
     val users = egoService.getUsersInGroup(programEntity.getId());
     users.forEach( user ->
-            assertTrue(ifUserExists(commonConverter.unboxStringValue(user.getEmail()), expectedUsers)));
+            assertTrue(ifUserExists(user.getEmail().getValue(), expectedUsers)));
 
     assertThat(egoService.leaveProgram(ADMIN_USER_EMAIL, programEntity.getId()))
             .as("ADMIN user is removed from TestProgram.").isTrue();
@@ -170,4 +212,5 @@ class EgoServiceIT {
   void cleanUp() {
     programService.removeProgram(this.programEntity);
   }
+
 }

@@ -19,14 +19,19 @@
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
+import org.icgc.argo.program_service.converter.CommonConverter;
+import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
+import org.icgc.argo.program_service.services.ego.EgoClient;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
+import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.support.RetryTemplate;
@@ -34,6 +39,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.interfaces.RSAPublicKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.UUID;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -48,17 +57,15 @@ import static org.mockito.Mockito.when;
 
 class EgoServiceTest {
   @Autowired RestTemplate restTemplate;
-  @Test
+
   void verifyKey() {
     val rsaPublicKey = (RSAPublicKey) Utils.getPublicKey(publickKey, "RSA");
     val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
-
     val retryTemplate = new RetryTemplate();
     val programConverter = mock(ProgramConverter.class);
     val egoClient = mock(EgoRESTClient.class);
     val egoService = new EgoService(programEgoGroupRepository, programConverter, egoClient);
     ReflectionTestUtils.setField(egoService,"egoPublicKey", rsaPublicKey);
-
     assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
     assertFalse(egoService.verifyToken(expiredToken).isPresent(), "Expired token should return empty ego token");
     assertFalse(egoService.verifyToken(wrongIssToken).isPresent(), "Wrong issuer token should return empty ego token");
@@ -126,4 +133,48 @@ class EgoServiceTest {
     verify(egoService1, times(1)).joinProgram(erroredEmail, mockProgramEntity, UserRole.ADMIN);
     verify(egoClient1, times(1)).createEgoUser(erroredEmail);
   }
+
+  @Test
+  public void update_user_role_success(){
+    // updating user role from ADMIN to COLLABORATOR
+    val egoService = mock(EgoService.class);
+    val egoClient = mock(EgoClient.class);
+    ReflectionTestUtils.setField(egoService,"egoClient", egoClient);
+
+    val userId = UUID.randomUUID();
+    val email = "raptors@gmail.com";
+    val newRole = UserRole.COLLABORATOR;
+
+    val programId = UUID.randomUUID();
+    val shortname = "WeTheNorth";
+    val mockProgramEntity = new ProgramEntity().setId(programId).setShortName(shortname);
+
+    val currentGroup = new EgoGroup();
+    currentGroup.setId(UUID.randomUUID());
+    currentGroup.setName("WeTheNorth-ADMIN");
+    val groupList = new ArrayList<EgoGroup>();
+    groupList.add(currentGroup);
+    val groupStream=groupList.stream();
+
+    val collabGroup = new EgoGroup();
+    val collabGroupId = UUID.randomUUID();
+    collabGroup.setId(collabGroupId);
+    collabGroup.setName("WeTheNorth-COLLABORATOR");
+
+    val mockProgramEgoGroup = Optional.of(new ProgramEgoGroupEntity());
+    mockProgramEgoGroup.get().setEgoGroupId(collabGroupId);
+    when(egoService.getEgoClient()).thenReturn(egoClient);
+    when(egoClient.getUserById(userId)).thenReturn(
+            new EgoUser().setStatus("APPROVED").setType("USER").setEmail(email).setId(userId));
+    when(egoClient.getGroupsByUserId(userId)).thenReturn(groupStream);
+    when(egoService.isCorrectGroupName(currentGroup, shortname)).thenReturn(true);
+    when(egoService.isSameRole(newRole, currentGroup.getName())).thenReturn(false);
+    when(egoService.getProgramEgoGroup(programId, newRole)).thenReturn(mockProgramEgoGroup.get());
+
+    doCallRealMethod().when(egoService).updateUserRole(userId, shortname, programId, newRole);
+    egoService.updateUserRole(userId, shortname, programId, newRole);
+
+    verify(egoClient, times(1)).addUserToGroup(collabGroupId, userId);
+  }
+
 }

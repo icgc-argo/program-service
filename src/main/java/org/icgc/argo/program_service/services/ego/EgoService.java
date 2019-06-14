@@ -24,12 +24,14 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
@@ -46,6 +48,7 @@ import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import java.security.interfaces.RSAPublicKey;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -53,11 +56,11 @@ import static java.lang.String.format;
 import static org.icgc.argo.program_service.proto.UserRole.ADMIN;
 import static org.icgc.argo.program_service.services.ego.GroupName.createProgramGroupName;
 
-//TODO [rtisma]: refactor into service and client
 @Slf4j
 @Service
 public class EgoService {
-  private final EgoRESTClient egoClient;
+  @Getter
+  private final EgoClient egoClient;
   private final ProgramEgoGroupRepository programEgoGroupRepository;
   private final ProgramConverter programConverter;
   private RSAPublicKey egoPublicKey;
@@ -66,7 +69,7 @@ public class EgoService {
   public EgoService(
     @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
     @NonNull ProgramConverter programConverter,
-    @NonNull EgoRESTClient restClient
+    @NonNull EgoClient restClient
   ) {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.programConverter = programConverter;
@@ -156,6 +159,59 @@ public class EgoService {
 
   private EgoGroup ensureGroupExists(ProgramEntity program, UserRole role) {
     return egoClient.ensureGroupExists(createProgramGroupName(program.getShortName(), role).toString());
+  }
+
+  public void updateUserRole(@NonNull UUID userId, @NonNull String shortname, @NonNull UUID programId,
+    @NonNull UserRole role) {
+    val groups = egoClient.getGroupsByUserId(userId).collect(Collectors.toUnmodifiableList());
+    NotFoundException.checkNotFound(!groups.isEmpty(), format("No groups found for user id %s.", userId));
+
+    groups.stream()
+      .filter(g -> isCorrectGroupName(g, shortname))
+      .forEach(g -> processUserWithGroup(role, g, userId));
+
+    val programEgoGroup = getProgramEgoGroup(programId, role);
+    val egoGroupId = programEgoGroup.getEgoGroupId();
+    egoClient.addUserToGroup(egoGroupId, userId);
+  }
+
+  void processUserWithGroup(UserRole role, EgoGroup group, UUID userId) {
+    if (!isSameRole(role, group.getName())) {
+      egoClient.removeUserFromGroup(group.getId(), userId);
+    } else {
+      log.error("Cannot update user role to {}, new role is the same as current role.", role);
+    }
+  }
+
+  public boolean isCorrectGroupName(EgoGroup g, String shortname) {
+    return g.getName().toLowerCase().contains(shortname.toLowerCase());
+  }
+
+  public ProgramEgoGroupEntity getProgramEgoGroup(UUID programId, UserRole role) {
+    return programEgoGroupRepository.findByProgramIdAndRole(programId, role)
+      .orElseThrow(() -> {
+        throw new NotFoundException(format("Cannot find ProgramEgoGroupEntity for programId %s and user role %s. ",
+          programId, role.toString()));
+      });
+  }
+
+  public boolean isSameRole(@NonNull UserRole role, @NonNull String groupName) throws RuntimeException {
+    UserRole currentRole = UserRole.UNRECOGNIZED;
+    if (groupName.contains(UserRole.COLLABORATOR.toString())) {
+      currentRole = UserRole.COLLABORATOR;
+    } else if (groupName.contains(UserRole.SUBMITTER.toString())) {
+      currentRole = UserRole.SUBMITTER;
+    } else if (groupName.contains(UserRole.CURATOR.toString())) {
+      currentRole = UserRole.CURATOR;
+    } else if (groupName.contains(ADMIN.toString())) {
+      currentRole = ADMIN;
+    } else if (groupName.contains(UserRole.BANNED.toString())) {
+      currentRole = UserRole.BANNED;
+    } else {
+      log.error("Unrecognized role {}.", currentRole.toString());
+      throw new IllegalArgumentException("Unrecognized role!");
+    }
+    return currentRole.toString().equalsIgnoreCase(role.toString());
   }
 
   private void saveGroupIdForProgramAndRole(ProgramEntity program, UserRole role, UUID groupId) {
