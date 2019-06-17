@@ -27,14 +27,14 @@ import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
-import org.mapstruct.InheritConfiguration;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
+import lombok.val;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ProgramConverter {
@@ -48,43 +48,22 @@ public interface ProgramConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
-  @Mapping(target = "egoGroups", ignore = true)
+  //@Mapping(target = "egoGroups", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "shortName", ignore = true)
-  @Mapping(target = "egoGroups", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
-  @Mapping(target = "id", source = "programId")
-  @Mapping(target = "shortName", ignore = true)
+  @Mapping(target = "id", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
-  @Mapping(target = "egoGroups", ignore = true)
+  //@Mapping(target = "egoGroups", ignore = true)
   ProgramEntity updateProgramRequestToProgramEntity(@NonNull UpdateProgramRequest request);
-
-  //  @AfterMapping
-  //  default void updateProgramRelationships(@MappingTarget ProgramEntity programEntity,
-  //    @NonNull UpdateProgramRequest request) {
-  //    cancersToCancerEntities(getCancerFromRequest(request))
-  //      .forEach(programEntity::associateCancer);
-  //
-  //    primarySitesToPrimarySiteEntities(getPrimarySiteFromRequest(request))
-  //      .forEach(programEntity::associatePrimarySite);
-  //  }
-
-  //  @AfterMapping
-  //  default void updateProgramRelationships(@NonNull Program p, @MappingTarget ProgramEntity programEntity) {
-  //    cancersToCancerEntities(programToCancers(p))
-  //      .forEach(programEntity::associateCancer);
-  //
-  //    primarySitesToPrimarySiteEntities(programToPrimarySites(p))
-  //      .forEach(programEntity::associatePrimarySite);
-  //  }
 
   /**
    * To Proto Converters
@@ -110,8 +89,12 @@ public interface ProgramConverter {
   @Mapping(target = "primarySitesList", ignore = true)
   Program programEntityToProgram(ProgramEntity entity);
 
-  default String programCancersToString(ProgramCancer programCancer) {
-    return programCancer.getCancer().getName();
+  @AfterMapping
+  default Program updateProgramFromEntity(ProgramEntity entity, Program program) {
+    return program.toBuilder().
+      addAllCancerTypes(entity.listCancerTypes()).
+      addAllPrimarySites(entity.listPrimarySites()).
+      build();
   }
 
   @InheritConfiguration
@@ -135,9 +118,11 @@ public interface ProgramConverter {
   @Mapping(target = "mergeUpdatedAt", ignore = true)
   UpdateProgramResponse programEntityToUpdateProgramResponse(ProgramEntity p);
 
-  default ProgramDetails map(ProgramEntity value) {
+  default ProgramDetails ProgramEntityToProgramDetails(ProgramEntity value) {
+    val p = programEntityToProgram(value);
+    val program = updateProgramFromEntity(value,p);
     return ProgramDetails.newBuilder().
-      setProgram(programEntityToProgram(value)).
+      setProgram(program).
       setMetadata(programEntityToMetadata(value)).
       build();
   }
@@ -204,6 +189,9 @@ public interface ProgramConverter {
       .setInviteId(StringValue.of(inviteId.toString()))
       .build();
   }
+
+  @Mapping(target= "programCancers", ignore = true)
+  CancerEntity cloneCancerEntity(CancerEntity c);
 
   /**
    * JoinEntity Converters

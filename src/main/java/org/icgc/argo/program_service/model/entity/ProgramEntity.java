@@ -35,11 +35,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
 import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
 @Entity
 @Table(name = Tables.PROGRAM)
@@ -111,10 +111,10 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-          mappedBy = ProgramCancer.Fields.program,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.EAGER,
-          orphanRemoval = true
+    mappedBy = ProgramCancer.Fields.program,
+    cascade = CascadeType.ALL,
+    fetch = FetchType.LAZY,
+    orphanRemoval = true
   )
   private Set<ProgramCancer> programCancers = new TreeSet<>();
 
@@ -123,33 +123,33 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @OneToMany(
     mappedBy = ProgramPrimarySite.Fields.program,
     cascade = CascadeType.ALL,
-    fetch = FetchType.EAGER,
-    orphanRemoval = true
-  )
-  private Set<ProgramPrimarySite> programPrimarySites = new TreeSet<>();
-
-  @EqualsAndHashCode.Exclude
-  @ToString.Exclude
-  @OneToMany(
-    mappedBy = ProgramEgoGroupEntity.Fields.program,
-    cascade = CascadeType.ALL,
     fetch = FetchType.LAZY,
     orphanRemoval = true
   )
+  private Set<ProgramPrimarySite> programPrimarySites = new TreeSet<>();
+//  @EqualsAndHashCode.Exclude
+//  @ToString.Exclude
+//  @OneToMany(
+//    mappedBy = ProgramEgoGroupEntity.Fields.program,
+//    cascade = CascadeType.ALL,
+//    fetch = FetchType.LAZY,
+//    orphanRemoval = true
+//  )
+//
+//  private Set<ProgramEgoGroupEntity> egoGroups = newHashSet();
 
-  private Set<ProgramEgoGroupEntity> egoGroups = newHashSet();
-
-  public void associateEgoGroup(@NonNull ProgramEgoGroupEntity e) {
-    this.getEgoGroups().add(e);
-    e.setProgram(this);
-  }
+//  public void associateEgoGroup(@NonNull ProgramEgoGroupEntity e) {
+//    this.getEgoGroups().add(e);
+//    e.setProgram(this);
+//  }
 
   public void associateCancer(@NonNull CancerEntity c) {
     val pc = createProgramCancer(this, c);
 
     pc.ifPresent(programCancer -> {
       this.getProgramCancers().add(programCancer);
-      c.getProgramCancers().add(programCancer);
+      c.addProgramCancer(programCancer);
+      //c.getProgramCancers().add(programCancer);
     });
   }
 
@@ -162,10 +162,10 @@ public class ProgramEntity implements NameableEntity<UUID> {
   }
 
   public List<String> listCancerTypes() {
-    return getProgramCancers().stream().map(c->c.getCancer().getName()).collect(Collectors.toList());
+    return mapToList(getProgramCancers(), c -> c.getCancer().getName());
   }
 
   public List<String> listPrimarySites() {
-    return getProgramCancers().stream().map(p->p.getCancer().getName()).collect(Collectors.toList());
+    return mapToList(getProgramPrimarySites(), p -> p.getPrimarySite().getName());
   }
 }

@@ -151,7 +151,7 @@ class ProgramServiceIT {
 
 
   public void test_removeProgram(ProgramEntity programEntity) {
-    egoService.cleanUpProgram(programEntity);
+    egoService.cleanUpProgram(programEntity.getShortName());
     programService.removeProgram(programEntity.getShortName());
 
     // Groups are removed

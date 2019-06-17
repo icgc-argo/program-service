@@ -84,7 +84,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     }
 
     try {
-      egoService.setUpProgram(programEntity, adminEmails);
+      egoService.setUpProgram(programEntity.getShortName(), adminEmails);
     } catch (Throwable t) {
       responseObserver.onError(status(t));
       return;
@@ -107,13 +107,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       return;
     }
 
-    val program = programConverter.programEntityToProgram(programEntity);
-
-    val programDetails = ProgramDetails.newBuilder().
-      setProgram(program).
-      setMetadata(programConverter.programEntityToMetadata(programEntity)).
-      build();
-
+    val programDetails = programConverter.ProgramEntityToProgramDetails(programEntity);
     val response = GetProgramResponse.newBuilder().setProgram(programDetails).build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();
@@ -204,7 +198,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onError(t);
       return;
     }
+
     val listProgramsResponse = programConverter.programEntitiesToListProgramsResponse(programEntities);
+
     responseObserver.onNext(listProgramsResponse);
     responseObserver.onCompleted();
   }
@@ -225,7 +221,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     List<User> users;
 
     try {
-      users = egoService.getUsersInGroup(programId);
+      users = egoService.getUsersInGroup(shortName);
     } catch (Throwable t) {
       responseObserver.onError(status(t));
       return;
@@ -243,8 +239,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val email = request.getUserEmail().getValue();
 
     try {
-      val program_id = programService.getProgram(programName).getId();
-      egoService.leaveProgram(email, program_id);
+      //val program_id = programService.getProgram(programName).getId();
+      egoService.leaveProgram(email, programName);
     } catch (Throwable throwable) {
       responseObserver.onError(status(throwable));
       return;
@@ -270,11 +266,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
-    ProgramEntity programEntity;
     val programName = request.getProgramShortName().getValue();
     try {
-      programEntity = programService.getProgram(programName);
-      egoService.cleanUpProgram(programEntity);
+      egoService.cleanUpProgram(programName);
       programService.removeProgram(request.getProgramShortName().getValue());
     } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
       responseObserver.onError(Status.NOT_FOUND.withDescription(getExceptionMessage(e)).asRuntimeException());

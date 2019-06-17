@@ -149,7 +149,7 @@ class EgoServiceIT {
     assertThat(user.isPresent()).isTrue();
 
     // add user to COLLABORATOR group
-    assertThat(egoService.joinProgram(UPDATE_USER_TEST_EMAIL, programEntity, UserRole.COLLABORATOR)).isTrue();
+    assertThat(egoService.joinProgram(UPDATE_USER_TEST_EMAIL, programEntity.getShortName(), UserRole.COLLABORATOR)).isTrue();
 
     val groupBefore = egoService.getEgoClient().getGroupsByUserId(user.get().getId()).
       collect(Collectors.toUnmodifiableList());
@@ -169,7 +169,7 @@ class EgoServiceIT {
     groupAfter.forEach(group -> assertThat(group.getId()).isEqualTo(adminGroupId));
 
     // remove test user from admin group
-    assertThat(egoService.leaveProgram(user.get().getId(), programEntity.getId())).isTrue();
+    assertThat(egoService.leaveProgram(user.get().getId(), programEntity.getShortName())).isTrue();
 
     //verify if the user is removed from a admin group
     val groupsLeft = egoService.getEgoClient().getGroupsByUserId(user.get().getId())
@@ -194,7 +194,7 @@ class EgoServiceIT {
 
   @Test
   void joinAndLeaveProgram() {
-    val result = egoService.joinProgram(TEST_EMAIL, programEntity, UserRole.ADMIN);
+    val result = egoService.joinProgram(TEST_EMAIL, programEntity.getShortName(), UserRole.ADMIN);
     assertThat(result).isTrue();
 
     val user = client.getUser(TEST_EMAIL);
@@ -203,7 +203,7 @@ class EgoServiceIT {
     val groupId = client.getGroupByName("PROGRAM-TestShortName-ADMIN").get().getId();
     assertThat(client.isMember(groupId, TEST_EMAIL)).isTrue();
 
-    egoService.leaveProgram(TEST_EMAIL, programEntity.getId());
+    egoService.leaveProgram(TEST_EMAIL, programEntity.getShortName());
     assertThat(client.isMember(groupId, TEST_EMAIL)).isFalse();
   }
 
@@ -216,19 +216,19 @@ class EgoServiceIT {
     val adminGroupId = client.getGroupByName("PROGRAM-TestShortName-ADMIN").get().getId();
     val collaboratorGroupId = client.getGroupByName("PROGRAM-TestShortName-COLLABORATOR").get().getId();
 
-    val adminJoin = egoService.joinProgram(ADMIN_USER_EMAIL, programEntity, UserRole.ADMIN);
+    val adminJoin = egoService.joinProgram(ADMIN_USER_EMAIL, programEntity.getShortName(), UserRole.ADMIN);
     assertThat(adminJoin).as("Can add ADMIN user to TestProgram.").isTrue();
 
-    val collaboratorJoin = egoService.joinProgram(COLLABORATOR_USER_EMAIL, programEntity, UserRole.COLLABORATOR);
+    val collaboratorJoin = egoService.joinProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName(), UserRole.COLLABORATOR);
     assertThat(collaboratorJoin).as("Can add COLLABORATOR user to TestProgram.").isTrue();
 
-    val users = egoService.getUsersInGroup(programEntity.getId());
+    val users = egoService.getUsersInGroup(programEntity.getShortName());
     users.forEach(user ->
       assertTrue(ifUserExists(user.getEmail().getValue(), expectedUsers)));
 
-    assertThat(egoService.leaveProgram(ADMIN_USER_EMAIL, programEntity.getId()))
+    assertThat(egoService.leaveProgram(ADMIN_USER_EMAIL, programEntity.getShortName()))
       .as("ADMIN user is removed from TestProgram.").isTrue();
-    assertThat(egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getId()))
+    assertThat(egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName()))
       .as("COLLABORATOR user is removed from TestProgram.").isTrue();
 
     assertThat(client.isMember(adminGroupId, ADMIN_USER_EMAIL)).isFalse();
@@ -243,7 +243,7 @@ class EgoServiceIT {
   void cleanUp() {
     val ego = egoService.getEgoClient();
     try {
-      egoService.cleanUpProgram(this.programEntity);
+      egoService.cleanUpProgram(this.programEntity.getShortName());
       programService.removeProgram(this.programEntity.getShortName());
     } catch (Throwable throwable) {
       System.err.println("Remove program threw" + throwable.getMessage());

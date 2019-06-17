@@ -22,9 +22,7 @@ import io.grpc.Status;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.converter.ProgramConverterImpl;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -32,28 +30,24 @@ import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.proto.Program;
-import org.icgc.argo.program_service.repositories.CancerRepository;
-import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
-import org.icgc.argo.program_service.repositories.ProgramRepository;
+import org.icgc.argo.program_service.repositories.*;
 import org.icgc.argo.program_service.repositories.query.CancerSpecification;
 import org.icgc.argo.program_service.repositories.query.PrimarySiteSpecification;
 import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
-import org.icgc.argo.program_service.services.ego.EgoService;
+import org.icgc.argo.program_service.utils.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.mail.MailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
+import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
 import static org.icgc.argo.program_service.utils.CollectionUtils.*;
 import static org.icgc.argo.program_service.utils.EntityService.getManyEntities;
 
@@ -69,18 +63,23 @@ public class ProgramService {
   private final CancerRepository cancerRepository;
   private final PrimarySiteRepository primarySiteRepository;
   private final ProgramConverter programConverter;
-
+  private final ProgramCancerRepository programCancerRepository;
+  private final ProgramPrimarySiteRepository programPrimarySiteRepository;
   @Autowired
   public ProgramService(
     @NonNull ProgramRepository programRepository,
     @NonNull CancerRepository cancerRepository,
     @NonNull PrimarySiteRepository primarySiteRepository,
-    @NonNull ProgramConverter programConverter
-    ) {
+    @NonNull ProgramConverter programConverter,
+    @NonNull ProgramCancerRepository programCancerRepository,
+    @NonNull ProgramPrimarySiteRepository programPrimarySiteRepository
+  ) {
     this.programRepository = programRepository;
     this.cancerRepository = cancerRepository;
     this.primarySiteRepository = primarySiteRepository;
     this.programConverter = programConverter;
+    this.programCancerRepository = programCancerRepository;
+    this.programPrimarySiteRepository = programPrimarySiteRepository;
   }
 
   public ProgramEntity getProgram(@NonNull String name) {
@@ -92,10 +91,14 @@ public class ProgramService {
     }
     val program = search.get();
     val uuid = program.getId();
-    val primarySiteList = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(uuid));
-    val cancerList = cancerRepository.findAll(CancerSpecification.containsProgram(uuid));
-    primarySiteList.forEach(program::associatePrimarySite);
-    cancerList.forEach(program::associateCancer);
+    val primarySites = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(uuid));
+    val cancers = cancerRepository.findAll(CancerSpecification.containsProgram(uuid));
+
+    List<ProgramCancer> programCancers = mapToList(cancers, x -> createProgramCancer(program, x).get());
+    List<ProgramPrimarySite> programPrimarySites = mapToList(primarySites, x -> createProgramPrimarySite(program, x).get());
+    program.setProgramCancers(new TreeSet<>(programCancers));
+    program.setProgramPrimarySites(new TreeSet<>(programPrimarySites));
+
     return program;
   }
 
@@ -108,20 +111,18 @@ public class ProgramService {
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
 
-    programRepository.save(programEntity);
-    val cancers = getCancers(program.getCancerTypesList());
-    val primarySites = getPrimarySites(program.getPrimarySitesList());
+    val p = programRepository.save(programEntity);
 
-    cancers.forEach(programEntity::associateCancer);
-    primarySites.forEach(programEntity::associatePrimarySite);
+    val cancers = cancerRepository.findAllByNameIn(program.getCancerTypesList());
+    val primarySites = primarySiteRepository.findAllByNameIn(program.getPrimarySitesList());
+
+    List<ProgramCancer> programCancers = mapToList(cancers, x -> createProgramCancer(p, x).get());
+    List<ProgramPrimarySite> programPrimarySites = mapToList(primarySites, x -> createProgramPrimarySite(p, x).get());
+
+    programCancerRepository.saveAll(programCancers);
+    programPrimarySiteRepository.saveAll(programPrimarySites);
 
     return programEntity;
-  }
-
-  private List<CancerEntity> getCancers(List<String> cancerTypesList) {
-    return cancerTypesList.stream().
-      map(this::getCancer).
-      collect(Collectors.toList());
   }
 
   private List<PrimarySiteEntity> getPrimarySites(List<String> primarySitesList) {
@@ -133,13 +134,15 @@ public class ProgramService {
   public ProgramEntity updateProgram(@NonNull ProgramEntity updatingProgram)
     throws NotFoundException, EmptyResultDataAccessException {
     val programToUpdate = getProgram(updatingProgram.getShortName());
-
+    val id = programToUpdate.getId();
     //update associations
     processCancers(programToUpdate, updatingProgram);
     processPrimarySites(programToUpdate, updatingProgram);
 
     // update basic info program
     programConverter.updateProgram(updatingProgram, programToUpdate);
+
+    programToUpdate.setId(id);
     programRepository.save(programToUpdate);
     return programToUpdate;
   }
@@ -192,10 +195,11 @@ public class ProgramService {
   }
 
   public List<ProgramEntity> listPrograms() {
-    return programRepository.findAll(new ProgramSpecificationBuilder()
+    val programs= programRepository.findAll(new ProgramSpecificationBuilder()
       .setFetchCancers(true)
       .setFetchPrimarySites(true)
       .listAll());
+    return List.copyOf(new LinkedHashSet<ProgramEntity>(programs));
   }
 
 }

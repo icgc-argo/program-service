@@ -95,20 +95,19 @@ message CreateProgramResponse {
 }
 
 message UpdateProgramRequest {
-  google.protobuf.StringValue request_id = 1;
-  google.protobuf.StringValue program_id = 2;
-  google.protobuf.StringValue description = 3;
-  google.protobuf.StringValue name = 4;
-  MembershipTypeValue membership_type = 5;
-  google.protobuf.Int32Value commitment_donors = 6;
-  google.protobuf.Int32Value submitted_donors = 7;
-  google.protobuf.Int32Value genomic_donors = 8;
-  google.protobuf.StringValue website = 9;
-  google.protobuf.StringValue institutions = 10;
-  google.protobuf.StringValue countries = 11;
-  google.protobuf.StringValue regions = 12;
-  repeated string cancer_types = 13;
-  repeated string primary_sites = 14;
+  google.protobuf.StringValue short_name = 1;
+  google.protobuf.StringValue description = 2;
+  google.protobuf.StringValue name = 3;
+  MembershipTypeValue membership_type = 4;
+  google.protobuf.Int32Value commitment_donors = 5;
+  google.protobuf.Int32Value submitted_donors = 6;
+  google.protobuf.Int32Value genomic_donors = 7;
+  google.protobuf.StringValue website = 8;
+  google.protobuf.StringValue institutions = 9;
+  google.protobuf.StringValue countries = 10;
+  google.protobuf.StringValue regions = 11;
+  repeated string cancer_types = 12;
+  repeated string primary_sites = 13;
 }
 
 message UpdateProgramResponse {

@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SqlFields {
+  public static final String THING="thing";
 
   public static final String ID = "id";
   public static final String SHORTNAME = "short_name";

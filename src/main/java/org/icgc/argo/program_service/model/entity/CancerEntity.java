@@ -20,6 +20,7 @@ package org.icgc.argo.program_service.model.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
@@ -68,5 +69,9 @@ public class CancerEntity implements NameableEntity<UUID> {
               fetch = FetchType.LAZY,
               orphanRemoval = true)
   private Set<ProgramCancer> programCancers = newHashSet();
+
+  public void addProgramCancer(@NonNull ProgramCancer programCancer){
+    this.programCancers.add(programCancer);
+  }
 
 }

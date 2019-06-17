@@ -98,7 +98,7 @@ class InvitationServiceTest {
     val invitation = mock(JoinProgramInvite.class);
     when(invitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
     invitationService.acceptInvite(invitation.getId());
-    verify(egoService).joinProgram(invitation.getUserEmail(), invitation.getProgram(), invitation.getRole());
+    verify(egoService).joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
     verify(invitation).accept();
   }
 

@@ -48,8 +48,8 @@ public class ProgramEgoGroupEntity implements Comparable<ProgramEgoGroupEntity>{
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
-  @ManyToOne
-  private ProgramEntity program;
+  @Column(nullable = false, unique = true, updatable = false)
+  private String programShortName;
 
   @Column(nullable = false, updatable = false)
   @Enumerated(EnumType.STRING)

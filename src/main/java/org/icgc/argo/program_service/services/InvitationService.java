@@ -45,7 +45,7 @@ public class InvitationService {
       val i = invitation.get();
       i.accept();
       val email = invitation.get().getUserEmail();
-      egoService.joinProgram(email, i.getProgram(), i.getRole());
+      egoService.joinProgram(email, i.getProgram().getShortName(), i.getRole());
       invitationRepository.save(invitation.get());
       return true;
     } else {

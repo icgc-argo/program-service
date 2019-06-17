@@ -101,41 +101,41 @@ class EgoServiceTest {
     val erroredEmail = "some.error@example.com";
 
     // Define behaviour for existing user
-    when(egoService1.joinProgram(existingEmail, mockProgramEntity, UserRole.ADMIN)).thenReturn(true);
+    when(egoService1.joinProgram(existingEmail, mockProgramEntity.getShortName(), UserRole.ADMIN)).thenReturn(true);
 
     // Define behaviour for non-existing
-    when(egoService1.joinProgram(nonExistingEmail, mockProgramEntity, UserRole.ADMIN)).thenReturn(false, true);
+    when(egoService1.joinProgram(nonExistingEmail, mockProgramEntity.getShortName(), UserRole.ADMIN)).thenReturn(false, true);
     when(egoClient1.createEgoUser(nonExistingEmail))
       .thenReturn(new EgoUser().setStatus("APPROVED").setType("USER").setEmail(nonExistingEmail));
 
     // Define behaviour for errored user
-    when(egoService1.joinProgram(erroredEmail, mockProgramEntity, UserRole.ADMIN)).thenReturn(false, false);
+    when(egoService1.joinProgram(erroredEmail, mockProgramEntity.getShortName(), UserRole.ADMIN)).thenReturn(false, false);
     when(egoClient1.createEgoUser(erroredEmail))
       .thenThrow(new IllegalStateException(format("Could not create ego user for: %s", erroredEmail)));
 
     // Indicate the plan to call the real "initAdmin" MUT (method under test) that uses the internal mocked methods
-    doCallRealMethod().when(egoService1).initAdmin(existingEmail, mockProgramEntity);
-    doCallRealMethod().when(egoService1).initAdmin(nonExistingEmail, mockProgramEntity);
-    doCallRealMethod().when(egoService1).initAdmin(erroredEmail, mockProgramEntity);
+    doCallRealMethod().when(egoService1).initAdmin(existingEmail, mockProgramEntity.getShortName());
+    doCallRealMethod().when(egoService1).initAdmin(nonExistingEmail, mockProgramEntity.getShortName());
+    doCallRealMethod().when(egoService1).initAdmin(erroredEmail, mockProgramEntity.getShortName());
 
     // Actually call the MUTs
-    egoService1.initAdmin(existingEmail, mockProgramEntity);
-    egoService1.initAdmin(nonExistingEmail, mockProgramEntity);
+    egoService1.initAdmin(existingEmail, mockProgramEntity.getShortName());
+    egoService1.initAdmin(nonExistingEmail, mockProgramEntity.getShortName());
 
     assertThatExceptionOfType(IllegalStateException.class)
-      .isThrownBy(() -> egoService1.initAdmin(erroredEmail, mockProgramEntity))
+      .isThrownBy(() -> egoService1.initAdmin(erroredEmail, mockProgramEntity.getShortName()))
       .withMessageStartingWith("Could not create ego user");
 
     // Verify expected behaviour for existing user case
-    verify(egoService1, times(1)).joinProgram(existingEmail, mockProgramEntity, UserRole.ADMIN);
+    verify(egoService1, times(1)).joinProgram(existingEmail, mockProgramEntity.getShortName(), UserRole.ADMIN);
     verify(egoClient1, never()).createEgoUser(existingEmail);
 
     // Verify expected behaviour for non-existing user case
-    verify(egoService1, times(2)).joinProgram(nonExistingEmail, mockProgramEntity, UserRole.ADMIN);
+    verify(egoService1, times(2)).joinProgram(nonExistingEmail, mockProgramEntity.getShortName(), UserRole.ADMIN);
     verify(egoClient1, times(1)).createEgoUser(nonExistingEmail);
 
     // Verify expected behaviour for errored user case
-    verify(egoService1, times(1)).joinProgram(erroredEmail, mockProgramEntity, UserRole.ADMIN);
+    verify(egoService1, times(1)).joinProgram(erroredEmail, mockProgramEntity.getShortName(), UserRole.ADMIN);
     verify(egoClient1, times(1)).createEgoUser(erroredEmail);
   }
 
@@ -174,7 +174,7 @@ class EgoServiceTest {
     when(egoClient.getGroupsByUserId(userId)).thenReturn(groupStream);
     when(egoService.isCorrectGroupName(currentGroup, shortname)).thenReturn(true);
     when(egoService.isSameRole(newRole, currentGroup.getName())).thenReturn(false);
-    when(egoService.getProgramEgoGroup(programId, newRole)).thenReturn(mockProgramEgoGroup.get());
+    when(egoService.getProgramEgoGroup(shortname, newRole)).thenReturn(mockProgramEgoGroup.get());
 
     doCallRealMethod().when(egoService).updateUserRole(userId, shortname, programId, newRole);
     egoService.updateUserRole(userId, shortname, programId, newRole);
