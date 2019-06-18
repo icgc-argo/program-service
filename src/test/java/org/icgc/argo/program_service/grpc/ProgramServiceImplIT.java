@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
 // TODO: program service is already running at the phase of pre-integration-test, use the existing running 50051 port
 @RunWith(SpringRunner.class)
@@ -89,11 +90,11 @@ public class ProgramServiceImplIT {
     assertNull(programsObserver.thrown);
 
     val programList = programsObserver.result.getProgramsList();
+    val programs = mapToList(programList, p -> p.getProgram().toString());
 
-    val programs = programList.stream().map(p -> p.getProgram().toString()).
-      collect(Collectors.toUnmodifiableSet());
     assertEquals("Two programs", 2, programList.size());
-    assertThat(programs).contains(p1.toString(), p2.toString());
+    assertThat(programs).contains(p1.toString());
+    assertThat(programs).contains(p2.toString());
   }
 
   public Program buildProgram(String name,
@@ -118,9 +119,7 @@ public class ProgramServiceImplIT {
       .setGenomicDonors(Int32Value.of(genomicDonors))
       .setWebsite(StringValue.of(website))
       .setCountries(StringValue.of("Canada"))
-      .addCancerTypes("Blood cancer")
       .addCancerTypes("Brain cancer")
-      .addPrimarySites("Blood")
       .addPrimarySites("Brain")
       .build();
     return p;

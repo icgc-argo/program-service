@@ -269,6 +269,7 @@ public class EgoService {
       } catch (HttpClientErrorException | HttpServerErrorException e) {
         log.error("Cannot remove group {} in ego: {}", egoGroupId, e.getResponseBodyAsString());
       }
+      programEgoGroupRepository.delete(programEgoGroup);
     });
 
     //TODO: create mini ego client with selected functionality instead of copy multiple requests

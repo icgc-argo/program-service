@@ -20,6 +20,7 @@ package org.icgc.argo.program_service.services;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
@@ -41,9 +42,11 @@ import org.springframework.test.context.TestPropertySource;
 import java.util.List;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.setMaxElementsForPrinting;
 import static org.icgc.argo.program_service.UtilsTest.*;
 import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
 
+@Slf4j
 @SpringBootTest
 @ActiveProfiles({ "test", "default" })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -60,8 +63,6 @@ class ProgramServiceIT {
   ProgramEgoGroupRepository repository;
   @Autowired
   ProgramConverter converter;
-  @Autowired
-  ProgramService programService;
 
   @Autowired
   MailService mailService;
@@ -69,72 +70,34 @@ class ProgramServiceIT {
   @Autowired
   JoinProgramInviteRepository inviteRepository;
 
-  @Autowired
-  AppProperties appProperties;
-
-  @Autowired
-  CommonConverter commonConverter;
-
   private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
-  private static final String COLLABORATOR_USER_EMAIL = "TestPS@dummy.com";
-
+  private static final String name="TestProgramX";
   @BeforeAll
   void setUp() {
     egoService = new EgoService(repository, converter, client, mailService, inviteRepository);
 
-    ProgramEntity p=null;
     try {
-      p = programService.getProgram("TestProgram");
+      egoService.cleanUpProgram(name);
     } catch(Throwable t) {
-      if (!isNotFoundException(t)) {
-        throw t;
-      }
-
+      log.error(t.getMessage());
     }
-
-    if (p != null) {
-      test_removeProgram(p);
-    }
-  }
-
-  private boolean isNotFoundException(Throwable t) {
-    if (t instanceof StatusRuntimeException) {
-      if (((StatusRuntimeException) t).getStatus() == Status.NOT_FOUND) {
-        return true;
-      }
-    }
-    return false;
   }
 
 
   @Test
-  public void test_createProgram() {
-    val program = Program.newBuilder()
-        .setName(stringValue("TestProgram"))
-        .setShortName(stringValue("TestShortName"))
-        .setCommitmentDonors(int32Value(0))
-        .setGenomicDonors(int32Value(0))
-        .setSubmittedDonors(int32Value(0))
-        .setMembershipType(membershipTypeValue(ASSOCIATE))
-        .setWebsite(stringValue("https://example.com"))
-        .setCountries(stringValue("Canada"))
-        .setInstitutions(stringValue("oicr"))
-        .setRegions(stringValue("toronto"))
-        .setDescription(stringValue(""))
-        .build();
-
-    val programEntity = programService.createProgram(program);
+  public void test_setupProgram() {
+    egoService.setUpProgram(name, List.of(ADMIN_USER_EMAIL));
 
     // Policies are created
-    assertThat(client.getPolicyByName("PROGRAM-" + programEntity.getShortName()).isPresent()).isTrue();
-    assertThat(client.getPolicyByName("PROGRAMDATA-" + programEntity.getShortName()).isPresent()).isTrue();
+    assertThat(client.getPolicyByName("PROGRAM-" + name).isPresent()).isTrue();
+    assertThat(client.getPolicyByName("PROGRAMDATA-" + name).isPresent()).isTrue();
 
     for(UserRole role: UserRole.values()) {
       if (role == UserRole.UNRECOGNIZED) { continue; }
-      verifyRole(role, programEntity.getShortName());
+      verifyRole(role, name);
     }
 
-    test_removeProgram(programEntity);
+    test_removeProgram(name);
   }
 
   void verifyRole(UserRole role, String shortName) {
@@ -150,19 +113,25 @@ class ProgramServiceIT {
   }
 
 
-  public void test_removeProgram(ProgramEntity programEntity) {
-    egoService.cleanUpProgram(programEntity.getShortName());
-    programService.removeProgram(programEntity.getShortName());
+  public void test_removeProgram(String name) {
+    egoService.cleanUpProgram(name);
+    Throwable throwable=null;
+    try {
+      egoService.getProgramEgoGroup(name, UserRole.ADMIN);
+    } catch(Throwable t) {
+      throwable = t;
+    }
+    assertThat(throwable).isNotNull();
 
     // Groups are removed
-    assertThat(client.getGroupByName("PROGRAM-TestShortName-BANNED").isPresent()).isFalse();
-    assertThat(client.getGroupByName("PROGRAM-TestShortName-CURATOR").isPresent()).isFalse();
-    assertThat(client.getGroupByName("PROGRAM-TestShortName-COLLABORATOR").isPresent()).isFalse();
-    assertThat(client.getGroupByName("PROGRAM-TestShortName-SUBMITTER").isPresent()).isFalse();
-    assertThat(client.getGroupByName("PROGRAM-TestShortName-ADMIN").isPresent()).isFalse();
+    assertThat(client.getGroupByName("PROGRAM-" + name + "-BANNED").isPresent()).isFalse();
+    assertThat(client.getGroupByName("PROGRAM-" + name + "-CURATOR").isPresent()).isFalse();
+    assertThat(client.getGroupByName("PROGRAM-" + name + "-COLLABORATOR").isPresent()).isFalse();
+    assertThat(client.getGroupByName("PROGRAM-" + name + "-SUBMITTER").isPresent()).isFalse();
+    assertThat(client.getGroupByName("PROGRAM-" + name + "-ADMIN").isPresent()).isFalse();
 
     // Policies are removed
-    assertThat(client.getPolicyByName("PROGRAM-" + programEntity.getShortName()).isPresent()).isFalse();
-    assertThat(client.getPolicyByName("PROGRAMDATA-" + programEntity.getShortName()).isPresent()).isFalse();
+    assertThat(client.getPolicyByName("PROGRAM-" + name).isPresent()).isFalse();
+    assertThat(client.getPolicyByName("PROGRAMDATA-" + name).isPresent()).isFalse();
   }
 }
