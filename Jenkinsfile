@@ -69,23 +69,9 @@ spec:
                     }
 
                     // DNS error if --network is default
-                    sh "docker build --network=host . -t overture/program-service:${commit}"
+                    sh "docker build --network=host . -t icgcargo/program-service:${commit}"
 
-                    sh "docker push overture/program-service:${commit}"
-                }
-            }
-        }
-
-        stage('Deploy qa - deprecated') {
-            when { branch 'master' }
-            steps {
-                container('helm') {
-                    withCredentials([file(credentialsId:'4ed1e45c-b552-466b-8f86-729402993e3b', variable: 'KUBECONFIG')]) {
-                        sh 'helm init --client-only'
-                        sh 'helm ls'
-                        sh 'helm repo add argo  https://icgc-argo.github.io/charts/'
-                        sh "helm upgrade program-service-qa argo/program-service --reuse-values --set-string image.tag=${commit}"
-                    }
+                    sh "docker push icgcargo/program-service:${commit}"
                 }
             }
         }
