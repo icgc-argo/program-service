@@ -18,6 +18,7 @@
 
 package org.icgc.argo.program_service.services;
 
+import lombok.NonNull;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.converter.CommonConverter;
@@ -30,9 +31,7 @@ import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.UserRole;
-import org.icgc.argo.program_service.repositories.CancerRepository;
-import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
-import org.icgc.argo.program_service.repositories.ProgramRepository;
+import org.icgc.argo.program_service.repositories.*;
 
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.jupiter.api.Test;
@@ -83,13 +82,10 @@ class ProgramServiceTest {
   private ProgramConverter programConverter;
 
   @Mock
-  private EgoService egoService;
+  private ProgramCancerRepository programCancerRepository;
 
   @Mock
-  private MailService mailService;
-
-  @Mock
-  private CommonConverter commonConverter;
+  private ProgramPrimarySiteRepository programPrimarySiteRepository;
 
   void setup() {
     program = Program.newBuilder().
@@ -105,7 +101,7 @@ class ProgramServiceTest {
   void setupCancerRepository() {
     for (val name: List.of("Blood cancer", "Brain cancer")) {
       val entity = createCancerEntity(name);
-      when(cancerRepository.getCancerByName(name)).thenReturn(entity);
+     // when(cancerRepository.getCancerByName(name)).thenReturn(entity);
     }
 
     ReflectionTestUtils.setField(programService, "cancerRepository", cancerRepository);
@@ -114,7 +110,7 @@ class ProgramServiceTest {
   void setupPrimarySiteRepository() {
     for (val name: List.of("Blood", "Brain")) {
       val entity = createPrimarySite(name);
-        when(primarySiteRepository.getPrimarySiteByName(name)).thenReturn(entity);
+      //  when(primarySiteRepository.getPrimarySiteByName(name)).thenReturn(entity);
     }
 
     ReflectionTestUtils.setField(programService, "primarySiteRepository", primarySiteRepository);

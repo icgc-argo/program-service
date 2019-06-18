@@ -118,8 +118,8 @@ public class ProgramServiceImplIT {
       .setGenomicDonors(Int32Value.of(genomicDonors))
       .setWebsite(StringValue.of(website))
       .setCountries(StringValue.of("Canada"))
-      .addCancerTypes("Blood_cancer")
-      .addCancerTypes("Brain_cancer")
+      .addCancerTypes("Blood cancer")
+      .addCancerTypes("Brain cancer")
       .addPrimarySites("Blood")
       .addPrimarySites("Brain")
       .build();
