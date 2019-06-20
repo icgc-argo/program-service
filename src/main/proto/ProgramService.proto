@@ -95,19 +95,7 @@ message CreateProgramResponse {
 }
 
 message UpdateProgramRequest {
-  google.protobuf.StringValue short_name = 1;
-  google.protobuf.StringValue description = 2;
-  google.protobuf.StringValue name = 3;
-  MembershipTypeValue membership_type = 4;
-  google.protobuf.Int32Value commitment_donors = 5;
-  google.protobuf.Int32Value submitted_donors = 6;
-  google.protobuf.Int32Value genomic_donors = 7;
-  google.protobuf.StringValue website = 8;
-  google.protobuf.StringValue institutions = 9;
-  google.protobuf.StringValue countries = 10;
-  google.protobuf.StringValue regions = 11;
-  repeated string cancer_types = 12;
-  repeated string primary_sites = 13;
+  Program program = 1;
 }
 
 message UpdateProgramResponse {

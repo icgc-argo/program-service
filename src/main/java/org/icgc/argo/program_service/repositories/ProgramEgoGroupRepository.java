@@ -18,9 +18,8 @@
 
 package org.icgc.argo.program_service.repositories;
 
-import org.icgc.argo.program_service.proto.Program;
-import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
+import org.icgc.argo.program_service.proto.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -29,5 +28,6 @@ import java.util.UUID;
 
 public interface ProgramEgoGroupRepository extends JpaRepository<ProgramEgoGroupEntity, UUID> {
   Optional<ProgramEgoGroupEntity> findByProgramShortNameAndRole(String program, UserRole role);
+
   List<ProgramEgoGroupEntity> findAllByProgramShortName(String Program);
 }

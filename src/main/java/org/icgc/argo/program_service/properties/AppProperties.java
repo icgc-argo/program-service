@@ -5,14 +5,12 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.velocity.app.VelocityEngine;
-import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.utils.NoOpJavaMailSender;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
@@ -31,7 +29,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Component
 @Validated
 @Setter @Getter
-@ConfigurationProperties(prefix= AppProperties.APP)
+@ConfigurationProperties(prefix = AppProperties.APP)
 public class AppProperties {
   public static final String APP = "app";
   /**
@@ -78,10 +76,10 @@ public class AppProperties {
 
   @Bean
   @ConditionalOnProperty(
-      prefix = APP,
-      name = "mail-enabled",
-      havingValue = "false")
-  public JavaMailSender noOpJavaMailSender(){
+    prefix = APP,
+    name = "mail-enabled",
+    havingValue = "false")
+  public JavaMailSender noOpJavaMailSender() {
     checkArgument(!mailEnabled, "The config 'mail-enabled' was 'true' but was expected to be 'false'");
     log.warn("Loaded {}", NoOpJavaMailSender.class.getSimpleName());
     return new NoOpJavaMailSender();

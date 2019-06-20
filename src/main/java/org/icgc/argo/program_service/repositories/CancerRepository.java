@@ -12,7 +12,5 @@ public interface CancerRepository extends JpaRepository<CancerEntity, UUID>,
   JpaSpecificationExecutor<CancerEntity>
 {
   Optional<CancerEntity> getCancerByName(String name);
-  List<CancerEntity> findAllByName(String name);
-
   List<CancerEntity> findAllByNameIn(List<String> names);
 }

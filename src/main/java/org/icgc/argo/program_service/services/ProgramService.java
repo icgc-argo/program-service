@@ -124,12 +124,6 @@ public class ProgramService {
     return programEntity;
   }
 
-  private List<PrimarySiteEntity> getPrimarySites(List<String> primarySitesList) {
-    return primarySitesList.stream().
-      map(this::getPrimarySite).
-      collect(Collectors.toList());
-  }
-
   public ProgramEntity updateProgram(@NonNull ProgramEntity updatingProgram,
                                      @NonNull List<String> cancers,
                                      @NonNull List<String> primarySites)

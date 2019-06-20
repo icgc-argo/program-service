@@ -18,7 +18,9 @@
 
 package org.icgc.argo.program_service.model.entity;
 
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
@@ -27,6 +29,7 @@ import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.proto.MembershipType;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -35,8 +38,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
-import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
 @Entity
@@ -125,7 +126,6 @@ public class ProgramEntity implements NameableEntity<UUID> {
     orphanRemoval = true
   )
   private Set<ProgramPrimarySite> programPrimarySites = new TreeSet<>();
-
 
   public List<String> listCancerTypes() {
     return mapToList(getProgramCancers(), c -> c.getCancer().getName());

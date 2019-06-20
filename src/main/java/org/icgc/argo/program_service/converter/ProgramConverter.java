@@ -20,19 +20,17 @@ package org.icgc.argo.program_service.converter;
 
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
-import org.icgc.argo.program_service.model.entity.CancerEntity;
-import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
+import lombok.val;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.model.join.ProgramCancer;
-import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
-import org.mapstruct.*;
-import lombok.val;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
+import java.util.Collection;
+import java.util.UUID;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ProgramConverter {
@@ -55,14 +53,6 @@ public interface ProgramConverter {
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
-
-  @Mapping(target = "id", ignore = true)
-//  @Mapping(target = "shortName", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "programCancers", ignore = true)
-  @Mapping(target = "programPrimarySites", ignore = true)
-  ProgramEntity updateProgramRequestToProgramEntity(@NonNull UpdateProgramRequest request);
 
   /**
    * To Proto Converters
@@ -96,9 +86,6 @@ public interface ProgramConverter {
       build();
   }
 
-  @InheritConfiguration
-  List<Program> programEntitiesToPrograms(Collection<ProgramEntity> entities);
-
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
@@ -119,22 +106,12 @@ public interface ProgramConverter {
 
   default ProgramDetails ProgramEntityToProgramDetails(ProgramEntity value) {
     val p = programEntityToProgram(value);
-    val program = updateProgramFromEntity(value,p);
+    val program = updateProgramFromEntity(value, p);
     return ProgramDetails.newBuilder().
       setProgram(program).
       setMetadata(programEntityToMetadata(value)).
       build();
   }
-
-  @Mapping(target = "mergeFrom", ignore = true)
-  @Mapping(target = "clearField", ignore = true)
-  @Mapping(target = "clearOneof", ignore = true)
-  @Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "unknownFields", ignore = true)
-  @Mapping(target = "mergeUnknownFields", ignore = true)
-  @Mapping(target = "mergeProgram", ignore = true)
-  @Mapping(target = "program", source = "p")
-  GetProgramResponse programEntityToGetProgramResponse(ProgramEntity p);
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
@@ -183,35 +160,6 @@ public interface ProgramConverter {
     return InviteUserResponse.newBuilder()
       .setInviteId(StringValue.of(inviteId.toString()))
       .build();
-  }
-
-  /**
-   * JoinEntity Converters
-   */
-
-  //TODO [rtisma]: what is the mapstruct way of doing this?
-  default CancerEntity programCancerToCancerEntity(@NonNull ProgramCancer c) {
-    return c.getCancer();
-  }
-
-  default Collection<String> programToCancers(@NonNull Program p) {
-    return p.getCancerTypesList();
-  }
-
-  default Collection<String> getCancerFromRequest(@NonNull UpdateProgramRequest request) {
-    return request.getCancerTypesList();
-  }
-
-  default Collection<String> getPrimarySiteFromRequest(@NonNull UpdateProgramRequest request) {
-    return request.getPrimarySitesList();
-  }
-
-  default PrimarySiteEntity programPrimarySiteToPrimarySiteEntity(@NonNull ProgramPrimarySite c) {
-    return c.getPrimarySite();
-  }
-
-  default Collection<String> programToPrimarySites(@NonNull Program p) {
-    return p.getPrimarySitesList();
   }
 
   /**

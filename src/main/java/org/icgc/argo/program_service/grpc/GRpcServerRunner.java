@@ -59,7 +59,7 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   }
 
   @Override
-  public void run(String... args) throws Exception {
+  public void run(String... args)  {
     // Interceptor bean depends on run profile.
     val programService = ServerInterceptors.intercept(programServiceImpl, authInterceptor);
     healthStatusManager.setStatus("program_service.ProgramService", ServingStatus.SERVING);
@@ -91,7 +91,7 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   }
 
   @Override
-  final public void destroy() throws Exception {
+  final public void destroy() {
     log.info("Shutting down gRPC server ...");
     Optional.ofNullable(server).ifPresent(Server::shutdown);
     log.info("gRPC server stopped.");

@@ -113,13 +113,13 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onCompleted();
   }
 
-  StatusRuntimeException status(Status code, String message) {
+  private StatusRuntimeException status(Status code, String message) {
     return code.
       augmentDescription(message).
       asRuntimeException();
   }
 
-  StatusRuntimeException status(Throwable throwable) {
+  private StatusRuntimeException status(Throwable throwable) {
     if (throwable instanceof StatusRuntimeException) {
       return (StatusRuntimeException) throwable;
     }
@@ -133,9 +133,10 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   @EgoAuth(typesAllowed = { "ADMIN" })
   public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver) {
-    val updatingProgram = programConverter.updateProgramRequestToProgramEntity(request);
+    val program = request.getProgram();
+    val updatingProgram = programConverter.programToProgramEntity(program);
     try {
-      val updatedProgram = programService.updateProgram(updatingProgram, request.getCancerTypesList(), request.getPrimarySitesList());
+      val updatedProgram = programService.updateProgram(updatingProgram, program.getCancerTypesList(), program.getPrimarySitesList());
       val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
       responseObserver.onNext(response);
       responseObserver.onCompleted();
@@ -207,16 +208,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
     val shortName = request.getProgramShortName().getValue();
-    ProgramEntity programEntity;
 
     try {
-      programEntity = programService.getProgram(shortName);
+      programService.getProgram(shortName);
     } catch (Throwable t) {
       responseObserver.onError(status(t));
       return;
     }
 
-    val programId = programEntity.getId();
     List<User> users;
 
     try {
@@ -242,7 +241,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       egoService.leaveProgram(email, programName);
     } catch (Throwable throwable) {
       responseObserver.onError(status(throwable));
-      return;
     }
   }
 
