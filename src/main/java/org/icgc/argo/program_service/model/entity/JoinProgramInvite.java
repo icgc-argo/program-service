@@ -39,7 +39,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class JoinProgramInvite {
 
-  public enum Status {PENDING, ACCEPTED, REVOKED};
+  public enum Status {PENDING, ACCEPTED, REVOKED}
 
   @Id
   @Getter

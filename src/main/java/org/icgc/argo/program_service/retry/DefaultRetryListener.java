@@ -83,11 +83,7 @@ public class DefaultRetryListener extends RetryListenerSupport {
   }
 
   private static boolean isClientException(Throwable throwable) {
-    if (throwable instanceof HttpClientErrorException) {
-      return true;
-    }
-
-    return false;
+    return throwable instanceof HttpClientErrorException;
   }
 
 }

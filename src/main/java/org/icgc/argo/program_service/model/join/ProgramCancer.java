@@ -25,6 +25,8 @@ import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
+import org.jetbrains.annotations.NotNull;
+
 import javax.persistence.*;
 import java.util.Optional;
 
@@ -39,7 +41,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 @FieldNameConstants
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProgramCancer implements IdentifiableEntity<ProgramCancerId> {
+public class ProgramCancer implements IdentifiableEntity<ProgramCancerId>, Comparable<ProgramCancer> {
 
   @EmbeddedId
   private ProgramCancerId id;
@@ -58,19 +60,24 @@ public class ProgramCancer implements IdentifiableEntity<ProgramCancerId> {
   @ManyToOne(fetch = FetchType.LAZY)
   private CancerEntity cancer;
 
-  public static Optional<ProgramCancer> createProgramCancer(@NonNull ProgramEntity p, @NonNull CancerEntity c){
-    if(c.getId() == null || isNullOrEmpty(c.getName())){
+  public static Optional<ProgramCancer> createProgramCancer(@NonNull ProgramEntity p, @NonNull CancerEntity c) {
+    if (c.getId() == null || isNullOrEmpty(c.getName())) {
       return Optional.empty();
     }
+
     val programCancer = ProgramCancer.builder()
-        .id(ProgramCancerId.builder()
-            .programId(p.getId())
-            .cancerId(c.getId())
-            .build())
+      .id(ProgramCancerId.builder()
+        .programId(p.getId())
+        .cancerId(c.getId())
+        .build())
+        // Note: must assign program and cancer to pc
         .program(p)
         .cancer(c)
         .build();
     return Optional.of(programCancer);
   }
 
+  @Override public int compareTo(@NotNull ProgramCancer o) {
+    return this.cancer.getName().compareTo(o.cancer.getName());
+  }
 }

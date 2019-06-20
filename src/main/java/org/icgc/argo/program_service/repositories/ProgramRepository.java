@@ -27,7 +27,5 @@ import java.util.UUID;
 
 
 public interface ProgramRepository extends JpaRepository<ProgramEntity, UUID>, JpaSpecificationExecutor<ProgramEntity> {
-
-  Optional<ProgramEntity> findByName(String name);
-
+  Optional<ProgramEntity> findByShortName(String name);
 }

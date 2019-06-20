@@ -76,7 +76,7 @@ public class RetryProperties {
   @Getter
   @Setter
   @Validated
-  public static class Retry {
+  private static class Retry {
 
     private static final int DEFAULT_MAX_RETRIES = 5;
     private static final long DEFAULT_INITIAL_BACKOFF_INTERVAL = SECONDS.toMillis(15L);

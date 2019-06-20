@@ -48,7 +48,6 @@ import static com.google.common.collect.Sets.newHashSet;
 @Accessors(chain = true)
 @FieldNameConstants
 public class PrimarySiteEntity implements NameableEntity<UUID> {
-
   @Id
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
@@ -60,14 +59,13 @@ public class PrimarySiteEntity implements NameableEntity<UUID> {
   @NotNull
   @Column(name = SqlFields.NAME)
   private String name;
-
+  
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-          mappedBy = ProgramPrimarySite.Fields.primarySite,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.LAZY,
-          orphanRemoval = true)
+              mappedBy = ProgramPrimarySite.Fields.primarySite,
+              cascade = CascadeType.ALL,
+              fetch = FetchType.LAZY,
+              orphanRemoval = true)
   private Set<ProgramPrimarySite> programPrimarySites = newHashSet();
-
 }

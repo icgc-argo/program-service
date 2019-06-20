@@ -20,35 +20,25 @@ package org.icgc.argo.program_service.model.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-import lombok.val;
 import org.hibernate.annotations.GenericGenerator;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
+import org.icgc.argo.program_service.proto.MembershipType;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 
-import static com.google.common.collect.Sets.newHashSet;
-import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
-import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
 @Entity
 @Table(name = Tables.PROGRAM)
@@ -56,7 +46,6 @@ import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.create
 @Accessors(chain = true)
 @FieldNameConstants
 public class ProgramEntity implements NameableEntity<UUID> {
-
   @Id
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
@@ -76,7 +65,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @NotNull
   @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.MEMBERSHIPTYPE)
-  private org.icgc.argo.program_service.proto.MembershipType membershipType;
+  private MembershipType membershipType;
 
   @NotNull
   @Column(name = SqlFields.COMMITMENTDONORS)
@@ -118,57 +107,31 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @Column(name = SqlFields.DESCRIPTION)
   private String description;
 
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
+  @OneToMany(
+    mappedBy = ProgramCancer.Fields.program,
+    cascade = CascadeType.ALL,
+    fetch = FetchType.LAZY,
+    orphanRemoval = true
+  )
+  private Set<ProgramCancer> programCancers = new TreeSet<>();
 
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-          mappedBy = ProgramCancer.Fields.program,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.EAGER,
-          orphanRemoval = true
+    mappedBy = ProgramPrimarySite.Fields.program,
+    cascade = CascadeType.ALL,
+    fetch = FetchType.LAZY,
+    orphanRemoval = true
   )
-  private Set<ProgramCancer> programCancers = newHashSet();
+  private Set<ProgramPrimarySite> programPrimarySites = new TreeSet<>();
 
-  @ToString.Exclude
-  @EqualsAndHashCode.Exclude
-  @OneToMany(
-          mappedBy = ProgramPrimarySite.Fields.program,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.EAGER,
-          orphanRemoval = true
-  )
-  private Set<ProgramPrimarySite> programPrimarySites = newHashSet();
-
-  @EqualsAndHashCode.Exclude
-  @ToString.Exclude
-  @OneToMany(
-          mappedBy = ProgramEgoGroupEntity.Fields.program,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.LAZY,
-          orphanRemoval = true
-  )
-  private Set<ProgramEgoGroupEntity> egoGroups = newHashSet();
-
-  public void associateCancer(@NonNull CancerEntity c){
-    val pc = createProgramCancer(this, c);
-
-    pc.ifPresent( programCancer -> {
-      this.getProgramCancers().add(programCancer);
-      c.getProgramCancers().add(programCancer);
-    });
+  public List<String> listCancerTypes() {
+    return mapToList(getProgramCancers(), c -> c.getCancer().getName());
   }
 
-  public void associatePrimarySite(@NonNull PrimarySiteEntity ps){
-    val pps = createProgramPrimarySite(this, ps);
-    pps.ifPresent( programPrimarySite -> {
-      this.getProgramPrimarySites().add(programPrimarySite);
-      ps.getProgramPrimarySites().add(programPrimarySite);
-    });
+  public List<String> listPrimarySites() {
+    return mapToList(getProgramPrimarySites(), p -> p.getPrimarySite().getName());
   }
-
-  public void associateEgoGroup(@NonNull ProgramEgoGroupEntity e){
-    this.getEgoGroups().add(e);
-    e.setProgram(this);
-  }
-
 }

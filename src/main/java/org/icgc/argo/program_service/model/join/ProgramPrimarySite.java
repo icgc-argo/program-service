@@ -25,6 +25,8 @@ import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
+import org.jetbrains.annotations.NotNull;
+
 import javax.persistence.*;
 import java.util.Optional;
 
@@ -39,7 +41,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProgramPrimarySite implements IdentifiableEntity<ProgramPrimarySiteId> {
+public class ProgramPrimarySite implements IdentifiableEntity<ProgramPrimarySiteId>, Comparable<ProgramPrimarySite>{
 
   @EmbeddedId
   private ProgramPrimarySiteId id;
@@ -73,4 +75,7 @@ public class ProgramPrimarySite implements IdentifiableEntity<ProgramPrimarySite
     return Optional.of(programPrimarySite);
   }
 
+  @Override public int compareTo(@NotNull ProgramPrimarySite o) {
+    return this.primarySite.getName().compareTo(o.primarySite.getName());
+  }
 }

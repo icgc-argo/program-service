@@ -23,6 +23,7 @@ import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import com.google.protobuf.Timestamp;
 import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -32,6 +33,7 @@ import java.util.UUID;
 
 @Mapper(config = ConverterConfig.class)
 public interface CommonConverter {
+  CommonConverter INSTANCE = Mappers.getMapper(CommonConverter.class);
 
   default String unboxStringValue(StringValue v){
     return v.getValue();

@@ -20,6 +20,7 @@ package org.icgc.argo.program_service.model.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
@@ -48,7 +49,6 @@ import static com.google.common.collect.Sets.newHashSet;
 @Accessors(chain = true)
 @FieldNameConstants
 public class CancerEntity implements NameableEntity<UUID> {
-
   @Id
   @Column(name = SqlFields.ID)
   @EqualsAndHashCode.Exclude
@@ -60,14 +60,18 @@ public class CancerEntity implements NameableEntity<UUID> {
   @NotNull
   @Column(name = SqlFields.NAME)
   private String name;
-
+  
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
   @OneToMany(
-          mappedBy = ProgramCancer.Fields.cancer,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.LAZY,
-          orphanRemoval = true)
+              mappedBy = ProgramCancer.Fields.cancer,
+              cascade = CascadeType.ALL,
+              fetch = FetchType.LAZY,
+              orphanRemoval = true)
   private Set<ProgramCancer> programCancers = newHashSet();
+
+  public void addProgramCancer(@NonNull ProgramCancer programCancer){
+    this.programCancers.add(programCancer);
+  }
 
 }

@@ -30,18 +30,25 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.stream.Collectors;
+
 import static junit.framework.TestCase.*;
 import static org.assertj.core.api.Assertions.assertThat;
-
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
 // TODO: program service is already running at the phase of pre-integration-test, use the existing running 50051 port
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles({ "test", "default" })
+
+@ComponentScan(lazyInit = true)
+
 @Slf4j
+
 public class ProgramServiceImplIT {
 
   @Autowired
@@ -55,7 +62,6 @@ public class ProgramServiceImplIT {
     programService.listPrograms(request, programsObserver);
     assertTrue(programsObserver.completed);
     assertNull(programsObserver.thrown);
-
     val p1 = buildProgram("Alice Bob and Charlie's Test Program Name",
       "ABC",
       "A test project. Fix this description later.",
@@ -84,46 +90,51 @@ public class ProgramServiceImplIT {
     assertNull(programsObserver.thrown);
 
     val programList = programsObserver.result.getProgramsList();
+    val programs = mapToList(programList, p -> p.getProgram().toString());
 
     assertEquals("Two programs", 2, programList.size());
-
-    assertThat(programList).usingElementComparatorOnFields("shortName", "description", "name", "commitmentDonors", "submittedDonors", "genomicDonors", "website", "membershipType").contains(p1, p2);
+    assertThat(programs).contains(p1.toString());
+    assertThat(programs).contains(p2.toString());
   }
 
-  private Program buildProgram(String name,
-     String shortName,
-     String description,
-     String membershipType,
-     int commitmentDonors,
-     int submittedDonors,
-     int genomicDonors,
-     String website
+  public Program buildProgram(String name,
+    String shortName,
+    String description,
+    String membershipType,
+    int commitmentDonors,
+    int submittedDonors,
+    int genomicDonors,
+    String website
   ) {
-    return Program
-        .newBuilder()
-        .setName(StringValue.of(name))
-        .setShortName(StringValue.of(shortName))
-        .setDescription(StringValue.of(description))
-        .setMembershipType(MembershipTypeValue.newBuilder()
-            .setValue( MembershipType.valueOf(membershipType))
-            .build())
-        .setCommitmentDonors(Int32Value.of(commitmentDonors))
-        .setSubmittedDonors(Int32Value.of(submittedDonors))
-        .setGenomicDonors(Int32Value.of(genomicDonors))
-        .setWebsite(StringValue.of(website))
-        .setCountries(StringValue.of("Canada"))
-        .build();
+    val p = Program
+      .newBuilder()
+      .setName(StringValue.of(name))
+      .setShortName(StringValue.of(shortName))
+      .setDescription(StringValue.of(description))
+      .setMembershipType(MembershipTypeValue.newBuilder()
+        .setValue(MembershipType.valueOf(membershipType))
+        .build())
+      .setCommitmentDonors(Int32Value.of(commitmentDonors))
+      .setSubmittedDonors(Int32Value.of(submittedDonors))
+      .setGenomicDonors(Int32Value.of(genomicDonors))
+      .setWebsite(StringValue.of(website))
+      .setCountries(StringValue.of("Canada"))
+      .addCancerTypes("Brain cancer")
+      .addPrimarySites("Brain")
+      .build();
+    return p;
   }
 
   private void createProgram(Program p) {
     val details = CreateProgramRequest
       .newBuilder()
       .setProgram(p)
+      .addAdminEmails("test@gmailcom")
       .build();
     val resultObserver = new TestObserver<CreateProgramResponse>();
     try {
       programService.createProgram(details, resultObserver);
-    } catch(ConflictException e) {
+    } catch (ConflictException e) {
       log.warn("program already exists");
     }
   }

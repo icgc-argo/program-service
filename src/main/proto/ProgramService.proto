@@ -27,7 +27,6 @@ option java_outer_classname = "ProgramServiceProto";
 option objc_class_prefix = "PSP";
 
 service ProgramService {
-
   rpc CreateProgram(CreateProgramRequest) returns (CreateProgramResponse);
   rpc RemoveProgram(RemoveProgramRequest) returns (google.protobuf.Empty);
   rpc UpdateProgram(UpdateProgramRequest) returns (UpdateProgramResponse);
@@ -55,17 +54,8 @@ message Program {
   google.protobuf.StringValue institutions = 9;
   google.protobuf.StringValue countries = 10;
   google.protobuf.StringValue regions = 11;
-
-  //TODO: should be a list of cancer_type_names
-  repeated Cancer cancer_types = 12;
-  //TODO: should be a list of primary_site_names
-  repeated PrimarySite primary_sites = 13;
-
-  // TODO: should not be here. This should be handled by the service. Should not be able to allow user to defined own create or update time.
-  google.protobuf.Timestamp created_at = 14;
-  google.protobuf.Timestamp updated_at = 15;
-
-  google.protobuf.StringValue id = 16;
+  repeated string cancer_types = 12;
+  repeated string primary_sites = 13;
 }
 
 enum MembershipType {
@@ -89,21 +79,10 @@ message UserRoleValue {
   UserRole value = 1;
 }
 
-message Cancer {
-  google.protobuf.StringValue id = 1;
-  google.protobuf.StringValue name = 2;
-}
-
-message PrimarySite {
-  google.protobuf.StringValue id = 1;
-  google.protobuf.StringValue name = 2;
-}
-
 message User {
-  google.protobuf.StringValue id = 1;
-  google.protobuf.StringValue email = 2;
-  google.protobuf.StringValue first_name = 3;
-  google.protobuf.StringValue last_name = 4;
+  google.protobuf.StringValue email = 1;
+  google.protobuf.StringValue first_name = 2;
+  google.protobuf.StringValue last_name = 3;
 }
 
 message CreateProgramRequest {
@@ -112,50 +91,46 @@ message CreateProgramRequest {
 }
 
 message CreateProgramResponse {
-  google.protobuf.StringValue id = 1;
-  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp created_at = 1;
 }
 
 message UpdateProgramRequest {
-  google.protobuf.StringValue request_id = 1;
-  google.protobuf.StringValue program_id = 2;
-  google.protobuf.StringValue description = 3;
-  google.protobuf.StringValue name = 4;
-  MembershipTypeValue membership_type = 5;
-  google.protobuf.Int32Value commitment_donors = 6;
-  google.protobuf.Int32Value submitted_donors = 7;
-  google.protobuf.Int32Value genomic_donors = 8;
-  google.protobuf.StringValue website = 9;
-  google.protobuf.StringValue institutions = 10;
-  google.protobuf.StringValue countries = 11;
-  google.protobuf.StringValue regions = 12;
-  repeated Cancer cancer_types = 13;
-  repeated PrimarySite primary_sites = 14;
+  Program program = 1;
 }
 
 message UpdateProgramResponse {
   google.protobuf.Timestamp updated_at = 1;
 }
 
+message ProgramDetails {
+  Program program = 1;
+  Metadata metadata = 2;
+}
+
+message Metadata {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp updated_at = 2;
+}
+
 message GetProgramRequest {
-  google.protobuf.StringValue id = 1;
+  google.protobuf.StringValue short_name = 1;
 }
 
 message GetProgramResponse {
-  Program program = 1;
+  ProgramDetails program = 1;
 }
 
 message ListProgramsResponse {
-  repeated Program programs = 1;
+  repeated ProgramDetails programs = 1;
 }
 
 message RemoveUserRequest {
-  google.protobuf.StringValue user_id = 1;
-  google.protobuf.StringValue program_id = 2;
+  google.protobuf.StringValue user_email = 1;
+  google.protobuf.StringValue program_short_name = 2;
 }
 
 message ListUserRequest {
-  google.protobuf.StringValue program_id = 1;
+  google.protobuf.StringValue program_short_name = 1;
 }
 
 message ListUserResponse {
@@ -170,7 +145,7 @@ message UpdateUserRequest {
 }
 
 message InviteUserRequest {
-  google.protobuf.StringValue program_id = 1;
+  google.protobuf.StringValue program_short_name = 1;
   google.protobuf.StringValue first_name = 2;
   google.protobuf.StringValue last_name = 3;
   google.protobuf.StringValue email = 4;
@@ -203,5 +178,5 @@ message JoinProgramRequest {
 }
 
 message RemoveProgramRequest {
-  google.protobuf.StringValue program_id = 2;
+  google.protobuf.StringValue program_short_name = 1;
 }

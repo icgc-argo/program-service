@@ -22,6 +22,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
+import org.assertj.core.api.Java6AbstractBDDSoftAssertions;
 import org.icgc.argo.program_service.proto.CreateProgramRequest;
 import org.icgc.argo.program_service.proto.InviteUserRequest;
 import org.icgc.argo.program_service.proto.Program;
@@ -29,7 +30,9 @@ import org.icgc.argo.program_service.proto.ProgramServiceGrpc;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.junit.jupiter.api.Test;
 
+import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
 import static org.icgc.argo.program_service.UtilsTest.int32Value;
 import static org.icgc.argo.program_service.UtilsTest.membershipTypeValue;
@@ -56,15 +59,15 @@ class ProgramServiceImplClientIT {
         .setDescription(stringValue("nothing"));
 
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
-
     val response = blockingStub.createProgram(createProgramRequest);
-    assertThat(response.getId().getValue()).isNotEmpty();
+    assertThat(response.getCreatedAt().toString()).isNotEmpty();
   }
 
   @Test
   void joinAndLeaveProgram() {
+    val name = stringValue(RandomString.make(10));
     val program = Program.newBuilder()
-        .setShortName(stringValue(RandomString.make(10)))
+        .setShortName( name)
         .setMembershipType(membershipTypeValue(ASSOCIATE))
         .setWebsite(stringValue(""))
         .setInstitutions(stringValue("oicr"))
@@ -78,14 +81,13 @@ class ProgramServiceImplClientIT {
 
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
     val response = blockingStub.createProgram(createProgramRequest);
-    val programId = response.getId();
 
     val inviteUserRequest = InviteUserRequest.newBuilder()
         .setFirstName(stringValue("First"))
         .setLastName(stringValue("Last"))
         .setEmail(stringValue("user@example.com"))
         .setRole(userRoleValue(UserRole.ADMIN))
-        .setProgramId(programId)
+        .setProgramShortName(name)
         .build();
     val inviteUserResponse = blockingStub.inviteUser(inviteUserRequest);
     assertThat(inviteUserResponse.getInviteId().getValue()).isNotEmpty();

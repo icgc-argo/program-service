@@ -22,18 +22,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.model.enums.Tables;
+import org.icgc.argo.program_service.proto.UserRole;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.UUID;
 
 @Data
@@ -42,14 +34,14 @@ import java.util.UUID;
 @FieldNameConstants
 @Accessors(chain = true)
 @Table(name = Tables.PROGRAM_EGO_GROUP)
-public class ProgramEgoGroupEntity {
+public class ProgramEgoGroupEntity implements Comparable<ProgramEgoGroupEntity> {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
-  @ManyToOne
-  private ProgramEntity program;
+  @Column(nullable = false, unique = true, updatable = false)
+  private String programShortName;
 
   @Column(nullable = false, updatable = false)
   @Enumerated(EnumType.STRING)
@@ -58,6 +50,9 @@ public class ProgramEgoGroupEntity {
   @Column(nullable = false, updatable = false)
   private UUID egoGroupId;
 
+  public int compareTo(ProgramEgoGroupEntity o) {
+    return this.role.compareTo(o.role);
+  }
 }
 
 

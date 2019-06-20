@@ -30,7 +30,7 @@ import static lombok.AccessLevel.PRIVATE;
 public final class RetryPolicies {
 
   /**
-   * Returns a map with exceptions that should be retried by the Spring Retry Framework.
+   * Returns a ProgramEntityToProgramDetails with exceptions that should be retried by the Spring Retry Framework.
    * 
    * <ul>
    * <li><b>ResourceAccessException</b> - to retry Connection Timeout</li>

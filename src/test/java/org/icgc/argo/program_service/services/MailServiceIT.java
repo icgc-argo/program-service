@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
@@ -44,6 +45,7 @@ import static org.mockito.Mockito.when;
         "spring.datasource.url=jdbc:postgresql://localhost:5432/program_db",
         "spring.datasource.driverClassName=org.postgresql.Driver",
 })
+@ComponentScan(lazyInit = true)
 class MailServiceIT {
   @Autowired
   MailService mailService;
