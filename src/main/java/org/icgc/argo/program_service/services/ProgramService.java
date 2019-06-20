@@ -34,22 +34,21 @@ import org.icgc.argo.program_service.repositories.*;
 import org.icgc.argo.program_service.repositories.query.CancerSpecification;
 import org.icgc.argo.program_service.repositories.query.PrimarySiteSpecification;
 import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
-import org.icgc.argo.program_service.utils.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
 import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
 import static org.icgc.argo.program_service.utils.CollectionUtils.*;
-import static org.icgc.argo.program_service.utils.EntityService.getManyEntities;
 
 @Service
 @Validated
@@ -131,17 +130,20 @@ public class ProgramService {
       collect(Collectors.toList());
   }
 
-  public ProgramEntity updateProgram(@NonNull ProgramEntity updatingProgram)
-    throws NotFoundException, EmptyResultDataAccessException {
-    val programToUpdate = getProgram(updatingProgram.getShortName());
+  public ProgramEntity updateProgram(@NonNull ProgramEntity updatingProgram,
+                                     @NonNull List<String> cancers,
+                                     @NonNull List<String> primarySites)
+    throws NotFoundException, NoSuchElementException {
+    val programToUpdate = programRepository
+            .findByShortName(updatingProgram.getShortName())
+            .orElseThrow(
+                    () -> new NotFoundException(format("The program with short name: '%s' is not found.", updatingProgram.getShortName())));
     val id = programToUpdate.getId();
     //update associations
-    processCancers(programToUpdate, updatingProgram);
-    processPrimarySites(programToUpdate, updatingProgram);
-
+    processCancers(programToUpdate, cancers);
+    processPrimarySites(programToUpdate, primarySites);
     // update basic info program
     programConverter.updateProgram(updatingProgram, programToUpdate);
-
     programToUpdate.setId(id);
     programRepository.save(programToUpdate);
     return programToUpdate;
@@ -158,35 +160,60 @@ public class ProgramService {
   private PrimarySiteEntity getPrimarySite(String primarySite) {
     val result = primarySiteRepository.getPrimarySiteByName(primarySite);
     if (result.isEmpty()) {
-      throw Status.INVALID_ARGUMENT.augmentDescription("Invalid primary site" + primarySite).asRuntimeException();
+      throw Status.INVALID_ARGUMENT.augmentDescription("Invalid primary site " + primarySite).asRuntimeException();
     }
     return result.get();
   }
 
-  private void processCancers(@NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram)
-    throws EmptyResultDataAccessException {
-    if (!nullOrEmpty(updatingProgram.getProgramCancers())) {
-      val updatingCancers = mapToImmutableSet(updatingProgram.getProgramCancers(), ProgramCancer::getCancer);
-      val updatingCancerIds = convertToIds(updatingCancers);
-      getManyEntities(CancerEntity.class, cancerRepository, updatingCancerIds);
-      programToUpdate.setProgramCancers(updatingProgram.getProgramCancers());
+  private void processCancers(@NonNull ProgramEntity programToUpdate, @NonNull List<String> cancers)
+    throws NoSuchElementException {
+    if (!nullOrEmpty(cancers)) {
+      try {
+        val updatingCancers = cancers.stream()
+                .map(this:: getCancer)
+                .collect(toUnmodifiableList());
+        // update program-cancer association
+        associateCancers(programToUpdate, updatingCancers);
+      } catch(NoSuchElementException e){
+        log.error("Cancer entities are not found!");
+        throw new NoSuchElementException("Cancer entities are not found!");
+      }
     } else {
       programToUpdate.setProgramCancers(Collections.emptySet());
     }
   }
 
-  private void processPrimarySites(@NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram)
-    throws EmptyResultDataAccessException {
+  public void associateCancers(@NonNull ProgramEntity p, @NonNull Collection<CancerEntity> cancers ) {
+    val pcs = cancers.stream()
+            .map(c -> createProgramCancer(p , c))
+            .map(Optional::get)
+            .collect(toUnmodifiableList());
+    programCancerRepository.saveAll(pcs);
+  }
 
-    if (!nullOrEmpty(updatingProgram.getProgramPrimarySites())) {
-      val updatingPrimarySites = mapToImmutableSet(updatingProgram.getProgramPrimarySites(),
-        ProgramPrimarySite::getPrimarySite);
-      val updatingPrimarySiteIds = convertToIds(updatingPrimarySites);
-      getManyEntities(PrimarySiteEntity.class, primarySiteRepository, updatingPrimarySiteIds);
-      programToUpdate.setProgramPrimarySites(updatingProgram.getProgramPrimarySites());
+  private void processPrimarySites(@NonNull ProgramEntity programToUpdate, @NonNull List<String> primarySites)
+    throws NoSuchElementException {
+    if (!nullOrEmpty(primarySites)) {
+      try {
+        val updatingPrimarySites = primarySites.stream()
+                .map(this :: getPrimarySite)
+                .collect(toUnmodifiableList());
+        associatePrimarySites(programToUpdate, updatingPrimarySites);
+      } catch(NoSuchElementException e){
+        log.error("Primary site entities are not found.");
+        throw new NoSuchElementException("Primary site entities are not found.");
+      }
     } else {
       programToUpdate.setProgramPrimarySites(Collections.emptySet());
     }
+  }
+
+  public void associatePrimarySites(@NonNull ProgramEntity p, @NonNull Collection<PrimarySiteEntity> primarySites){
+    val programPrimarySites = primarySites.stream()
+            .map(ps -> createProgramPrimarySite(p, ps))
+            .map(Optional :: get)
+            .collect(toUnmodifiableList());
+    programPrimarySiteRepository.saveAll(programPrimarySites);
   }
 
   public void removeProgram(String name) throws EmptyResultDataAccessException {

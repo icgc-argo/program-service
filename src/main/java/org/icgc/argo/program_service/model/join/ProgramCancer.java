@@ -70,9 +70,10 @@ public class ProgramCancer implements IdentifiableEntity<ProgramCancerId>, Compa
         .programId(p.getId())
         .cancerId(c.getId())
         .build())
-      .program(p)
-      .cancer(c)
-      .build();
+        // Note: must assign program and cancer to pc
+        .program(p)
+        .cancer(c)
+        .build();
     return Optional.of(programCancer);
   }
 

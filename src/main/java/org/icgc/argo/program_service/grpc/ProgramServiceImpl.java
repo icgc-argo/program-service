@@ -40,8 +40,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Component
@@ -131,16 +131,15 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-
   @EgoAuth(typesAllowed = { "ADMIN" })
   public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver) {
     val updatingProgram = programConverter.updateProgramRequestToProgramEntity(request);
     try {
-      val updatedProgram = programService.updateProgram(updatingProgram);
+      val updatedProgram = programService.updateProgram(updatingProgram, request.getCancerTypesList(), request.getPrimarySitesList());
       val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
       responseObserver.onNext(response);
       responseObserver.onCompleted();
-    } catch (NotFoundException | EmptyResultDataAccessException e) {
+    } catch (NotFoundException | NoSuchElementException e) {
       responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
     } catch (RuntimeException e) {
       responseObserver.onError(Status.UNKNOWN.withDescription(e.getMessage()).asRuntimeException());

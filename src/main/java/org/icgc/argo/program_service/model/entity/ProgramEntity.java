@@ -27,7 +27,6 @@ import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.proto.MembershipType;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -36,7 +35,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
 import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
@@ -143,23 +141,6 @@ public class ProgramEntity implements NameableEntity<UUID> {
 //    e.setProgram(this);
 //  }
 
-  public void associateCancer(@NonNull CancerEntity c) {
-    val pc = createProgramCancer(this, c);
-
-    pc.ifPresent(programCancer -> {
-      this.getProgramCancers().add(programCancer);
-      c.addProgramCancer(programCancer);
-      //c.getProgramCancers().add(programCancer);
-    });
-  }
-
-  public void associatePrimarySite(@NonNull PrimarySiteEntity ps) {
-    val pps = createProgramPrimarySite(this, ps);
-    pps.ifPresent(programPrimarySite -> {
-      this.getProgramPrimarySites().add(programPrimarySite);
-      ps.getProgramPrimarySites().add(programPrimarySite);
-    });
-  }
 
   public List<String> listCancerTypes() {
     return mapToList(getProgramCancers(), c -> c.getCancer().getName());

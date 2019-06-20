@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface PrimarySiteRepository extends JpaRepository<PrimarySiteEntity, UUID>,
-  JpaSpecificationExecutor<PrimarySiteEntity> {
-  Optional<PrimarySiteEntity> getPrimarySiteByName(String name);
+public interface PrimarySiteRepository extends JpaRepository<PrimarySiteEntity, UUID>, JpaSpecificationExecutor<PrimarySiteEntity> {
 
+  Optional<PrimarySiteEntity> getPrimarySiteByName(String name);
   List<PrimarySiteEntity> findAllByNameIn(List<String> names);
+
 }

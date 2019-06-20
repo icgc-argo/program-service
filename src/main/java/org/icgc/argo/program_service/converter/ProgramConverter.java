@@ -29,12 +29,10 @@ import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.mapstruct.*;
 import lombok.val;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ProgramConverter {
@@ -55,14 +53,16 @@ public interface ProgramConverter {
   @Mapping(target = "shortName", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "programCancers", ignore = true)
+  @Mapping(target = "programPrimarySites", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
   @Mapping(target = "id", ignore = true)
+//  @Mapping(target = "shortName", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
-  //@Mapping(target = "egoGroups", ignore = true)
   ProgramEntity updateProgramRequestToProgramEntity(@NonNull UpdateProgramRequest request);
 
   /**
@@ -166,8 +166,6 @@ public interface ProgramConverter {
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
-  //@Mapping(target = "programId", ignore = true)
-  //@Mapping(target = "mergeProgramId", ignore = true)
   @Mapping(target = "mergeEmail", ignore = true)
   @Mapping(target = "mergeFirstName", ignore = true)
   @Mapping(target = "mergeLastName", ignore = true)
