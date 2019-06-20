@@ -46,7 +46,6 @@ public interface ProgramConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
-  //@Mapping(target = "egoGroups", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
 
   @Mapping(target = "id", ignore = true)
@@ -154,10 +153,8 @@ public interface ProgramConverter {
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
-  //@Mapping(target = "mergeProgramId", ignore = true)
   @Mapping(target = "mergeCreatedAt", ignore = true)
   @Mapping(target = "mergeUpdatedAt", ignore = true)
-  //@Mapping(target = "programId", source = "id")
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
@@ -187,9 +184,6 @@ public interface ProgramConverter {
       .setInviteId(StringValue.of(inviteId.toString()))
       .build();
   }
-
-  @Mapping(target= "programCancers", ignore = true)
-  CancerEntity cloneCancerEntity(CancerEntity c);
 
   /**
    * JoinEntity Converters

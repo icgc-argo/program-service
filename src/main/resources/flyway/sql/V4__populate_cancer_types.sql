@@ -1,7 +1,7 @@
 -- CREATE TYPE join_program_invite_status AS ENUM ('PENDING', 'ACCEPTED', 'REVOKED');
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-insert into cancer (id, name)
+INSERT INTO cancer (id, name)
 VALUES
 (uuid_generate_v4(), 'Renal cancer'),
 (uuid_generate_v4(), 'Blood cancer'),
@@ -39,7 +39,7 @@ VALUES
 (uuid_generate_v4(), 'Rectal cancer'),
 (uuid_generate_v4(), 'Uterine cancer');
 
-insert into primary_site (id, name) VALUES
+INSERT INTO primary_site (id, name) VALUES
 (uuid_generate_v4(), 'Blood'),
 (uuid_generate_v4(), 'Kidney'),
 (uuid_generate_v4(), 'Liver'),

@@ -125,21 +125,6 @@ public class ProgramEntity implements NameableEntity<UUID> {
     orphanRemoval = true
   )
   private Set<ProgramPrimarySite> programPrimarySites = new TreeSet<>();
-//  @EqualsAndHashCode.Exclude
-//  @ToString.Exclude
-//  @OneToMany(
-//    mappedBy = ProgramEgoGroupEntity.Fields.program,
-//    cascade = CascadeType.ALL,
-//    fetch = FetchType.LAZY,
-//    orphanRemoval = true
-//  )
-//
-//  private Set<ProgramEgoGroupEntity> egoGroups = newHashSet();
-
-//  public void associateEgoGroup(@NonNull ProgramEgoGroupEntity e) {
-//    this.getEgoGroups().add(e);
-//    e.setProgram(this);
-//  }
 
 
   public List<String> listCancerTypes() {
