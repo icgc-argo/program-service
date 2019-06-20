@@ -142,7 +142,6 @@ public class ProgramService {
     // update basic info program
     programConverter.updateProgram(updatingProgram, programToUpdate);
 
-    programToUpdate.setId(id);
     programRepository.save(programToUpdate);
     return programToUpdate;
   }
