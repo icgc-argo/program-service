@@ -1,3 +1,1 @@
-var fs = require("fs");
-
-module.exports = fs.readFileSync("./ProgramService.proto", "utf-8");
+module.exports = __dirname + "/ProgramService.proto";
