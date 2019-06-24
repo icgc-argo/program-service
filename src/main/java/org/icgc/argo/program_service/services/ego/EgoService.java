@@ -60,6 +60,7 @@ import static org.icgc.argo.program_service.services.ego.GroupName.createProgram
 @Slf4j
 @Service
 public class EgoService {
+
   @Getter
   private final EgoClient egoClient;
   private final ProgramEgoGroupRepository programEgoGroupRepository;
@@ -168,8 +169,7 @@ public class EgoService {
     return egoClient.ensureGroupExists(createProgramGroupName(shortName, role).toString());
   }
 
-  public void updateUserRole(@NonNull UUID userId, @NonNull String shortName, @NonNull UUID programId,
-    @NonNull UserRole role) {
+  public void updateUserRole(@NonNull UUID userId, @NonNull String shortName, @NonNull UserRole role) {
     val groups = egoClient.getGroupsByUserId(userId).collect(Collectors.toUnmodifiableList());
     NotFoundException.checkNotFound(!groups.isEmpty(), format("No groups found for user id %s.", userId));
 
@@ -187,6 +187,7 @@ public class EgoService {
       egoClient.removeUserFromGroup(group.getId(), userId);
     } else {
       log.error("Cannot update user role to {}, new role is the same as current role.", role);
+      throw new IllegalArgumentException(format("Cannot update user role to '%s', new role is the same as current role.", role));
     }
   }
 
@@ -245,13 +246,14 @@ public class EgoService {
 
   public List<User> getUsersInGroup(String programShortName) {
     val userResults = new ArrayList<User>();
-
     programEgoGroupRepository.findAllByProgramShortName(programShortName).forEach(programEgoGroup -> {
       val groupId = programEgoGroup.getEgoGroupId();
+      val role = programEgoGroup.getRole();
       try {
         val egoUserStream = egoClient.getUsersByGroupId(groupId);
-        egoUserStream.map(programConverter::egoUserToUser)
-          .forEach(userResults::add);
+        egoUserStream
+                .map(egoUser -> egoUser.setRole(role))
+                .map(programConverter::egoUserToUser).forEach(userResults::add);
       } catch (HttpClientErrorException | HttpServerErrorException e) {
         log.error("Fail to retrieve users from ego group '{}': {}", groupId, e.getResponseBodyAsString());
       }
@@ -322,10 +324,6 @@ public class EgoService {
       }
     });
     return true;
-  }
-
-  public List<User> listUser(@NonNull String shortName) {
-    return getUsersInGroup(shortName);
   }
 
 }

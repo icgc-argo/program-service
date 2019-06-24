@@ -146,6 +146,7 @@ public interface ProgramConverter {
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "roleValue", ignore = true)
   User egoUserToUser(EgoUser egoUser);
 
   default ListProgramsResponse programEntitiesToListProgramsResponse(Collection<ProgramEntity> programEntities) {
@@ -172,4 +173,5 @@ public interface ProgramConverter {
   default MembershipType unboxMembershipTypeValue(@NonNull MembershipTypeValue v) {
     return v.getValue();
   }
+
 }

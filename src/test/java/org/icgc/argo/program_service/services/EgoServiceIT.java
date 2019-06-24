@@ -42,7 +42,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,15 +60,19 @@ import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
 })
 @ComponentScan(lazyInit = true)
 class EgoServiceIT {
+
   @Autowired
   EgoRESTClient client;
 
   @Autowired
   ProgramEgoGroupRepository repository;
+
   @Autowired
   ProgramConverter converter;
+
   @Autowired
   MailService mailService;
+
   @Autowired
   JoinProgramInviteRepository inviteRepository;
 
@@ -83,14 +86,15 @@ class EgoServiceIT {
   CommonConverter commonConverter;
 
   ProgramEntity programEntity;
+
   EgoService egoService;
 
   private static final String TEST_EMAIL = "d8660091@gmail.com";
   private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
   private static final String COLLABORATOR_USER_EMAIL = "TestPS@dummy.com";
   private static final String UPDATE_USER_TEST_EMAIL = "Test_update_user_PS@dummy.com";
-
   private static final String program_name = "TestProgram2";
+
   @BeforeAll
   void setUp() {
     egoService = new EgoService(repository, converter, client, mailService, inviteRepository);
@@ -163,7 +167,7 @@ class EgoServiceIT {
 
     // expected group is ADMIN group
     val shortname = program_name;
-    egoService.updateUserRole(user.get().getId(), shortname, programEntity.getId(), UserRole.ADMIN);
+    egoService.updateUserRole(user.get().getId(), shortname, UserRole.ADMIN);
     val adminGroupName = "PROGRAM-TestProgram2-ADMIN";
     val adminGroupId = egoService.getEgoClient().getGroupByName(adminGroupName).get().getId();
 

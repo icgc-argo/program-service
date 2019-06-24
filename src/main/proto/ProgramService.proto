@@ -27,6 +27,7 @@ option java_outer_classname = "ProgramServiceProto";
 option objc_class_prefix = "PSP";
 
 service ProgramService {
+
   rpc CreateProgram(CreateProgramRequest) returns (CreateProgramResponse);
   rpc RemoveProgram(RemoveProgramRequest) returns (google.protobuf.Empty);
   rpc UpdateProgram(UpdateProgramRequest) returns (UpdateProgramResponse);
@@ -83,6 +84,7 @@ message User {
   google.protobuf.StringValue email = 1;
   google.protobuf.StringValue first_name = 2;
   google.protobuf.StringValue last_name = 3;
+  UserRole role = 4;
 }
 
 message CreateProgramRequest {
@@ -139,9 +141,8 @@ message ListUserResponse {
 
 message UpdateUserRequest {
   google.protobuf.StringValue user_id = 1;
-  google.protobuf.StringValue program_id = 2;
-  UserRoleValue role = 3;
-  google.protobuf.StringValue short_name = 4;
+  UserRoleValue role = 2;
+  google.protobuf.StringValue short_name = 3;
 }
 
 message InviteUserRequest {
