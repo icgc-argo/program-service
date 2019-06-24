@@ -255,10 +255,9 @@ public class EgoService {
                 .forEach(userResults::add);
       } catch (HttpClientErrorException | HttpServerErrorException e) {
         log.error("Fail to retrieve users from ego group '{}': {}", groupId, e.getResponseBodyAsString());
-        throw new EgoException(format("Fail to retrieve users from ego group '%s' ", groupId));
+        throw new EgoException(format("Fail to retrieve users from ego group '%s' ", groupId), e);
       }
     });
-
     return userResults;
   }
 
