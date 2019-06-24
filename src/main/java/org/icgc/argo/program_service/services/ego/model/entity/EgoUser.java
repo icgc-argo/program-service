@@ -5,12 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-
+import org.icgc.argo.program_service.proto.UserRole;
 import java.util.UUID;
 
 @Accessors(chain = true)
 @AllArgsConstructor @NoArgsConstructor @Data
 public class EgoUser {
+
   @JsonProperty
   private UUID id;
 
@@ -28,4 +29,7 @@ public class EgoUser {
 
   @JsonProperty
   private String lastName;
+
+  private UserRole role;
+
 }

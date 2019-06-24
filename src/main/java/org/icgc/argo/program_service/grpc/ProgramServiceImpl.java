@@ -248,10 +248,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void updateUser(UpdateUserRequest request, StreamObserver<Empty> responseObserver) {
     val userId = commonConverter.stringToUUID(request.getUserId());
     val role = request.getRole().getValue();
-    val programId = commonConverter.stringToUUID(request.getProgramId());
     val shortname = commonConverter.unboxStringValue(request.getShortName());
     try {
-      egoService.updateUserRole(userId, shortname, programId, role);
+      egoService.updateUserRole(userId, shortname, role);
     } catch (NotFoundException e) {
       responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
     } catch (RuntimeException e) {
