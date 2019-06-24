@@ -98,7 +98,10 @@ class EgoServiceIT {
   @BeforeAll
   void setUp() {
     egoService = new EgoService(repository, converter, client, mailService, inviteRepository);
-    setUpUser();
+    setUpUser(TEST_EMAIL);
+    setUpUser(ADMIN_USER_EMAIL);
+    setUpUser(COLLABORATOR_USER_EMAIL);
+    setUpUser(UPDATE_USER_TEST_EMAIL);
     programEntity = setupProgram();
   }
 
@@ -144,12 +147,12 @@ class EgoServiceIT {
     return false;
   }
 
-  public EgoUser setUpUser() {
-    val user = egoService.getEgoClient().getUser(UPDATE_USER_TEST_EMAIL);
+  public EgoUser setUpUser(String email) {
+    val user = egoService.getEgoClient().getUser(email);
     if (user.isPresent()) {
       return user.get();
     }
-    return egoService.getEgoClient().createEgoUser(UPDATE_USER_TEST_EMAIL);
+    return egoService.getEgoClient().createEgoUser(email);
   }
 
   @Test
