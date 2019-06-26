@@ -13,11 +13,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.validation.beanvalidation.CustomValidatorBean;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
+import javax.validation.*;
 import javax.validation.constraints.NotNull;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Properties;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -101,6 +107,22 @@ public class AppProperties {
         build();
     t.setUriTemplateHandler(new DefaultUriBuilderFactory(getEgoUrl()));
     return t;
+  }
+
+  public ClockProvider getClockProvider() {
+    return new MyClockProvider();
+  }
+
+  @Bean
+  public ValidatorFactory validatorFactory() {
+        val config = Validation.byDefaultProvider().configure();
+        return config.clockProvider(getClockProvider()).buildValidatorFactory();
+  }
+
+  @Bean
+  public Validator defaultValidator() {
+    val factory = validatorFactory();
+    return factory.getValidator();
   }
 }
 

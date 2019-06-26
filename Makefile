@@ -27,8 +27,8 @@ DOCKER_PROJ := $$(sed -n -e 's/.*<name>\(.*\)<\/name>.*/\1/p' ./pom.xml)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 # Required System files
-DOCKER_EXE := /usr/bin/docker
-DOCKER_COMPOSE_EXE := /usr/bin/docker-compose
+DOCKER_EXE := $(shell which docker)
+DOCKER_COMPOSE_EXE := $(shell which docker-compose)
 
 # Required Project files
 DOCKERFILE_SERVER := Dockerfile

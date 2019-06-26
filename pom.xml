@@ -39,7 +39,7 @@
 		<guava.version>27.1-jre</guava.version>
 		<mockito.version>2.25.1</mockito.version>
 		<velocity.version>1.7</velocity.version>
-
+		<el.version>3.0.1-b09</el.version>
 		<!--Plugin Versions-->
 		<plugin.compiler.version>3.8.1</plugin.compiler.version>
 		<plugin.protobuf.version>0.6.1</plugin.protobuf.version>
@@ -245,6 +245,11 @@
 			<groupId>org.apache.velocity</groupId>
 			<artifactId>velocity</artifactId>
 			<version>${velocity.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.glassfish</groupId>
+		    <artifactId>javax.el</artifactId>
+		    <version>${el.version}</version>
 		</dependency>
 	</dependencies>
 

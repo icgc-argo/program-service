@@ -24,6 +24,7 @@ import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.proto.UserRole;
+import org.icgc.argo.program_service.validation.ProgramShortName;
 
 import javax.persistence.*;
 import java.util.UUID;
@@ -40,6 +41,7 @@ public class ProgramEgoGroupEntity implements Comparable<ProgramEgoGroupEntity> 
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
+  @ProgramShortName
   @Column(nullable = false, unique = true, updatable = false)
   private String programShortName;
 
