@@ -37,7 +37,7 @@ service ProgramService {
   rpc InviteUser(InviteUserRequest) returns (InviteUserResponse);
   rpc JoinProgram(JoinProgramRequest) returns (google.protobuf.Empty);
 
-  rpc RemoveUser(RemoveUserRequest) returns (google.protobuf.Empty);
+  rpc RemoveUser(RemoveUserRequest) returns (RemoveUserResponse);
   rpc ListUser(ListUserRequest) returns (ListUserResponse);
   rpc UpdateUser(UpdateUserRequest) returns (google.protobuf.Empty);
 
@@ -129,6 +129,10 @@ message ListProgramsResponse {
 message RemoveUserRequest {
   google.protobuf.StringValue user_email = 1;
   google.protobuf.StringValue program_short_name = 2;
+}
+
+message RemoveUserResponse {
+  google.protobuf.StringValue message = 1;
 }
 
 message ListUserRequest {
