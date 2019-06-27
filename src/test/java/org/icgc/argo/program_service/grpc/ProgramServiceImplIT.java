@@ -63,7 +63,7 @@ public class ProgramServiceImplIT {
     assertTrue(programsObserver.completed);
     assertNull(programsObserver.thrown);
     val p1 = buildProgram("Alice Bob and Charlie's Test Program Name",
-      "ABC",
+      "ABC-GB",
       "A test project. Fix this description later.",
       "FULL",
       100000000,
@@ -74,7 +74,7 @@ public class ProgramServiceImplIT {
     createProgram(p1);
 
     val p2 = buildProgram("Xander's Yearly Zoological Experimentations",
-      "XYZ",
+      "XYZ-CA",
       "This needs a better description.",
       "ASSOCIATE",
       500000000,
@@ -119,6 +119,8 @@ public class ProgramServiceImplIT {
       .setGenomicDonors(Int32Value.of(genomicDonors))
       .setWebsite(StringValue.of(website))
       .setCountries(StringValue.of("Canada"))
+      .setRegions(StringValue.of("North America"))
+      .setInstitutions(StringValue.of("Institute of Institute Research"))
       .addCancerTypes("Brain cancer")
       .addPrimarySites("Brain")
       .build();

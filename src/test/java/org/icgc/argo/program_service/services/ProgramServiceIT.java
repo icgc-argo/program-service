@@ -71,7 +71,7 @@ class ProgramServiceIT {
   JoinProgramInviteRepository inviteRepository;
 
   private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
-  private static final String name="TestProgramX";
+  private static final String name="TEST-PROGRAM-X-CA";
   @BeforeAll
   void setUp() {
     egoService = new EgoService(repository, converter, client, mailService, inviteRepository);
