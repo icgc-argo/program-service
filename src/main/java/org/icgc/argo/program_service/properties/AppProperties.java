@@ -108,21 +108,5 @@ public class AppProperties {
     t.setUriTemplateHandler(new DefaultUriBuilderFactory(getEgoUrl()));
     return t;
   }
-
-  public ClockProvider getClockProvider() {
-    return new MyClockProvider();
-  }
-
-  @Bean
-  public ValidatorFactory validatorFactory() {
-        val config = Validation.byDefaultProvider().configure();
-        return config.clockProvider(getClockProvider()).buildValidatorFactory();
-  }
-
-  @Bean
-  public Validator defaultValidator() {
-    val factory = validatorFactory();
-    return factory.getValidator();
-  }
 }
 

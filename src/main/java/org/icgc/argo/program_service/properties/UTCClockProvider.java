@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 
 @Configuration
-public class MyClockProvider implements ClockProvider {
+public class UTCClockProvider implements ClockProvider {
   @Override
   @Bean
   public Clock getClock() {

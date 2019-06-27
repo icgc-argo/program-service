@@ -20,9 +20,10 @@ package org.icgc.argo.program_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = { ValidationAutoConfiguration.class })
 @EnableAspectJAutoProxy
 public class ProgramServiceApplication {
 
