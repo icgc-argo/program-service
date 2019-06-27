@@ -27,6 +27,7 @@ import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.model.enums.Tables;
 import javax.persistence.*;
+import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.PastOrPresent;
@@ -40,6 +41,7 @@ import java.util.UUID;
 @Accessors(chain = true)
 @FieldNameConstants
 @NoArgsConstructor
+@Valid
 public class JoinProgramInvite {
 
   public enum Status {PENDING, ACCEPTED, REVOKED}
