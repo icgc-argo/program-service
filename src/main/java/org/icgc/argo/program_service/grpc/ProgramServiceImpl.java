@@ -232,14 +232,13 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void removeUser(RemoveUserRequest request, StreamObserver<RemoveUserResponse> responseObserver) {
     val programName = request.getProgramShortName().getValue();
     val email = request.getUserEmail().getValue();
-    val message = "User is successfully removed!";
     try {
       egoService.leaveProgram(email, programName);
     } catch (Throwable throwable) {
       responseObserver.onError(status(throwable));
       return;
     }
-    val response = programConverter.toRemoveUserResponse(message);
+    val response = programConverter.toRemoveUserResponse("User is successfully removed!");
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
