@@ -21,7 +21,6 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.UserRole;
@@ -33,17 +32,11 @@ import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
-
 import java.security.interfaces.RSAPublicKey;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,7 +48,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 class EgoServiceTest {
-  @Autowired RestTemplate restTemplate;
+
+  @Autowired
+  RestTemplate restTemplate;
 
   void verifyKey() {
     val rsaPublicKey = (RSAPublicKey) Utils.getPublicKey(publickKey, "RSA");
@@ -152,7 +147,7 @@ class EgoServiceTest {
 
     val programId = UUID.randomUUID();
     val shortname = "WeTheNorth";
-    val mockProgramEntity = new ProgramEntity().setId(programId).setShortName(shortname);
+    new ProgramEntity().setId(programId).setShortName(shortname);
 
     val currentGroup = new EgoGroup();
     currentGroup.setId(UUID.randomUUID());
@@ -176,9 +171,10 @@ class EgoServiceTest {
     when(egoService.isSameRole(newRole, currentGroup.getName())).thenReturn(false);
     when(egoService.getProgramEgoGroup(shortname, newRole)).thenReturn(mockProgramEgoGroup.get());
 
-    doCallRealMethod().when(egoService).updateUserRole(userId, shortname, programId, newRole);
-    egoService.updateUserRole(userId, shortname, programId, newRole);
+    doCallRealMethod().when(egoService).updateUserRole(userId, shortname, newRole);
+    egoService.updateUserRole(userId, shortname, newRole);
 
     verify(egoClient, times(1)).addUserToGroup(collabGroupId, userId);
   }
+
 }

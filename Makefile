@@ -187,3 +187,12 @@ demo-stop:
 	@$(DOCKER_COMPOSE_COMMAND) down
 	@echo $(DONE_MESSAGE)
 
+
+#######################################
+
+publish-npm:
+	@echo $(YELLOW)$(INFO_HEADER) "Publishing Protocol Buffers to NPM"$(END)
+	@echo $(YELLOW)$(INFO_HEADER) " --- Logging into NPM"$(END)
+	@npm login
+	@npm publish ./src/main/proto --access public
+	@echo $(DONE_MESSAGE)

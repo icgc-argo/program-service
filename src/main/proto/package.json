@@ -1,0 +1,13 @@
+{
+  "name": "@icgc-argo/program-service-proto",
+  "version": "0.0.1",
+  "description": "GRPC Protobuf files for ICGC-Argo Program Service",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icgc-argo/program-service/"
+  },
+  "author": "icgc-argo",
+  "license": "AGPL-3.0-only"
+}

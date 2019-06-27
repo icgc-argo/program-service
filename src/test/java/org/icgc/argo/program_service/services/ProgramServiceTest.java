@@ -18,7 +18,6 @@
 
 package org.icgc.argo.program_service.services;
 
-import lombok.NonNull;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.converter.CommonConverter;
@@ -32,33 +31,23 @@ import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.*;
-
-import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
-
 import org.springframework.test.util.ReflectionTestUtils;
-
 import java.time.LocalDateTime;
-
 import java.util.*;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceTest {
+
   @InjectMocks
   private ProgramService programService;
 
@@ -77,15 +66,14 @@ class ProgramServiceTest {
   @Mock
   private PrimarySiteRepository primarySiteRepository;
 
-
   @Mock
   private ProgramConverter programConverter;
 
   @Mock
-  private ProgramCancerRepository programCancerRepository;
+  ProgramCancerRepository programCancerRepository;
 
   @Mock
-  private ProgramPrimarySiteRepository programPrimarySiteRepository;
+  ProgramPrimarySiteRepository programPrimarySiteRepository;
 
   void setup() {
     program = Program.newBuilder().
@@ -123,7 +111,6 @@ class ProgramServiceTest {
   private Optional<PrimarySiteEntity> createPrimarySite(String name) {
     return Optional.of(new PrimarySiteEntity().setId(UUID.randomUUID()).setName(name));
   }
-
 
   @Test
   void createProgram() {
