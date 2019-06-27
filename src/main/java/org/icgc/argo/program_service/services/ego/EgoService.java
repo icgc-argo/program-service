@@ -67,6 +67,7 @@ public class EgoService {
   private final MailService mailService;
   private RSAPublicKey egoPublicKey;
   private final JoinProgramInviteRepository invitationRepository;
+
   @Autowired
   public EgoService(
     @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
@@ -125,7 +126,6 @@ public class EgoService {
           egoClient.assignPermission(group, programPolicy, getProgramMask(role));
           egoClient.assignPermission(group, dataPolicy, getDataMask(role));
           saveGroupIdForProgramAndRole(shortName, role, group.getId());
-
         }
       );
 
@@ -273,7 +273,6 @@ public class EgoService {
       programEgoGroupRepository.delete(programEgoGroup);
     });
 
-    //TODO: create mini ego client with selected functionality instead of copy multiple requests
     egoClient.removePolicyByName("PROGRAM-" + programShortName);
     egoClient.removePolicyByName("PROGRAMDATA-" + programShortName);
   }
@@ -305,23 +304,23 @@ public class EgoService {
   public Boolean leaveProgram(@Email String email, String shortName) {
     val user = egoClient.getUser(email).orElse(null);
     if (user == null) {
-      log.error("Cannot find user with email {}", email);
-      return false;
+      log.error("Cannot find ego user with email {}", email);
+      throw new EgoException(format("Cannot find ego user with email '%s' ", email));
     }
     return this.leaveProgram(user.getId(), shortName);
   }
 
   public Boolean leaveProgram(UUID userId, String shortName) {
-    val groups = programEgoGroupRepository.findAllByProgramShortName(shortName);
-    groups.forEach(group -> {
-      try {
-        egoClient.removeUserFromGroup(group.getEgoGroupId(), userId);
-
-        log.info("User {} left group {}", userId, group.getEgoGroupId());
-      } catch (HttpClientErrorException | HttpServerErrorException e) {
-        log.info("Cannot remove user {} from group {}: {}", userId, group.getRole(), e.getResponseBodyAsString());
-      }
-    });
+    val group = egoClient.getGroupsByUserId(userId)
+            .filter(egoGroup -> egoGroup.getName().toLowerCase().contains(shortName.toLowerCase()))
+            .findFirst()
+            .get();
+    try {
+      egoClient.removeUserFromGroup(group.getId(), userId);
+    } catch (HttpClientErrorException | HttpServerErrorException e) {
+      log.info("Cannot remove user {} from group {}: {}", userId, group.getName(), e.getResponseBodyAsString());
+      return false;
+    }
     return true;
   }
 

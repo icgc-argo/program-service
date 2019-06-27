@@ -169,7 +169,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onCompleted();
   }
 
-  // not tested
   @Override
   public void joinProgram(JoinProgramRequest request, StreamObserver<Empty> responseObserver) {
     boolean succeed;
@@ -229,19 +228,19 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onCompleted();
   }
 
-  // not tested
   @Override
-  public void removeUser(RemoveUserRequest request,
-    StreamObserver<com.google.protobuf.Empty> responseObserver) {
+  public void removeUser(RemoveUserRequest request, StreamObserver<RemoveUserResponse> responseObserver) {
     val programName = request.getProgramShortName().getValue();
     val email = request.getUserEmail().getValue();
-
     try {
-      //val program_id = programService.getProgram(programName).getId();
       egoService.leaveProgram(email, programName);
     } catch (Throwable throwable) {
       responseObserver.onError(status(throwable));
+      return;
     }
+    val response = programConverter.toRemoveUserResponse("User is successfully removed!");
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
   }
 
   @Override
