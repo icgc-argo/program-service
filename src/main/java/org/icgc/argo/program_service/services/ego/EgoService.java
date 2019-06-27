@@ -126,7 +126,6 @@ public class EgoService {
           egoClient.assignPermission(group, programPolicy, getProgramMask(role));
           egoClient.assignPermission(group, dataPolicy, getDataMask(role));
           saveGroupIdForProgramAndRole(shortName, role, group.getId());
-
         }
       );
 
