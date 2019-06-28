@@ -18,15 +18,9 @@
 
 package org.icgc.argo.program_service.services;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.properties.AppProperties;
-import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
@@ -42,9 +36,6 @@ import org.springframework.test.context.TestPropertySource;
 import java.util.List;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.setMaxElementsForPrinting;
-import static org.icgc.argo.program_service.UtilsTest.*;
-import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
 
 @Slf4j
 @SpringBootTest
@@ -55,12 +46,15 @@ import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
         "spring.datasource.driverClassName=org.postgresql.Driver",
 })
 class ProgramServiceIT {
+
   EgoService egoService;
 
   @Autowired
   EgoRESTClient client;
+
   @Autowired
   ProgramEgoGroupRepository repository;
+
   @Autowired
   ProgramConverter converter;
 
@@ -72,6 +66,7 @@ class ProgramServiceIT {
 
   private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
   private static final String name="TEST-PROGRAM-X-CA";
+
   @BeforeAll
   void setUp() {
     egoService = new EgoService(repository, converter, client, mailService, inviteRepository);
@@ -82,7 +77,6 @@ class ProgramServiceIT {
       log.error(t.getMessage());
     }
   }
-
 
   @Test
   public void test_setupProgram() {
@@ -134,4 +128,5 @@ class ProgramServiceIT {
     assertThat(client.getPolicyByName("PROGRAM-" + name).isPresent()).isFalse();
     assertThat(client.getPolicyByName("PROGRAMDATA-" + name).isPresent()).isFalse();
   }
+
 }
