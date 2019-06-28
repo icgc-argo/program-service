@@ -27,6 +27,10 @@ import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.model.enums.Tables;
 import javax.persistence.*;
+import javax.validation.Valid;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.FutureOrPresent;
+import javax.validation.constraints.PastOrPresent;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
@@ -37,6 +41,7 @@ import java.util.UUID;
 @Accessors(chain = true)
 @FieldNameConstants
 @NoArgsConstructor
+@Valid
 public class JoinProgramInvite {
 
   public enum Status {PENDING, ACCEPTED, REVOKED}
@@ -47,11 +52,14 @@ public class JoinProgramInvite {
   private UUID id;
 
   @Column(nullable = false, updatable = false)
+  @PastOrPresent
   private LocalDateTime createdAt;
 
   @Column(nullable = false)
-  private LocalDateTime expiredAt;
+  @FutureOrPresent
+  private LocalDateTime expiresAt;
 
+  @PastOrPresent
   private LocalDateTime acceptedAt;
 
   @ManyToOne
@@ -59,6 +67,7 @@ public class JoinProgramInvite {
   private ProgramEntity program;
 
   @Column(nullable = false, updatable = false)
+  @Email
   @Getter private String userEmail;
 
   @Column(nullable = false)
@@ -81,7 +90,7 @@ public class JoinProgramInvite {
 
   public JoinProgramInvite(ProgramEntity program, String userEmail, String firstName, String lastName, UserRole role) {
     this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
-    this.expiredAt = this.createdAt.plusHours(48);
+    this.expiresAt = this.createdAt.plusHours(48);
     this.acceptedAt = null;
 
     this.program = program;
@@ -103,7 +112,7 @@ public class JoinProgramInvite {
   }
 
   public Boolean isExpired() {
-    return LocalDateTime.now(ZoneOffset.UTC).isAfter(this.expiredAt);
+    return LocalDateTime.now(ZoneOffset.UTC).isAfter(this.expiresAt);
   }
 }
 

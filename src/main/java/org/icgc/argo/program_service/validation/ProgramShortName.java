@@ -1,3 +1,5 @@
+package org.icgc.argo.program_service.validation;
+
 /*
  * Copyright (c) 2019. Ontario Institute for Cancer Research
  *
@@ -16,19 +18,24 @@
  *
  */
 
-package org.icgc.argo.program_service;
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@SpringBootApplication(exclude = { ValidationAutoConfiguration.class })
-@EnableAspectJAutoProxy
-public class ProgramServiceApplication {
+@Target({ FIELD })
+@Retention(RUNTIME)
+@Constraint(validatedBy = ProgramShortNameValidator.class)
+@Documented
+public @interface ProgramShortName {
+  String message() default "{ProgramShortName.invalid}";
 
-  public static void main(String[] args) {
-    SpringApplication.run(ProgramServiceApplication.class, args);
-  }
+  Class<?>[] groups() default {};
 
+
+  Class<? extends Payload>[] payload() default {};
 }

@@ -24,14 +24,19 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.validator.constraints.URL;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.proto.MembershipType;
+import org.icgc.argo.program_service.validation.ProgramShortName;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PastOrPresent;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -56,6 +61,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
 
   @NotNull
   @Column(name = SqlFields.SHORTNAME)
+  @ProgramShortName
   private String shortName;
 
   @NotNull
@@ -68,28 +74,34 @@ public class ProgramEntity implements NameableEntity<UUID> {
   private MembershipType membershipType;
 
   @NotNull
+  @PositiveOrZero
   @Column(name = SqlFields.COMMITMENTDONORS)
   private Integer commitmentDonors;
 
   @NotNull
+  @PositiveOrZero
   @Column(name = SqlFields.SUBMITTEDDONORS)
   private Integer submittedDonors;
 
   @NotNull
+  @PositiveOrZero
   @Column(name = SqlFields.GENOMICDONORS)
   private Integer genomicDonors;
 
   @NotNull
+  @URL
   @Column(name = SqlFields.WEBSITE)
   private String website;
 
   @NotNull
   @EqualsAndHashCode.Exclude
+  @PastOrPresent
   @Column(name = SqlFields.CREATEDAT)
   private LocalDateTime createdAt;
 
   @NotNull
   @EqualsAndHashCode.Exclude
+  @PastOrPresent
   @Column(name = SqlFields.UPDATEDAT)
   private LocalDateTime updatedAt;
 
@@ -115,7 +127,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
     fetch = FetchType.LAZY,
     orphanRemoval = true
   )
-  private Set<ProgramCancer> programCancers = new TreeSet<>();
+  private Set<@NotNull ProgramCancer> programCancers = new TreeSet<>();
 
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
@@ -125,7 +137,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
     fetch = FetchType.LAZY,
     orphanRemoval = true
   )
-  private Set<ProgramPrimarySite> programPrimarySites = new TreeSet<>();
+  private Set<@NotNull ProgramPrimarySite> programPrimarySites = new TreeSet<>();
 
   public List<String> listCancerTypes() {
     return mapToList(getProgramCancers(), c -> c.getCancer().getName());

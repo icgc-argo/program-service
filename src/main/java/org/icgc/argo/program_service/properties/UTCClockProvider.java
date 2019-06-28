@@ -1,3 +1,5 @@
+package org.icgc.argo.program_service.properties;
+
 /*
  * Copyright (c) 2019. Ontario Institute for Cancer Research
  *
@@ -13,22 +15,35 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
-package org.icgc.argo.program_service;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import javax.validation.ClockProvider;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 
-@SpringBootApplication(exclude = { ValidationAutoConfiguration.class })
-@EnableAspectJAutoProxy
-public class ProgramServiceApplication {
 
-  public static void main(String[] args) {
-    SpringApplication.run(ProgramServiceApplication.class, args);
+@Configuration
+public class UTCClockProvider implements ClockProvider {
+  @Override
+  @Bean
+  public Clock getClock() {
+
+    return new Clock() {
+      @Override public ZoneId getZone() {
+        return ZoneId.of("UTC");
+      }
+
+      @Override public Clock withZone(ZoneId zone) {
+        return Clock.system(ZoneId.of("UTC"));
+      }
+
+      @Override public Instant instant() {
+        return Instant.now();
+      }
+    };
   }
-
 }

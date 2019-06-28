@@ -1,3 +1,5 @@
+package org.icgc.argo.program_service.properties;
+
 /*
  * Copyright (c) 2019. Ontario Institute for Cancer Research
  *
@@ -13,22 +15,32 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
-package org.icgc.argo.program_service;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import javax.validation.ClockProvider;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
 
-@SpringBootApplication(exclude = { ValidationAutoConfiguration.class })
-@EnableAspectJAutoProxy
-public class ProgramServiceApplication {
+@Slf4j
+@Configuration
+public class ValidationProperties {
+  @Bean
+  public ClockProvider clockProvider() {
+    return new UTCClockProvider();
+  }
 
-  public static void main(String[] args) {
-    SpringApplication.run(ProgramServiceApplication.class, args);
+
+  @Bean
+  public ValidatorFactory factory() {
+    return Validation.byDefaultProvider()
+      .configure()
+      .clockProvider(clockProvider())
+      .buildValidatorFactory();
   }
 
 }
+

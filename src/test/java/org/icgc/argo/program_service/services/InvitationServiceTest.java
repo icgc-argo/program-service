@@ -73,7 +73,7 @@ class InvitationServiceTest {
     assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "createdAt"))
       .as("Creation time is within 5 seconds")
       .isCloseTo(LocalDateTime.now(ZoneOffset.UTC), within(5, ChronoUnit.SECONDS));
-    assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "expiredAt"))
+    assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "expiresAt"))
       .as("Expire time should be after 47 hours")
       .isAfter(LocalDateTime.now(ZoneOffset.UTC).plusHours(47));
     assertThat(ReflectionTestUtils.getField(invitation, "status"))
