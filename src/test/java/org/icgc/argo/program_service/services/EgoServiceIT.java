@@ -206,17 +206,17 @@ class EgoServiceIT {
 
   @Test
   void joinAndLeaveProgram() {
-    val result = egoService.joinProgram(TEST_EMAIL, programEntity.getShortName(), UserRole.ADMIN);
+    val result = egoService.joinProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName(), UserRole.ADMIN);
     assertThat(result).isTrue();
 
-    val user = client.getUser(TEST_EMAIL);
+    val user = client.getUser(COLLABORATOR_USER_EMAIL);
     assertThat(user.isPresent()).isTrue();
 
     val groupId = client.getGroupByName("PROGRAM-"+PROGRAM_NAME+"-ADMIN").get().getId();
-    assertThat(client.isMember(groupId, TEST_EMAIL)).isTrue();
+    assertThat(client.isMember(groupId, COLLABORATOR_USER_EMAIL)).isTrue();
 
-    egoService.leaveProgram(TEST_EMAIL, programEntity.getShortName());
-    assertThat(client.isMember(groupId, TEST_EMAIL)).isFalse();
+    egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName());
+    assertThat(client.isMember(groupId, COLLABORATOR_USER_EMAIL)).isFalse();
   }
 
   @Test
@@ -224,6 +224,7 @@ class EgoServiceIT {
     List<String> expectedUsers = new ArrayList();
     expectedUsers.add(ADMIN_USER_EMAIL);
     expectedUsers.add(COLLABORATOR_USER_EMAIL);
+    expectedUsers.add(TEST_EMAIL);
 
     val adminGroupId = client.getGroupByName("PROGRAM-"+PROGRAM_NAME+"-ADMIN").get().getId();
     val collaboratorGroupId = client.getGroupByName("PROGRAM-"+PROGRAM_NAME+"-COLLABORATOR").get().getId();

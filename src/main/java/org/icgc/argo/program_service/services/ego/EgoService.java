@@ -294,7 +294,7 @@ public class EgoService {
     val usersInGroup = egoClient.getUsersByGroupId(egoGroupId);
     if(usersInGroup.anyMatch(egoUser -> egoUser.getEmail().equalsIgnoreCase(email))){
       log.error("User {} has already joined ego group {} for program {}.", email, egoGroupId, programEgoGroup.get().getProgramShortName());
-      throw new EgoException(format("User %s has already joined ego group %s for program %s.", email, egoGroupId, programEgoGroup.get().getProgramShortName()));
+      return false;
     }
 
     try {
