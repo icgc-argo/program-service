@@ -18,6 +18,8 @@
 
 package org.icgc.argo.program_service.services;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import io.grpc.Status;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,7 @@ import org.icgc.argo.program_service.repositories.*;
 import org.icgc.argo.program_service.repositories.query.CancerSpecification;
 import org.icgc.argo.program_service.repositories.query.PrimarySiteSpecification;
 import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
+import org.icgc.argo.program_service.utils.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -44,6 +47,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
@@ -163,10 +167,15 @@ public class ProgramService {
   }
 
   private void processCancers(@NonNull ProgramEntity programToUpdate, @NonNull List<String> cancerNames) {
-    cancerNames.forEach(name -> getCancer(name));
-    programCancerRepository.deleteAllByProgramId(programToUpdate.getId());
-    List<CancerEntity> cancerEntities = cancerRepository.findAllByNameIn(cancerNames);
+    val cancerEntities = cancerRepository.findAllByNameIn(cancerNames);
+    val requestedCancerNames = ImmutableSet.copyOf(cancerNames);
+    val existingCancerNames = mapToSet(cancerEntities, CancerEntity::getName);
+    val nonExistingCancerNames = CollectionUtils.difference(requestedCancerNames, existingCancerNames);
+    checkState(
+            nonExistingCancerNames.isEmpty(),
+            "The following cancer names do not exist: %s", Joiner.on(" , ").join(nonExistingCancerNames));
 
+    programCancerRepository.deleteAllByProgramId(programToUpdate.getId());
     val programCancers = cancerEntities.stream()
             .map(c -> createProgramCancer(programToUpdate, c))
             .map(Optional::get)
@@ -175,9 +184,15 @@ public class ProgramService {
   }
 
   private void processPrimarySites(@NonNull ProgramEntity programToUpdate, @NonNull List<String> primarySitesNames) {
-    primarySitesNames.forEach(name -> getPrimarySite(name));
-    programPrimarySiteRepository.deleteAllByProgramId(programToUpdate.getId());
     val primarySiteEntities = primarySiteRepository.findAllByNameIn(primarySitesNames);
+    val requestedPrimarySiteNames = ImmutableSet.copyOf(primarySitesNames);
+    val existingPrimarySiteNames = mapToSet(primarySiteEntities, PrimarySiteEntity::getName);
+    val nonExistingPrimarySiteNames = CollectionUtils.difference(requestedPrimarySiteNames, existingPrimarySiteNames);
+    checkState(
+            nonExistingPrimarySiteNames.isEmpty(),
+            "The following primary site names do not exist: %s", Joiner.on(" , ").join(nonExistingPrimarySiteNames));
+
+    programPrimarySiteRepository.deleteAllByProgramId(programToUpdate.getId());
     val programPrimarySites = primarySiteEntities.stream()
             .map( ps -> createProgramPrimarySite(programToUpdate, ps))
             .map(Optional::get)
