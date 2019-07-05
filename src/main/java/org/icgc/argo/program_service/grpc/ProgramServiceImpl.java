@@ -20,7 +20,6 @@ package org.icgc.argo.program_service.grpc;
 
 import com.google.protobuf.Empty;
 import io.grpc.Status;
-import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.NonNull;
@@ -170,22 +169,17 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-  public void joinProgram(JoinProgramRequest request, StreamObserver<Empty> responseObserver) {
-    boolean succeed;
+  public void joinProgram(JoinProgramRequest request, StreamObserver<JoinProgramResponse> responseObserver) {
     try {
-      succeed = invitationService.acceptInvite(commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
-    } catch (Throwable t) {
-      responseObserver.onError(t);
-      return;
+      val responseUser = invitationService.acceptInvite(commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
+      val response = programConverter.toJoinProgramResponse(responseUser);
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (NotFoundException e) {
+      responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (RuntimeException e1){
+      responseObserver.onError(Status.UNKNOWN.withDescription(e1.getMessage()).asRuntimeException());
     }
-
-    if (!succeed) {
-      responseObserver.onError(new StatusException(Status.fromCode(Status.Code.UNKNOWN)));
-      return;
-    }
-
-    responseObserver.onNext(Empty.getDefaultInstance());
-    responseObserver.onCompleted();
   }
 
   @Override

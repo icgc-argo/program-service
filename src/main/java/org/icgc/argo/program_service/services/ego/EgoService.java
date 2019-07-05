@@ -277,7 +277,7 @@ public class EgoService {
     egoClient.removePolicyByName("PROGRAMDATA-" + programShortName);
   }
 
-  public Boolean joinProgram(@Email String email, String programShortRole, UserRole role) {
+  public Boolean joinProgram(@Email String email, @NonNull String programShortRole, @NonNull UserRole role) {
     val user = egoClient.getUser(email).orElse(null);
     if (user == null) {
       log.error("Cannot find user with email {}", email);
@@ -290,10 +290,15 @@ public class EgoService {
     }
     val egoGroupId = programEgoGroup.map(ProgramEgoGroupEntity::getEgoGroupId).get();
 
-    //TODO: [rtisma] need to check if the user ids are already associated with the group, to avoid conflicts
+    // check if the user ids are already associated with the group, to avoid conflicts
+    val usersInGroup = egoClient.getUsersByGroupId(egoGroupId);
+    if(usersInGroup.anyMatch(egoUser -> egoUser.getEmail().equalsIgnoreCase(email))){
+      log.error("User {} has already joined ego group {} for program {}.", email, egoGroupId, programEgoGroup.get().getProgramShortName());
+      throw new EgoException(format("User %s has already joined ego group %s for program %s.", email, egoGroupId, programEgoGroup.get().getProgramShortName()));
+    }
+
     try {
       egoClient.addUserToGroup(egoGroupId, user.getId());
-
       log.info("{} joined program {}", email, programShortRole);
     } catch (HttpClientErrorException | HttpServerErrorException e) {
       log.error("Cannot {} joined program {}: {}", email, programShortRole, e.getResponseBodyAsString());

@@ -35,7 +35,7 @@ service ProgramService {
   rpc GetProgram(GetProgramRequest) returns (GetProgramResponse);
 
   rpc InviteUser(InviteUserRequest) returns (InviteUserResponse);
-  rpc JoinProgram(JoinProgramRequest) returns (google.protobuf.Empty);
+  rpc JoinProgram(JoinProgramRequest) returns (JoinProgramResponse);
 
   rpc RemoveUser(RemoveUserRequest) returns (RemoveUserResponse);
   rpc ListUser(ListUserRequest) returns (ListUserResponse);
@@ -180,6 +180,10 @@ message JoinProgramRequest {
 
   // The department of the user
   google.protobuf.StringValue department = 5;
+}
+
+message JoinProgramResponse {
+  User user = 1;
 }
 
 message RemoveProgramRequest {

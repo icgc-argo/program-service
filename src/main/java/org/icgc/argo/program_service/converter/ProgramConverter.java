@@ -176,6 +176,10 @@ public interface ProgramConverter {
       .build();
   }
 
+  default JoinProgramResponse toJoinProgramResponse(EgoUser egoUser){
+    return JoinProgramResponse.newBuilder().setUser(egoUserToUser(egoUser)).build();
+  }
+
   /**
    * Enum Boxing Converters
    */
