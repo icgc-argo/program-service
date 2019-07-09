@@ -70,7 +70,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @EgoAuth(typesAllowed = { "ADMIN" })
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     val program = request.getProgram();
-    val adminEmails = request.getAdminEmailsList();
+    val admins = request.getAdminsList();
+
     ProgramEntity programEntity;
 
     try {
@@ -83,7 +84,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     }
 
     try {
-      egoService.setUpProgram(programEntity.getShortName(), adminEmails);
+      egoService.setUpProgram(programEntity.getShortName());
+      admins.forEach(admin -> {
+              val email = commonConverter.unboxStringValue(admin.getEmail());
+              val firstName = commonConverter.unboxStringValue(admin.getFirstName());
+              val lastName = commonConverter.unboxStringValue(admin.getLastName());
+              egoService.getOrCreateUser(email, firstName, lastName);
+              invitationService.inviteUser(programEntity, email, firstName, lastName, UserRole.ADMIN);
+      });
     } catch (Throwable t) {
       responseObserver.onError(status(t));
       return;
@@ -255,9 +263,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
-    val programName = request.getProgramShortName().getValue();
+    val shortName = request.getProgramShortName().getValue();
     try {
-      egoService.cleanUpProgram(programName);
+      egoService.cleanUpProgram(shortName);
       programService.removeProgram(request.getProgramShortName().getValue());
     } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
       responseObserver.onError(Status.NOT_FOUND.withDescription(getExceptionMessage(e)).asRuntimeException());

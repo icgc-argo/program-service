@@ -65,7 +65,6 @@ public class EgoService {
   private final EgoClient egoClient;
   private final ProgramEgoGroupRepository programEgoGroupRepository;
   private final ProgramConverter programConverter;
-  private final MailService mailService;
   private RSAPublicKey egoPublicKey;
   private final JoinProgramInviteRepository invitationRepository;
 
@@ -74,13 +73,11 @@ public class EgoService {
     @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
     @NonNull ProgramConverter programConverter,
     @NonNull EgoClient restClient,
-    @NonNull MailService mailService,
     @NonNull JoinProgramInviteRepository invitationRepository
   ) {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.programConverter = programConverter;
     this.egoClient = restClient;
-    this.mailService = mailService;
     this.invitationRepository = invitationRepository;
     setEgoPublicKey();
   }
@@ -115,7 +112,7 @@ public class EgoService {
   }
 
   //TODO: add transactional. If there are more programdb logic in the future and something fails, it will be able to roll back those changes.
-  public void setUpProgram(@NonNull String shortName, @NonNull Collection<String> adminEmails) {
+  public void setUpProgram(@NonNull String shortName) {
     val programPolicy = egoClient.createEgoPolicy("PROGRAM-" + shortName);
     val dataPolicy = egoClient.createEgoPolicy("PROGRAMDATA-" + shortName);
 
@@ -129,8 +126,6 @@ public class EgoService {
           saveGroupIdForProgramAndRole(shortName, role, group.getId());
         }
       );
-
-    adminEmails.forEach(email -> initAdmin(email, shortName));
   }
 
   public static String getProgramMask(UserRole role) {
@@ -263,7 +258,7 @@ public class EgoService {
   }
 
   @Transactional
-  public void cleanUpProgram(String programShortName) {
+  public void cleanUpProgram(@NonNull String programShortName) {
     programEgoGroupRepository.findAllByProgramShortName(programShortName).forEach(programEgoGroup -> {
       val egoGroupId = programEgoGroup.getEgoGroupId();
       try {
@@ -276,15 +271,17 @@ public class EgoService {
 
     egoClient.removePolicyByName("PROGRAM-" + programShortName);
     egoClient.removePolicyByName("PROGRAMDATA-" + programShortName);
+
+    invitationRepository.deleteAllByProgramShortName(programShortName);
   }
 
-  public Boolean joinProgram(@Email String email, @NonNull String programShortRole, @NonNull UserRole role) {
+  public Boolean joinProgram(@Email String email, @NonNull String programShortName, @NonNull UserRole role) {
     val user = egoClient.getUser(email).orElse(null);
     if (user == null) {
       log.error("Cannot find user with email {}", email);
       return false;
     }
-    val programEgoGroup = programEgoGroupRepository.findByProgramShortNameAndRole(programShortRole, role);
+    val programEgoGroup = programEgoGroupRepository.findByProgramShortNameAndRole(programShortName, role);
     if (programEgoGroup.isEmpty()) {
       log.error("Cannot find program ego group, have you created the groups in ego?");
       return false;
@@ -300,9 +297,9 @@ public class EgoService {
 
     try {
       egoClient.addUserToGroup(egoGroupId, user.getId());
-      log.info("{} joined program {}", email, programShortRole);
+      log.info("{} joined program {}", email, programShortName);
     } catch (HttpClientErrorException | HttpServerErrorException e) {
-      log.error("Cannot {} joined program {}: {}", email, programShortRole, e.getResponseBodyAsString());
+      log.error("Cannot {} joined program {}: {}", email, programShortName, e.getResponseBodyAsString());
       return false;
     }
     return true;
@@ -329,6 +326,12 @@ public class EgoService {
       return false;
     }
     return true;
+  }
+
+  public EgoUser getOrCreateUser(@Email String email, @NonNull String firstName, @NonNull String lastName){
+    return egoClient.getUser(email)
+            .orElseGet(() ->{
+              return egoClient.createEgoUser(email).setFirstName(firstName).setLastName(lastName);});
   }
 
   public EgoUser convertInvitationToEgoUser(@NonNull JoinProgramInvite invite){
