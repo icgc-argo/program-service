@@ -303,6 +303,7 @@ public class EgoService {
       log.info("{} joined program {}", email, programShortRole);
     } catch (HttpClientErrorException | HttpServerErrorException e) {
       log.error("Cannot {} joined program {}: {}", email, programShortRole, e.getResponseBodyAsString());
+      return false;
     }
     return true;
   }

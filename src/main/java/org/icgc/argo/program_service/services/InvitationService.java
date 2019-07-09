@@ -30,9 +30,9 @@ public class InvitationService {
 
   @Autowired
   InvitationService(
-    MailService mailService,
-    JoinProgramInviteRepository invitationRepository,
-    EgoService egoService) {
+    @NonNull MailService mailService,
+    @NonNull JoinProgramInviteRepository invitationRepository,
+    @NonNull EgoService egoService) {
     this.mailService = mailService;
     this.invitationRepository = invitationRepository;
     this.egoService = egoService;
@@ -56,8 +56,8 @@ public class InvitationService {
             .orElseThrow(() ->
               new NotFoundException(format("Cannot find invitation with id '%s' ", invitationId)));
     invitation.accept();
-    egoService.joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
     invitationRepository.save(invitation);
+    egoService.joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
     return egoService.convertInvitationToEgoUser(invitation);
   }
 
