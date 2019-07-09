@@ -21,6 +21,7 @@ package org.icgc.argo.program_service.converter;
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
 import lombok.val;
+import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
@@ -28,7 +29,6 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-
 import java.util.Collection;
 import java.util.UUID;
 
@@ -158,6 +158,26 @@ public interface ProgramConverter {
   @Mapping(target = "mergeRole", ignore = true)
   User egoUserToUser(EgoUser egoUser);
 
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeUser", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "user", source = "egoUser")
+  JoinProgramResponse egoUserToJoinProgramResponse(Integer dummy, EgoUser egoUser);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "type", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "email", source = "userEmail")
+  EgoUser joinProgramInviteToEgoUser(JoinProgramInvite invite);
+
+  default JoinProgramResponse egoUserToJoinProgramResponse(EgoUser egoUser){
+    return egoUserToJoinProgramResponse(0, egoUser);
+  }
+
   default UserRoleValue boxUserValue(@NonNull UserRole role){
     return UserRoleValue.newBuilder().setValue(role).build();
   }
@@ -174,10 +194,6 @@ public interface ProgramConverter {
     return InviteUserResponse.newBuilder()
       .setInviteId(StringValue.of(inviteId.toString()))
       .build();
-  }
-
-  default JoinProgramResponse toJoinProgramResponse(EgoUser egoUser){
-    return JoinProgramResponse.newBuilder().setUser(egoUserToUser(egoUser)).build();
   }
 
   /**

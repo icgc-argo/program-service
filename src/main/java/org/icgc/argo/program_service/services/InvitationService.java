@@ -12,6 +12,7 @@ import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -31,8 +32,7 @@ public class InvitationService {
   InvitationService(
     MailService mailService,
     JoinProgramInviteRepository invitationRepository,
-    EgoService egoService
-  ) {
+    EgoService egoService) {
     this.mailService = mailService;
     this.invitationRepository = invitationRepository;
     this.egoService = egoService;
@@ -49,7 +49,8 @@ public class InvitationService {
     return invitation.getId();
   }
 
-  public EgoUser acceptInvite(UUID invitationId) throws NotFoundException {
+  @Transactional
+  public EgoUser acceptInvite(@NonNull UUID invitationId) throws NotFoundException {
     val invitation = invitationRepository
             .findById(invitationId)
             .orElseThrow(() ->
@@ -57,15 +58,7 @@ public class InvitationService {
     invitation.accept();
     egoService.joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
     invitationRepository.save(invitation);
-    return convertInvitationToEgoUser(invitation);
+    return egoService.convertInvitationToEgoUser(invitation);
   }
 
-  private EgoUser convertInvitationToEgoUser(@NonNull JoinProgramInvite invite){
-    return EgoUser.builder()
-            .email(invite.getUserEmail())
-            .firstName(invite.getFirstName())
-            .lastName(invite.getLastName())
-            .role(invite.getRole())
-            .build();
-  }
 }

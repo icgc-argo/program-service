@@ -19,42 +19,25 @@
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
-import org.icgc.argo.program_service.Utils;
-import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
-import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
-import org.icgc.argo.program_service.services.ego.EgoClient;
-import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestTemplate;
-
-import java.security.interfaces.RSAPublicKey;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
-
-import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 class InvitationServiceTest {
+
   @Test
   void inviteUser() {
     val programEntity = mock(ProgramEntity.class);
@@ -99,6 +82,8 @@ class InvitationServiceTest {
     val program = new ProgramEntity();
     program.setShortName("TEST1");
     when(invitation.getProgram()).thenReturn(program);
+    when(invitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
+    when(invitation.getId()).thenReturn(UUID.randomUUID());
     when(invitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
     invitationService.acceptInvite(invitation.getId());
     verify(egoService).joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());

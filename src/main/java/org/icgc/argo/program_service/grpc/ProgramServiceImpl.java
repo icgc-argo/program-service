@@ -172,7 +172,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void joinProgram(JoinProgramRequest request, StreamObserver<JoinProgramResponse> responseObserver) {
     try {
       val responseUser = invitationService.acceptInvite(commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
-      val response = programConverter.toJoinProgramResponse(responseUser);
+      val response = programConverter.egoUserToJoinProgramResponse(responseUser);
       responseObserver.onNext(response);
       responseObserver.onCompleted();
     } catch (NotFoundException e) {

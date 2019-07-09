@@ -29,6 +29,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.User;
@@ -329,5 +330,8 @@ public class EgoService {
     return true;
   }
 
+  public EgoUser convertInvitationToEgoUser(@NonNull JoinProgramInvite invite){
+    return programConverter.joinProgramInviteToEgoUser(invite);
+  }
 }
 
