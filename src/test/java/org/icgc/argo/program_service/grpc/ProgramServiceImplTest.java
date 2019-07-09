@@ -25,6 +25,7 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
 import org.assertj.core.api.Assertions;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.CreateProgramRequest;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.RemoveProgramRequest;
@@ -70,11 +71,9 @@ class ProgramServiceImplTest {
   void createProgram() {
     val request = mock(CreateProgramRequest.class);
     val program = mock(Program.class);
-    val adminEmails = mock(ProtocolStringList.class);
     val responseObserver = mock(StreamObserver.class);
 
     when(request.getProgram()).thenReturn(program);
-    when(request.getAdminEmailsList()).thenReturn(adminEmails);
     when(programService.createProgram(program))
         .thenThrow(new DataIntegrityViolationException("test error"));
 
@@ -88,6 +87,7 @@ class ProgramServiceImplTest {
   void removeProgram() {
     val request = mock(RemoveProgramRequest.class);
     when(request.getProgramShortName()).thenReturn(StringValue.of("TEST-XYZ123"));
+    when(programService.getProgram("TEST-XYZ123")).thenReturn(new ProgramEntity().setId(UUID.randomUUID()));
     val responseObserver = mock(StreamObserver.class);
 
     doAnswer(invocation -> {

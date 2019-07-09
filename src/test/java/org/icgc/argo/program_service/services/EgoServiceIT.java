@@ -71,9 +71,6 @@ class EgoServiceIT {
   ProgramConverter converter;
 
   @Autowired
-  MailService mailService;
-
-  @Autowired
   JoinProgramInviteRepository inviteRepository;
 
   @Autowired
@@ -97,7 +94,7 @@ class EgoServiceIT {
 
   @BeforeAll
   void setUp() {
-    egoService = new EgoService(repository, converter, client, mailService, inviteRepository);
+    egoService = new EgoService(repository, converter, client, inviteRepository);
     setUpUser(TEST_EMAIL);
     setUpUser(ADMIN_USER_EMAIL);
     setUpUser(COLLABORATOR_USER_EMAIL);
@@ -131,7 +128,7 @@ class EgoServiceIT {
       .setDescription(stringValue(""))
       .build();
 
-    egoService.setUpProgram(PROGRAM_NAME, List.of(TEST_EMAIL));
+    egoService.setUpProgram(PROGRAM_NAME);
     return programService.createProgram(program);
   }
 
@@ -255,7 +252,7 @@ class EgoServiceIT {
   void cleanUp() {
     val ego = egoService.getEgoClient();
     try {
-      egoService.cleanUpProgram(PROGRAM_NAME);
+      egoService.cleanUpProgram(PROGRAM_NAME, programEntity.getId());
       programService.removeProgram(PROGRAM_NAME);
     } catch (Throwable throwable) {
       System.err.println("Remove program threw" + throwable.getMessage());

@@ -58,10 +58,8 @@ class EgoServiceTest {
     val retryTemplate = new RetryTemplate();
     val programConverter = mock(ProgramConverter.class);
     val egoClient = mock(EgoRESTClient.class);
-    val mailClient = mock(MailService.class);
     val invitationRepository = mock(JoinProgramInviteRepository.class);
-    val egoService = new EgoService(programEgoGroupRepository, programConverter, egoClient, mailClient,
-      invitationRepository);
+    val egoService = new EgoService(programEgoGroupRepository, programConverter, egoClient, invitationRepository);
     ReflectionTestUtils.setField(egoService, "egoPublicKey", rsaPublicKey);
     assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
     assertFalse(egoService.verifyToken(expiredToken).isPresent(), "Expired token should return empty ego token");
