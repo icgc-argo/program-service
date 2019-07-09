@@ -214,6 +214,7 @@ public class ProgramService {
   public void removeProgram(String name) throws EmptyResultDataAccessException {
     val p = getProgram(name);
     programRepository.deleteById(p.getId());
+    log.info("Program {} is successfully deleted. ", name);
   }
 
   public List<ProgramEntity> listPrograms() {
