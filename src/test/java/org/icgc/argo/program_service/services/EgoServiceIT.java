@@ -149,7 +149,7 @@ class EgoServiceIT {
     if (user.isPresent()) {
       return user.get();
     }
-    return egoService.getEgoClient().createEgoUser(email);
+    return egoService.getEgoClient().createEgoUser(email, "", "");
   }
 
   @Test
