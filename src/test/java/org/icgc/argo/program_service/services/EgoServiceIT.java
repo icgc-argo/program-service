@@ -252,7 +252,7 @@ class EgoServiceIT {
   void cleanUp() {
     val ego = egoService.getEgoClient();
     try {
-      egoService.cleanUpProgram(PROGRAM_NAME, programEntity.getId());
+      egoService.cleanUpProgram(PROGRAM_NAME);
       programService.removeProgram(PROGRAM_NAME);
     } catch (Throwable throwable) {
       System.err.println("Remove program threw" + throwable.getMessage());

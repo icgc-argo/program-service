@@ -95,7 +95,7 @@ class ProgramServiceIT {
               .setCreatedAt(LocalDateTime.now())
               .setUpdatedAt(LocalDateTime.now());
       programRepository.save(program);
-      egoService.cleanUpProgram(name, program.getId());
+      egoService.cleanUpProgram(name);
     } catch(Throwable t) {
       log.error(t.getMessage());
     }
@@ -131,8 +131,7 @@ class ProgramServiceIT {
 
 
   public void test_removeProgram(String name) {
-    val program = programService.getProgram(name);
-    egoService.cleanUpProgram(name, program.getId());
+    egoService.cleanUpProgram(name);
     Throwable throwable=null;
     try {
       egoService.getProgramEgoGroup(name, UserRole.ADMIN);

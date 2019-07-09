@@ -257,7 +257,7 @@ public class EgoService {
   }
 
   @Transactional
-  public void cleanUpProgram(@NonNull String programShortName, @NonNull UUID programId) {
+  public void cleanUpProgram(@NonNull String programShortName) {
     programEgoGroupRepository.findAllByProgramShortName(programShortName).forEach(programEgoGroup -> {
       val egoGroupId = programEgoGroup.getEgoGroupId();
       try {
@@ -271,7 +271,7 @@ public class EgoService {
     egoClient.removePolicyByName("PROGRAM-" + programShortName);
     egoClient.removePolicyByName("PROGRAMDATA-" + programShortName);
 
-    invitationRepository.deleteAllByProgramId(programId);
+    invitationRepository.deleteAllByProgramShortName(programShortName);
   }
 
   public Boolean joinProgram(@Email String email, @NonNull String programShortName, @NonNull UserRole role) {

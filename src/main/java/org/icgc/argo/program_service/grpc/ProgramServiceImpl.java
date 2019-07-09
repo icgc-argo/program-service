@@ -271,8 +271,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
     val shortName = request.getProgramShortName().getValue();
     try {
-      val program = programService.getProgram(shortName);
-      egoService.cleanUpProgram(shortName, program.getId());
+      egoService.cleanUpProgram(shortName);
       programService.removeProgram(request.getProgramShortName().getValue());
     } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
       responseObserver.onError(Status.NOT_FOUND.withDescription(getExceptionMessage(e)).asRuntimeException());

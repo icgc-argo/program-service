@@ -24,6 +24,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface JoinProgramInviteRepository extends JpaRepository<JoinProgramInvite, UUID> {
-  void deleteAllByProgramId(UUID programId);
+  void deleteAllByProgramShortName(String programShortName);
 }
 

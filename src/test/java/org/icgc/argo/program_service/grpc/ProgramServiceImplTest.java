@@ -18,14 +18,12 @@
 
 package org.icgc.argo.program_service.grpc;
 
-import com.google.protobuf.ProtocolStringList;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.val;
 import org.assertj.core.api.Assertions;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.CreateProgramRequest;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.RemoveProgramRequest;
@@ -41,8 +39,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
-
-import java.util.UUID;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -87,7 +83,6 @@ class ProgramServiceImplTest {
   void removeProgram() {
     val request = mock(RemoveProgramRequest.class);
     when(request.getProgramShortName()).thenReturn(StringValue.of("TEST-XYZ123"));
-    when(programService.getProgram("TEST-XYZ123")).thenReturn(new ProgramEntity().setId(UUID.randomUUID()));
     val responseObserver = mock(StreamObserver.class);
 
     doAnswer(invocation -> {
