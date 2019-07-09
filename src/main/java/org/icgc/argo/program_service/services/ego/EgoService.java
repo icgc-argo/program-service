@@ -29,6 +29,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.User;
@@ -287,12 +288,19 @@ public class EgoService {
     }
     val egoGroupId = programEgoGroup.map(ProgramEgoGroupEntity::getEgoGroupId).get();
 
-    //TODO: [rtisma] need to check if the user ids are already associated with the group, to avoid conflicts
+    // check if the user ids are already associated with the group, to avoid conflicts
+    val usersInGroup = egoClient.getUsersByGroupId(egoGroupId);
+    if(usersInGroup.anyMatch(egoUser -> egoUser.getEmail().equalsIgnoreCase(email))){
+      log.error("User {} has already joined ego group {} for program {}.", email, egoGroupId, programEgoGroup.get().getProgramShortName());
+      return false;
+    }
+
     try {
       egoClient.addUserToGroup(egoGroupId, user.getId());
       log.info("{} joined program {}", email, programShortName);
     } catch (HttpClientErrorException | HttpServerErrorException e) {
       log.error("Cannot {} joined program {}: {}", email, programShortName, e.getResponseBodyAsString());
+      return false;
     }
     return true;
   }
@@ -326,5 +334,8 @@ public class EgoService {
               return egoClient.createEgoUser(email).setFirstName(firstName).setLastName(lastName);});
   }
 
+  public EgoUser convertInvitationToEgoUser(@NonNull JoinProgramInvite invite){
+    return programConverter.joinProgramInviteToEgoUser(invite);
+  }
 }
 
