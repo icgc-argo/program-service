@@ -20,32 +20,28 @@ package org.icgc.argo.program_service.services;
 
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
-import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.converter.ProgramConverterImpl;
 import org.icgc.argo.program_service.model.entity.*;
-import org.icgc.argo.program_service.model.join.ProgramCancer;
-import org.icgc.argo.program_service.model.join.ProgramCancerId;
-import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
-import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.proto.Program;
-import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.*;
+import org.icgc.argo.program_service.utils.EntityGenerator;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.runner.RunWith;
 import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.test.util.ReflectionTestUtils;
-import java.time.LocalDateTime;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@RunWith(SpringRunner.class)
+@Transactional
 class ProgramServiceTest {
 
   @InjectMocks
@@ -75,41 +71,14 @@ class ProgramServiceTest {
   @Mock
   ProgramPrimarySiteRepository programPrimarySiteRepository;
 
+  @Autowired
+  private EntityGenerator entityGenerator;
+
   void setup() {
     program = Program.newBuilder().
-      addAllCancerTypes(List.of("Blood cancer", "Brain cancer")).
-      addAllPrimarySites(List.of("Blood", "Brain")).
-      build();
-
-    setupCancerRepository();
-    setupPrimarySiteRepository();
-
-  }
-
-  void setupCancerRepository() {
-    for (val name: List.of("Blood cancer", "Brain cancer")) {
-      val entity = createCancerEntity(name);
-     // when(cancerRepository.getCancerByName(name)).thenReturn(entity);
-    }
-
-    ReflectionTestUtils.setField(programService, "cancerRepository", cancerRepository);
-  }
-
-  void setupPrimarySiteRepository() {
-    for (val name: List.of("Blood", "Brain")) {
-      val entity = createPrimarySite(name);
-      //  when(primarySiteRepository.getPrimarySiteByName(name)).thenReturn(entity);
-    }
-
-    ReflectionTestUtils.setField(programService, "primarySiteRepository", primarySiteRepository);
-  }
-
-  private Optional<CancerEntity> createCancerEntity(String name) {
-    return Optional.of(new CancerEntity().setId(UUID.randomUUID()).setName(name));
-  }
-
-  private Optional<PrimarySiteEntity> createPrimarySite(String name) {
-    return Optional.of(new PrimarySiteEntity().setId(UUID.randomUUID()).setName(name));
+            addAllCancerTypes(List.of("Blood cancer", "Brain cancer")).
+            addAllPrimarySites(List.of("Blood", "Brain")).
+            build();
   }
 
   @Test
@@ -126,103 +95,10 @@ class ProgramServiceTest {
     verify(programRepository).save(inputProgramEntity);
   }
 
-  //@Test
-  void testMappingProgramEntityToProgram() {
-    val entity = new ProgramEntity().
-      setCommitmentDonors(1000).
-      setCountries("Canada").
-      setCreatedAt(LocalDateTime.now()).
-      setDescription("Test Program").
-      setGenomicDonors(1000).
-      setId(UUID.randomUUID()).
-      setInstitutions("Institute of Institutions").
-      setMembershipType(MembershipType.ASSOCIATE).
-      setName("Program One").
-
-      setShortName("P1").
-      setSubmittedDonors(1000).
-      setUpdatedAt(LocalDateTime.now()).
-      setWebsite("http://test.org");
-
-    val egoGroups = getEgoGroups(entity);
-    val cancers = getCancerTypes(entity);
-    val sites = getSites(entity);
-
-    entity.setProgramCancers(cancers);
-    entity.setProgramPrimarySites(sites);
-    //entity.setEgoGroups(egoGroups);
-
-    val mapper = new ProgramConverterImpl(CommonConverter.INSTANCE);
-    val details = mapper.ProgramEntityToProgramDetails(entity);
-    val program = details.getProgram();
-    val metadata = details.getMetadata();
-    assertThat(program.getCancerTypesList()).contains("Blood cancer");
-  }
-
-  Set<ProgramEgoGroupEntity> getEgoGroups(ProgramEntity entity) {
-    val egoGroups = new TreeSet<ProgramEgoGroupEntity>();
-    for(val role: UserRole.values()) {
-      if (role == UserRole.UNRECOGNIZED) {
-        continue;
-      }
-      egoGroups.add(createGroup(entity, role));
-    }
-    return egoGroups;
-  }
-
-  ProgramEgoGroupEntity createGroup(ProgramEntity entity, UserRole role) {
-    return new ProgramEgoGroupEntity().
-      setId(UUID.randomUUID()).
-      setRole(role).
-      setEgoGroupId(UUID.randomUUID()).
-      setProgramShortName(entity.getShortName());
-  }
-
-  Set<ProgramCancer> getCancerTypes(ProgramEntity entity) {
-    val cancers = new TreeSet<ProgramCancer>();
-    val bloodCancer = new CancerEntity().setId(UUID.randomUUID());
-    bloodCancer.setName("Blood cancer");
-    val c1_id = new ProgramCancerId();
-    c1_id.setCancerId(bloodCancer.getId());
-    c1_id.setProgramId(entity.getId());
-
-    val c1 = new ProgramCancer();
-    c1.setProgram(entity);
-    c1.setCancer(bloodCancer);
-    c1.setId(c1_id);
-
-    bloodCancer.setProgramCancers(Set.of(c1));
-
-    return cancers;
-  }
-
-  Set<ProgramPrimarySite> getSites(ProgramEntity entity) {
-    val sites = new TreeSet<ProgramPrimarySite>();
-    return sites;
-  }
-
-
-  void getProgram() {
-    val id1 ="Program One";
-    val id2 = "Program Two";
-    val id3 = "Program Three";
-
-    // test success (id found)
-    when(programRepository.findByShortName(programEntity.getShortName()))
-      .thenReturn(Optional.of(programEntity));
-    val result1 = programService.getProgram(id1);
-    assertThat(result1).isEqualTo(programEntity);
-
-    // test repository failure (not found/exception condition)
-    when(programRepository.findByShortName(id3))
-      .thenThrow(new RuntimeException("Repository error"));
-    assertThrows(RuntimeException.class, () -> { programService.getProgram(id3); });
-  }
-
   @Test
   void listPrograms() {
     when(programRepository.findAll((Specification<ProgramEntity>) Mockito.any()))
-      .thenReturn(List.of(programEntity));
+            .thenReturn(List.of(programEntity));
     val programs = programService.listPrograms();
     assertThat(programs).contains(programEntity);
   }
