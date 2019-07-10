@@ -1,5 +1,6 @@
 package org.icgc.argo.program_service.services.ego;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.Utils;
@@ -84,13 +85,13 @@ public class EgoRESTClient implements EgoClient {
   }
 
   @Override
-  public EgoUser createEgoUser(String email) {
+  public EgoUser createEgoUser(@NonNull String email, String firstname, String lastname) {
     val user = new EgoUser()
       .setEmail(email)
       .setStatus(EgoStatusType.APPROVED.toString())
       //NOTE: for ticket PS-88 (https://github.com/icgc-argo/program-service/issues/88)
-      .setFirstName("")
-      .setLastName("")
+      .setFirstName(firstname == null ? "" : firstname)
+      .setLastName(lastname == null ? "" : lastname)
       .setType(EgoUserType.USER.toString());
     return createObject(user, EgoUser.class, "/users");
   }

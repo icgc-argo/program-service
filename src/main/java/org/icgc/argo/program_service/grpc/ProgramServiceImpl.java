@@ -20,7 +20,6 @@ package org.icgc.argo.program_service.grpc;
 
 import com.google.protobuf.Empty;
 import io.grpc.Status;
-import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.NonNull;
@@ -71,7 +70,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @EgoAuth(typesAllowed = { "ADMIN" })
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     val program = request.getProgram();
-    val adminEmails = request.getAdminEmailsList();
+    val admins = request.getAdminsList();
+
     ProgramEntity programEntity;
 
     try {
@@ -84,7 +84,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     }
 
     try {
-      egoService.setUpProgram(programEntity.getShortName(), adminEmails);
+      egoService.setUpProgram(programEntity.getShortName());
+      admins.forEach(admin -> {
+              val email = commonConverter.unboxStringValue(admin.getEmail());
+              val firstName = commonConverter.unboxStringValue(admin.getFirstName());
+              val lastName = commonConverter.unboxStringValue(admin.getLastName());
+              egoService.getOrCreateUser(email, firstName, lastName);
+              invitationService.inviteUser(programEntity, email, firstName, lastName, UserRole.ADMIN);
+      });
     } catch (Throwable t) {
       responseObserver.onError(status(t));
       return;
@@ -170,22 +177,17 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-  public void joinProgram(JoinProgramRequest request, StreamObserver<Empty> responseObserver) {
-    boolean succeed;
+  public void joinProgram(JoinProgramRequest request, StreamObserver<JoinProgramResponse> responseObserver) {
     try {
-      succeed = invitationService.acceptInvite(commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
-    } catch (Throwable t) {
-      responseObserver.onError(t);
-      return;
+      val responseUser = invitationService.acceptInvite(commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
+      val response = programConverter.egoUserToJoinProgramResponse(responseUser);
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (NotFoundException e) {
+      responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (RuntimeException e1){
+      responseObserver.onError(Status.UNKNOWN.withDescription(e1.getMessage()).asRuntimeException());
     }
-
-    if (!succeed) {
-      responseObserver.onError(new StatusException(Status.fromCode(Status.Code.UNKNOWN)));
-      return;
-    }
-
-    responseObserver.onNext(Empty.getDefaultInstance());
-    responseObserver.onCompleted();
   }
 
   @Override
@@ -261,9 +263,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
-    val programName = request.getProgramShortName().getValue();
+    val shortName = request.getProgramShortName().getValue();
     try {
-      egoService.cleanUpProgram(programName);
+      egoService.cleanUpProgram(shortName);
       programService.removeProgram(request.getProgramShortName().getValue());
     } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
       responseObserver.onError(Status.NOT_FOUND.withDescription(getExceptionMessage(e)).asRuntimeException());

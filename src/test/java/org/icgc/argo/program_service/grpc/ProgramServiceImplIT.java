@@ -131,7 +131,6 @@ public class ProgramServiceImplIT {
     val details = CreateProgramRequest
       .newBuilder()
       .setProgram(p)
-      .addAdminEmails("test@gmailcom")
       .build();
     val resultObserver = new TestObserver<CreateProgramResponse>();
     try {

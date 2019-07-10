@@ -18,7 +18,6 @@
 
 package org.icgc.argo.program_service.grpc;
 
-import com.google.protobuf.ProtocolStringList;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -40,8 +39,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
-
-import java.util.UUID;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -70,11 +67,9 @@ class ProgramServiceImplTest {
   void createProgram() {
     val request = mock(CreateProgramRequest.class);
     val program = mock(Program.class);
-    val adminEmails = mock(ProtocolStringList.class);
     val responseObserver = mock(StreamObserver.class);
 
     when(request.getProgram()).thenReturn(program);
-    when(request.getAdminEmailsList()).thenReturn(adminEmails);
     when(programService.createProgram(program))
         .thenThrow(new DataIntegrityViolationException("test error"));
 

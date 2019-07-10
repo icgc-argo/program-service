@@ -16,7 +16,7 @@ public interface EgoClient {
 
   void assignPermission(EgoGroup group, EgoPolicy policy, String mask);
 
-  EgoUser createEgoUser(String email);
+  EgoUser createEgoUser(String email, String firstname, String lastname);
 
   EgoPolicy createEgoPolicy(String policyName);
 

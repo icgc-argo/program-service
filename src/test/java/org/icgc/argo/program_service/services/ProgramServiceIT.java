@@ -21,9 +21,12 @@ package org.icgc.argo.program_service.services;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
+import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,7 +36,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -59,19 +64,37 @@ class ProgramServiceIT {
   ProgramConverter converter;
 
   @Autowired
-  MailService mailService;
-
-  @Autowired
   JoinProgramInviteRepository inviteRepository;
 
-  private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
+  @Autowired
+  ProgramService programService;
+
+  @Autowired
+  ProgramRepository programRepository;
+
   private static final String name="TEST-PROGRAM-X-CA";
 
   @BeforeAll
   void setUp() {
-    egoService = new EgoService(repository, converter, client, mailService, inviteRepository);
+    egoService = new EgoService(repository, converter, client, inviteRepository);
 
     try {
+      val program = new ProgramEntity()
+              .setShortName(name)
+              .setId(UUID.randomUUID())
+              .setName("TEST-NAME")
+              .setCommitmentDonors(10)
+              .setSubmittedDonors(10)
+              .setGenomicDonors(10)
+              .setCountries("CA")
+              .setRegions("AMERICA")
+              .setDescription("this is a test program")
+              .setInstitutions("OICR")
+              .setMembershipType(MembershipType.ASSOCIATE)
+              .setWebsite("http://www.site.org")
+              .setCreatedAt(LocalDateTime.now())
+              .setUpdatedAt(LocalDateTime.now());
+      programRepository.save(program);
       egoService.cleanUpProgram(name);
     } catch(Throwable t) {
       log.error(t.getMessage());
@@ -80,7 +103,7 @@ class ProgramServiceIT {
 
   @Test
   public void test_setupProgram() {
-    egoService.setUpProgram(name, List.of(ADMIN_USER_EMAIL));
+    egoService.setUpProgram(name);
 
     // Policies are created
     assertThat(client.getPolicyByName("PROGRAM-" + name).isPresent()).isTrue();
