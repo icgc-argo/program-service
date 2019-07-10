@@ -279,28 +279,26 @@ public class EgoService {
     val user = egoClient.getUser(email).orElse(null);
     if (user == null) {
       log.error("Cannot find user with email {}", email);
-      return false;
+      throw new NotFoundException(format("Cannot join user %s into program %s, user does not exist in ego.", email, programShortName));
     }
     val programEgoGroup = programEgoGroupRepository.findByProgramShortNameAndRole(programShortName, role);
     if (programEgoGroup.isEmpty()) {
       log.error("Cannot find program ego group, have you created the groups in ego?");
-      return false;
+      throw new NotFoundException("Cannot find program ego group, have you created the groups in ego?");
     }
     val egoGroupId = programEgoGroup.map(ProgramEgoGroupEntity::getEgoGroupId).get();
 
-    // check if the user ids are already associated with the group, to avoid conflicts
     val usersInGroup = egoClient.getUsersByGroupId(egoGroupId);
     if(usersInGroup.anyMatch(egoUser -> egoUser.getEmail().equalsIgnoreCase(email))){
       log.error("User {} has already joined ego group {} for program {}.", email, egoGroupId, programEgoGroup.get().getProgramShortName());
-      return false;
+      throw new EgoException(format("User %s has already joined ego group %s.", email, egoGroupId));
     }
 
     try {
       egoClient.addUserToGroup(egoGroupId, user.getId());
       log.info("{} joined program {}", email, programShortName);
     } catch (HttpClientErrorException | HttpServerErrorException e) {
-      log.error("Cannot {} joined program {}: {}", email, programShortName, e.getResponseBodyAsString());
-      return false;
+      throw new EgoException(format("Cannot join user %s to program %s", email, programShortName), e.getCause());
     }
     return true;
   }
