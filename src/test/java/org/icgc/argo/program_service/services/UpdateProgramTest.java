@@ -3,6 +3,7 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
+import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.repositories.CancerRepository;
 import org.icgc.argo.program_service.repositories.PrimarySiteRepository;
 import org.icgc.argo.program_service.repositories.query.CancerSpecification;
@@ -18,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -38,7 +39,7 @@ public class UpdateProgramTest {
   private PrimarySiteRepository primarySiteRepository;
 
   @Test
-  public void add_cancer_primary_site_success(){
+  public void add_valid_cancer_valid_primary_site_success(){
     val programToUpdate = entityGenerator.setUpProgramEntity("PROGRAM-CA");
     val programId = programToUpdate.getId();
     val updatingCancer = entityGenerator.setUpCancer("Soft Tissue cancer");
@@ -62,36 +63,6 @@ public class UpdateProgramTest {
 
     assertThat(updatedPrimarySites.size()).isEqualTo(1);
     assertThat(updatedPrimarySites.contains(updatingPrimarySite)).isTrue();
-  }
-
-  @Test
-  public void dissociate_all_success(){
-    val programToUpdate = entityGenerator.setUpProgramEntity("PROGRAM-CA");
-    val programId = programToUpdate.getId();
-    entityGenerator.setUpCancer("Soft Tissue cancer");
-    entityGenerator.setUpCancer("Brain cancer");
-    entityGenerator.setUpPrimarySite("Liver");
-    entityGenerator.setUpPrimarySite("Brain");
-
-    val cancers = List.of("Soft Tissue cancer", "Brain cancer");
-    val primarySites = List.of("Liver", "Brain");
-    programService.updateProgram(programToUpdate, cancers, primarySites);
-
-    val cancersBeforeUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
-    val primarySiteBeforeUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
-
-    assertThat(cancersBeforeUpdate.size()).isEqualTo(2);
-    assertThat(cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers)).isTrue();
-
-    assertThat(primarySiteBeforeUpdate.size()).isEqualTo(2);
-    assertThat(primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites)).isTrue();
-
-    programService.updateProgram(programToUpdate, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
-    val cancersAfterUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
-    val primarySiteAfterUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
-
-    assertTrue(cancersAfterUpdate.isEmpty());
-    assertTrue(primarySiteAfterUpdate.isEmpty());
   }
 
   @Test
@@ -131,6 +102,123 @@ public class UpdateProgramTest {
 
     assertThat(primarySitesAfterUpdate.size()).isEqualTo(3);
     assertThat(primarySitesAfterUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites2)).isTrue();
+  }
+
+  @Test
+  public void associate_empty_cancer_primary_site_fail(){
+    val programToUpdate = entityGenerator.setUpProgramEntity("PROGRAM-CA");
+    val programId = programToUpdate.getId();
+    entityGenerator.setUpCancer("Soft Tissue cancer");
+    entityGenerator.setUpCancer("Brain cancer");
+    entityGenerator.setUpPrimarySite("Liver");
+    entityGenerator.setUpPrimarySite("Brain");
+
+    val cancers = List.of("Soft Tissue cancer", "Brain cancer");
+    val primarySites = List.of("Liver", "Brain");
+    programService.updateProgram(programToUpdate, cancers, primarySites);
+
+    val cancersBeforeUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
+    val primarySiteBeforeUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
+
+    assertThat(cancersBeforeUpdate.size()).isEqualTo(2);
+    assertThat(cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers)).isTrue();
+
+    assertThat(primarySiteBeforeUpdate.size()).isEqualTo(2);
+    assertThat(primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites)).isTrue();
+
+    val exception = assertThrows(RuntimeException.class,
+            ()-> programService.updateProgram(programToUpdate, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
+    assertThat(exception.getMessage()).isEqualTo("INVALID_ARGUMENT: Cannot update program, a program must have at least one cancer and one primary site");
+  }
+
+  @Test
+  public void add_invalid_cancer_valid_primary_site_fail(){
+    val programToUpdate = entityGenerator.setUpProgramEntity("PROGRAM-CA");
+    val programId = programToUpdate.getId();
+    entityGenerator.setUpCancer("Soft Tissue cancer");
+    entityGenerator.setUpPrimarySite("Liver");
+    entityGenerator.setUpPrimarySite("Brain");
+    entityGenerator.setUpPrimarySite("Bone");
+    entityGenerator.setUpPrimarySite("Skin");
+
+    val cancers = List.of("Soft Tissue cancer");
+    val primarySites = List.of("Liver", "Brain");
+    programService.updateProgram(programToUpdate, cancers, primarySites);
+
+    val cancersBeforeUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
+    val primarySiteBeforeUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
+
+    assertThat(cancersBeforeUpdate.size()).isEqualTo(1);
+    assertThat(cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers)).isTrue();
+
+    assertThat(primarySiteBeforeUpdate.size()).isEqualTo(2);
+    assertThat(primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites)).isTrue();
+
+    val cancers2 = List.of("Unicorn cancer");
+    val primarySites2 = List.of("Bone", "Skin");
+    val exception = assertThrows(NotFoundException.class,
+            () -> programService.updateProgram(programToUpdate, cancers2, primarySites2));
+    assertThat(exception.getMessage().contains("Unicorn cancer"));
+  }
+
+  @Test
+  public void add_valid_cancer_invalid_primary_site_fail(){
+    val programToUpdate = entityGenerator.setUpProgramEntity("PROGRAM-CA");
+    val programId = programToUpdate.getId();
+    entityGenerator.setUpCancer("Soft Tissue cancer");
+    entityGenerator.setUpCancer("Skin cancer");
+    entityGenerator.setUpCancer("Bone cancer");
+    entityGenerator.setUpPrimarySite("Liver");
+    entityGenerator.setUpPrimarySite("Brain");
+
+    val cancers = List.of("Soft Tissue cancer", "Skin cancer");
+    val primarySites = List.of("Liver", "Brain");
+    programService.updateProgram(programToUpdate, cancers, primarySites);
+
+    val cancersBeforeUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
+    val primarySiteBeforeUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
+
+    assertThat(cancersBeforeUpdate.size()).isEqualTo(2);
+    assertThat(cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers)).isTrue();
+
+    assertThat(primarySiteBeforeUpdate.size()).isEqualTo(2);
+    assertThat(primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites)).isTrue();
+
+    val cancers2 = List.of("Bone cancer");
+    val primarySites2 = List.of("Unicorn", "Hair");
+    val exception = assertThrows(NotFoundException.class,
+            () -> programService.updateProgram(programToUpdate, cancers2, primarySites2));
+    assertThat(exception.getMessage().contains("Unicorn"));
+    assertThat(exception.getMessage().contains("Hair"));
+  }
+
+  @Test
+  public void add_invalid_cancer_invalid_primary_site_fail(){
+    val programToUpdate = entityGenerator.setUpProgramEntity("PROGRAM-CA");
+    val programId = programToUpdate.getId();
+    entityGenerator.setUpCancer("Soft Tissue cancer");
+    entityGenerator.setUpCancer("Skin cancer");
+    entityGenerator.setUpPrimarySite("Liver");
+    entityGenerator.setUpPrimarySite("Brain");
+
+    val cancers = List.of("Soft Tissue cancer", "Skin cancer");
+    val primarySites = List.of("Liver", "Brain");
+    programService.updateProgram(programToUpdate, cancers, primarySites);
+
+    val cancersBeforeUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
+    val primarySiteBeforeUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
+
+    assertThat(cancersBeforeUpdate.size()).isEqualTo(2);
+    assertThat(cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers)).isTrue();
+
+    assertThat(primarySiteBeforeUpdate.size()).isEqualTo(2);
+    assertThat(primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites)).isTrue();
+
+    val cancers2 = List.of("Fingernail cancer");
+    val primarySites2 = List.of("Unicorn", "Hair");
+    val exception = assertThrows(NotFoundException.class,
+            () -> programService.updateProgram(programToUpdate, cancers2, primarySites2));
+    assertThat(exception.getMessage().contains("Fingernail cancer"));
   }
 
 }

@@ -47,7 +47,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
-import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
@@ -133,6 +132,11 @@ public class ProgramService {
   public ProgramEntity updateProgram(@NonNull ProgramEntity updatingProgram,
                                      @NonNull List<String> cancers,
                                      @NonNull List<String> primarySites) throws NotFoundException {
+    if(cancers.isEmpty() || primarySites.isEmpty()){
+      throw Status.INVALID_ARGUMENT
+              .augmentDescription("Cannot update program, a program must have at least one cancer and one primary site").asRuntimeException();
+    }
+
     val programToUpdate = programRepository
             .findByShortName(updatingProgram.getShortName())
             .orElseThrow(
@@ -145,7 +149,6 @@ public class ProgramService {
 
     // update program info
     programConverter.updateProgram(updatingProgram, programToUpdate);
-
     programRepository.save(programToUpdate);
     return programToUpdate;
   }
@@ -171,9 +174,11 @@ public class ProgramService {
     val requestedCancerNames = ImmutableSet.copyOf(cancerNames);
     val existingCancerNames = mapToSet(cancerEntities, CancerEntity::getName);
     val nonExistingCancerNames = CollectionUtils.difference(requestedCancerNames, existingCancerNames);
-    checkState(
-            nonExistingCancerNames.isEmpty(),
-            "The following cancer names do not exist: %s", Joiner.on(" , ").join(nonExistingCancerNames));
+
+    if(!nonExistingCancerNames.isEmpty()) {
+      throw new NotFoundException(
+              String.format("The following cancer names do not exist: %s", Joiner.on(" , ").join(nonExistingCancerNames)));
+    }
 
     programCancerRepository.deleteAllByProgramId(programToUpdate.getId());
     val programCancers = cancerEntities.stream()
@@ -188,9 +193,11 @@ public class ProgramService {
     val requestedPrimarySiteNames = ImmutableSet.copyOf(primarySitesNames);
     val existingPrimarySiteNames = mapToSet(primarySiteEntities, PrimarySiteEntity::getName);
     val nonExistingPrimarySiteNames = CollectionUtils.difference(requestedPrimarySiteNames, existingPrimarySiteNames);
-    checkState(
-            nonExistingPrimarySiteNames.isEmpty(),
-            "The following primary site names do not exist: %s", Joiner.on(" , ").join(nonExistingPrimarySiteNames));
+
+    if(!nonExistingPrimarySiteNames.isEmpty()) {
+      throw new NotFoundException(
+              String.format("The following primary site names do not exist: %s", Joiner.on(" , ").join(nonExistingPrimarySiteNames)));
+    }
 
     programPrimarySiteRepository.deleteAllByProgramId(programToUpdate.getId());
     val programPrimarySites = primarySiteEntities.stream()

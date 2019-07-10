@@ -36,7 +36,6 @@ import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
-import org.icgc.argo.program_service.services.MailService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
@@ -73,8 +72,7 @@ public class EgoService {
     @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
     @NonNull ProgramConverter programConverter,
     @NonNull EgoClient restClient,
-    @NonNull JoinProgramInviteRepository invitationRepository
-  ) {
+    @NonNull JoinProgramInviteRepository invitationRepository) {
     this.programEgoGroupRepository = programEgoGroupRepository;
     this.programConverter = programConverter;
     this.egoClient = restClient;
