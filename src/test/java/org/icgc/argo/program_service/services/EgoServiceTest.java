@@ -98,12 +98,12 @@ class EgoServiceTest {
 
     // Define behaviour for non-existing
     when(egoService1.joinProgram(nonExistingEmail, mockProgramEntity.getShortName(), UserRole.ADMIN)).thenReturn(false, true);
-    when(egoClient1.createEgoUser(nonExistingEmail))
+    when(egoClient1.createEgoUser(nonExistingEmail, "", ""))
       .thenReturn(new EgoUser().setStatus("APPROVED").setType("USER").setEmail(nonExistingEmail));
 
     // Define behaviour for errored user
     when(egoService1.joinProgram(erroredEmail, mockProgramEntity.getShortName(), UserRole.ADMIN)).thenReturn(false, false);
-    when(egoClient1.createEgoUser(erroredEmail))
+    when(egoClient1.createEgoUser(erroredEmail, "", ""))
       .thenThrow(new IllegalStateException(format("Could not create ego user for: %s", erroredEmail)));
 
     // Indicate the plan to call the real "initAdmin" MUT (method under test) that uses the internal mocked methods
@@ -121,15 +121,15 @@ class EgoServiceTest {
 
     // Verify expected behaviour for existing user case
     verify(egoService1, times(1)).joinProgram(existingEmail, mockProgramEntity.getShortName(), UserRole.ADMIN);
-    verify(egoClient1, never()).createEgoUser(existingEmail);
+    verify(egoClient1, never()).createEgoUser(existingEmail, "", "");
 
     // Verify expected behaviour for non-existing user case
     verify(egoService1, times(2)).joinProgram(nonExistingEmail, mockProgramEntity.getShortName(), UserRole.ADMIN);
-    verify(egoClient1, times(1)).createEgoUser(nonExistingEmail);
+    verify(egoClient1, times(1)).createEgoUser(nonExistingEmail, "", "");
 
     // Verify expected behaviour for errored user case
     verify(egoService1, times(1)).joinProgram(erroredEmail, mockProgramEntity.getShortName(), UserRole.ADMIN);
-    verify(egoClient1, times(1)).createEgoUser(erroredEmail);
+    verify(egoClient1, times(1)).createEgoUser(erroredEmail, "", "");
   }
 
   @Test

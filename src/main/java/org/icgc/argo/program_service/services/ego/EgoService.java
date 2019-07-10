@@ -229,7 +229,7 @@ public class EgoService {
     if (!joinProgram(adminEmail, shortName, ADMIN)) {
       EgoUser egoUser;
       try {
-        egoUser = egoClient.createEgoUser(adminEmail);
+        egoUser = egoClient.createEgoUser(adminEmail, "", "");
       } catch (EgoException e) {
         throw new IllegalStateException(format("Could not create ego user for: %s", adminEmail));
       }
@@ -331,7 +331,7 @@ public class EgoService {
   public EgoUser getOrCreateUser(@Email String email, @NonNull String firstName, @NonNull String lastName){
     return egoClient.getUser(email)
             .orElseGet(() ->{
-              return egoClient.createEgoUser(email).setFirstName(firstName).setLastName(lastName);});
+              return egoClient.createEgoUser(email, firstName, lastName);});
   }
 
   public EgoUser convertInvitationToEgoUser(@NonNull JoinProgramInvite invite){
