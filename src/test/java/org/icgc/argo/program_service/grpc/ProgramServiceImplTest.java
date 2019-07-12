@@ -96,12 +96,17 @@ class ProgramServiceImplTest {
 
   @Test
   void listUser() {
-    val program = mock(ProgramEntity.class);
-    val programName = "TEST-CA";
-    val programId = UUID.randomUUID();
-    program.setId(programId);
-
     val responseObserver = mock(StreamObserver.class);
+    val responseObserver2 = mock(StreamObserver.class);
+    val responseObserver3 = mock(StreamObserver.class);
+
+    val programName1 = "TEST-CA";
+    val programName2 = "TEST-DK";
+    val programName3 = "NotFound";
+
+    val program1 = mockProgram(programName1);
+    val program2 = mockProgram(programName2);
+    val program3 = mockNonExistantProgram(programName3);
 
     val accepted = LocalDateTime.now();
     val firstName = "Terry";
@@ -109,27 +114,17 @@ class ProgramServiceImplTest {
     val email ="tfox@national-heros.ca";
     val role = UserRole.COLLABORATOR;
 
-    val invite1 = new JoinProgramInvite().
-      setFirstName(firstName).
-      setLastName(lastName).
-      setProgram(program).
-      setRole(role).
-      setUserEmail(email).
-      setStatus(JoinProgramInvite.Status.ACCEPTED).
-      setAcceptedAt(accepted).
-      setId(UUID.randomUUID()).
-      setCreatedAt(accepted).
-      setExpiresAt(accepted.plusMonths(3)).
-      setEmailSent(true);
+    val invite1 = createInvitation(firstName, lastName, role, email, accepted, program1);
+    val invite2 = createInvitation(firstName, lastName, role, email, accepted, program2);
+    invite2.setAcceptedAt(null);
+    invite2.setStatus(JoinProgramInvite.Status.PENDING);
 
-    val invitationList = List.of(invite1);
+    val invitationList1 = List.of(invite1);
+    val invitationList2 = List.of(invite2);
 
-    when(program.getId()).thenReturn(programId);
-    when(programService.getProgram(programName)).thenReturn(program);
-    when(invitationService.listInvitations(programId)).thenReturn(invitationList);
+    when(invitationService.listInvitations(program1.getId())).thenReturn(invitationList1);
+    when(invitationService.listInvitations(program2.getId())).thenReturn(invitationList2);
 
-    val request = ListUserRequest.newBuilder().
-                  setProgramShortName(StringValue.of(programName)).build();
 
     val roleValue = UserRoleValue.newBuilder().setValue(role).build();
 
@@ -140,15 +135,81 @@ class ProgramServiceImplTest {
       setRole(roleValue).
       build();
 
-    val invitations = List.of(Invitation.newBuilder().
-      setUser(user1).
-      setAcceptedAt(CommonConverter.INSTANCE.localDateTimeToTimestamp(accepted))
-      .setStatus(InviteStatus.ACCEPTED).
-      build());
+    val invitations = List.of(createInvitation(user1,  accepted, InviteStatus.ACCEPTED));
+    val invitations2 = List.of(createInvitation(user1, null, InviteStatus.PENDING));
 
-    val expected = ListUserResponse.newBuilder().addAllInvitations(invitations).build();
+    val request = createListUserRequest(programName1);
+    val request2 = createListUserRequest(programName2);
+    val request3 = createListUserRequest(programName3);
+
+    val expected = getListUserResponse(invitations);
     programServiceImpl.listUser(request, responseObserver);
     verify(responseObserver).onNext(expected);
 
+    val expected2 = getListUserResponse(invitations2);
+    programServiceImpl.listUser(request2, responseObserver2);
+    verify(responseObserver2).onNext(expected2);
+
+    programServiceImpl.listUser(request3, responseObserver3);
+    val argument = ArgumentCaptor.forClass(StatusRuntimeException.class);
+    verify(responseObserver3).onError(argument.capture());
+    Assertions.assertThat(argument.getValue().getStatus().getCode()).
+      as("Program '"+ programName3 + "' not found").isEqualTo(Status.NOT_FOUND.getCode());
+  }
+
+  ListUserRequest createListUserRequest(String shortName) {
+    return ListUserRequest.newBuilder().
+      setProgramShortName(StringValue.of(shortName)).build();
+  }
+
+  ListUserResponse getListUserResponse(List<Invitation> invitations) {
+    return ListUserResponse.newBuilder().addAllInvitations(invitations).build();
+  }
+
+  Invitation createInvitation(User user, LocalDateTime accepted, InviteStatus status) {
+    val builder =  Invitation.newBuilder().
+      setUser(user).
+      setStatus(status);
+    if (accepted == null) {
+      return builder.build();
+    }
+    return builder. setAcceptedAt(CommonConverter.INSTANCE.localDateTimeToTimestamp(accepted)).build();
+  }
+
+  ProgramEntity mockNonExistantProgram(String shortName) {
+    val program = mock(ProgramEntity.class);
+    when(programService.getProgram(shortName)).thenThrow(programNotFound(shortName));
+    return program;
+  }
+
+  StatusRuntimeException programNotFound(String shortName) {
+    return new StatusRuntimeException(
+      Status.fromCode(Status.Code.NOT_FOUND).withDescription("Program '"+shortName+"' not found"));
+  }
+
+  ProgramEntity mockProgram(String shortName) {
+    val program = mock(ProgramEntity.class);
+    val programId = UUID.randomUUID();
+    program.setId(programId);
+    when(program.getId()).thenReturn(programId);
+    when(programService.getProgram(shortName)).thenReturn(program);
+
+    return program;
+  }
+
+  JoinProgramInvite createInvitation(String firstName, String lastName, UserRole role,  String email,
+    LocalDateTime accepted, ProgramEntity program) {
+      return new JoinProgramInvite().
+        setFirstName(firstName).
+        setLastName(lastName).
+        setProgram(program).
+        setRole(role).
+        setUserEmail(email).
+        setStatus(JoinProgramInvite.Status.ACCEPTED).
+        setAcceptedAt(accepted).
+        setId(UUID.randomUUID()).
+        setCreatedAt(accepted).
+        setExpiresAt(accepted.plusMonths(3)).
+        setEmailSent(true);
   }
 }
