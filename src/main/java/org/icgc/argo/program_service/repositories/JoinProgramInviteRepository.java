@@ -20,10 +20,13 @@ package org.icgc.argo.program_service.repositories;
 
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface JoinProgramInviteRepository extends JpaRepository<JoinProgramInvite, UUID> {
+  List<JoinProgramInvite> findAllByProgramId(UUID programId);
   void deleteAllByProgramShortName(String programShortName);
 }
 

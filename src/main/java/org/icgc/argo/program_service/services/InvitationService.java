@@ -52,7 +52,7 @@ public class InvitationService {
 
   @Transactional
   public List<JoinProgramInvite> listInvitations(UUID programId) {
-    return invitationRepository.findAllById(List.of(programId));
+    return invitationRepository.findAllByProgramId(programId);
   }
 
   @Transactional

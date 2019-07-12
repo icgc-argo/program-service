@@ -227,11 +227,13 @@ public interface ProgramConverter {
   User JoinProgramInviteToUser(JoinProgramInvite invitation);
 
   default Invitation joinProgramInviteToInvitation(JoinProgramInvite invitation) {
-    return Invitation.newBuilder().
+    val builder = Invitation.newBuilder().
       setUser(JoinProgramInviteToUser(invitation)).
-      setAcceptedAt(CommonConverter.INSTANCE.localDateTimeToTimestamp(invitation.getAcceptedAt())).
-      setStatus(JoinProgramInviteStatusToInviteStatus(invitation.getStatus())).
-      build();
+      setStatus(JoinProgramInviteStatusToInviteStatus(invitation.getStatus()));
+    if (invitation.getAcceptedAt() == null) {
+      return builder.build();
+    }
+    return builder.setAcceptedAt(CommonConverter.INSTANCE.localDateTimeToTimestamp(invitation.getAcceptedAt())).build();
   }
 
  default ListUserResponse invitationsToListUserResponse(List<JoinProgramInvite> invitations) {
