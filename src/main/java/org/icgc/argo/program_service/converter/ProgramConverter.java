@@ -29,8 +29,12 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
+
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ProgramConverter {
@@ -186,10 +190,6 @@ public interface ProgramConverter {
     return programEntitiesToListProgramsResponse(0, programEntities);
   }
 
-  default ListUserResponse usersToListUserResponse(Collection<User> users) {
-    return ListUserResponse.newBuilder().addAllUsers(users).build();
-  }
-
   default InviteUserResponse inviteIdToInviteUserResponse(@NonNull UUID inviteId) {
     return InviteUserResponse.newBuilder()
       .setInviteId(StringValue.of(inviteId.toString()))
@@ -207,4 +207,36 @@ public interface ProgramConverter {
     return v.getValue();
   }
 
+  default InviteStatus JoinProgramInviteStatusToInviteStatus(JoinProgramInvite.Status status) {
+    if (status == JoinProgramInvite.Status.ACCEPTED) { return InviteStatus.ACCEPTED; }
+    if (status == JoinProgramInvite.Status.PENDING) { return InviteStatus.PENDING; }
+    return InviteStatus.REVOKED;
+  }
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeEmail", ignore = true)
+  @Mapping(target = "mergeFirstName", ignore = true)
+  @Mapping(target = "mergeLastName", ignore = true)
+  @Mapping(target = "mergeRole", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "email", source = "userEmail")
+  User JoinProgramInviteToUser(JoinProgramInvite invitation);
+
+  default Invitation joinProgramInviteToInvitation(JoinProgramInvite invitation) {
+    return Invitation.newBuilder().
+      setUser(JoinProgramInviteToUser(invitation)).
+      setAcceptedAt(CommonConverter.INSTANCE.localDateTimeToTimestamp(invitation.getAcceptedAt())).
+      setStatus(JoinProgramInviteStatusToInviteStatus(invitation.getStatus())).
+      build();
+  }
+
+ default ListUserResponse invitationsToListUserResponse(List<JoinProgramInvite> invitations) {
+   return ListUserResponse.newBuilder().
+     addAllInvitations(mapToList(invitations, this::joinProgramInviteToInvitation)).
+     build();
+ }
 }

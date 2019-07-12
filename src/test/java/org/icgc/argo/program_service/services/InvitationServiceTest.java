@@ -31,6 +31,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
@@ -88,6 +89,22 @@ class InvitationServiceTest {
     invitationService.acceptInvite(invitation.getId());
     verify(egoService).joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
     verify(invitation).accept();
+  }
+
+  @Test
+  void listInvitations() {
+    val invitationRepository = mock(JoinProgramInviteRepository.class);
+    val egoService = mock(EgoService.class);
+    val mailService = mock(MailService.class);
+
+    val invitationService = new InvitationService(mailService, invitationRepository, egoService);
+    val programId1 = UUID.randomUUID();
+    val invitation1 = new JoinProgramInvite();
+
+    when(invitationRepository.findAllById(List.of(programId1))).thenReturn(List.of(invitation1));
+
+    val result = invitationService.listInvitations(programId1);
+    assertThat(result).isEqualTo(List.of(invitation1));
   }
 
 }

@@ -76,6 +76,12 @@ enum UserRole {
   BANNED = 4;
 }
 
+enum InviteStatus {
+  REVOKED = 0;
+  PENDING = 1;
+  ACCEPTED = 2;
+}
+
 message UserRoleValue {
   UserRole value = 1;
 }
@@ -85,6 +91,12 @@ message User {
   google.protobuf.StringValue first_name = 2;
   google.protobuf.StringValue last_name = 3;
   UserRoleValue role = 4;
+}
+
+message Invitation {
+  User user = 1;
+  InviteStatus status = 2;
+  google.protobuf.Timestamp accepted_at = 3;
 }
 
 message CreateProgramRequest {
@@ -140,7 +152,7 @@ message ListUserRequest {
 }
 
 message ListUserResponse {
-  repeated User users = 1;
+  repeated Invitation invitations = 1;
 }
 
 message UpdateUserRequest {
