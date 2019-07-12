@@ -100,9 +100,7 @@ class InvitationServiceTest {
     val invitationService = new InvitationService(mailService, invitationRepository, egoService);
     val programId1 = UUID.randomUUID();
     val invitation1 = new JoinProgramInvite();
-
-    when(invitationRepository.findAllById(List.of(programId1))).thenReturn(List.of(invitation1));
-
+    when(invitationRepository.findAllByProgramId(programId1)).thenReturn(List.of(invitation1));
     val result = invitationService.listInvitations(programId1);
     assertThat(result).isEqualTo(List.of(invitation1));
   }
