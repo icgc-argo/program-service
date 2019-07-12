@@ -20,6 +20,7 @@ package org.icgc.argo.program_service.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.val;
+import org.apache.commons.lang.RandomStringUtils;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.junit.jupiter.api.Test;
@@ -64,19 +65,20 @@ class MailServiceIT {
   @Test
   void sendInviteEmail() {
     val uuid = UUID.randomUUID();
+    val randomUserName = RandomStringUtils.randomAlphabetic(10);
+    val randomEmail = randomUserName + "@program-service.com";
     when(invite.getId()).thenReturn(uuid);
     when(invite.getFirstName()).thenReturn("Albert");
     when(invite.getLastName()).thenReturn("Einstein");
-    when(invite.getUserEmail()).thenReturn("it_test@program-service.com");
+    when(invite.getUserEmail()).thenReturn(randomEmail);
     when(mockProgramEntity.getShortName()).thenReturn("TestProgram");
     when(invite.getProgram()).thenReturn(mockProgramEntity);
     mailService.sendInviteEmail(invite);
-    val messages = restTemplate.getForObject("https://" + mailhogHost + "/api/v2/search?kind=containing&query=" + uuid, JsonNode.class);
+    val messages = restTemplate.getForObject("https://" + mailhogHost + "/api/v2/search?kind=containing&query=" + randomEmail, JsonNode.class);
     assertThat(messages.at("/total").asInt()).isGreaterThan(0);
     assertThat(messages.at("/items/0/From/Mailbox").asText()).isEqualTo("noreply");
     assertThat(messages.at("/items/0/From/Domain").asText()).isEqualTo("oicr.on.ca");
-    assertThat(messages.at("/items/0/To/0/Mailbox").asText()).isEqualTo("it_test");
-    assertThat(messages.at("/items/0/To/0/Domain").asText()).isEqualTo("program-service.com");
+    assertThat(messages.at("/items/0/To/0/Mailbox").asText()).isEqualTo(randomUserName);
     assertThat(messages.at("/items/0/To/0/Domain").asText()).isEqualTo("program-service.com");
     assertThat(messages.at("/items/0/Content/Body").asText()).contains("Albert").contains("Einstein");
   }
