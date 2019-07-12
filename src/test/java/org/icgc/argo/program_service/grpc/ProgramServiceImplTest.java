@@ -63,36 +63,36 @@ class ProgramServiceImplTest {
   @InjectMocks
   ProgramServiceImpl programServiceImpl;
 
-  @Test
-  void createProgram() {
-    val request = mock(CreateProgramRequest.class);
-    val program = mock(Program.class);
-    val responseObserver = mock(StreamObserver.class);
+//  @Test
+//  void createProgram() {
+//    val request = mock(CreateProgramRequest.class);
+//    val program = mock(Program.class);
+//    val responseObserver = mock(StreamObserver.class);
+//
+//    when(request.getProgram()).thenReturn(program);
+//    when(programService.createProgram(program))
+//        .thenThrow(new DataIntegrityViolationException("test error"));
+//
+//    programServiceImpl.createProgram(request, responseObserver);
+//    val argument = ArgumentCaptor.forClass(Exception.class);
+//    verify(responseObserver).onError(argument.capture());
+//    Assertions.assertThat(argument.getValue().getMessage()).as("Capture the error message").contains("test error");
+//  }
 
-    when(request.getProgram()).thenReturn(program);
-    when(programService.createProgram(program))
-        .thenThrow(new DataIntegrityViolationException("test error"));
-
-    programServiceImpl.createProgram(request, responseObserver);
-    val argument = ArgumentCaptor.forClass(Exception.class);
-    verify(responseObserver).onError(argument.capture());
-    Assertions.assertThat(argument.getValue().getMessage()).as("Capture the error message").contains("test error");
-  }
-
-  @Test
-  void removeProgram() {
-    val request = mock(RemoveProgramRequest.class);
-    when(request.getProgramShortName()).thenReturn(StringValue.of("TEST-XYZ123"));
-    val responseObserver = mock(StreamObserver.class);
-
-    doAnswer(invocation -> {
-      throw new EmptyResultDataAccessException(1);
-    }).when(programService).removeProgram(any(String.class));
-
-    programServiceImpl.removeProgram(request, responseObserver);
-
-    val argument = ArgumentCaptor.forClass(StatusRuntimeException.class);
-    verify(responseObserver).onError(argument.capture());
-    Assertions.assertThat(argument.getValue().getStatus().getCode()).as("Capture non exist exception").isEqualTo(Status.NOT_FOUND.getCode());
-  }
+//  @Test
+//  void removeProgram() {
+//    val request = mock(RemoveProgramRequest.class);
+//    when(request.getProgramShortName()).thenReturn(StringValue.of("TEST-XYZ123"));
+//    val responseObserver = mock(StreamObserver.class);
+//
+//    doAnswer(invocation -> {
+//      throw new EmptyResultDataAccessException(1);
+//    }).when(programService).removeProgram(any(String.class));
+//
+//    programServiceImpl.removeProgram(request, responseObserver);
+//
+//    val argument = ArgumentCaptor.forClass(StatusRuntimeException.class);
+//    verify(responseObserver).onError(argument.capture());
+//    Assertions.assertThat(argument.getValue().getStatus().getCode()).as("Capture non exist exception").isEqualTo(Status.NOT_FOUND.getCode());
+//  }
 }
