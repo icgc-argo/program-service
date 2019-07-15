@@ -26,6 +26,7 @@ public interface EgoClient {
 
   Optional<EgoUser> getUser(@Email String email);
   EgoUser getUserById(UUID userId);
+  void deleteUserById(UUID userId);
 
   Stream<EgoUser> getUsersByGroupId(UUID groupId);
   Stream <EgoGroup> getGroupsByUserId(UUID userId);

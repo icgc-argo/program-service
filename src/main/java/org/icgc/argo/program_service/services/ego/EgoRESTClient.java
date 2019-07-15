@@ -166,6 +166,11 @@ public class EgoRESTClient implements EgoClient {
   }
 
   @Override
+  public void deleteUserById(@NonNull UUID userId){
+    retryRunnable(() -> restTemplate.delete(format("/users/%s", userId)));
+  }
+
+  @Override
   public Stream<EgoUser> getUsersByGroupId(UUID groupId) {
     return getObjects(format("/groups/%s/users", groupId), new ParameterizedTypeReference<EgoCollection<EgoUser>>() {});
   }
@@ -174,6 +179,7 @@ public class EgoRESTClient implements EgoClient {
   public Stream <EgoGroup> getGroupsByUserId(UUID userId){
     return getObjects(format("/users/%s/groups", userId), new ParameterizedTypeReference<EgoCollection<EgoGroup>>() {});
   }
+
   @Override
   public void deleteGroup(UUID egoGroupId) {
     retryRunnable(() -> restTemplate.delete(format("/groups/%s", egoGroupId)));
