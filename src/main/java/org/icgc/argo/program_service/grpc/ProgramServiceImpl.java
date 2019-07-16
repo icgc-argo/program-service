@@ -157,14 +157,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void inviteUser(InviteUserRequest request, StreamObserver<InviteUserResponse> responseObserver) {
     val programResult = programService.getProgram(request.getProgramShortName().getValue());
-
     UUID inviteId;
+
     try {
-      inviteId = invitationService.inviteUser(programResult,
-        request.getEmail().getValue(),
-        request.getFirstName().getValue(),
-        request.getLastName().getValue(),
-        request.getRole().getValue());
+      val email = commonConverter.unboxStringValue(request.getEmail());
+      val firstName = commonConverter.unboxStringValue(request.getFirstName());
+      val lastName = commonConverter.unboxStringValue(request.getLastName());
+      inviteId = invitationService.inviteUser(programResult, email, firstName, lastName, request.getRole().getValue());
+      egoService.getOrCreateUser(email, firstName, lastName);
     } catch (Throwable throwable) {
       responseObserver.onError(status(throwable));
       return;
