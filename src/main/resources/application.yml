@@ -21,8 +21,6 @@ spring:
   mail:
     host: mailhog.qa.argo.cancercollaboratory.org
     port: 40001
-    #host: mailhog.qa.cancercollaboratory.org
-    #port: 1025
 
 retry:
   # Connection retries in case of connection failure

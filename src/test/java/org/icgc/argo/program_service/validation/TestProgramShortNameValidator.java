@@ -49,6 +49,7 @@ class TestProgramShortNameValidator {
     // not ok (UK is not a valid country code )
     validate("TEST-UK", false);
     // GB is a valid country code (Great Britain)
+    // Short name must have dash
     validate("TESTGB", false);
     // dashes are legal (DK is Denmark)
     validate("---DK", false);
