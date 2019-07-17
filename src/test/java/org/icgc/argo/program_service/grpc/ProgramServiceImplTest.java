@@ -63,36 +63,43 @@ class ProgramServiceImplTest {
   @InjectMocks
   ProgramServiceImpl programServiceImpl;
 
-//  @Test
-//  void createProgram() {
-//    val request = mock(CreateProgramRequest.class);
-//    val program = mock(Program.class);
-//    val responseObserver = mock(StreamObserver.class);
-//
-//    when(request.getProgram()).thenReturn(program);
-//    when(programService.createProgram(program))
-//        .thenThrow(new DataIntegrityViolationException("test error"));
-//
-//    programServiceImpl.createProgram(request, responseObserver);
-//    val argument = ArgumentCaptor.forClass(Exception.class);
-//    verify(responseObserver).onError(argument.capture());
-//    Assertions.assertThat(argument.getValue().getMessage()).as("Capture the error message").contains("test error");
-//  }
+  @Test
+  void createProgram() {
+    val request = mock(CreateProgramRequest.class);
+    val program = mock(Program.class);
+    val responseObserver = mock(StreamObserver.class);
 
-//  @Test
-//  void removeProgram() {
-//    val request = mock(RemoveProgramRequest.class);
-//    when(request.getProgramShortName()).thenReturn(StringValue.of("TEST-XYZ123"));
-//    val responseObserver = mock(StreamObserver.class);
-//
-//    doAnswer(invocation -> {
-//      throw new EmptyResultDataAccessException(1);
-//    }).when(programService).removeProgram(any(String.class));
-//
-//    programServiceImpl.removeProgram(request, responseObserver);
-//
-//    val argument = ArgumentCaptor.forClass(StatusRuntimeException.class);
-//    verify(responseObserver).onError(argument.capture());
-//    Assertions.assertThat(argument.getValue().getStatus().getCode()).as("Capture non exist exception").isEqualTo(Status.NOT_FOUND.getCode());
-//  }
+    when(request.getProgram()).thenReturn(program);
+    when(programService.createProgram(program))
+        .thenThrow(new DataIntegrityViolationException("test error"));
+    String err = "";
+    try {
+      programServiceImpl.createProgram(request, responseObserver);
+    } catch (DataIntegrityViolationException ex) {
+      err=ex.getMessage();
+    }
+    Assertions.assertThat(err).isEqualTo("test error");
+  }
+
+  @Test
+  void removeProgram() {
+    val request = mock(RemoveProgramRequest.class);
+    when(request.getProgramShortName()).thenReturn(StringValue.of("TEST-XYZ123"));
+    val responseObserver = mock(StreamObserver.class);
+
+    doAnswer(invocation -> {
+      throw new EmptyResultDataAccessException(1);
+    }).when(programService).removeProgram(any(String.class));
+
+    String msg = "";
+      try {
+        programServiceImpl.removeProgram(request, responseObserver);
+      } catch (Exception ex) {
+        msg = ex.getMessage();
+      }
+
+      Assertions.assertThat(msg).
+        isEqualTo("NOT_FOUND: Incorrect result size: expected 1, actual 0");
+
+  }
 }
