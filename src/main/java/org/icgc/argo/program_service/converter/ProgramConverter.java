@@ -30,7 +30,10 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
+
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ProgramConverter {
@@ -186,10 +189,6 @@ public interface ProgramConverter {
     return programEntitiesToListProgramsResponse(0, programEntities);
   }
 
-  default ListUserResponse usersToListUserResponse(Collection<User> users) {
-    return ListUserResponse.newBuilder().addAllUsers(users).build();
-  }
-
   default InviteUserResponse inviteIdToInviteUserResponse(@NonNull UUID inviteId) {
     return InviteUserResponse.newBuilder()
       .setInviteId(StringValue.of(inviteId.toString()))
@@ -205,6 +204,63 @@ public interface ProgramConverter {
 
   default MembershipType unboxMembershipTypeValue(@NonNull MembershipTypeValue v) {
     return v.getValue();
+  }
+
+
+  InviteStatus JoinProgramInviteStatusToInviteStatus(JoinProgramInvite.Status status);
+
+  default InviteStatus unboxInviteStatusValue(InviteStatusValue status){
+    return status.getValue();
+  }
+
+  default InviteStatusValue boxInviteStatus(InviteStatus status){
+    return InviteStatusValue.newBuilder().setValue(status).build();
+  }
+
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeEmail", ignore = true)
+  @Mapping(target = "mergeFirstName", ignore = true)
+  @Mapping(target = "mergeLastName", ignore = true)
+  @Mapping(target = "mergeRole", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "email", source = "userEmail")
+  User JoinProgramInviteToUser(JoinProgramInvite invitation);
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeUser", ignore = true)
+  @Mapping(target = "mergeStatus", ignore = true)
+  @Mapping(target = "mergeAcceptedAt", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "user", source = "invitation")
+  Invitation joinProgramInviteToInvitation(Integer dummy, JoinProgramInvite invitation);
+
+  default Invitation joinProgramInviteToInvitation(JoinProgramInvite invitation){
+    return joinProgramInviteToInvitation(0, invitation);
+  }
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "removeInvitations", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "invitationsOrBuilderList", ignore = true)
+  @Mapping(target = "invitationsBuilderList", ignore = true)
+  @Mapping(target = "invitationsList", source = "invitations")
+  ListUserResponse invitationsToListUserResponse(Integer dummy, Collection<JoinProgramInvite> invitations);
+
+  default ListUserResponse invitationsToListUserResponse(Collection<JoinProgramInvite> invitations){
+    return invitationsToListUserResponse(0, invitations);
   }
 
 }

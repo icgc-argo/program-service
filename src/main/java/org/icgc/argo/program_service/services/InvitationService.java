@@ -16,6 +16,7 @@ import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 import java.util.UUID;
 
 import static java.lang.String.format;
@@ -47,6 +48,11 @@ public class InvitationService {
     invitationRepository.save(invitation);
     mailService.sendInviteEmail(invitation);
     return invitation.getId();
+  }
+
+  @Transactional
+  public List<JoinProgramInvite> listInvitations(@NonNull String programShortName) {
+    return invitationRepository.findAllByProgramShortName(programShortName);
   }
 
   @Transactional

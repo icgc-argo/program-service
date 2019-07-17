@@ -208,24 +208,18 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
-    val shortName = request.getProgramShortName().getValue();
+    ListUserResponse response;
 
     try {
-      programService.getProgram(shortName);
+      val shortName = request.getProgramShortName().getValue();
+      val invitations = invitationService.listInvitations(shortName);
+
+      response = programConverter.invitationsToListUserResponse(invitations);
     } catch (Throwable t) {
       responseObserver.onError(status(t));
       return;
     }
 
-    List<User> users;
-
-    try {
-      users = egoService.getUsersInGroup(shortName);
-    } catch (Throwable t) {
-      responseObserver.onError(status(t));
-      return;
-    }
-    val response = programConverter.usersToListUserResponse(users);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }

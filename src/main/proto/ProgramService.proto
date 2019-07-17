@@ -87,6 +87,22 @@ message User {
   UserRoleValue role = 4;
 }
 
+enum InviteStatus {
+  REVOKED = 0;
+  PENDING = 1;
+  ACCEPTED = 2;
+}
+
+message InviteStatusValue {
+  InviteStatus value = 1;
+}
+
+message Invitation {
+  User user = 1;
+  InviteStatusValue status = 2;
+  google.protobuf.Timestamp accepted_at = 3;
+}
+
 message CreateProgramRequest {
   Program program = 1;
   repeated User admins = 3;
@@ -140,7 +156,7 @@ message ListUserRequest {
 }
 
 message ListUserResponse {
-  repeated User users = 1;
+  repeated Invitation invitations = 1;
 }
 
 message UpdateUserRequest {
