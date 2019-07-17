@@ -28,7 +28,8 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 public class ProgramShortNameValidator implements ConstraintValidator<ProgramShortName, String> {
-  private final static Pattern pattern = Pattern.compile("^[-A-Z]+([A-Z][A-Z])$");
+
+  private final static Pattern pattern = Pattern.compile("^[A-Z1-9][-A-Z1-9]+[-]([A-Z][A-Z])$");
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {

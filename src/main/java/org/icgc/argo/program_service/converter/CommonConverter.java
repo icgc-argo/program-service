@@ -80,6 +80,10 @@ public interface CommonConverter {
   }
 
   default Timestamp localDateTimeToTimestamp(LocalDateTime dateTime) {
+    if (dateTime == null) {
+      return null;
+    }
+
     Instant instant = dateTime.toInstant(ZoneOffset.UTC);
     return Timestamp.newBuilder()
         .setSeconds(instant.getEpochSecond())

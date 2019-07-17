@@ -134,11 +134,19 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void inviteUser(InviteUserRequest request, StreamObserver<InviteUserResponse> responseObserver) {
     val programResult = programService.getProgram(request.getProgramShortName().getValue());
-    val inviteId = invitationService.inviteUser(programResult,
-        request.getEmail().getValue(),
-        request.getFirstName().getValue(),
-        request.getLastName().getValue(),
-        request.getRole().getValue());
+    UUID inviteId;
+
+    try {
+      val email = commonConverter.unboxStringValue(request.getEmail());
+      val firstName = commonConverter.unboxStringValue(request.getFirstName());
+      val lastName = commonConverter.unboxStringValue(request.getLastName());
+      inviteId = invitationService.inviteUser(programResult, email, firstName, lastName, request.getRole().getValue());
+      egoService.getOrCreateUser(email, firstName, lastName);
+    } catch (Throwable throwable) {
+      responseObserver.onError(status(throwable));
+      return;
+    }
+
     val inviteUserResponse = programConverter.inviteIdToInviteUserResponse(inviteId);
 
     responseObserver.onNext(inviteUserResponse);
@@ -169,11 +177,18 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
-    val shortName = request.getProgramShortName().getValue();
-    programService.getProgram(shortName);
+    ListUserResponse response;
 
-    val users = egoService.getUsersInGroup(shortName);
-    val response = programConverter.usersToListUserResponse(users);
+    try {
+      val shortName = request.getProgramShortName().getValue();
+      val invitations = invitationService.listInvitations(shortName);
+
+      response = programConverter.invitationsToListUserResponse(invitations);
+    } catch (Throwable t) {
+      responseObserver.onError(status(t));
+      return;
+    }
+
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }

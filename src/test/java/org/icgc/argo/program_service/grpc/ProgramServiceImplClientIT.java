@@ -22,17 +22,39 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.proto.*;
+import org.icgc.argo.program_service.services.ego.EgoClient;
+import org.icgc.argo.program_service.utils.EntityGenerator;
 import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.apache.commons.lang.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.argo.program_service.UtilsTest.*;
 import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
 
+@SpringBootTest
+@RunWith(SpringRunner.class)
 class ProgramServiceImplClientIT {
+
   private ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051).usePlaintext().build();
   private ProgramServiceGrpc.ProgramServiceBlockingStub blockingStub = ProgramServiceGrpc.newBlockingStub(channel);
+
+  private final String NEW_USER_EMAIL = "hermionegranger@gmail.com";
+  private final String PROGRAM_SHORT_NAME = "PROGRAM-CA";
+
+  @Autowired
+  private CommonConverter commonConverter;
+
+  @Autowired
+  private EgoClient egoClient;
+
+  @Autowired
+  private EntityGenerator entityGenerator;
 
   @Test
   void createAndListPrograms() {
@@ -82,6 +104,30 @@ class ProgramServiceImplClientIT {
       .build();
     val inviteUserResponse = blockingStub.inviteUser(inviteUserRequest);
     assertThat(inviteUserResponse.getInviteId().getValue()).isNotEmpty();
+  }
+
+  @Test
+  public void invite_new_user_user_gets_added(){
+    entityGenerator.setUpProgramEntity(PROGRAM_SHORT_NAME);
+    assertThat(egoClient.getUser(NEW_USER_EMAIL).isPresent()).isFalse();
+
+    val request = InviteUserRequest.newBuilder()
+            .setEmail(commonConverter.boxString(NEW_USER_EMAIL))
+            .setFirstName(commonConverter.boxString("Hermione"))
+            .setLastName(commonConverter.boxString("Granger"))
+            .setProgramShortName(commonConverter.boxString(PROGRAM_SHORT_NAME))
+            .build();
+    val response = blockingStub.inviteUser(request);
+
+    assertThat(response.getInviteId()).isNotNull();
+    assertThat(egoClient.getUser(NEW_USER_EMAIL).isPresent()).isTrue();
+    val user = egoClient.getUser(NEW_USER_EMAIL).get();
+
+    assertThat(egoClient.getUser(NEW_USER_EMAIL).get().getFirstName()).isEqualTo("Hermione");
+    assertThat(egoClient.getUser(NEW_USER_EMAIL).get().getLastName()).isEqualTo("Granger");
+
+    egoClient.deleteUserById(user.getId());
+    assertThat(egoClient.getUser(NEW_USER_EMAIL).isPresent()).isFalse();
   }
 
   String randomProgramName() {
