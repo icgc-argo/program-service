@@ -76,12 +76,6 @@ enum UserRole {
   BANNED = 4;
 }
 
-enum InviteStatus {
-  REVOKED = 0;
-  PENDING = 1;
-  ACCEPTED = 2;
-}
-
 message UserRoleValue {
   UserRole value = 1;
 }
@@ -93,9 +87,19 @@ message User {
   UserRoleValue role = 4;
 }
 
+enum InviteStatus {
+  REVOKED = 0;
+  PENDING = 1;
+  ACCEPTED = 2;
+}
+
+message InviteStatusValue {
+  InviteStatus value = 1;
+}
+
 message Invitation {
   User user = 1;
-  InviteStatus status = 2;
+  InviteStatusValue status = 2;
   google.protobuf.Timestamp accepted_at = 3;
 }
 
