@@ -83,18 +83,6 @@ public class ExceptionListener<ReqT, RespT> extends ServerCall.Listener<ReqT> {
     return toStatus(t);
   }
 
-  private StatusRuntimeException hibernateValidationException(org.hibernate.exception.ConstraintViolationException t) {
-    val metadata= new Metadata();
-    val name = t.getClass().getName();
-
-    metadata.put(key("stacktrace"), Arrays.stream(t.getStackTrace()).
-      map(s -> s + "\n").
-      collect(Collectors.joining()));
-    metadata.put(key("name"), name);
-    val msg = t.getConstraintName() + "=>" + t.getMessage();
-    return Status.INVALID_ARGUMENT.augmentDescription(msg).asRuntimeException(metadata);
-  }
-
   StatusRuntimeException validationException(ConstraintViolationException e) {
      val metadata= new Metadata();
      val name = e.getClass().getName();
