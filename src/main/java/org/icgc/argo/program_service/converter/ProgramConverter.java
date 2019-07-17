@@ -29,7 +29,6 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -207,11 +206,17 @@ public interface ProgramConverter {
     return v.getValue();
   }
 
-  default InviteStatus JoinProgramInviteStatusToInviteStatus(JoinProgramInvite.Status status) {
-    if (status == JoinProgramInvite.Status.ACCEPTED) { return InviteStatus.ACCEPTED; }
-    if (status == JoinProgramInvite.Status.PENDING) { return InviteStatus.PENDING; }
-    return InviteStatus.REVOKED;
+
+  InviteStatus JoinProgramInviteStatusToInviteStatus(JoinProgramInvite.Status status);
+
+  default InviteStatus unboxInviteStatusValue(InviteStatusValue status){
+    return status.getValue();
   }
+
+  default InviteStatusValue boxInviteStatus(InviteStatus status){
+    return InviteStatusValue.newBuilder().setValue(status).build();
+  }
+
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "mergeEmail", ignore = true)
@@ -226,19 +231,36 @@ public interface ProgramConverter {
   @Mapping(target = "email", source = "userEmail")
   User JoinProgramInviteToUser(JoinProgramInvite invitation);
 
-  default Invitation joinProgramInviteToInvitation(JoinProgramInvite invitation) {
-    val builder = Invitation.newBuilder().
-      setUser(JoinProgramInviteToUser(invitation)).
-      setStatus(JoinProgramInviteStatusToInviteStatus(invitation.getStatus()));
-    if (invitation.getAcceptedAt() == null) {
-      return builder.build();
-    }
-    return builder.setAcceptedAt(CommonConverter.INSTANCE.localDateTimeToTimestamp(invitation.getAcceptedAt())).build();
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeUser", ignore = true)
+  @Mapping(target = "mergeStatus", ignore = true)
+  @Mapping(target = "mergeAcceptedAt", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "user", source = "invitation")
+  Invitation joinProgramInviteToInvitation(Integer dummy, JoinProgramInvite invitation);
+
+  default Invitation joinProgramInviteToInvitation(JoinProgramInvite invitation){
+    return joinProgramInviteToInvitation(0, invitation);
   }
 
- default ListUserResponse invitationsToListUserResponse(List<JoinProgramInvite> invitations) {
-   return ListUserResponse.newBuilder().
-     addAllInvitations(mapToList(invitations, this::joinProgramInviteToInvitation)).
-     build();
- }
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "removeInvitations", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "invitationsOrBuilderList", ignore = true)
+  @Mapping(target = "invitationsBuilderList", ignore = true)
+  @Mapping(target = "invitationsList", source = "invitations")
+  ListUserResponse invitationsToListUserResponse(Integer dummy, Collection<JoinProgramInvite> invitations);
+
+  default ListUserResponse invitationsToListUserResponse(Collection<JoinProgramInvite> invitations){
+    return invitationsToListUserResponse(0, invitations);
+  }
+
 }

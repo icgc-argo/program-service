@@ -51,8 +51,8 @@ public class InvitationService {
   }
 
   @Transactional
-  public List<JoinProgramInvite> listInvitations(UUID programId) {
-    return invitationRepository.findAllByProgramId(programId);
+  public List<JoinProgramInvite> listInvitations(@NonNull String programShortName) {
+    return invitationRepository.findAllByProgramShortName(programShortName);
   }
 
   @Transactional

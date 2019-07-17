@@ -212,9 +212,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
     try {
       val shortName = request.getProgramShortName().getValue();
-      val program = programService.getProgram(shortName);
-      val id = program.getId();
-      val invitations = invitationService.listInvitations(id);
+      val invitations = invitationService.listInvitations(shortName);
 
       response = programConverter.invitationsToListUserResponse(invitations);
     } catch (Throwable t) {
