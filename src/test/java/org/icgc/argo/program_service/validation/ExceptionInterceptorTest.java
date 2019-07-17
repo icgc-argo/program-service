@@ -25,7 +25,6 @@ import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import lombok.SneakyThrows;
 import lombok.val;
-
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.grpc.interceptor.ExceptionInterceptor;
 import org.icgc.argo.program_service.proto.CreateProgramRequest;
@@ -37,20 +36,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.mapping.PropertyPath;
 import org.springframework.transaction.TransactionSystemException;
 
-import javax.security.auth.x500.X500Principal;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Path;
-import javax.validation.metadata.ConstraintDescriptor;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -98,10 +92,20 @@ public class ExceptionInterceptorTest {
   }
 
   @Test
-  public void testUnwrapsExceptions() throws Exception {
+  public void testUnwrapsException1() throws Exception {
     verifyUnwrapsException(TransactionSystemException.class);
+  }
+  @Test
+  public void testUnwrapsException2() throws Exception {
     verifyUnwrapsException(javax.persistence.RollbackException.class);
+  }
+
+  @Test
+  public void testUnwrapsException3() throws Exception {
     verifyUnwrapsException(DataIntegrityViolationException.class);
+  }
+  @Test
+    public void getTestUnwrapsException4() throws Exception {
     verifyUnwrapsException(org.hibernate.exception.ConstraintViolationException.class);
   }
 
@@ -130,6 +134,7 @@ public class ExceptionInterceptorTest {
       assertNotNull(stacktrace);
       System.out.println("stacktrace=" + stacktrace);
     }
+
   }
 
   @Test
@@ -180,8 +185,9 @@ public class ExceptionInterceptorTest {
       client.createProgram(CreateProgramRequest.getDefaultInstance());
     } catch (StatusRuntimeException e) {
       assertEquals(Status.Code.INVALID_ARGUMENT, e.getStatus().getCode() );
-      assertEquals("Large Bowl=>TOO_HOT, Small Bowl=>TOO_COLD",
-        e.getStatus().getDescription());
+      val desc = e.getStatus().getDescription();
+      assertTrue("Large Bowl=>TOO_HOT, Small Bowl=>TOO_COLD".equals(desc) ||
+        "Small Bowl=>TOO_COLD, Large Bowl=>TOO_HOT".equals(desc));
     }
   }
 
