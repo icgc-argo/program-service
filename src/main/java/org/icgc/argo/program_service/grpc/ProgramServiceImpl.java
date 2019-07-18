@@ -44,8 +44,10 @@ import java.awt.desktop.UserSessionEvent;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
@@ -213,12 +215,12 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
     ListUserResponse response;
-    List<Invitation> status;
+    Set<Invitation> status;
 
     try {
       val programShortName = request.getProgramShortName().getValue();
       val users = egoService.getUsersInProgram(programShortName);
-      status = mapToList(users, user -> getInvitationForEgoUser(programShortName, user));
+      status = mapToSet(users, user -> getInvitationForEgoUser(programShortName, user));
 
       status.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
         programConverter::joinProgramInviteToInvitation ));
