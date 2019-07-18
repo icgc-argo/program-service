@@ -1,15 +1,11 @@
 package org.icgc.argo.program_service.services;
 
-import com.google.protobuf.StringValue;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
-import org.icgc.argo.program_service.proto.Invitation;
-import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.services.ego.EgoService;
@@ -20,11 +16,9 @@ import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -76,7 +70,7 @@ public class InvitationService {
 
 
   public Optional<JoinProgramInvite> getInvitation(String programShortName, String email) {
-    return invitationRepository.findTopByProgramShortNameAndUserEmailOrderByEmailSentDesc(programShortName, email);
+    return invitationRepository.findTopByProgramShortNameAndUserEmailOrderByCreatedAtDesc(programShortName, email);
   }
 
   public List<JoinProgramInvite> listPendingInvitations(String programShortName) {

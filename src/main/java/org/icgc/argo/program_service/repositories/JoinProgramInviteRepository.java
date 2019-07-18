@@ -28,7 +28,7 @@ import java.util.UUID;
 public interface JoinProgramInviteRepository extends JpaRepository<JoinProgramInvite, UUID> {
   List<JoinProgramInvite> findAllByProgramShortName(String programShortName);
   List<JoinProgramInvite> findAllByProgramShortNameAndStatus(String programShortName, JoinProgramInvite.Status status);
-  Optional<JoinProgramInvite> findTopByProgramShortNameAndUserEmailOrderByEmailSentDesc(String programShortName,
+  Optional<JoinProgramInvite> findTopByProgramShortNameAndUserEmailOrderByCreatedAtDesc(String programShortName,
     String userEmail);
   void deleteAllByProgramShortName(String programShortName);
 }
