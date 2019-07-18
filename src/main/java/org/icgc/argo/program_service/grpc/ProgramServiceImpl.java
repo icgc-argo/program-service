@@ -39,9 +39,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
+
+import java.awt.desktop.UserSessionEvent;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
@@ -209,12 +213,17 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
     ListUserResponse response;
+    List<Invitation> status;
 
     try {
-      val shortName = request.getProgramShortName().getValue();
-      val invitations = invitationService.listInvitations(shortName);
+      val programShortName = request.getProgramShortName().getValue();
+      val users = egoService.getUsersInProgram(programShortName);
+      status = mapToList(users, user -> getInvitationForEgoUser(programShortName, user));
 
-      response = programConverter.invitationsToListUserResponse(invitations);
+      status.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
+        programConverter::joinProgramInviteToInvitation ));
+
+      response = ListUserResponse.newBuilder().addAllInvitations(status).build();
     } catch (Throwable t) {
       responseObserver.onError(status(t));
       return;
@@ -222,6 +231,26 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
     responseObserver.onNext(response);
     responseObserver.onCompleted();
+  }
+
+  private Invitation getInvitationForEgoUser(String programShortName, User user) {
+    val builder = Invitation.newBuilder().setUser(user);
+
+    val invite = invitationService.getInvitation(programShortName, user.getEmail().getValue());
+
+    if (invite.isEmpty()) {
+      return builder.build();
+    }
+
+    val status = programConverter.JoinProgramInviteStatusToInviteStatus(invite.get().getStatus());
+    val builder2 = builder.setStatus(programConverter.boxInviteStatus(status));
+
+    if (status == InviteStatus.PENDING) {
+      return builder2.build();
+    }
+
+    val accepted = CommonConverter.INSTANCE.localDateTimeToTimestamp(invite.get().getAcceptedAt());
+    return builder2.setAcceptedAt(accepted).build();
   }
 
   @Override

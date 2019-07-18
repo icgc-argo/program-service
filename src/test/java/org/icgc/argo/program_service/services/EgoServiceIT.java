@@ -232,7 +232,7 @@ class EgoServiceIT {
     val collaboratorJoin = egoService.joinProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName(), UserRole.COLLABORATOR);
     assertThat(collaboratorJoin).as("Can add COLLABORATOR user to Program.").isTrue();
 
-    val users = egoService.getUsersInGroup(programEntity.getShortName());
+    val users = egoService.getUsersInProgram(programEntity.getShortName());
     users.forEach(user ->
       assertTrue(ifUserExists(user.getEmail().getValue(), expectedUsers)));
 

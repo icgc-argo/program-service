@@ -40,11 +40,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
 
+import javax.persistence.criteria.Join;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
+import static org.apache.commons.lang.math.RandomUtils.nextInt;
+import static org.apache.commons.lang.math.RandomUtils.nextLong;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -96,56 +102,140 @@ class ProgramServiceImplTest {
 
   @Test
   void listUser() {
+    // Case 1: No pending invitations, user in ego with invitation information
     val responseObserver = mock(StreamObserver.class);
-    val responseObserver2 = mock(StreamObserver.class);
-    val responseObserver3 = mock(StreamObserver.class);
 
     val programName1 = "TEST-CA";
-    val programName2 = "TEST-DK";
-
     val program1 = mockProgram(programName1);
-    val program2 = mockProgram(programName2);
+    val invite1 = createInvitation(program1);
 
-    val accepted = LocalDateTime.now();
-    val firstName = "Terry";
-    val lastName = "Fox";
-    val email ="tfox@national-heros.ca";
-    val role = UserRole.COLLABORATOR;
+    when(invitationService.listPendingInvitations(programName1)).thenReturn(List.of());
+    when(invitationService.getInvitation(programName1, invite1.getUserEmail())).thenReturn(Optional.of(invite1));
 
-    val invite1 = createInvitation(firstName, lastName, role, email, accepted, program1);
-    val invite2 = createInvitation(firstName, lastName, role, email, accepted, program2);
-    invite2.setAcceptedAt(null);
-    invite2.setStatus(JoinProgramInvite.Status.PENDING);
-
-    val invitationList1 = List.of(invite1);
-    val invitationList2 = List.of(invite2);
-
-    when(invitationService.listInvitations(programName1)).thenReturn(invitationList1);
-    when(invitationService.listInvitations(programName2)).thenReturn(invitationList2);
-
-
-    val roleValue = UserRoleValue.newBuilder().setValue(role).build();
+    val roleValue = UserRoleValue.newBuilder().setValue(invite1.getRole()).build();
 
     val user1 = User.newBuilder().
-      setEmail(StringValue.of(email)).
-      setFirstName(StringValue.of(firstName)).
-      setLastName(StringValue.of(lastName)).
+      setEmail(StringValue.of(invite1.getUserEmail())).
+      setFirstName(StringValue.of(invite1.getFirstName())).
+      setLastName(StringValue.of(invite1.getLastName())).
       setRole(roleValue).
       build();
 
-    val invitations = List.of(createInvitation(user1,  accepted, InviteStatus.ACCEPTED));
-    val invitations2 = List.of(createInvitation(user1, null, InviteStatus.PENDING));
+    when(egoService.getUsersInProgram(programName1)).thenReturn(List.of(user1));
 
+    val invitations = List.of(invite1);
     val request = createListUserRequest(programName1);
-    val request2 = createListUserRequest(programName2);
 
-    val expected = getListUserResponse(invitations);
+    val expected = programConverter.invitationsToListUserResponse(invitations);
+
     programServiceImpl.listUser(request, responseObserver);
     verify(responseObserver).onNext(expected);
+  }
 
-    val expected2 = getListUserResponse(invitations2);
-    programServiceImpl.listUser(request2, responseObserver2);
-    verify(responseObserver2).onNext(expected2);
+  @Test
+  void listUser2() {
+    val programName = "TEST-CA";
+    val program = mockProgram(programName);
+
+    val pendingInvitations = List.of(createPendingInvitation(program),
+      createPendingInvitation(program));
+
+    val invite1 = createInvitation(program);
+    val invite2 = createInvitation(program);
+    val user1 = fromInvite(invite1);
+    val user2 = fromInvite(invite2);
+    val egoUsers = List.of(user1, user2);
+
+    val egoInvitations = new TreeMap<String, JoinProgramInvite>();
+    egoInvitations.put(user1.getEmail().getValue(), invite1);
+
+    val service = setupListUserTest("TEST-CA", pendingInvitations, egoUsers,
+      egoInvitations);
+
+    val request = createListUserRequest(programName);
+    val invitations = new ArrayList<JoinProgramInvite>(pendingInvitations);
+    invitations.add(invite1);
+    invite2.setStatus(null);
+    invite2.setAcceptedAt(null);
+    invitations.add(invite2);
+
+    val expected = programConverter.invitationsToListUserResponse(invitations);
+    val responseObserver = mock(StreamObserver.class);
+
+    service.listUser(request, responseObserver);
+    val argument = ArgumentCaptor.forClass(ListUserResponse.class);
+
+    verify(responseObserver).onNext(argument.capture());
+    val actualInvitations = Set.copyOf(argument.getValue().getInvitationsList());
+    val expectedInvitations = Set.copyOf(expected.getInvitationsList());
+
+    assertTrue(actualInvitations.containsAll(expectedInvitations));
+    assertTrue(expectedInvitations.containsAll(actualInvitations));
+
+  }
+
+  User fromInvite(JoinProgramInvite invite) {
+    val roleValue = UserRoleValue.newBuilder().setValue(invite.getRole()).build();
+
+   return User.newBuilder().
+      setEmail(StringValue.of(invite.getUserEmail())).
+      setFirstName(StringValue.of(invite.getFirstName())).
+      setLastName(StringValue.of(invite.getLastName())).
+      setRole(roleValue).
+      build();
+  }
+
+  @Test
+  void listUser3() {
+    val programName1 = "TEST-CA";
+    val program1 = mockProgram(programName1);
+    val invite1 = createInvitation(program1);
+
+    val roleValue = UserRoleValue.newBuilder().setValue(invite1.getRole()).build();
+
+    val user1 = User.newBuilder().
+      setEmail(StringValue.of(invite1.getUserEmail())).
+      setFirstName(StringValue.of(invite1.getFirstName())).
+      setLastName(StringValue.of(invite1.getLastName())).
+      setRole(roleValue).
+      build();
+
+    val pendingInvitations = new ArrayList<JoinProgramInvite>();
+    val egoUsers = List.of(user1);
+
+    val egoInvitations = new TreeMap<String, JoinProgramInvite>();
+    egoInvitations.put(user1.getEmail().getValue(), invite1);
+
+    val service = setupListUserTest("TEST-CA", pendingInvitations, egoUsers,
+      egoInvitations);
+
+    val request = createListUserRequest(programName1);
+    val expected = programConverter.invitationsToListUserResponse(List.of(invite1));
+    val responseObserver = mock(StreamObserver.class);
+
+    service.listUser(request, responseObserver);
+    verify(responseObserver).onNext(expected);
+  }
+
+  ProgramServiceImpl setupListUserTest(
+      String programName,
+      List <JoinProgramInvite> pendingInvitations,
+      List<User> egoUsers,
+      Map<String, JoinProgramInvite> egoInvitations) {
+    ProgramConverter programConverter = new ProgramConverterImpl(CommonConverter.INSTANCE);
+    ProgramService programService = mock(ProgramService.class);
+    InvitationService invitationService=mock(InvitationService.class);
+    EgoService egoService = mock(EgoService.class);
+
+    for(val key: egoInvitations.keySet()) {
+      when(invitationService.getInvitation(programName, key)).thenReturn(Optional.of(egoInvitations.get(key)));
+    }
+
+    when(invitationService.listPendingInvitations(programName)).thenReturn(pendingInvitations);
+    when(egoService.getUsersInProgram(programName)).thenReturn(egoUsers);
+
+    return new ProgramServiceImpl(programService, programConverter, CommonConverter.INSTANCE,egoService,
+      invitationService);
   }
 
   ListUserRequest createListUserRequest(String shortName) {
@@ -184,19 +274,42 @@ class ProgramServiceImplTest {
     return program;
   }
 
-  JoinProgramInvite createInvitation(String firstName, String lastName, UserRole role,  String email,
-    LocalDateTime accepted, ProgramEntity program) {
-      return new JoinProgramInvite().
+  JoinProgramInvite createInvitationWithStatus(ProgramEntity program,
+    JoinProgramInvite.Status status) {
+      val created = LocalDateTime.now();
+
+      val firstName = RandomStringUtils.randomAlphabetic(5);
+      val lastName = RandomStringUtils.randomAlphabetic(10);
+
+      val invite = new JoinProgramInvite().
         setFirstName(firstName).
         setLastName(lastName).
         setProgram(program).
-        setRole(role).
-        setUserEmail(email).
-        setStatus(JoinProgramInvite.Status.ACCEPTED).
-        setAcceptedAt(accepted).
+        setRole(RandomChoiceFrom(UserRole.values())).
+        setUserEmail(firstName + "." + lastName + "@gmail.com").
+        setStatus(status).
         setId(UUID.randomUUID()).
-        setCreatedAt(accepted).
-        setExpiresAt(accepted.plusMonths(3)).
+        setCreatedAt(created).
+        setExpiresAt(created.plusMonths(3)).
         setEmailSent(true);
+      if (status == JoinProgramInvite.Status.PENDING) {
+        return invite;
+      }
+    val accepted = created.plusDays(nextInt(90));
+      return invite.setAcceptedAt(accepted);
   }
+
+  JoinProgramInvite createPendingInvitation(ProgramEntity program) {
+    return createInvitationWithStatus(program, JoinProgramInvite.Status.PENDING);
+  }
+
+  JoinProgramInvite createInvitation(ProgramEntity program) {
+    return createInvitationWithStatus(program,
+      RandomChoiceFrom(JoinProgramInvite.Status.values()));
+  }
+
+  <T> T RandomChoiceFrom(T[] elements) {
+    return elements[nextInt(elements.length-1)];
+  }
+
 }
