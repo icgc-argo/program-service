@@ -47,6 +47,9 @@ public interface ProgramConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
+  @Mapping(target = "programInstitutions", ignore = true)
+  @Mapping(target = "programCountries", ignore = true)
+  @Mapping(target = "programRegions", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
 
   @Mapping(target = "id", ignore = true)
@@ -55,6 +58,9 @@ public interface ProgramConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "programCancers", ignore = true)
   @Mapping(target = "programPrimarySites", ignore = true)
+  @Mapping(target = "programInstitutions", ignore = true)
+  @Mapping(target = "programCountries", ignore = true)
+  @Mapping(target = "programRegions", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
   /**
@@ -71,22 +77,25 @@ public interface ProgramConverter {
   @Mapping(target = "mergeSubmittedDonors", ignore = true)
   @Mapping(target = "mergeGenomicDonors", ignore = true)
   @Mapping(target = "mergeWebsite", ignore = true)
-  @Mapping(target = "mergeInstitutions", ignore = true)
-  @Mapping(target = "mergeCountries", ignore = true)
-  @Mapping(target = "mergeRegions", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "cancerTypesList", ignore = true)
   @Mapping(target = "primarySitesList", ignore = true)
+  @Mapping(target = "institutionsList", ignore = true)
+  @Mapping(target = "countriesList", ignore = true)
+  @Mapping(target = "regionsList", ignore = true)
   Program programEntityToProgram(ProgramEntity entity);
 
   @AfterMapping
   default Program updateProgramFromEntity(ProgramEntity entity, Program program) {
-    return program.toBuilder().
-      addAllCancerTypes(entity.listCancerTypes()).
-      addAllPrimarySites(entity.listPrimarySites()).
-      build();
+    return program.toBuilder()
+            .addAllCancerTypes(entity.listCancerTypes())
+            .addAllPrimarySites(entity.listPrimarySites())
+            .addAllInstitutions(entity.listInstitutions())
+            .addAllCountries(entity.listCountries())
+            .addAllRegions(entity.listRegions())
+            .build();
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -110,10 +119,10 @@ public interface ProgramConverter {
   default ProgramDetails ProgramEntityToProgramDetails(ProgramEntity value) {
     val p = programEntityToProgram(value);
     val program = updateProgramFromEntity(value, p);
-    return ProgramDetails.newBuilder().
-      setProgram(program).
-      setMetadata(programEntityToMetadata(value)).
-      build();
+    return ProgramDetails.newBuilder()
+            .setProgram(program)
+            .setMetadata(programEntityToMetadata(value))
+            .build();
   }
 
   @Mapping(target = "mergeFrom", ignore = true)

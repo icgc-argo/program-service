@@ -36,15 +36,12 @@ import org.icgc.argo.program_service.services.ProgramService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -53,6 +50,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceImplTest {
+
   ProgramConverter programConverter = new ProgramConverterImpl(CommonConverter.INSTANCE);
   ProgramService programService = mock(ProgramService.class);
   InvitationService invitationService=mock(InvitationService.class);
@@ -66,7 +64,6 @@ class ProgramServiceImplTest {
     val request = mock(CreateProgramRequest.class);
     val program = mock(Program.class);
     val responseObserver = mock(StreamObserver.class);
-
     when(request.getProgram()).thenReturn(program);
     when(programService.createProgram(program))
         .thenThrow(new DataIntegrityViolationException("test error"));
@@ -122,7 +119,6 @@ class ProgramServiceImplTest {
 
     when(invitationService.listInvitations(programName1)).thenReturn(invitationList1);
     when(invitationService.listInvitations(programName2)).thenReturn(invitationList2);
-
 
     val roleValue = UserRoleValue.newBuilder().setValue(role).build();
 
