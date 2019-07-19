@@ -37,8 +37,11 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
@@ -69,6 +72,47 @@ public class EgoAuthInterceptor implements AuthInterceptor {
     Context context = Context.current().withValue(EGO_TOKEN, egoToken.orElse(null));
     return Contexts.interceptCall(context, call, metadata, next);
   }
+
+  public static  void authorize(String permission) {
+    if(!isAuthorized(permission)) {
+      throw Status.fromCode(Status.Code.PERMISSION_DENIED).asRuntimeException();
+    }
+  }
+
+  public static boolean isDCCAdmin() {
+    return EGO_TOKEN.get().getType().equalsIgnoreCase("ADMIN");
+  }
+
+  public static boolean hasPermission(String permission) {
+    return getPermissions().contains(permission);
+  }
+
+  public static Set<String> getPermissions() {
+    return new HashSet<>(Arrays.asList(EGO_TOKEN.get().getPermissions()));
+  }
+
+  public static Set<String> getProgramNames() {
+    return getPermissions().stream().
+      filter(s -> s.startsWith("PROGRAM-")).
+      map(s -> s.replaceFirst("PROGRAM-", "")).
+      collect(Collectors.toSet());
+  }
+
+  public static boolean isAuthorized(String permission) {
+    return isDCCAdmin() || hasPermission(permission);
+  }
+
+  public static boolean isAuthenticatedUserEmail(String email) {
+    return EGO_TOKEN.get().getEmail().equalsIgnoreCase(email);
+  }
+
+  public static boolean isAuthorizedProgram(String programName) {
+    if (isDCCAdmin()) {
+      return true;
+    }
+    return getProgramNames().contains(programName);
+  }
+
 
   /**
    * Handling authorization

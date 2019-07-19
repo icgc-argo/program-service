@@ -333,5 +333,6 @@ public class EgoService {
   public EgoUser convertInvitationToEgoUser(@NonNull JoinProgramInvite invite){
     return programConverter.joinProgramInviteToEgoUser(invite);
   }
+
 }
 

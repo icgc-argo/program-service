@@ -55,12 +55,15 @@ public class InvitationService {
     return invitationRepository.findAllByProgramShortName(programShortName);
   }
 
+  public JoinProgramInvite getInvitation(@NonNull UUID invitationId) throws NotFoundException {
+    return invitationRepository
+      .findById(invitationId)
+      .orElseThrow(() ->
+        new NotFoundException(format("Cannot find invitation with id '%s' ", invitationId)));
+  }
+
   @Transactional
-  public EgoUser acceptInvite(@NonNull UUID invitationId) throws NotFoundException {
-    val invitation = invitationRepository
-            .findById(invitationId)
-            .orElseThrow(() ->
-              new NotFoundException(format("Cannot find invitation with id '%s' ", invitationId)));
+  public EgoUser acceptInvite(@NonNull JoinProgramInvite invitation) {
     invitation.accept();
     invitationRepository.save(invitation);
     egoService.joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
