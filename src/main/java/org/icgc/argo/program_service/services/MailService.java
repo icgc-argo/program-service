@@ -25,6 +25,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -41,6 +42,9 @@ public class MailService {
 
   private final JavaMailSender mailSender;
   private final VelocityEngine velocityEngine;
+
+  @Value("${app.invitationUrlPrefix}")
+  private String invitationUrlPrefix;
 
   @Autowired
   public MailService(@NonNull JavaMailSender mailSender,
@@ -65,7 +69,7 @@ public class MailService {
       ctx.put("invitationId", invitation.getId());
       ctx.put("programShortName", invitation.getProgram().getShortName());
       // TODO: add join program link
-      ctx.put("joinProgramLink", "#");
+      ctx.put("joinProgramLink", invitationUrlPrefix + invitation.getId());
       template.merge(ctx, sw);
 
       msg.setContent(sw.toString(), "text/html");
