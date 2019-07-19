@@ -31,6 +31,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
@@ -242,6 +243,24 @@ public interface ProgramConverter {
 
   default Invitation joinProgramInviteToInvitation(JoinProgramInvite invitation) {
     return joinProgramInviteToInvitation(0, invitation);
+  }
+
+  default Invitation userWithOptionalJoinProgramInviteToInvitation(User user, Optional<JoinProgramInvite> invite) {
+    val builder = Invitation.newBuilder().setUser(user);
+
+    if (invite.isEmpty()) {
+      return builder.build();
+    }
+
+    val status = JoinProgramInviteStatusToInviteStatus(invite.get().getStatus());
+    val builder2 = builder.setStatus(boxInviteStatus(status));
+
+    if (status == InviteStatus.PENDING) {
+      return builder2.build();
+    }
+
+    val accepted = CommonConverter.INSTANCE.localDateTimeToTimestamp(invite.get().getAcceptedAt());
+    return builder2.setAcceptedAt(accepted).build();
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
