@@ -11,6 +11,14 @@ import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.*;
 
 public class AuthorizationServiceTest {
+  AuthorizationService authorizationService(EgoToken token) {
+    return new EgoAuthorizationService(){
+      @Override
+      public EgoToken getEgoToken() {
+        return token;
+      }
+    };
+  }
 
   EgoToken mockToken(String type, String... permissions) {
     val token = mock(EgoToken.class);
@@ -51,7 +59,7 @@ public class AuthorizationServiceTest {
   }
 
   private Exception testRequireDCCAdmin(EgoToken token) {
-    val auth = new AuthorizationService(token);
+    val auth = authorizationService(token);
     Exception exception = null;
     try {
       auth.requireDCCAdmin();
@@ -60,6 +68,7 @@ public class AuthorizationServiceTest {
     }
     return exception;
   }
+
 
   @Test
   void requireProgramAdmin() {
@@ -108,7 +117,7 @@ public class AuthorizationServiceTest {
   }
 
   private Exception testRequireProgramAdmin(EgoToken token, String programShortName) {
-    val auth = new AuthorizationService(token);
+    val auth = authorizationService(token);
     Exception exception = null;
     try {
       auth.requireProgramAdmin(programShortName);
@@ -166,7 +175,7 @@ public class AuthorizationServiceTest {
   }
 
   private Exception testRequireProgramUser(EgoToken token, String programShortName) {
-    val auth = new AuthorizationService(token);
+    val auth = authorizationService(token);
     Exception exception = null;
     try {
       auth.requireProgramUser(programShortName);
@@ -201,7 +210,7 @@ public class AuthorizationServiceTest {
   }
 
   private Exception testRequireEmail(EgoToken token, String email) {
-    val auth = new AuthorizationService(token);
+    val auth = authorizationService(token);
     Exception exception = null;
     try {
       auth.requireEmail(email);
@@ -210,6 +219,4 @@ public class AuthorizationServiceTest {
     }
     return exception;
   }
-
- 
 }
