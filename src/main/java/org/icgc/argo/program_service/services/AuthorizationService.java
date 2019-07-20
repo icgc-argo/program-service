@@ -5,6 +5,8 @@ import io.grpc.Status;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import lombok.val;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 
 public class AuthorizationService {
@@ -64,7 +66,12 @@ public class AuthorizationService {
   }
 
   public boolean isDCCAdmin() {
-    return getToken().getType().equalsIgnoreCase("ADMIN");
+    val type = getToken().getType();
+
+    if (type == null) {
+      return false;
+    }
+    return type.equalsIgnoreCase("ADMIN");
   }
 
   public boolean isAuthorized(String permission) {
@@ -76,11 +83,22 @@ public class AuthorizationService {
   }
 
   private Set<String> getPermissions() {
-    return new HashSet<>(Arrays.asList(getToken().getPermissions()));
+    val permissions = getToken().getPermissions();
+
+    if (permissions == null) {
+      return new HashSet<>();
+    }
+    return new HashSet<>(Arrays.asList(permissions));
   }
 
   public boolean hasEmail(String email) {
-    return getToken().getEmail().equalsIgnoreCase(email);
+    val authenticatedEmail = getToken().getEmail();
+
+    if (authenticatedEmail == null || email == null) {
+      return false;
+    }
+
+    return authenticatedEmail.equalsIgnoreCase(email);
   }
 
 }
