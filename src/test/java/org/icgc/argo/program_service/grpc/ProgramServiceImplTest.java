@@ -30,6 +30,7 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.services.AuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ProgramService;
@@ -57,9 +58,10 @@ class ProgramServiceImplTest {
   ProgramService programService = mock(ProgramService.class);
   InvitationService invitationService=mock(InvitationService.class);
   EgoService egoService = mock(EgoService.class);
+  AuthorizationService authorizationService = mock(AuthorizationService.class);
 
   ProgramServiceImpl programServiceImpl = new ProgramServiceImpl(programService, programConverter,
-    CommonConverter.INSTANCE,egoService, invitationService);
+    CommonConverter.INSTANCE,egoService, invitationService, authorizationService);
 
   @Test
   void createProgram() {
@@ -74,7 +76,8 @@ class ProgramServiceImplTest {
     programServiceImpl.createProgram(request, responseObserver);
     val argument = ArgumentCaptor.forClass(Exception.class);
     verify(responseObserver).onError(argument.capture());
-    Assertions.assertThat(argument.getValue().getMessage()).as("Capture the error message").contains("test error");
+    Assertions.assertThat(argument.getValue().getMessage()).as("Capture the error message").
+      contains("test error");
   }
 
   @Test
@@ -91,14 +94,14 @@ class ProgramServiceImplTest {
 
     val argument = ArgumentCaptor.forClass(StatusRuntimeException.class);
     verify(responseObserver).onError(argument.capture());
-    Assertions.assertThat(argument.getValue().getStatus().getCode()).as("Capture non exist exception").isEqualTo(Status.NOT_FOUND.getCode());
+    Assertions.assertThat(argument.getValue().getStatus().getCode()).
+      as("Capture non exist exception").isEqualTo(Status.NOT_FOUND.getCode());
   }
 
   @Test
   void listUser() {
     val responseObserver = mock(StreamObserver.class);
     val responseObserver2 = mock(StreamObserver.class);
-    val responseObserver3 = mock(StreamObserver.class);
 
     val programName1 = "TEST-CA";
     val programName2 = "TEST-DK";
@@ -164,17 +167,6 @@ class ProgramServiceImplTest {
       return builder.build();
     }
     return builder. setAcceptedAt(CommonConverter.INSTANCE.localDateTimeToTimestamp(accepted)).build();
-  }
-
-  ProgramEntity mockNonExistantProgram(String shortName) {
-    val program = mock(ProgramEntity.class);
-    when(programService.getProgram(shortName)).thenThrow(programNotFound(shortName));
-    return program;
-  }
-
-  StatusRuntimeException programNotFound(String shortName) {
-    return new StatusRuntimeException(
-      Status.fromCode(Status.Code.NOT_FOUND).withDescription("Program '"+shortName+"' not found"));
   }
 
   ProgramEntity mockProgram(String shortName) {

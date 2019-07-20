@@ -86,7 +86,7 @@ class InvitationServiceTest {
     when(invitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
     when(invitation.getId()).thenReturn(UUID.randomUUID());
     when(invitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
-    invitationService.acceptInvite(invitation.getId());
+    invitationService.acceptInvite(invitation);
     verify(egoService).joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
     verify(invitation).accept();
   }

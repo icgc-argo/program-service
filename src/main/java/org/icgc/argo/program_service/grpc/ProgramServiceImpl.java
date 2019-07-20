@@ -26,10 +26,10 @@ import lombok.NonNull;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.*;
+import org.icgc.argo.program_service.services.AuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.icgc.argo.program_service.services.ego.EgoService;
@@ -45,8 +45,6 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.*;
-
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
 
@@ -58,30 +56,26 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   private final ProgramConverter programConverter;
   private final CommonConverter commonConverter;
   private final EgoService egoService;
+  private final AuthorizationService authorizationService;
 
   @Autowired
   public ProgramServiceImpl(@NonNull ProgramService programService, @NonNull ProgramConverter programConverter,
-    @NonNull CommonConverter commonConverter, @NonNull EgoService egoService,InvitationService invitationService) {
+    @NonNull CommonConverter commonConverter, @NonNull EgoService egoService,InvitationService invitationService,
+    AuthorizationService authorizationService) {
     this.programService = programService;
     this.programConverter = programConverter;
     this.egoService = egoService;
     this.commonConverter = commonConverter;
     this.invitationService = invitationService;
+    this.authorizationService = authorizationService;
   }
 
 
-  private String readPermission(String programShortName) {
-    return "PROGRAM-"+ programShortName +".READ";
-  }
-
-  private String writePermission(String programShortName) {
-    return "PROGRAM-" + programShortName + ".WRITE";
-  }
-  
   //TODO: need better error response. If a duplicate program is created, get "2 UNKNOWN" error. Should atleast have a message in it
   @Override
-  @EgoAuth(typesAllowed = { "ADMIN" })
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
+    authorizationService.requireDCCAdmin();
+
     val program = request.getProgram();
     val admins = request.getAdminsList();
 
@@ -119,8 +113,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void getProgram(GetProgramRequest request, StreamObserver<GetProgramResponse> responseObserver) {
     ProgramEntity programEntity;
     val shortName = request.getShortName().getValue();
-
-    authorize(readPermission(shortName));
+    authorizationService.requireProgramUser(shortName);
 
     try {
       programEntity = programService.getProgram(shortName);
@@ -153,8 +146,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-  @EgoAuth(typesAllowed = { "ADMIN" })
   public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver) {
+    authorizationService.requireDCCAdmin();
+
     val program = request.getProgram();
     val updatingProgram = programConverter.programToProgramEntity(program);
     try {
@@ -172,8 +166,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void inviteUser(InviteUserRequest request, StreamObserver<InviteUserResponse> responseObserver) {
     val programShortName = request.getProgramShortName().getValue();
-    
-    authorize(writePermission(programShortName));
+    authorizationService.requireProgramAdmin(programShortName);
 
     val programResult = programService.getProgram(programShortName);
     UUID inviteId;
@@ -200,11 +193,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val id = commonConverter.stringToUUID(request.getJoinProgramInvitationId());
     val invitation = invitationService.getInvitation(id);
 
-    // only the person who the invitation is for can log in and accept the invitation
-    if (!isAuthenticatedUserEmail(invitation.getUserEmail())) {
-      throw Status.fromCode(Status.Code.PERMISSION_DENIED).asRuntimeException();
-    }
-    
+    authorizationService.requireEmail(invitation.getUserEmail());
+
     try {
       val responseUser = invitationService.acceptInvite(invitation);
       val response = programConverter.egoUserToJoinProgramResponse(responseUser);
@@ -223,7 +213,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
     try {
       programEntities = programService.listPrograms().stream().
-        filter(p -> isAuthorizedProgram(p.getShortName())).collect(Collectors.toList());
+        filter(p -> authorizationService.canRead(p.getShortName())).
+        collect(Collectors.toList());
     } catch (Throwable t) {
       responseObserver.onError(t);
       return;
@@ -238,12 +229,10 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
     ListUserResponse response;
+    val shortName = request.getProgramShortName().getValue();
+    authorizationService.requireProgramAdmin(shortName);
 
     try {
-      val shortName = request.getProgramShortName().getValue();
-
-      authorize(writePermission(shortName));
-
       val invitations = invitationService.listInvitations(shortName);
 
       response = programConverter.invitationsToListUserResponse(invitations);
@@ -259,7 +248,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void removeUser(RemoveUserRequest request, StreamObserver<RemoveUserResponse> responseObserver) {
     val programName = request.getProgramShortName().getValue();
-    authorize(writePermission(programName));
+    authorizationService.requireProgramAdmin(programName);
+
     val email = request.getUserEmail().getValue();
     try {
       egoService.leaveProgram(email, programName);
@@ -274,11 +264,11 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void updateUser(UpdateUserRequest request, StreamObserver<Empty> responseObserver) {
+    val shortname = commonConverter.unboxStringValue(request.getShortName());
+    authorizationService.requireProgramAdmin(shortname);
+
     val userId = commonConverter.stringToUUID(request.getUserId());
     val role = request.getRole().getValue();
-    val shortname = commonConverter.unboxStringValue(request.getShortName());
-    authorize(writePermission(shortname));
-
     try {
       egoService.updateUserRole(userId, shortname, role);
     } catch (NotFoundException e) {
@@ -291,8 +281,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-  @EgoAuth(typesAllowed = { "ADMIN" })
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
+    authorizationService.requireDCCAdmin();
+
     val shortName = request.getProgramShortName().getValue();
     try {
       egoService.cleanUpProgram(shortName);
