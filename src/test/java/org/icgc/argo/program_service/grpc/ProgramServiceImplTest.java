@@ -45,8 +45,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.apache.commons.lang.math.RandomUtils.nextInt;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -302,6 +301,18 @@ class ProgramServiceImplTest {
 
     assertTrue(actualInvitations.containsAll(expectedInvitations));
     assertTrue(expectedInvitations.containsAll(actualInvitations));
+  }
+
+  @Test
+  void testInvitationExpiry() {
+    val programName = "TEST-CA";
+    val program = mockProgram(programName);
+    val invite = createPendingInvitation(program);
+    assertFalse(invite.isExpired());
+    assertEquals(JoinProgramInvite.Status.PENDING, invite.getStatus());
+    invite.setExpiresAt(LocalDateTime.now().minusDays(1));
+    assertTrue(invite.isExpired());
+    assertEquals(JoinProgramInvite.Status.EXPIRED, invite.getStatus());
   }
 
   User fromInvite(JoinProgramInvite invite) {
