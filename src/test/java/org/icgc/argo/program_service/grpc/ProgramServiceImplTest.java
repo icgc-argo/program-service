@@ -68,11 +68,14 @@ class ProgramServiceImplTest {
     when(request.getProgram()).thenReturn(program);
     when(programService.createProgram(program))
       .thenThrow(new DataIntegrityViolationException("test error"));
-
-    programServiceImpl.createProgram(request, responseObserver);
-    val argument = ArgumentCaptor.forClass(Exception.class);
-    verify(responseObserver).onError(argument.capture());
-    Assertions.assertThat(argument.getValue().getMessage()).as("Capture the error message").contains("test error");
+    Exception exception=null;
+    try {
+      programServiceImpl.createProgram(request, responseObserver);
+    } catch(Exception ex) {
+      exception = ex;
+    }
+    Assertions.assertThat(exception).isNotNull();
+    Assertions.assertThat(exception.getMessage()).as("Capture the error message").contains("test error");
   }
 
   @Test
@@ -85,20 +88,18 @@ class ProgramServiceImplTest {
       throw new EmptyResultDataAccessException(1);
     }).when(programService).removeProgram(any(String.class));
 
-    String msg = "";
+    Exception exception=null;
       try {
         programServiceImpl.removeProgram(request, responseObserver);
       } catch (Exception ex) {
-        msg = ex.getMessage();
+        exception = ex;
       }
-
-      Assertions.assertThat(msg).
+      Assertions.assertThat(exception).isNotNull();
+      Assertions.assertThat(exception.getMessage()).
         isEqualTo("NOT_FOUND: Incorrect result size: expected 1, actual 0");
-
-    val argument = ArgumentCaptor.forClass(StatusRuntimeException.class);
-    verify(responseObserver).onError(argument.capture());
-    Assertions.assertThat(argument.getValue().getStatus().getCode()).as("Capture non exist exception")
-      .isEqualTo(Status.NOT_FOUND.getCode());
+      Assertions.assertThat(exception).isInstanceOf(StatusRuntimeException.class);
+      val e = (StatusRuntimeException) exception;
+    Assertions.assertThat(e.getStatus().getCode()).isEqualTo(Status.NOT_FOUND.getCode());
   }
 
   @Test
@@ -348,10 +349,6 @@ class ProgramServiceImplTest {
       setProgramShortName(StringValue.of(shortName)).build();
   }
 
-  ListUserResponse getListUserResponse(List<Invitation> invitations) {
-    return ListUserResponse.newBuilder().addAllInvitations(invitations).build();
-  }
-
   Invitation createInvitation(User user, LocalDateTime accepted, InviteStatus status) {
     val builder = Invitation.newBuilder().setUser(user);
     if (status == null) {
@@ -364,16 +361,6 @@ class ProgramServiceImplTest {
     return builder2.setAcceptedAt(CommonConverter.INSTANCE.localDateTimeToTimestamp(accepted)).build();
   }
 
-  ProgramEntity mockNonExistantProgram(String shortName) {
-    val program = mock(ProgramEntity.class);
-    when(programService.getProgram(shortName)).thenThrow(programNotFound(shortName));
-    return program;
-  }
-
-  StatusRuntimeException programNotFound(String shortName) {
-    return new StatusRuntimeException(
-      Status.fromCode(Status.Code.NOT_FOUND).withDescription("Program '" + shortName + "' not found"));
-  }
 
   ProgramEntity mockProgram(String shortName) {
     val program = mock(ProgramEntity.class);
