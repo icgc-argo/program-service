@@ -194,7 +194,6 @@ public class ExceptionInterceptorTest {
   @Test
   public void testHandleNoException() throws IOException {
     val service = new ProgramServiceGrpc.ProgramServiceImplBase() {
-      @EgoAuthInterceptor.EgoAuth(typesAllowed = { "ADMIN" })
       public void createProgram(
         CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
         responseObserver.onNext(CreateProgramResponse.getDefaultInstance());
