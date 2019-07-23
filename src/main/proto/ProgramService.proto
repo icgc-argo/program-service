@@ -98,7 +98,7 @@ message InviteStatusValue {
   InviteStatus value = 1;
 }
 
-message UserStatus {
+message UserDetails {
   User user = 1;
   InviteStatusValue status = 2;
   google.protobuf.Timestamp accepted_at = 3;
@@ -157,7 +157,7 @@ message ListUserRequest {
 }
 
 message ListUserResponse {
-  repeated UserStatus invitations = 1;
+  repeated UserDetails userDetails = 1;
 }
 
 message UpdateUserRequest {

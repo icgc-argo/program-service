@@ -186,8 +186,8 @@ class ProgramServiceImplTest {
     val argument = ArgumentCaptor.forClass(ListUserResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
-    val actualInvitations = Set.copyOf(argument.getValue().getInvitationsList());
-    val expectedInvitations = Set.copyOf(expected.getInvitationsList());
+    val actualInvitations = Set.copyOf(argument.getValue().getUserDetailsList());
+    val expectedInvitations = Set.copyOf(expected.getUserDetailsList());
 
     assertTrue(actualInvitations.containsAll(expectedInvitations));
     assertTrue(expectedInvitations.containsAll(actualInvitations));
@@ -221,11 +221,11 @@ class ProgramServiceImplTest {
     val argument = ArgumentCaptor.forClass(ListUserResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
-    val actualInvitationList = argument.getValue().getInvitationsList();
+    val actualInvitationList = argument.getValue().getUserDetailsList();
     // Ensure that we haven't listed the same user twice
     assertEquals(1, actualInvitationList.size());
     val actualInvite = actualInvitationList.get(0);
-    val expectedInvite = expected.getInvitationsList().get(0);
+    val expectedInvite = expected.getUserDetailsList().get(0);
     assertEquals(expectedInvite, actualInvite);
   }
 
@@ -248,7 +248,7 @@ class ProgramServiceImplTest {
       egoInvitations);
 
     val request = createListUserRequest(programName);
-    val expectedInvite = createInvitation(user, null, null);
+    val expectedUserDetails = createUserDetails(user, null, null);
 
     val responseObserver = mock(StreamObserver.class);
 
@@ -256,14 +256,14 @@ class ProgramServiceImplTest {
     val argument = ArgumentCaptor.forClass(ListUserResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
-    val actualInvitations = Set.copyOf(argument.getValue().getInvitationsList());
-    val expectedInvitations = Set.of(expectedInvite);
+    val actual = Set.copyOf(argument.getValue().getUserDetailsList());
+    val expected = Set.of(expectedUserDetails);
 
     // Ensure that we haven't listed the same user twice
-    assertEquals(1, argument.getValue().getInvitationsList().size());
+    assertEquals(1, argument.getValue().getUserDetailsList().size());
 
-    assertTrue(actualInvitations.containsAll(expectedInvitations));
-    assertTrue(expectedInvitations.containsAll(actualInvitations));
+    assertTrue(actual.containsAll(expected));
+    assertTrue(expected.containsAll(actual));
   }
 
   @Test
@@ -285,7 +285,7 @@ class ProgramServiceImplTest {
       egoInvitations);
 
     val request = createListUserRequest(programName);
-    val expectedInvite = createInvitation(user, null, null);
+    val expectedUserDetails = createUserDetails(user, null, null);
 
     val responseObserver = mock(StreamObserver.class);
 
@@ -293,14 +293,14 @@ class ProgramServiceImplTest {
     val argument = ArgumentCaptor.forClass(ListUserResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
-    val actualInvitations = Set.copyOf(argument.getValue().getInvitationsList());
-    val expectedInvitations = Set.of(expectedInvite);
+    val actual = Set.copyOf(argument.getValue().getUserDetailsList());
+    val expected = Set.of(expectedUserDetails);
 
     // Ensure that we haven't listed the same user twice
-    assertEquals(1, argument.getValue().getInvitationsList().size());
+    assertEquals(1, argument.getValue().getUserDetailsList().size());
 
-    assertTrue(actualInvitations.containsAll(expectedInvitations));
-    assertTrue(expectedInvitations.containsAll(actualInvitations));
+    assertTrue(actual.containsAll(expected));
+    assertTrue(expected.containsAll(actual));
   }
 
   @Test
@@ -351,12 +351,12 @@ class ProgramServiceImplTest {
       setProgramShortName(StringValue.of(shortName)).build();
   }
 
-  ListUserResponse getListUserResponse(List<UserStatus> invitations) {
-    return ListUserResponse.newBuilder().addAllInvitations(invitations).build();
+  ListUserResponse getListUserResponse(List<UserDetails> invitations) {
+    return ListUserResponse.newBuilder().addAllUserDetails(invitations).build();
   }
 
-  UserStatus createInvitation(User user, LocalDateTime accepted, InviteStatus status) {
-    val builder = UserStatus.newBuilder().setUser(user);
+  UserDetails createUserDetails(User user, LocalDateTime accepted, InviteStatus status) {
+    val builder = UserDetails.newBuilder().setUser(user);
     if (status == null) {
       return builder.build();
     }
@@ -365,17 +365,6 @@ class ProgramServiceImplTest {
       return builder2.build();
     }
     return builder2.setAcceptedAt(CommonConverter.INSTANCE.localDateTimeToTimestamp(accepted)).build();
-  }
-
-  ProgramEntity mockNonExistantProgram(String shortName) {
-    val program = mock(ProgramEntity.class);
-    when(programService.getProgram(shortName)).thenThrow(programNotFound(shortName));
-    return program;
-  }
-
-  StatusRuntimeException programNotFound(String shortName) {
-    return new StatusRuntimeException(
-      Status.fromCode(Status.Code.NOT_FOUND).withDescription("Program '" + shortName + "' not found"));
   }
 
   ProgramEntity mockProgram(String shortName) {

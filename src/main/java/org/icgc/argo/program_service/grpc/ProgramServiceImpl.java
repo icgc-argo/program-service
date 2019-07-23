@@ -213,18 +213,18 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listUsers(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
     ListUserResponse response;
-    Set<UserStatus> status;
+    Set<UserDetails> status;
 
     try {
       val programShortName = request.getProgramShortName().getValue();
       val users = egoService.getUsersInProgram(programShortName);
-      status = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToUserStatus(user,
+      status = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
         invitationService.getInvitation(programShortName, user.getEmail().getValue())));
 
       status.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
-        programConverter::joinProgramInviteToUserStatus));
+        programConverter::joinProgramInviteToUserDetails));
 
-      response = ListUserResponse.newBuilder().addAllInvitations(status).build();
+      response = ListUserResponse.newBuilder().addAllUserDetails(status).build();
     } catch (Throwable t) {
       responseObserver.onError(status(t));
       return;
