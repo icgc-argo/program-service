@@ -42,8 +42,13 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
+
+import static io.grpc.Status.NOT_FOUND;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
@@ -79,30 +84,15 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val program = request.getProgram();
     val admins = request.getAdminsList();
 
-    ProgramEntity programEntity;
-
-    try {
-      programEntity = programService.createProgram(program);
-    } catch (DataIntegrityViolationException e) {
-      responseObserver.onError(
-        status(Status.INVALID_ARGUMENT,
-          getExceptionMessage(e)));
-      return;
-    }
-
-    try {
-      egoService.setUpProgram(programEntity.getShortName());
-      admins.forEach(admin -> {
-        val email = commonConverter.unboxStringValue(admin.getEmail());
-        val firstName = commonConverter.unboxStringValue(admin.getFirstName());
-        val lastName = commonConverter.unboxStringValue(admin.getLastName());
-        egoService.getOrCreateUser(email, firstName, lastName);
-        invitationService.inviteUser(programEntity, email, firstName, lastName, UserRole.ADMIN);
-      });
-    } catch (Throwable t) {
-      responseObserver.onError(status(t));
-      return;
-    }
+    val programEntity = programService.createProgram(program);
+    egoService.setUpProgram(programEntity.getShortName());
+    admins.forEach(admin -> {
+              val email = commonConverter.unboxStringValue(admin.getEmail());
+              val firstName = commonConverter.unboxStringValue(admin.getFirstName());
+              val lastName = commonConverter.unboxStringValue(admin.getLastName());
+              egoService.getOrCreateUser(email, firstName, lastName);
+              invitationService.inviteUser(programEntity, email, firstName, lastName, UserRole.ADMIN);
+    });
 
     val response = programConverter.programEntityToCreateProgramResponse(programEntity);
     responseObserver.onNext(response);
@@ -111,17 +101,10 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void getProgram(GetProgramRequest request, StreamObserver<GetProgramResponse> responseObserver) {
-    ProgramEntity programEntity;
     val shortName = request.getShortName().getValue();
     authorizationService.requireProgramUser(shortName);
 
-    try {
-      programEntity = programService.getProgram(shortName);
-    } catch (Throwable t) {
-      responseObserver.onError(status(t));
-      return;
-    }
-
+    val programEntity = programService.getProgram(shortName);
     val programDetails = programConverter.ProgramEntityToProgramDetails(programEntity);
     val response = GetProgramResponse.newBuilder().setProgram(programDetails).build();
     responseObserver.onNext(response);
@@ -157,9 +140,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onNext(response);
       responseObserver.onCompleted();
     } catch (NotFoundException | NoSuchElementException e) {
-      responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
-    } catch (RuntimeException e) {
-      responseObserver.onError(Status.UNKNOWN.withDescription(e.getMessage()).asRuntimeException());
+        throw status(NOT_FOUND, e.getMessage());
     }
   }
 
@@ -201,24 +182,15 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onNext(response);
       responseObserver.onCompleted();
     } catch (NotFoundException e) {
-      responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
-    } catch (RuntimeException e1){
-      responseObserver.onError(Status.UNKNOWN.withDescription(e1.getMessage()).asRuntimeException());
+      throw status(NOT_FOUND, e.getMessage());
     }
   }
 
   @Override
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
-    List<ProgramEntity> programEntities;
-
-    try {
-      programEntities = programService.listPrograms().stream().
+      List<ProgramEntity> programEntities = programService.listPrograms().stream().
         filter(p -> authorizationService.canRead(p.getShortName())).
         collect(Collectors.toList());
-    } catch (Throwable t) {
-      responseObserver.onError(t);
-      return;
-    }
 
     val listProgramsResponse = programConverter.programEntitiesToListProgramsResponse(programEntities);
 
@@ -229,21 +201,23 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
     ListUserResponse response;
+
     val shortName = request.getProgramShortName().getValue();
     authorizationService.requireProgramAdmin(shortName);
 
-    try {
-      val invitations = invitationService.listInvitations(shortName);
+    val programShortName = request.getProgramShortName().getValue();
+    val users = egoService.getUsersInProgram(programShortName);
+    val status = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToInvitation(user,
+      invitationService.getInvitation(programShortName, user.getEmail().getValue())));
 
-      response = programConverter.invitationsToListUserResponse(invitations);
-    } catch (Throwable t) {
-      responseObserver.onError(status(t));
-      return;
-    }
+    status.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
+      programConverter::joinProgramInviteToInvitation ));
 
+    response = ListUserResponse.newBuilder().addAllInvitations(status).build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
+
 
   @Override
   public void removeUser(RemoveUserRequest request, StreamObserver<RemoveUserResponse> responseObserver) {
@@ -251,12 +225,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     authorizationService.requireProgramAdmin(programName);
 
     val email = request.getUserEmail().getValue();
-    try {
-      egoService.leaveProgram(email, programName);
-    } catch (Throwable throwable) {
-      responseObserver.onError(status(throwable));
-      return;
-    }
+    egoService.leaveProgram(email, programName);
     val response = programConverter.toRemoveUserResponse("User is successfully removed!");
     responseObserver.onNext(response);
     responseObserver.onCompleted();
@@ -272,9 +241,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     try {
       egoService.updateUserRole(userId, shortname, role);
     } catch (NotFoundException e) {
-      responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
-    } catch (RuntimeException e) {
-      responseObserver.onError(Status.UNKNOWN.withDescription(e.getMessage()).asRuntimeException());
+      throw status(NOT_FOUND, e.getMessage());
     }
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
@@ -289,13 +256,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       egoService.cleanUpProgram(shortName);
       programService.removeProgram(request.getProgramShortName().getValue());
     } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
-      responseObserver.onError(Status.NOT_FOUND.withDescription(getExceptionMessage(e)).asRuntimeException());
-      return;
-    } catch (Throwable t) {
-      responseObserver.onError(t);
-      return;
+      throw status(NOT_FOUND, getExceptionMessage(e));
     }
-
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
