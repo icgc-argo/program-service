@@ -239,14 +239,14 @@ public interface ProgramConverter {
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "user", source = "invitation")
-  Invitation joinProgramInviteToInvitation(Integer dummy, JoinProgramInvite invitation);
+  UserStatus joinProgramInviteToUserStatus(Integer dummy, JoinProgramInvite invitation);
 
-  default Invitation joinProgramInviteToInvitation(JoinProgramInvite invitation) {
-    return joinProgramInviteToInvitation(0, invitation);
+  default UserStatus joinProgramInviteToUserStatus(JoinProgramInvite invitation) {
+    return joinProgramInviteToUserStatus(0, invitation);
   }
 
-  default Invitation userWithOptionalJoinProgramInviteToInvitation(User user, Optional<JoinProgramInvite> invite) {
-    val builder = Invitation.newBuilder().setUser(user);
+  default UserStatus userWithOptionalJoinProgramInviteToUserStatus(User user, Optional<JoinProgramInvite> invite) {
+    val builder = UserStatus.newBuilder().setUser(user);
 
     if (invite.isEmpty()) {
       return builder.build();

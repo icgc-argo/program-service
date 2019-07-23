@@ -120,7 +120,7 @@ class ProgramServiceImplTest {
 
     val expected = programConverter.invitationsToListUserResponse(invitations);
 
-    programServiceImpl.listUser(request, responseObserver);
+    programServiceImpl.listUsers(request, responseObserver);
     verify(responseObserver).onNext(expected);
   }
 
@@ -146,7 +146,7 @@ class ProgramServiceImplTest {
     val expected = programConverter.invitationsToListUserResponse(List.of(invite1));
     val responseObserver = mock(StreamObserver.class);
 
-    service.listUser(request, responseObserver);
+    service.listUsers(request, responseObserver);
     verify(responseObserver).onNext(expected);
   }
 
@@ -182,7 +182,7 @@ class ProgramServiceImplTest {
     val expected = programConverter.invitationsToListUserResponse(invitations);
     val responseObserver = mock(StreamObserver.class);
 
-    service.listUser(request, responseObserver);
+    service.listUsers(request, responseObserver);
     val argument = ArgumentCaptor.forClass(ListUserResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
@@ -217,7 +217,7 @@ class ProgramServiceImplTest {
     val expected = programConverter.invitationsToListUserResponse(invitations);
     val responseObserver = mock(StreamObserver.class);
 
-    service.listUser(request, responseObserver);
+    service.listUsers(request, responseObserver);
     val argument = ArgumentCaptor.forClass(ListUserResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
@@ -252,7 +252,7 @@ class ProgramServiceImplTest {
 
     val responseObserver = mock(StreamObserver.class);
 
-    service.listUser(request, responseObserver);
+    service.listUsers(request, responseObserver);
     val argument = ArgumentCaptor.forClass(ListUserResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
@@ -289,7 +289,7 @@ class ProgramServiceImplTest {
 
     val responseObserver = mock(StreamObserver.class);
 
-    service.listUser(request, responseObserver);
+    service.listUsers(request, responseObserver);
     val argument = ArgumentCaptor.forClass(ListUserResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
@@ -351,12 +351,12 @@ class ProgramServiceImplTest {
       setProgramShortName(StringValue.of(shortName)).build();
   }
 
-  ListUserResponse getListUserResponse(List<Invitation> invitations) {
+  ListUserResponse getListUserResponse(List<UserStatus> invitations) {
     return ListUserResponse.newBuilder().addAllInvitations(invitations).build();
   }
 
-  Invitation createInvitation(User user, LocalDateTime accepted, InviteStatus status) {
-    val builder = Invitation.newBuilder().setUser(user);
+  UserStatus createInvitation(User user, LocalDateTime accepted, InviteStatus status) {
+    val builder = UserStatus.newBuilder().setUser(user);
     if (status == null) {
       return builder.build();
     }
