@@ -1,5 +1,6 @@
 package org.icgc.argo.program_service.grpc;
 
+import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.ServerInterceptors;
 import io.grpc.Status;
@@ -8,6 +9,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.testing.GrpcCleanupRule;
+import lombok.AllArgsConstructor;
 import lombok.val;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.converter.CommonConverter;
@@ -36,14 +38,16 @@ import java.util.Set;
 import java.util.UUID;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class ProgramServiceAuthorizationTest {
   UUID invitationUUID = UUID.randomUUID();
+  UUID invitationUUID2 = UUID.randomUUID();
   StringValue invitationId = StringValue.of(invitationUUID.toString());
+  StringValue invitationId2 = StringValue.of(invitationUUID2.toString());
 
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
@@ -60,9 +64,32 @@ public class ProgramServiceAuthorizationTest {
       + "-----END PUBLIC KEY-----";
     val publicKey = (RSAPublicKey) Utils.getPublicKey(key, "RSA");
 
+    /*
+    In case we want to generate more tokens to test with...
+
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEpQIBAAKCAQEA2e08i2xE07jzorq8Xm/KnNutxwwHElMFbjz1upGpZTHDfs29oHLd4J9XqjCYzKDkBg0Hs3gZY3AsEQycg+RK9Z7yGepgVZhXs
+    zMo3KyCDAmM64P9Qtftlz4AfZmR4ypqsAlnruNMYum0WqWvKGFL85sGlkshemLlEQWuEDFJFvVHiWKq4b4BknU9r+t6QROkrAg6upWYUOaK7ZiIje
+    BSLYsDQy5jMiXgM6TYSZuebee7vNqZdm9HeUYis3X22yyU8FvfKfkgDFgCL9w/qIpvv7h48X+XVVH50Uwk0L2PTz7d1ohlhuOTEc71japcrQZtvU6
+    IQEA7PtHkbABQsAYjjQIDAQABAoIBAQCxhK+h/vLd6LYF48kXwEaymbwn/SMxiRFOaDfe31K2jN/rxhpmvcsBc6sMhoOhhJnaV/ji97zupGwxAy3nv
+    ipVhEFAXQxWDT+7SLxLbfaNaaYyHxVJwuzWG3p41YTiICZB+ZdM/fi2RhtVD8vrv74H1Ut7V/4QXMitogvVQuB/4pJRLcG9nvoASWojOay2PX5I6FH
+    olzsRUgH+PRgW0rKKEo0pgl6QxpJrvsgnNexX+WJA8ur/jlVttQwhpPf1VC+6LvlKKsT4zWhOdC87eCkvlpSUO6XY4Qfv84gjp/2vpm5aYTqOdEFx7
+    ua40r0bA2PoifdwrFANzARe7aXmZ+5hAoGBAPberrlAmT/q/nFAvQfINoNkXPFbGU5C9R57SoXFcYF0oyvYfrd6HWf0qKWEQkLN5IMsOEcfJoP5lsx
+    F/j2lhFshi0LfxhCRjDpWApWKCJMywyNPJms4M44y4LEhW+4JGtp/u2GaDcIuTf3wyauNWBDv9HyNqA7Kh5dhbKBzvX65AoGBAOH8hpNNk4ftKZxKa
+    Vu/Uim0FtLFGTCrhdkR10kxixPQsK3sGIyzqyzWaqtdUD+2N2SwsyTdRQc1f51xiJ1XpVpmbli8rIMBsTuqDDzjL9V225A/qeRjGRf3/99asd08oEo
+    Ybf7ldfs2KhijxW4+f5uxjb1eA+DtSUnPO/tyEIF1AoGBAKqXMHfVGtEfatoJ2VYSVREwfkVOJUt+W3HH0rRjvs6tMcAvp0jUOpPGbe+KWFtfeYPnP
+    7Bt5yiVhU39I/WndbGfmWMJzQ1P9m2tV7XMH6bQEiZJIIxA1udxYvEj0ynG4uaQE4UbdlxzsPNEu6cvUebKWdDj9njaHR5PdUffEtgJAoGAIFEYfaA
+    uZNXJiYwqnPAzM7uJOALvo0IkFfKzMshe9yp02apVqGlZJURUZMUnYLUSHtgWBkOOR4WjBkTiIH4UK2VSimYQ1Xs8eSfMMDjc8k3ZADvac8qoIAFbG
+    fnCTb0Jvw7XTAhMYuxQAM4KwcU2QnGVr2ruaxAD1wZHsaGSMrECgYEAlnQPAej0zwlYThPOX4um5VOEVhT6xTMZpHXQAXWnzu3r17+roPTZf0De+uW
+    vojUY3h5X3ra98Xsq+Ol1wWC4dy2MGncGBOIXdwfhVbg0Jim+PS4BI8GHKC6M4xKnTvsS/RW+klpFvotKj6Ocf4Hzz1f8XY9IxcRyOSjQkKYQbVg=
+
+    -----END RSA PRIVATE KEY-----
+     */
+
     val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
     val invitationService = mock(InvitationService.class);
     when(invitationService.getInvitation(invitationUUID)).thenReturn(joinProgramInvite());
+    when(invitationService.getInvitation(invitationUUID2)).thenReturn(badJoinProgramInvite());
     when(invitationService.inviteUser(entity(), userId().getValue(), "TEST", "USER",
       UserRole.COLLABORATOR)).thenReturn(invitationUUID);
 
@@ -76,23 +103,24 @@ public class ProgramServiceAuthorizationTest {
     val mockEgoService = mock(EgoService.class);
 
     val programService = mock(ProgramService.class);
-
     when(programService.createProgram(any())).thenReturn(entity());
     when(programService.getProgram(programName().getValue())).thenReturn(entity());
+    when(programService.listPrograms()).thenReturn(List.of(entity(), entity2(), entity3()));
+
 
     val service = new ProgramServiceImpl(programService, programConverter,
       commonConverter, mockEgoService, invitationService, authorizationService);
 
     val serverName = InProcessServerBuilder.generateName();
     val channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
-    val interceptor = new EgoAuthInterceptor(egoService);
-    val interceptor2 = new ExceptionInterceptor();
+    val authInterceptor = new EgoAuthInterceptor(egoService);
+    val exceptionInterceptor = new ExceptionInterceptor();
 
     // Create a server, add service, start, and register for automatic graceful shutdown.
     grpcCleanup.register(
       InProcessServerBuilder.forName(serverName)
         .directExecutor()
-        .addService(ServerInterceptors.intercept(service, interceptor, interceptor2))
+        .addService(ServerInterceptors.intercept(service, exceptionInterceptor, authInterceptor))
         .build()
         .start());
 
@@ -122,192 +150,133 @@ public class ProgramServiceAuthorizationTest {
     return Arrays.asList(values);
   }
 
-  List<Exception> runTests(ProgramServiceGrpc.ProgramServiceBlockingStub client) {
-    return list(
-      catchException(() -> client.createProgram(createProgramRequest())),
-      catchException(() -> client.updateProgram(updateProgramRequest())),
-      catchException(() -> client.removeProgram(removeProgramRequest())),
-      //catchException(() -> client.listPrograms(Empty.getDefaultInstance())), // always succeeds, contents vary
-      catchException(() -> client.inviteUser(inviteUserRequest())),
-      catchException(() -> client.updateUser(updateUserRequest())),
-      catchException(() -> client.listUser(listUserRequest())),
-      catchException(() -> client.removeUser(removeUserRequest())),
-      catchException(() -> client.getProgram(getProgramRequest())),
-      catchException(() -> client.joinProgram(joinProgramRequest()))
-    );
-  }
+  AuthorizationTest runTests(String testName, ProgramServiceGrpc.ProgramServiceBlockingStub client) {
+    val tests = list(
+      EndpointTest.of("wrongEmail", () -> client.joinProgram(badJoinProgramRequest())), // 0 -- No one
 
-  String[] calls = { "createProgram", "updateProgram", "removeProgram", //"listPrograms",
-    "inviteUser",  "updateUser", "listUser", "removeUser", "getProgram", "joinProgram"};
+      EndpointTest.of("createProgam", () -> client.createProgram(createProgramRequest())), // 1 -3 DCC Admin
+      EndpointTest.of("updateProgram", () -> client.updateProgram(updateProgramRequest())),
+      EndpointTest.of("removeProgram", () -> client.removeProgram(removeProgramRequest())),
+
+      EndpointTest.of("inviteUser", () -> client.inviteUser(inviteUserRequest())),      // 4-7 Program Admin
+      EndpointTest.of("updateUser", () -> client.updateUser(updateUserRequest())),
+      EndpointTest.of("listUser", () -> client.listUser(listUserRequest())),
+      EndpointTest.of("removeUser", () -> client.removeUser(removeUserRequest())),
+
+      EndpointTest.of("getProgram", () -> client.getProgram(getProgramRequest())),    //8  Program User
+      EndpointTest.of("listProgram",() -> client.listPrograms(Empty.getDefaultInstance())), // 9-10 Public
+      EndpointTest.of("joinProgram", () -> client.joinProgram(joinProgramRequest()))
+    );
+
+    val t = new AuthorizationTest(testName, tests);
+    t.run();
+    return t;
+  }
 
   @Test
   void noAuthentication() throws Exception {
     // no authentication token (should fail for all calls with status UNAUTHENTICATED)
     val client = getClient();
-    checkResults("NoAuthentication", runTests(client), Status.UNAUTHENTICATED);
+
+    val tests = runTests("NoAuthentication", client);
+    assert tests.threwStatusException(Status.UNAUTHENTICATED);
+
   }
 
   @Test
   void expired() throws Exception {
     // expired token (should fail all calls with status UNAUTHORIZED)
     val client = addAuthHeader(getClient(), expiredToken());
-    checkResults("ExpiredToken", runTests(client), Status.PERMISSION_DENIED);
-  }
 
+    val tests = runTests("ExpiredToken", client);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED);
+  }
 
   @Test
   void invalid() throws Exception {
     // invalid (non-parseable) token (should fail all calls with status UNAUTHORIZED)
     val client = addAuthHeader(getClient(), invalidToken());
-    checkResults("InvalidToken", runTests(client), Status.PERMISSION_DENIED);
-  }
 
+    val tests = runTests("InvalidToken", client);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED);
+  }
 
   @Test
   void wrongKey() throws Exception {
     // DCCAdmin level authentication -- signed with an invalid key
     val client = addAuthHeader(getClient(), tokenWrongKey());
-    checkResults("InvalidSignature", runTests(client), Status.PERMISSION_DENIED);
+
+    val tests = runTests("WrongKey", client);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED);
   }
 
   @Test
   void noPermissions() throws Exception {
+    // User token for a user with no permissions yet.
     val client = addAuthHeader(getClient(), tokenNoPermissions());
-    var results = runTests(client);
-    checkResults("NoPermissions", results, Status.PERMISSION_DENIED, 0, 7);
-    checkSuccess("NoPermissions", results, 8);
+    val tests = runTests("NoPermissions", client);
+
+    assert tests.threwStatusException(Status.PERMISSION_DENIED,0,9);
+    assert tests.threwNoExceptions(9);
+
+    val programs = client.listPrograms(Empty.getDefaultInstance());
+    assert programs.getProgramsCount() == 0;
   }
 
   @Test
   void wrongAdmin() throws Exception {
     // Admin level access to a different program shouldn't give us anything.
     val client = addAuthHeader(getClient(), tokenAdminUserWrongProgram());
-    checkResults("WrongAdmin", runTests(client), Status.PERMISSION_DENIED);
+    val tests = runTests("WrongAdmin", client);
+
+    assert tests.threwStatusException(Status.PERMISSION_DENIED,0,9);
+    assert tests.threwNoExceptions(9);
+
+    val programs = client.listPrograms(Empty.getDefaultInstance());
+    assert programs.getProgramsCount() == 1;
+    assertThat(programs.getProgramsList().get(0).getProgram().getShortName().getValue()).isEqualTo("TEST-DK");
   }
 
   @Test
   void DCCAdmin() throws Exception {
     // DCCAdmin level authentication -- signed with an invalid key
     val client = addAuthHeader(getClient(), tokenDCCAdmin());
-    val results = runTests(client);
-    boolean ok=true;
-    for(int i=0; i < results.size(); i++) {
-      val ex = results.get(i);
-      if (ex != null) {
-        System.err.printf("In test DCCAdmin, call to %s threw %s\n", calls[i], ex.getMessage());
-        ok = false;
-      }
-    }
-    assertThat(ok).isTrue();
+
+    val tests = runTests("DCCAdmin", client);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED,0,1);
+    assert tests.threwNoExceptions(1);
+
+    val programs = client.listPrograms(Empty.getDefaultInstance());
+    assertThat(programs.getProgramsCount()).isEqualTo(3);
   }
 
   @Test
   void programAdmin() throws Exception {
     val client = addAuthHeader(getClient(), tokenAdminUser());
-    val results = runTests(client);
-    checkResults("programUser", results, Status.PERMISSION_DENIED, 0, 2);
-    boolean ok=true;
-    for(int i=3; i < results.size(); i++) {
-      val ex = results.get(i);
-      if (ex != null) {
-        System.err.printf("In test programAdmin, call to %s threw %s\n", calls[i], ex.getMessage());
-        ok = false;
-      }
-    }
-    assertThat(ok).isTrue();
+
+    val tests = runTests("programAdmin", client);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED, 0, 4);
+    assert tests.threwNoExceptions(4);
+
+    val programs = client.listPrograms(Empty.getDefaultInstance());
+    assertThat(programs.getProgramsCount()).isEqualTo(1);
+    assertThat(programs.getProgramsList().get(0).getProgram().getShortName().getValue()).isEqualTo("TEST-CA");
   }
 
   @Test
   void programUser() throws Exception {
     val client = addAuthHeader(getClient(), tokenProgramUser());
-    val results = runTests(client);
-    checkResults("programUser", results, Status.PERMISSION_DENIED, 0, 6);
 
-    boolean ok=true;
-    for(int i=7; i < results.size(); i++) {
-      val ex = results.get(i);
-      if (ex != null) {
-        System.err.printf("In test programUser, call to %s threw %s\n", calls[i], ex.getMessage());
-        ok = false;
-      }
-    }
-    assertThat(ok).isTrue();
+    val tests = runTests("programUser", client);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED, 0, 8);
+    assert tests.threwNoExceptions(8);
+
+    val programs = client.listPrograms(Empty.getDefaultInstance());
+    assertThat(programs.getProgramsCount()).isEqualTo(1);
+    assertThat(programs.getProgramsList().get(0).getProgram().getShortName().getValue()).isEqualTo("TEST-CA");
   }
 
-  boolean checkStatus(String testName, String rpcName, Exception ex, Status status) {
-    if ( ex == null) {
-      System.err.printf("In test %s, call to %s did not raise an exception (expected) %s\n", testName, rpcName, status);
-      return false;
-    }
-    if (!(ex instanceof StatusRuntimeException)){
-      System.err.printf("In test %s, call to %s threw %s\n", testName, rpcName, ex.getMessage());
-      return false;
-    }
-    val e = (StatusRuntimeException) ex;
-    if (e.getStatus() != status) {
-      System.err.printf("In test %s, call to %s had status '%s' (%s), not '%s'\n",
-        testName, rpcName, e.getStatus().getCode().toString(), e.getMessage(),status);
-      return false;
-    }
-    return true;
-  }
-
-  void checkSuccess(String testName, List<Exception> result) {
-    checkSuccess(testName, result, 0, result.size());
-  }
-  void checkSuccess(String testName, List<Exception> result, Integer start) {
-    checkSuccess(testName, result, start, result.size());
-  }
-  void checkSuccess(String testName, List<Exception> results, Integer start, Integer stop) {
-    boolean ok=true;
-    for(int i=start; i < stop; i++) {
-      val ex = results.get(i);
-      if (ex != null) {
-        System.err.printf("In test %s, call to %s threw %s\n", testName, calls[i], ex.getMessage());
-        ok = false;
-      }
-    }
-    assertThat(ok).isTrue();
-  }
-  void checkResults(String testName, List<Exception> results, Status expectedStatus) {
-    checkResults(testName, results, expectedStatus, 0, results.size());
-  }
-
-  void checkResults(String testName, List<Exception> results, Status expectedStatus, Integer start) {
-    checkResults(testName, results, expectedStatus, start, results.size());
-  }
-
-  void checkResults(String testName, List<Exception> results, Status expectedStatus, Integer start, Integer stop) {
-    boolean ok=true;
-
-    for (int i = start; i < stop; i++) {
-      val ex = results.get(i);
-      if (!checkStatus(testName, calls[i], ex, expectedStatus)) {
-        ok = false;
-      }
-    }
-    assertThat(ok).isTrue();
-  }
-
-
-
-  // Kinds of Tokens:
-  // Run all tests for:
-  // hasEmail()
-  // hasAdmin()
-  // hasMember()
-  // hasNothing()
-
-  // Kinds of Tests
-  // CreateProgram() (new program)
-  // UpdateProgram() (exists)
-  // RemoveProgram() (exists)
-  //
-  // ListPrograms() => Includes own programs, doesn't include others
-  // Owner has 0, 1, many programs
-  // GetProgram() (exists)
   // Wrong Email
-  // ListUser, InviteUser, Update User, JoinProgram
 
   String invalidToken() {
     return "ABCDEFG";
@@ -338,7 +307,7 @@ public class ProgramServiceAuthorizationTest {
   }
 
   String tokenAdminUserWrongProgram() {
-    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MTU1Mzc4NTYzNSwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJVU0VSIiwicGVybWlzc2lvbnMiOlsiUFJPR1JBTS1URVNULURLLldSSVRFIiwiUFJPR1JBTS1URVNULURLLlJFQUQiXX19LCJzY29wZSI6W119.tAgBBaF9L5VVntK-u_Dc1r6mAfrwverdPoj-r6hksM87slkhMNN2Lz3OYZmAyiOyWhhSmGW-r8mXOMGhMTyEsTg3lFue1Xi9zAN88Tyly-myQmj47KqbF8Hetzh37U5flSPE5ki8K-mAlwuFDRDqJThpM9DMQU-De3FYbmYCrLPKuqrFvb3UmCUcyZs9X3_vcOTNlijBW9l7jd6vMHY-DKOMn_CT9MvjnQ8YPIpTNdM38pwBbXzz9bRh-CSeMNuFVCqlpC0flkEcs54CLwJf6JLpY8g3--pq2MY3zfPIClU0NVqfpFDAYCm1JbnPNlSxZ4g-zjD6A1E2-yOZEgzi6Q";
+    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6NTA1Mzc4NTYzNSwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJVU0VSIiwicGVybWlzc2lvbnMiOlsiUFJPR1JBTS1URVNULURLLldSSVRFIiwiUFJPR1JBTS1URVNULURLLlJFQUQiXX19LCJzY29wZSI6W119.eza4_b03Iv9j9eG90dOjfFLcnUswAXHHzS-GRjo0Z5iWhBXIgm-EXbgIGdLfk9y6JQGJ0AzN55SR_ZsM-ZRBdh6ybcbKrxo6Tp0Xb1tWTKyTnscZu-8Fx9X2EipH4HC0dGTjQiQJNOd5UtFmRc9lg52OtXVGzoAXKYp61mNzxBaJ--8paVHRTfWqn0LScjku1oSKzkRSFo2Gg1besJkGelonxNZal8lTtNWf9Y67lcle4s_dwSXCH8Hc1RNpPqxN0hsq8E6EuArx9GAUqVujBsrHOv99FO5ys1Z1iHLcMfNYmIhwOlrRCHDFQTkll0B2of5etyHNqb2SUYdQNWXD4Q";
   }
 
   StringValue programName() {
@@ -351,11 +320,28 @@ public class ProgramServiceAuthorizationTest {
 
   ProgramEntity entity() {
     val created = LocalDateTime.now();
-    return new ProgramEntity().setShortName(programName().getValue()).setName("").setSubmittedDonors(3).
-      setCommitmentDonors(30000).setCountries("CA").setCreatedAt(created).setDescription("Fake").setGenomicDonors(8).
+    return new ProgramEntity().setShortName(programName().getValue()).setName("").setSubmittedDonors(1).
+      setCommitmentDonors(10000).setCountries("CA").setCreatedAt(created).setDescription("Fake").setGenomicDonors(10).
       setMembershipType(MembershipType.ASSOCIATE).setProgramCancers(Set.of()).setProgramPrimarySites(Set.of()).
-    setWebsite("http://org.com");
+      setWebsite("http://org.com");
   }
+
+  ProgramEntity entity2() {
+    val created = LocalDateTime.now();
+    return new ProgramEntity().setShortName("TEST-DK").setName("").setSubmittedDonors(2).
+      setCommitmentDonors(20000).setCountries("DK").setCreatedAt(created).setDescription("Fake 2").setGenomicDonors(20).
+      setMembershipType(MembershipType.ASSOCIATE).setProgramCancers(Set.of()).setProgramPrimarySites(Set.of()).
+      setWebsite("http://org.com");
+  }
+
+  ProgramEntity entity3() {
+    val created = LocalDateTime.now();
+    return new ProgramEntity().setShortName("OTHER-CA").setName("").setSubmittedDonors(3).
+      setCommitmentDonors(30000).setCountries("CA").setCreatedAt(created).setDescription("Fake 3").setGenomicDonors(30).
+      setMembershipType(MembershipType.FULL).setProgramCancers(Set.of()).setProgramPrimarySites(Set.of()).
+      setWebsite("http://org.com");
+  }
+
   Program program() {
     return Program.newBuilder().
       setName(programName()).
@@ -407,13 +393,21 @@ public class ProgramServiceAuthorizationTest {
     return ListUserRequest.newBuilder().setProgramShortName(programName()).build();
   }
 
-
   JoinProgramRequest joinProgramRequest() {
     return JoinProgramRequest.newBuilder().setJoinProgramInvitationId(invitationId).build();
   }
 
+  JoinProgramRequest badJoinProgramRequest() {
+    return JoinProgramRequest.newBuilder().setJoinProgramInvitationId(invitationId2).build();
+  }
+
   JoinProgramInvite joinProgramInvite() {
     return new JoinProgramInvite().setUserEmail("x@test.com").setId(invitationUUID).setProgram(entity()).setStatus(
+      JoinProgramInvite.Status.PENDING);
+  }
+
+  JoinProgramInvite badJoinProgramInvite() {
+    return new JoinProgramInvite().setUserEmail("wrong-user@sorry.com").setId(invitationUUID2).setProgram(entity()).setStatus(
       JoinProgramInvite.Status.PENDING);
   }
 
@@ -423,4 +417,102 @@ public class ProgramServiceAuthorizationTest {
 
 }
 
+// Helper classes
+
+ /**
+  * Remote Procedure call test
+  */
+@AllArgsConstructor
+class EndpointTest implements Runnable {
+  String rpcName;
+  Runnable code;
+  Exception exception;
+
+  static EndpointTest of(String rpcName, Runnable code) {
+    return new EndpointTest(rpcName, code, null);
+  }
+
+  public void run() {
+    try {
+      code.run();
+    } catch (Exception ex) {
+      exception = ex;
+    }
+  }
+
+  boolean threwStatusException(String testName, Status status) {
+    if (exception == null) {
+      System.err.printf("In test %s, call to %s did not raise an exception (expected) %s\n", testName, rpcName, status);
+      return false;
+    }
+    if (!(exception instanceof StatusRuntimeException)) {
+      System.err.printf("In test %s, call to %s threw %s\n", testName, rpcName, exception.getMessage());
+      return false;
+    }
+    val e = (StatusRuntimeException) exception;
+    if (e.getStatus() != status) {
+      System.err.printf("In test %s, call to %s had status '%s' (%s), not '%s'\n",
+        testName, rpcName, e.getStatus().getCode().toString(), e.getMessage(), status);
+      return false;
+    }
+    return true;
+  }
+
+  boolean threwNoExceptions(String testName) {
+    if (exception != null) {
+      System.err.printf("In test %s, call to %s threw %s\n", testName, rpcName, exception.getMessage());
+      return false;
+    }
+    return true;
+  }
+}
+
+@AllArgsConstructor
+class AuthorizationTest implements Runnable {
+  String testName;
+  List<EndpointTest> tests;
+
+  public void run() {
+    tests.stream().forEach(t -> t.run());
+  }
+
+  boolean threwNoExceptions() {
+    return threwNoExceptions(0, tests.size());
+  }
+
+  boolean threwNoExceptions(Integer start) {
+    return threwNoExceptions(start, tests.size());
+  }
+
+  boolean threwNoExceptions(Integer start, Integer stop) {
+    boolean ok = true;
+    for (int i = start; i < stop; i++) {
+      val test = tests.get(i);
+      if (!test.threwNoExceptions(testName)) {
+        ok = false;
+      }
+    }
+    return ok;
+  }
+
+  boolean threwStatusException(Status expectedStatus) {
+    return threwStatusException(expectedStatus, 0, tests.size());
+  }
+
+  boolean threwStatusException(Status expectedStatus, Integer start) {
+    return threwStatusException(expectedStatus, start, tests.size());
+  }
+
+  boolean threwStatusException(Status expectedStatus, Integer start, Integer stop) {
+    boolean ok = true;
+
+    for (int i = start; i < stop; i++) {
+      val test = tests.get(i);
+      if (!test.threwStatusException(testName, expectedStatus)) {
+        ok = false;
+      }
+    }
+    return ok;
+  }
+}
 

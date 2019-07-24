@@ -59,21 +59,21 @@ class ProgramServiceTest {
   @Mock
   private ProgramRepository programRepository;
 
-//  @Mock
-//  private CancerRepository cancerRepository;
-//
-//  @Mock
-//  private PrimarySiteRepository primarySiteRepository;
+  @Mock
+  private CancerRepository cancerRepository;
+
+  @Mock
+  private PrimarySiteRepository primarySiteRepository;
 
   @Mock
   private ProgramConverter programConverter;
 
-//  @Mock
-//  ProgramCancerRepository programCancerRepository;
-//
-//  @Mock
-//  ProgramPrimarySiteRepository programPrimarySiteRepository;
-//
+  @Mock
+  ProgramCancerRepository programCancerRepository;
+
+  @Mock
+  ProgramPrimarySiteRepository programPrimarySiteRepository;
+
 //  @Autowired
 //  private EntityGenerator entityGenerator;
 
