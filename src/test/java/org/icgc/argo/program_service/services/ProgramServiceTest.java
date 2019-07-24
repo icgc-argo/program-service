@@ -24,65 +24,68 @@ import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
+import org.icgc.argo.program_service.utils.EntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
+@Transactional
 class ProgramServiceTest {
 
-  @InjectMocks private ProgramService programService;
+  @InjectMocks
+  private ProgramService programService;
 
-  @Mock private Program program;
+  @Mock
+  private Program program;
 
-  @Mock private ProgramRepository programRepository;
+  @Mock
+  private ProgramEntity programEntity;
 
-  @Mock private CancerRepository cancerRepository;
+  @Mock
+  private ProgramRepository programRepository;
 
-  @Mock private PrimarySiteRepository primarySiteRepository;
+  @Mock
+  private CancerRepository cancerRepository;
 
-  @Mock private ProgramConverter programConverter;
+  @Mock
+  private PrimarySiteRepository primarySiteRepository;
 
-  @Mock ProgramCancerRepository programCancerRepository;
+  @Mock
+  private ProgramConverter programConverter;
 
-  @Mock ProgramPrimarySiteRepository programPrimarySiteRepository;
+  @Mock
+  ProgramCancerRepository programCancerRepository;
 
-  @Mock ProgramInstitutionRepository programInstitutionRepository;
+  @Mock
+  ProgramPrimarySiteRepository programPrimarySiteRepository;
 
-  @Mock ProgramCountryRepository programCountryRepository;
-
-  @Mock ProgramRegionRepository programRegionRepository;
-
-  @Mock InstitutionRepository institutionRepository;
-
-  @Mock RegionRepository regionRepository;
-
-  @Mock CountryRepository countryRepository;
+  @Autowired
+  private EntityGenerator entityGenerator;
 
   void setup() {
-    program = Program.newBuilder()
-            .addAllCancerTypes(List.of("Blood cancer", "Brain cancer"))
-            .addAllPrimarySites(List.of("Blood", "Brain"))
-            .addAllInstitutions(List.of("OICR"))
-            .addAllCountries(List.of("Canada"))
-            .addAllRegions(List.of("North America"))
-            .build();
+    program = Program.newBuilder().
+            addAllCancerTypes(List.of("Blood cancer", "Brain cancer")).
+            addAllPrimarySites(List.of("Blood", "Brain")).
+            build();
   }
 
   @Test
   void createProgram() {
     setup();
 
-    val shortName = RandomString.make(33);
-    val inputProgramEntity = new ProgramEntity().setName(RandomString.make(10)).setShortName(shortName);
+    val inputProgramEntity = new ProgramEntity().setName(RandomString.make(10)).setShortName(RandomString.make(33));
     assertThat(inputProgramEntity.getCreatedAt()).isNull();
     assertThat(inputProgramEntity.getUpdatedAt()).isNull();
     when(programConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
@@ -94,7 +97,6 @@ class ProgramServiceTest {
 
   @Test
   void listPrograms() {
-    val programEntity = mock(ProgramEntity.class);
     when(programRepository.findAll((Specification<ProgramEntity>) Mockito.any()))
             .thenReturn(List.of(programEntity));
     val programs = programService.listPrograms();

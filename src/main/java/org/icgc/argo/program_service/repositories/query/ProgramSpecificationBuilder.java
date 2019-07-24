@@ -22,7 +22,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.model.join.*;
+import org.icgc.argo.program_service.model.join.ProgramCancer;
+import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
+
 import javax.persistence.criteria.Root;
 import java.util.UUID;
 
@@ -34,10 +36,8 @@ import static javax.persistence.criteria.JoinType.LEFT;
 public class ProgramSpecificationBuilder extends AbstractSpecificationBuilder<ProgramEntity, UUID> {
 
   private boolean fetchCancers;
+
   private boolean fetchPrimarySites;
-  private boolean fetchInstitutions;
-  private boolean fetchCountries;
-  private boolean fetchRegions;
 
   @Override
   protected Root<ProgramEntity> setupFetchStrategy(Root<ProgramEntity> root) {
@@ -48,18 +48,6 @@ public class ProgramSpecificationBuilder extends AbstractSpecificationBuilder<Pr
     if (fetchPrimarySites){
       root.fetch(ProgramEntity.Fields.programPrimarySites, LEFT)
           .fetch(ProgramPrimarySite.Fields.primarySite, LEFT);
-    }
-    if(fetchInstitutions){
-      root.fetch(ProgramEntity.Fields.programInstitutions, LEFT)
-          .fetch(ProgramInstitution.Fields.institution, LEFT);
-    }
-    if(fetchCountries){
-      root.fetch(ProgramEntity.Fields.programCountries, LEFT)
-              .fetch(ProgramCountry.Fields.country, LEFT);
-    }
-    if(fetchRegions){
-      root.fetch(ProgramEntity.Fields.programRegions, LEFT)
-              .fetch(ProgramRegion.Fields.region, LEFT);
     }
     return root;
   }

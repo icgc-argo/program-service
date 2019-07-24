@@ -147,14 +147,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val program = request.getProgram();
     val updatingProgram = programConverter.programToProgramEntity(program);
     try {
-      val updatedProgram = programService.updateProgram(
-              updatingProgram,
-              program.getCancerTypesList(),
-              program.getPrimarySitesList(),
-              program.getInstitutionsList(),
-              program.getCountriesList(),
-              program.getRegionsList()
-      );
+      val updatedProgram = programService.updateProgram(updatingProgram, program.getCancerTypesList(), program.getPrimarySitesList());
       val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
       responseObserver.onNext(response);
       responseObserver.onCompleted();

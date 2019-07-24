@@ -1,20 +1,15 @@
 package org.icgc.argo.program_service.utils;
 
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
-import org.icgc.argo.program_service.model.entity.NameableEntity;
-import org.icgc.argo.program_service.model.exceptions.NotFoundException;
-import org.icgc.argo.program_service.repositories.BaseRepository;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import static lombok.AccessLevel.PRIVATE;
@@ -42,26 +37,6 @@ public class EntityService {
 
     return entitySet;
   }
-
-  public static <T extends NameableEntity<ID>, ID> List<T> checkExistenceByName(
-          @NonNull Class<T> entityType,
-          @NonNull BaseRepository<T, ID> repository,
-          @NonNull List<String> names){
-
-    val entities = repository.findAllByNameIn(names);
-    val requestedNames = ImmutableSet.copyOf(names);
-    val existingNames = mapToSet(entities, NameableEntity::getName);
-    val nonExistingNames = CollectionUtils.difference(requestedNames, existingNames);
-
-    if(!nonExistingNames.isEmpty()) {
-      throw new NotFoundException(
-              String.format("The following %s names do not exist: %s",
-                      resolveEntityTypeName(entityType),
-                      Joiner.on(" , ").join(nonExistingNames)));
-    }
-    return entities;
-  }
-
 
   private static String resolveEntityTypeName(Class<?> entityType) {
     return entityType.getSimpleName();

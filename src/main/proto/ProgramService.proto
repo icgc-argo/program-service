@@ -52,11 +52,11 @@ message Program {
   google.protobuf.Int32Value submitted_donors = 6;
   google.protobuf.Int32Value genomic_donors = 7;
   google.protobuf.StringValue website = 8;
+  google.protobuf.StringValue institutions = 9;
+  google.protobuf.StringValue countries = 10;
+  google.protobuf.StringValue regions = 11;
   repeated string cancer_types = 12;
   repeated string primary_sites = 13;
-  repeated string institutions = 14;
-  repeated string countries = 15;
-  repeated string regions = 16;
 }
 
 enum MembershipType {
