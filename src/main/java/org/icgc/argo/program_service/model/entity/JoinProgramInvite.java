@@ -18,10 +18,7 @@
 
 package org.icgc.argo.program_service.model.entity;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.proto.UserRole;
@@ -44,7 +41,7 @@ import java.util.UUID;
 @Valid
 public class JoinProgramInvite {
 
-  public enum Status {PENDING, ACCEPTED, REVOKED}
+  public enum Status {PENDING, ACCEPTED, REVOKED, EXPIRED}
 
   @Id
   @Getter
@@ -87,6 +84,12 @@ public class JoinProgramInvite {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Status status;
+  public Status getStatus() {
+    if (status == Status.PENDING && isExpired()) {
+      status = Status.EXPIRED;
+    }
+    return status;
+  }
 
   public JoinProgramInvite(ProgramEntity program, String userEmail, String firstName, String lastName, UserRole role) {
     this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
