@@ -67,11 +67,14 @@ class ProgramServiceImplTest {
     when(request.getProgram()).thenReturn(program);
     when(programService.createProgram(program))
       .thenThrow(new DataIntegrityViolationException("test error"));
-
-    programServiceImpl.createProgram(request, responseObserver);
-    val argument = ArgumentCaptor.forClass(Exception.class);
-    verify(responseObserver).onError(argument.capture());
-    Assertions.assertThat(argument.getValue().getMessage()).as("Capture the error message").contains("test error");
+    Exception exception=null;
+    try {
+      programServiceImpl.createProgram(request, responseObserver);
+    } catch(Exception ex) {
+      exception = ex;
+    }
+    Assertions.assertThat(exception).isNotNull();
+    Assertions.assertThat(exception.getMessage()).as("Capture the error message").contains("test error");
   }
 
   @Test
@@ -84,12 +87,18 @@ class ProgramServiceImplTest {
       throw new EmptyResultDataAccessException(1);
     }).when(programService).removeProgram(any(String.class));
 
-    programServiceImpl.removeProgram(request, responseObserver);
-
-    val argument = ArgumentCaptor.forClass(StatusRuntimeException.class);
-    verify(responseObserver).onError(argument.capture());
-    Assertions.assertThat(argument.getValue().getStatus().getCode()).as("Capture non exist exception")
-      .isEqualTo(Status.NOT_FOUND.getCode());
+    Exception exception=null;
+      try {
+        programServiceImpl.removeProgram(request, responseObserver);
+      } catch (Exception ex) {
+        exception = ex;
+      }
+      Assertions.assertThat(exception).isNotNull();
+      Assertions.assertThat(exception.getMessage()).
+        isEqualTo("NOT_FOUND: Incorrect result size: expected 1, actual 0");
+      Assertions.assertThat(exception).isInstanceOf(StatusRuntimeException.class);
+      val e = (StatusRuntimeException) exception;
+    Assertions.assertThat(e.getStatus().getCode()).isEqualTo(Status.NOT_FOUND.getCode());
   }
 
   @Test

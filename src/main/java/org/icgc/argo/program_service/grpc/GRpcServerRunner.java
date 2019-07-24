@@ -27,6 +27,7 @@ import io.grpc.services.HealthStatusManager;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.grpc.interceptor.AuthInterceptor;
+import org.icgc.argo.program_service.grpc.interceptor.ExceptionInterceptor;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +46,7 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   private Server server;
 
   private final AuthInterceptor authInterceptor;
+  private final ExceptionInterceptor exceptionInterceptor;
   private final ProgramServiceImpl programServiceImpl;
   private final HealthStatusManager healthStatusManager;
 
@@ -52,16 +54,18 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   private Integer port;
 
   @Autowired
-  public GRpcServerRunner(ProgramServiceImpl programServiceImpl, AuthInterceptor authInterceptor) {
+  public GRpcServerRunner(ProgramServiceImpl programServiceImpl, AuthInterceptor authInterceptor,
+    ExceptionInterceptor exceptionInterceptor) {
     this.programServiceImpl = programServiceImpl;
     this.authInterceptor = authInterceptor;
+    this.exceptionInterceptor = exceptionInterceptor;
     this.healthStatusManager = new HealthStatusManager();
   }
 
   @Override
   public void run(String... args)  {
     // Interceptor bean depends on run profile.
-    val programService = ServerInterceptors.intercept(programServiceImpl, authInterceptor);
+    val programService = ServerInterceptors.intercept(programServiceImpl, authInterceptor, exceptionInterceptor);
     healthStatusManager.setStatus("program_service.ProgramService", ServingStatus.SERVING);
 
     try {
