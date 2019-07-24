@@ -27,15 +27,12 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.validator.constraints.URL;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
-import org.icgc.argo.program_service.model.join.ProgramCancer;
-import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
+import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.validation.ProgramShortName;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PastOrPresent;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -51,6 +48,7 @@ import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 @Accessors(chain = true)
 @FieldNameConstants
 public class ProgramEntity implements NameableEntity<UUID> {
+
   @Id
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
@@ -105,27 +103,49 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @Column(name = SqlFields.UPDATEDAT)
   private LocalDateTime updatedAt;
 
-  @NotNull
-  @Column(name = SqlFields.INSTITUTIONS)
-  private String institutions;
-
-  @NotNull
-  @Column(name = SqlFields.COUNTRIES)
-  private String countries;
-
-  @Column(name = SqlFields.REGIONS)
-  private String regions;
-
   @Column(name = SqlFields.DESCRIPTION)
   private String description;
+
+  @NotNull
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
+  @OneToMany(
+          mappedBy = ProgramInstitution.Fields.program,
+          cascade = CascadeType.ALL,
+          fetch = FetchType.LAZY,
+          orphanRemoval = true
+  )
+  private Set<ProgramInstitution> programInstitutions = new TreeSet<>();
+
+  @NotNull
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
+  @OneToMany(
+          mappedBy = ProgramCountry.Fields.program,
+          cascade = CascadeType.ALL,
+          fetch = FetchType.LAZY,
+          orphanRemoval = true
+  )
+  private Set<ProgramCountry> programCountries = new TreeSet<>();
+
+  @NotNull
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
+  @OneToMany(
+          mappedBy = ProgramRegion.Fields.program,
+          cascade = CascadeType.ALL,
+          fetch = FetchType.LAZY,
+          orphanRemoval = true
+  )
+  private Set<ProgramRegion> programRegions = new TreeSet<>();
 
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-    mappedBy = ProgramCancer.Fields.program,
-    cascade = CascadeType.ALL,
-    fetch = FetchType.LAZY,
-    orphanRemoval = true
+          mappedBy = ProgramCancer.Fields.program,
+          cascade = CascadeType.ALL,
+          fetch = FetchType.LAZY,
+          orphanRemoval = true
   )
   private Set<@NotNull ProgramCancer> programCancers = new TreeSet<>();
 
@@ -137,13 +157,19 @@ public class ProgramEntity implements NameableEntity<UUID> {
     fetch = FetchType.LAZY,
     orphanRemoval = true
   )
+
   private Set<@NotNull ProgramPrimarySite> programPrimarySites = new TreeSet<>();
 
   public List<String> listCancerTypes() {
     return mapToList(getProgramCancers(), c -> c.getCancer().getName());
   }
 
-  public List<String> listPrimarySites() {
-    return mapToList(getProgramPrimarySites(), p -> p.getPrimarySite().getName());
-  }
+  public List<String> listPrimarySites() { return mapToList(getProgramPrimarySites(), p -> p.getPrimarySite().getName());}
+
+  public List<String> listInstitutions () { return mapToList(getProgramInstitutions(), i -> i.getInstitution().getName()); }
+
+  public List<String> listCountries() { return mapToList(getProgramCountries(), c -> c.getCountry().getName()); }
+
+  public List<String> listRegions() { return mapToList(getProgramRegions(), r -> r.getRegion().getName()); }
+
 }
