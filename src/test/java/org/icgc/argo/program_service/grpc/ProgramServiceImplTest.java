@@ -63,6 +63,7 @@ class ProgramServiceImplTest {
     val request = mock(CreateProgramRequest.class);
     val program = mock(Program.class);
     val responseObserver = mock(StreamObserver.class);
+
     when(request.getProgram()).thenReturn(program);
     when(programService.createProgram(program))
       .thenThrow(new DataIntegrityViolationException("test error"));
