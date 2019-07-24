@@ -29,14 +29,14 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 
-import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.UUID;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ProgramConverter {
+  ProgramConverter INSTANCE = new ProgramConverterImpl(CommonConverter.INSTANCE);
 
   /**
    * From Proto Converters
@@ -146,7 +146,7 @@ public interface ProgramConverter {
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
-  RemoveUserResponse  toRemoveUserResponse(String message);
+  RemoveUserResponse toRemoveUserResponse(String message);
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
@@ -186,11 +186,11 @@ public interface ProgramConverter {
   @Mapping(target = "email", source = "userEmail")
   EgoUser joinProgramInviteToEgoUser(JoinProgramInvite invite);
 
-  default JoinProgramResponse egoUserToJoinProgramResponse(EgoUser egoUser){
+  default JoinProgramResponse egoUserToJoinProgramResponse(EgoUser egoUser) {
     return egoUserToJoinProgramResponse(0, egoUser);
   }
 
-  default UserRoleValue boxUserValue(@NonNull UserRole role){
+  default UserRoleValue boxUserValue(@NonNull UserRole role) {
     return UserRoleValue.newBuilder().setValue(role).build();
   }
 
@@ -215,17 +215,15 @@ public interface ProgramConverter {
     return v.getValue();
   }
 
-
   InviteStatus JoinProgramInviteStatusToInviteStatus(JoinProgramInvite.Status status);
 
-  default InviteStatus unboxInviteStatusValue(InviteStatusValue status){
+  default InviteStatus unboxInviteStatusValue(InviteStatusValue status) {
     return status.getValue();
   }
 
-  default InviteStatusValue boxInviteStatus(InviteStatus status){
+  default InviteStatusValue boxInviteStatus(InviteStatus status) {
     return InviteStatusValue.newBuilder().setValue(status).build();
   }
-
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "mergeEmail", ignore = true)
@@ -252,8 +250,26 @@ public interface ProgramConverter {
   @Mapping(target = "user", source = "invitation")
   Invitation joinProgramInviteToInvitation(Integer dummy, JoinProgramInvite invitation);
 
-  default Invitation joinProgramInviteToInvitation(JoinProgramInvite invitation){
+  default Invitation joinProgramInviteToInvitation(JoinProgramInvite invitation) {
     return joinProgramInviteToInvitation(0, invitation);
+  }
+
+  default Invitation userWithOptionalJoinProgramInviteToInvitation(User user, Optional<JoinProgramInvite> invite) {
+    val builder = Invitation.newBuilder().setUser(user);
+
+    if (invite.isEmpty()) {
+      return builder.build();
+    }
+
+    val status = JoinProgramInviteStatusToInviteStatus(invite.get().getStatus());
+    val builder2 = builder.setStatus(boxInviteStatus(status));
+
+    if (status == InviteStatus.PENDING) {
+      return builder2.build();
+    }
+
+    val accepted = CommonConverter.INSTANCE.localDateTimeToTimestamp(invite.get().getAcceptedAt());
+    return builder2.setAcceptedAt(accepted).build();
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -268,7 +284,7 @@ public interface ProgramConverter {
   @Mapping(target = "invitationsList", source = "invitations")
   ListUserResponse invitationsToListUserResponse(Integer dummy, Collection<JoinProgramInvite> invitations);
 
-  default ListUserResponse invitationsToListUserResponse(Collection<JoinProgramInvite> invitations){
+  default ListUserResponse invitationsToListUserResponse(Collection<JoinProgramInvite> invitations) {
     return invitationsToListUserResponse(0, invitations);
   }
 

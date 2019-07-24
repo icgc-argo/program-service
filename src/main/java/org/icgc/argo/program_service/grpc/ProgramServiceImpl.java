@@ -39,9 +39,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
+
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
@@ -216,12 +220,18 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
     ListUserResponse response;
+    Set<Invitation> status;
 
     try {
-      val shortName = request.getProgramShortName().getValue();
-      val invitations = invitationService.listInvitations(shortName);
+      val programShortName = request.getProgramShortName().getValue();
+      val users = egoService.getUsersInProgram(programShortName);
+      status = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToInvitation(user,
+        invitationService.getInvitation(programShortName, user.getEmail().getValue())));
 
-      response = programConverter.invitationsToListUserResponse(invitations);
+      status.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
+        programConverter::joinProgramInviteToInvitation ));
+
+      response = ListUserResponse.newBuilder().addAllInvitations(status).build();
     } catch (Throwable t) {
       responseObserver.onError(status(t));
       return;
@@ -230,6 +240,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
+
 
   @Override
   public void removeUser(RemoveUserRequest request, StreamObserver<RemoveUserResponse> responseObserver) {

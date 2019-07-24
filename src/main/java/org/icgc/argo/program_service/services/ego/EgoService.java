@@ -237,7 +237,7 @@ public class EgoService {
     }
   }
 
-  public List<User> getUsersInGroup(String programShortName) {
+  public List<User> getUsersInProgram(String programShortName) {
     val userResults = new ArrayList<User>();
     programEgoGroupRepository.findAllByProgramShortName(programShortName).forEach(programEgoGroup -> {
       val groupId = programEgoGroup.getEgoGroupId();

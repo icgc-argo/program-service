@@ -3,9 +3,14 @@ package org.icgc.argo.program_service.services;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.converter.CommonConverter;
+import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
+import org.icgc.argo.program_service.proto.Invitation;
+import org.icgc.argo.program_service.proto.InviteStatus;
+import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.services.ego.EgoService;
@@ -17,6 +22,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static java.lang.String.format;
@@ -29,8 +35,7 @@ public class InvitationService {
   private final JoinProgramInviteRepository invitationRepository;
   private final EgoService egoService;
 
-  @Autowired
-  InvitationService(
+  @Autowired InvitationService(
     @NonNull MailService mailService,
     @NonNull JoinProgramInviteRepository invitationRepository,
     @NonNull EgoService egoService) {
@@ -58,13 +63,20 @@ public class InvitationService {
   @Transactional
   public EgoUser acceptInvite(@NonNull UUID invitationId) throws NotFoundException {
     val invitation = invitationRepository
-            .findById(invitationId)
-            .orElseThrow(() ->
-              new NotFoundException(format("Cannot find invitation with id '%s' ", invitationId)));
+      .findById(invitationId)
+      .orElseThrow(() ->
+        new NotFoundException(format("Cannot find invitation with id '%s' ", invitationId)));
     invitation.accept();
     invitationRepository.save(invitation);
     egoService.joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
     return egoService.convertInvitationToEgoUser(invitation);
   }
 
+  public Optional<JoinProgramInvite> getInvitation(String programShortName, String email) {
+    return invitationRepository.findTopByProgramShortNameAndUserEmailOrderByCreatedAtDesc(programShortName, email);
+  }
+
+  public List<JoinProgramInvite> listPendingInvitations(String programShortName) {
+    return invitationRepository.findAllByProgramShortNameAndStatus(programShortName, JoinProgramInvite.Status.PENDING);
+  }
 }
