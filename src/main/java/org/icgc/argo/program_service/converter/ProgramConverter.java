@@ -239,14 +239,14 @@ public interface ProgramConverter {
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "user", source = "invitation")
-  Invitation joinProgramInviteToInvitation(Integer dummy, JoinProgramInvite invitation);
+  UserDetails joinProgramInviteToUserDetails(Integer dummy, JoinProgramInvite invitation);
 
-  default Invitation joinProgramInviteToInvitation(JoinProgramInvite invitation) {
-    return joinProgramInviteToInvitation(0, invitation);
+  default UserDetails joinProgramInviteToUserDetails(JoinProgramInvite invitation) {
+    return joinProgramInviteToUserDetails(0, invitation);
   }
 
-  default Invitation userWithOptionalJoinProgramInviteToInvitation(User user, Optional<JoinProgramInvite> invite) {
-    val builder = Invitation.newBuilder().setUser(user);
+  default UserDetails userWithOptionalJoinProgramInviteToUserDetails(User user, Optional<JoinProgramInvite> invite) {
+    val builder = UserDetails.newBuilder().setUser(user);
 
     if (invite.isEmpty()) {
       return builder.build();
@@ -266,13 +266,13 @@ public interface ProgramConverter {
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
-  @Mapping(target = "removeInvitations", ignore = true)
+  @Mapping(target = "removeUserDetails", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "invitationsOrBuilderList", ignore = true)
-  @Mapping(target = "invitationsBuilderList", ignore = true)
-  @Mapping(target = "invitationsList", source = "invitations")
+  @Mapping(target = "userDetailsOrBuilderList", ignore = true)
+  @Mapping(target = "userDetailsBuilderList", ignore = true)
+  @Mapping(target = "userDetailsList", source = "invitations")
   ListUserResponse invitationsToListUserResponse(Integer dummy, Collection<JoinProgramInvite> invitations);
 
   default ListUserResponse invitationsToListUserResponse(Collection<JoinProgramInvite> invitations) {
