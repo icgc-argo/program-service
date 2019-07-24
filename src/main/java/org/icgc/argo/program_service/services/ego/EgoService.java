@@ -24,6 +24,8 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -80,6 +82,18 @@ public class EgoService {
     setEgoPublicKey();
   }
 
+  public EgoService(@NonNull ProgramEgoGroupRepository programEgoGroupRepository,
+    @NonNull ProgramConverter programConverter,
+    @NonNull EgoClient restClient,
+    @NonNull JoinProgramInviteRepository invitationRepository,
+    RSAPublicKey key) {
+    this.programEgoGroupRepository = programEgoGroupRepository;
+    this.programConverter = programConverter;
+    this.egoClient = restClient;
+    this.invitationRepository = invitationRepository;
+    this.egoPublicKey = key;
+  }
+
   @Autowired
   private void setEgoPublicKey() {
     this.egoPublicKey = egoClient.getPublicKey();
@@ -93,9 +107,10 @@ public class EgoService {
         .build(); //Reusable verifier instance
       val jwt = verifier.verify(jwtToken);
       return parseToken(jwt);
-    } catch (JWTVerificationException | NullPointerException e) {
-      // Handle NPE defensively for null JWT.
-      return Optional.empty();
+    } catch (JWTVerificationException e) {
+      throw Status.PERMISSION_DENIED.asRuntimeException();
+    } catch (NullPointerException e) {
+      throw Status.UNAUTHENTICATED.asRuntimeException();
     }
   }
 

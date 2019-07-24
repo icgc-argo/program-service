@@ -171,7 +171,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void joinProgram(JoinProgramRequest request, StreamObserver<JoinProgramResponse> responseObserver) {
-    val id = commonConverter.stringToUUID(request.getJoinProgramInvitationId());
+    val str = request.getJoinProgramInvitationId().getValue();
+    val id = commonConverter.stringToUUID(str);
     val invitation = invitationService.getInvitation(id);
 
     authorizationService.requireEmail(invitation.getUserEmail());
@@ -233,7 +234,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void updateUser(UpdateUserRequest request, StreamObserver<Empty> responseObserver) {
-    val shortname = commonConverter.unboxStringValue(request.getShortName());
+    val shortname = request.getShortName().getValue();
     authorizationService.requireProgramAdmin(shortname);
 
     val userId = commonConverter.stringToUUID(request.getUserId());

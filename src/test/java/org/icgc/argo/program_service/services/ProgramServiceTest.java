@@ -21,23 +21,26 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.model.entity.*;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
 import org.icgc.argo.program_service.utils.EntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.*;
 
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -56,29 +59,29 @@ class ProgramServiceTest {
   @Mock
   private ProgramRepository programRepository;
 
-  @Mock
-  private CancerRepository cancerRepository;
-
-  @Mock
-  private PrimarySiteRepository primarySiteRepository;
+//  @Mock
+//  private CancerRepository cancerRepository;
+//
+//  @Mock
+//  private PrimarySiteRepository primarySiteRepository;
 
   @Mock
   private ProgramConverter programConverter;
 
-  @Mock
-  ProgramCancerRepository programCancerRepository;
-
-  @Mock
-  ProgramPrimarySiteRepository programPrimarySiteRepository;
-
-  @Autowired
-  private EntityGenerator entityGenerator;
+//  @Mock
+//  ProgramCancerRepository programCancerRepository;
+//
+//  @Mock
+//  ProgramPrimarySiteRepository programPrimarySiteRepository;
+//
+//  @Autowired
+//  private EntityGenerator entityGenerator;
 
   void setup() {
     program = Program.newBuilder().
-            addAllCancerTypes(List.of("Blood cancer", "Brain cancer")).
-            addAllPrimarySites(List.of("Blood", "Brain")).
-            build();
+      addAllCancerTypes(List.of("Blood cancer", "Brain cancer")).
+      addAllPrimarySites(List.of("Blood", "Brain")).
+      build();
   }
 
   @Test
@@ -98,7 +101,7 @@ class ProgramServiceTest {
   @Test
   void listPrograms() {
     when(programRepository.findAll((Specification<ProgramEntity>) Mockito.any()))
-            .thenReturn(List.of(programEntity));
+      .thenReturn(List.of(programEntity));
     val programs = programService.listPrograms();
     assertThat(programs).contains(programEntity);
   }

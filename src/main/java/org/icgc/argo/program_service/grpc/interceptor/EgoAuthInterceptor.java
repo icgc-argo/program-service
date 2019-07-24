@@ -49,7 +49,6 @@ public class EgoAuthInterceptor implements AuthInterceptor {
     ServerCall<ReqT, RespT> call,
     Metadata metadata,
     ServerCallHandler<ReqT, RespT> next) {
-    // You need to implement validateIdentity
     String token = metadata.get(JWT_METADATA_KEY);
     val egoToken = egoService.verifyToken(token);
     Context context = Context.current().withValue(EGO_TOKEN, egoToken.orElse(null));
