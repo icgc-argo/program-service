@@ -173,7 +173,7 @@ public class UpdateProgramTest {
 
     val exception = assertThrows(RuntimeException.class,
             ()-> programService.updateProgram(programToUpdate, Collections.EMPTY_LIST, Collections.EMPTY_LIST, institutions, countries, regions));
-    assertThat(exception.getMessage()).isEqualTo("INVALID_ARGUMENT: Cannot update program, a program must have at least one cancer, primary site, institution, country, and region.");
+    assertThat(exception.getMessage()).isEqualTo("INVALID_ARGUMENT: Cannot update program, a program must have at least one of each: cancer, primary site, institution, country, and region.");
   }
 
   @Test

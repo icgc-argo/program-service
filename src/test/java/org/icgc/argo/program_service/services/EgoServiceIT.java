@@ -123,6 +123,11 @@ class EgoServiceIT {
       .setMembershipType(membershipTypeValue(ASSOCIATE))
       .setWebsite(stringValue("https://example.com"))
       .setDescription(stringValue(""))
+      .addCountries("Canada")
+      .addRegions("North America")
+      .addInstitutions("OICR")
+      .addCancerTypes("Blood cancer")
+      .addPrimarySites("Blood")
       .build();
 
     egoService.setUpProgram(PROGRAM_NAME);

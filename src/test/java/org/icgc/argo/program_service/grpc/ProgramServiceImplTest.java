@@ -35,6 +35,7 @@ import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -43,6 +44,7 @@ import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
 import javax.validation.constraints.Email;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static org.apache.commons.lang.math.RandomUtils.nextInt;
 import static org.junit.Assert.*;
@@ -64,7 +66,7 @@ class ProgramServiceImplTest {
     val program = mock(Program.class);
     val responseObserver = mock(StreamObserver.class);
     when(request.getProgram()).thenReturn(program);
-    when(programService.createProgram(program))
+    when(programService.createWithSideEffectTransactional(Mockito.anyObject(), Mockito.<Consumer>anyObject()))
       .thenThrow(new DataIntegrityViolationException("test error"));
     Exception exception=null;
     try {

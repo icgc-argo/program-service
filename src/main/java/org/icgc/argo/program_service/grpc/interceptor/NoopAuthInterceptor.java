@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
  * Noop Interceptor
  */
 @Slf4j
-@Profile("default")
+@Profile({"default", "test"})
 @Component
 public class NoopAuthInterceptor implements AuthInterceptor{
 
