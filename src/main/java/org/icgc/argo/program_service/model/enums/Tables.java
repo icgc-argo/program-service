@@ -26,12 +26,19 @@ import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Tables {
+
   public static final String PROGRAM = "program";
   public static final String CANCER = "cancer";
   public static final String SITE = "primary_site";
+  public static final String COUNTRY = "country";
+  public static final String INSTITUTION = "institution";
+  public static final String REGION = "region";
   public static final String PROGRAM_CANCER = "program_cancer";
   public static final String PROGRAM_PRIMARY_SITE = "program_primary_site";
   public static final String PROGRAM_EGO_GROUP = "program_ego_group";
   public static final String JOIN_PROGRAM_INVITE = "join_program_invite";
+  public static final String PROGRAM_COUNTRY = "program_country";
+  public static final String PROGRAM_INSTITUTION = "program_institution";
+  public static final String PROGRAM_REGION = "program_region";
 
 }

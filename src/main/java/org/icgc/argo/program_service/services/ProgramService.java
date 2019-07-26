@@ -18,134 +18,239 @@
 
 package org.icgc.argo.program_service.services;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
 import io.grpc.Status;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.model.entity.CancerEntity;
-import org.icgc.argo.program_service.model.entity.PrimarySiteEntity;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
-import org.icgc.argo.program_service.model.join.ProgramCancer;
-import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
+import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
-import org.icgc.argo.program_service.repositories.query.CancerSpecification;
-import org.icgc.argo.program_service.repositories.query.PrimarySiteSpecification;
-import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
-import org.icgc.argo.program_service.utils.CollectionUtils;
+import org.icgc.argo.program_service.repositories.query.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.TreeSet;
+import java.util.function.Consumer;
 
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
+import static org.icgc.argo.program_service.model.join.ProgramCountry.createProgramCountry;
+import static org.icgc.argo.program_service.model.join.ProgramInstitution.createProgramInstitution;
 import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
-import static org.icgc.argo.program_service.utils.CollectionUtils.*;
+import static org.icgc.argo.program_service.model.join.ProgramRegion.createProgramRegion;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
+import static org.icgc.argo.program_service.utils.EntityService.checkExistenceByName;
 
 @Service
 @Validated
 @Slf4j
 public class ProgramService {
 
-  /**
-   * Dependencies
-   */
+  /** Dependencies */
   private final ProgramRepository programRepository;
+
   private final CancerRepository cancerRepository;
   private final PrimarySiteRepository primarySiteRepository;
+  private final InstitutionRepository institutionRepository;
+  private final RegionRepository regionRepository;
+  private final CountryRepository countryRepository;
   private final ProgramConverter programConverter;
   private final ProgramCancerRepository programCancerRepository;
   private final ProgramPrimarySiteRepository programPrimarySiteRepository;
+  private final ProgramInstitutionRepository programInstitutionRepository;
+  private final ProgramRegionRepository programRegionRepository;
+  private final ProgramCountryRepository programCountryRepository;
 
   @Autowired
   public ProgramService(
-    @NonNull ProgramRepository programRepository,
-    @NonNull CancerRepository cancerRepository,
-    @NonNull PrimarySiteRepository primarySiteRepository,
-    @NonNull ProgramConverter programConverter,
-    @NonNull ProgramCancerRepository programCancerRepository,
-    @NonNull ProgramPrimarySiteRepository programPrimarySiteRepository
-  ) {
+      @NonNull ProgramRepository programRepository,
+      @NonNull CancerRepository cancerRepository,
+      @NonNull PrimarySiteRepository primarySiteRepository,
+      @NonNull ProgramConverter programConverter,
+      @NonNull ProgramCancerRepository programCancerRepository,
+      @NonNull ProgramPrimarySiteRepository programPrimarySiteRepository,
+      @NonNull InstitutionRepository institutionRepository,
+      @NonNull RegionRepository regionRepository,
+      @NonNull CountryRepository countryRepository,
+      @NonNull ProgramInstitutionRepository programInstitutionRepository,
+      @NonNull ProgramRegionRepository programRegionRepository,
+      @NonNull ProgramCountryRepository programCountryRepository) {
     this.programRepository = programRepository;
     this.cancerRepository = cancerRepository;
     this.primarySiteRepository = primarySiteRepository;
     this.programConverter = programConverter;
     this.programCancerRepository = programCancerRepository;
     this.programPrimarySiteRepository = programPrimarySiteRepository;
+    this.institutionRepository = institutionRepository;
+    this.regionRepository = regionRepository;
+    this.countryRepository = countryRepository;
+    this.programInstitutionRepository = programInstitutionRepository;
+    this.programRegionRepository = programRegionRepository;
+    this.programCountryRepository = programCountryRepository;
+  }
+
+  private ProgramEntity findProgramByShortName(@NonNull String name) {
+    val search = programRepository.findByShortName(name);
+    if (search.isEmpty()) {
+      throw Status.NOT_FOUND
+          .withDescription("Program '" + name + "' not found")
+          .asRuntimeException();
+    }
+    return search.get();
   }
 
   public ProgramEntity getProgram(@NonNull String name) {
-    val search = programRepository.findByShortName(name);
-    if (search.isEmpty()) {
-      throw Status.NOT_FOUND.
-        withDescription("Program '" + name + "' not found").
-        asRuntimeException();
-    }
-    val program = search.get();
+    val program = findProgramByShortName(name);
     val uuid = program.getId();
-    val primarySites = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(uuid));
+    val primarySites =
+        primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(uuid));
     val cancers = cancerRepository.findAll(CancerSpecification.containsProgram(uuid));
+    val institutions =
+        institutionRepository.findAll(InstitutionSpecification.containsProgram(uuid));
+    val regions = regionRepository.findAll(RegionSpecification.containsProgram(uuid));
+    val countries = countryRepository.findAll(CountrySpecification.containsProgram(uuid));
 
-    List<ProgramCancer> programCancers = mapToList(cancers, x -> createProgramCancer(program, x).get());
-    List<ProgramPrimarySite> programPrimarySites = mapToList(primarySites, x -> createProgramPrimarySite(program, x).get());
+    List<ProgramCancer> programCancers =
+        mapToList(cancers, x -> createProgramCancer(program, x).get());
+    List<ProgramPrimarySite> programPrimarySites =
+        mapToList(primarySites, x -> createProgramPrimarySite(program, x).get());
+    List<ProgramInstitution> programInstitutions =
+        mapToList(institutions, x -> createProgramInstitution(program, x).get());
+    List<ProgramRegion> programRegions =
+        mapToList(regions, x -> createProgramRegion(program, x).get());
+    List<ProgramCountry> programCountries =
+        mapToList(countries, x -> createProgramCountry(program, x).get());
+
     program.setProgramCancers(new TreeSet<>(programCancers));
     program.setProgramPrimarySites(new TreeSet<>(programPrimarySites));
+    program.setProgramInstitutions(new TreeSet<>(programInstitutions));
+    program.setProgramRegions(new TreeSet<>(programRegions));
+    program.setProgramCountries(new TreeSet<>(programCountries));
 
     return program;
   }
 
-  //TODO: add existence check, and ensure program doesnt already exist. If it does, return a Conflict
+  @Transactional
+  public ProgramEntity createWithSideEffectTransactional(@NonNull Program program, Consumer<ProgramEntity> consumer) {
+    val programEntity = createProgram(program);
+    consumer.accept(programEntity);
+    return programEntity;
+  }
+
+  // TODO: add existence check, and ensure program doesnt already exist. If it does, return a
+  // Conflict
   public ProgramEntity createProgram(@NonNull Program program)
-    throws DataIntegrityViolationException {
+      throws DataIntegrityViolationException {
     val programEntity = programConverter.programToProgramEntity(program);
-    // Set the timestamps
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
 
-    val p = programRepository.save(programEntity);
+    if (program.getCancerTypesList().isEmpty()
+        || program.getPrimarySitesList().isEmpty()
+        || program.getInstitutionsList().isEmpty()
+        || program.getRegionsList().isEmpty()
+        || program.getCountriesList().isEmpty()) {
+      throw Status.INVALID_ARGUMENT
+          .augmentDescription(
+            "Cannot create program, Must provide at least one of each: cancer, primary site, institution, country, and region.")
+          .asRuntimeException();
+    }
 
     val cancers = cancerRepository.findAllByNameIn(program.getCancerTypesList());
     val primarySites = primarySiteRepository.findAllByNameIn(program.getPrimarySitesList());
+    val regions = regionRepository.findAllByNameIn(program.getRegionsList());
+    val countries = countryRepository.findAllByNameIn(program.getCountriesList());
+
+    // Verify input
+    if (cancers.size() != program.getCancerTypesList().size()
+      || primarySites.size() != program.getPrimarySitesList().size()
+      || countries.size() != program.getCountriesList().size()
+      || regions.size() != program.getRegionsList().size()) {
+      throw Status.INVALID_ARGUMENT
+        .augmentDescription(
+          "Cannot create program, Must provide valid cancer, primary site, institution, country, and region.")
+        .asRuntimeException();
+    }
+
+    // Add new institutions if we must
+    List<InstitutionEntity> institutions = institutionRepository.findAllByNameIn(program.getInstitutionsList()); // MUTABLE
+    if (institutions.size() != program.getInstitutionsList().size()) {
+      // Add new ones
+      val existing = institutions.stream().map(InstitutionEntity::getName).collect(toUnmodifiableSet());
+      program.getInstitutionsList().stream().filter(i -> !existing.contains(i)).forEach( i -> {
+          val newInstitute = new InstitutionEntity();
+          newInstitute.setName(i);
+          institutionRepository.save(newInstitute);
+        }
+      );
+      institutions = institutionRepository.findAllByNameIn(program.getInstitutionsList());
+      if (institutions.size() != program.getInstitutionsList().size()) {
+        throw new IllegalStateException("Was unable to add new institutions"); // Final Sanity Check
+      }
+    }
+
+    val p = programRepository.save(programEntity);
 
     List<ProgramCancer> programCancers = mapToList(cancers, x -> createProgramCancer(p, x).get());
-    List<ProgramPrimarySite> programPrimarySites = mapToList(primarySites, x -> createProgramPrimarySite(p, x).get());
+    List<ProgramPrimarySite> programPrimarySites =
+        mapToList(primarySites, x -> createProgramPrimarySite(p, x).get());
+    List<ProgramInstitution> programInstitutions =
+        mapToList(institutions, x -> createProgramInstitution(p, x).get());
+    List<ProgramRegion> programRegions = mapToList(regions, x -> createProgramRegion(p, x).get());
+    List<ProgramCountry> programCountries =
+        mapToList(countries, x -> createProgramCountry(p, x).get());
 
     programCancerRepository.saveAll(programCancers);
     programPrimarySiteRepository.saveAll(programPrimarySites);
+    programInstitutionRepository.saveAll(programInstitutions);
+    programRegionRepository.saveAll(programRegions);
+    programCountryRepository.saveAll(programCountries);
 
     return programEntity;
   }
 
   @Transactional
-  public ProgramEntity updateProgram(@NonNull ProgramEntity updatingProgram,
-                                     @NonNull List<String> cancers,
-                                     @NonNull List<String> primarySites) throws NotFoundException {
-    if(cancers.isEmpty() || primarySites.isEmpty()){
+  public ProgramEntity updateProgram(
+      @NonNull ProgramEntity updatingProgram,
+      @NonNull List<String> cancers,
+      @NonNull List<String> primarySites,
+      @NonNull List<String> institutions,
+      @NonNull List<String> countries,
+      @NonNull List<String> regions)
+      throws NotFoundException {
+    if (cancers.isEmpty()
+        || primarySites.isEmpty()
+        || institutions.isEmpty()
+        || countries.isEmpty()
+        || regions.isEmpty()) {
       throw Status.INVALID_ARGUMENT
-              .augmentDescription("Cannot update program, a program must have at least one cancer and one primary site").asRuntimeException();
+          .augmentDescription(
+              "Cannot update program, a program must have at least one of each: cancer, primary site, institution, country, and region.")
+          .asRuntimeException();
     }
 
-    val programToUpdate = programRepository
-            .findByShortName(updatingProgram.getShortName())
-            .orElseThrow(
-                    () -> new NotFoundException(format("The program with short name: '%s' is not found.",
-                            updatingProgram.getShortName())));
+    val programToUpdate = findProgramByShortName(updatingProgram.getShortName());
 
-    //update associations
+    // update associations
     processCancers(programToUpdate, cancers);
     processPrimarySites(programToUpdate, primarySites);
+    processInstitutions(programToUpdate, institutions);
+    processCountries(programToUpdate, countries);
+    processRegions(programToUpdate, regions);
 
     // update program info
     programConverter.updateProgram(updatingProgram, programToUpdate);
@@ -153,58 +258,70 @@ public class ProgramService {
     return programToUpdate;
   }
 
-  private CancerEntity getCancer(String cancerType) {
-    val result = cancerRepository.getCancerByName(cancerType);
-    if (result.isEmpty()) {
-      throw Status.INVALID_ARGUMENT.augmentDescription("Invalid cancer type '" + cancerType + "'").asRuntimeException();
-    }
-    return result.get();
-  }
-
-  private PrimarySiteEntity getPrimarySite(String primarySite) {
-    val result = primarySiteRepository.getPrimarySiteByName(primarySite);
-    if (result.isEmpty()) {
-      throw Status.INVALID_ARGUMENT.augmentDescription("Invalid primary site " + primarySite).asRuntimeException();
-    }
-    return result.get();
-  }
-
-  private void processCancers(@NonNull ProgramEntity programToUpdate, @NonNull List<String> cancerNames) {
-    val cancerEntities = cancerRepository.findAllByNameIn(cancerNames);
-    val requestedCancerNames = ImmutableSet.copyOf(cancerNames);
-    val existingCancerNames = mapToSet(cancerEntities, CancerEntity::getName);
-    val nonExistingCancerNames = CollectionUtils.difference(requestedCancerNames, existingCancerNames);
-
-    if(!nonExistingCancerNames.isEmpty()) {
-      throw new NotFoundException(
-              String.format("The following cancer names do not exist: %s", Joiner.on(" , ").join(nonExistingCancerNames)));
-    }
+  private void processCancers(
+      @NonNull ProgramEntity programToUpdate, @NonNull List<String> cancerNames) {
+    val cancerEntities = checkExistenceByName(CancerEntity.class, cancerRepository, cancerNames);
 
     programCancerRepository.deleteAllByProgramId(programToUpdate.getId());
-    val programCancers = cancerEntities.stream()
+    val programCancers =
+        cancerEntities.stream()
             .map(c -> createProgramCancer(programToUpdate, c))
             .map(Optional::get)
             .collect(toUnmodifiableList());
     programCancerRepository.saveAll(programCancers);
   }
 
-  private void processPrimarySites(@NonNull ProgramEntity programToUpdate, @NonNull List<String> primarySitesNames) {
-    val primarySiteEntities = primarySiteRepository.findAllByNameIn(primarySitesNames);
-    val requestedPrimarySiteNames = ImmutableSet.copyOf(primarySitesNames);
-    val existingPrimarySiteNames = mapToSet(primarySiteEntities, PrimarySiteEntity::getName);
-    val nonExistingPrimarySiteNames = CollectionUtils.difference(requestedPrimarySiteNames, existingPrimarySiteNames);
-
-    if(!nonExistingPrimarySiteNames.isEmpty()) {
-      throw new NotFoundException(
-              String.format("The following primary site names do not exist: %s", Joiner.on(" , ").join(nonExistingPrimarySiteNames)));
-    }
+  private void processPrimarySites(
+      @NonNull ProgramEntity programToUpdate, @NonNull List<String> primarySitesNames) {
+    val primarySiteEntities =
+        checkExistenceByName(PrimarySiteEntity.class, primarySiteRepository, primarySitesNames);
 
     programPrimarySiteRepository.deleteAllByProgramId(programToUpdate.getId());
-    val programPrimarySites = primarySiteEntities.stream()
-            .map( ps -> createProgramPrimarySite(programToUpdate, ps))
+    val programPrimarySites =
+        primarySiteEntities.stream()
+            .map(ps -> createProgramPrimarySite(programToUpdate, ps))
             .map(Optional::get)
             .collect(toUnmodifiableList());
     programPrimarySiteRepository.saveAll(programPrimarySites);
+  }
+
+  private void processInstitutions(
+      @NonNull ProgramEntity programToUpdate, @NonNull List<String> names) {
+    val institutionEntities =
+        checkExistenceByName(InstitutionEntity.class, institutionRepository, names);
+
+    programInstitutionRepository.deleteAllByProgramId(programToUpdate.getId());
+    val programInstitutions =
+        institutionEntities.stream()
+            .map(c -> createProgramInstitution(programToUpdate, c))
+            .map(Optional::get)
+            .collect(toUnmodifiableList());
+    programInstitutionRepository.saveAll(programInstitutions);
+  }
+
+  private void processCountries(
+      @NonNull ProgramEntity programToUpdate, @NonNull List<String> names) {
+    val countryEntities = checkExistenceByName(CountryEntity.class, countryRepository, names);
+
+    programCountryRepository.deleteAllByProgramId(programToUpdate.getId());
+    val programCountries =
+        countryEntities.stream()
+            .map(c -> createProgramCountry(programToUpdate, c))
+            .map(Optional::get)
+            .collect(toUnmodifiableList());
+    programCountryRepository.saveAll(programCountries);
+  }
+
+  private void processRegions(@NonNull ProgramEntity programToUpdate, @NonNull List<String> names) {
+    val regionEntities = checkExistenceByName(RegionEntity.class, regionRepository, names);
+
+    programRegionRepository.deleteAllByProgramId(programToUpdate.getId());
+    val programRegions =
+        regionEntities.stream()
+            .map(c -> createProgramRegion(programToUpdate, c))
+            .map(Optional::get)
+            .collect(toUnmodifiableList());
+    programRegionRepository.saveAll(programRegions);
   }
 
   public void removeProgram(String name) throws EmptyResultDataAccessException {
@@ -214,11 +331,15 @@ public class ProgramService {
   }
 
   public List<ProgramEntity> listPrograms() {
-    val programs= programRepository.findAll(new ProgramSpecificationBuilder()
-      .setFetchCancers(true)
-      .setFetchPrimarySites(true)
-      .listAll());
+    val programs =
+        programRepository.findAll(
+            new ProgramSpecificationBuilder()
+                .setFetchCancers(true)
+                .setFetchPrimarySites(true)
+                .setFetchInstitutions(true)
+                .setFetchCountries(true)
+                .setFetchRegions(true)
+                .listAll());
     return List.copyOf(new LinkedHashSet<ProgramEntity>(programs));
   }
-
 }

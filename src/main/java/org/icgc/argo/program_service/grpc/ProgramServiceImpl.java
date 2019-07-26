@@ -78,14 +78,15 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val program = request.getProgram();
     val admins = request.getAdminsList();
 
-    val programEntity = programService.createProgram(program);
-    egoService.setUpProgram(programEntity.getShortName());
-    admins.forEach(admin -> {
-              val email = commonConverter.unboxStringValue(admin.getEmail());
-              val firstName = commonConverter.unboxStringValue(admin.getFirstName());
-              val lastName = commonConverter.unboxStringValue(admin.getLastName());
-              egoService.getOrCreateUser(email, firstName, lastName);
-              invitationService.inviteUser(programEntity, email, firstName, lastName, UserRole.ADMIN);
+    val programEntity = programService.createWithSideEffectTransactional(program, (ProgramEntity pe) -> {
+      egoService.setUpProgram(pe.getShortName());
+      admins.forEach(admin -> {
+        val email = commonConverter.unboxStringValue(admin.getEmail());
+        val firstName = commonConverter.unboxStringValue(admin.getFirstName());
+        val lastName = commonConverter.unboxStringValue(admin.getLastName());
+        egoService.getOrCreateUser(email, firstName, lastName);
+        invitationService.inviteUser(pe, email, firstName, lastName, UserRole.ADMIN);
+        });
     });
 
     val response = programConverter.programEntityToCreateProgramResponse(programEntity);
@@ -126,7 +127,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val program = request.getProgram();
     val updatingProgram = programConverter.programToProgramEntity(program);
     try {
-      val updatedProgram = programService.updateProgram(updatingProgram, program.getCancerTypesList(), program.getPrimarySitesList());
+      val updatedProgram = programService.updateProgram(
+              updatingProgram,
+              program.getCancerTypesList(),
+              program.getPrimarySitesList(),
+              program.getInstitutionsList(),
+              program.getCountriesList(),
+              program.getRegionsList()
+      );
       val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
       responseObserver.onNext(response);
       responseObserver.onCompleted();
