@@ -18,10 +18,7 @@
 
 package org.icgc.argo.program_service.model.entity;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.proto.UserRole;

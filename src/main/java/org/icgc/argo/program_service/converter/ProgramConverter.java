@@ -273,6 +273,7 @@ public interface ProgramConverter {
   @Mapping(target = "userDetailsOrBuilderList", ignore = true)
   @Mapping(target = "userDetailsBuilderList", ignore = true)
   @Mapping(target = "userDetailsList", source = "invitations")
+
   ListUsersResponse invitationsToListUsersResponse(Integer dummy, Collection<JoinProgramInvite> invitations);
 
   default ListUsersResponse invitationsToListUsersResponse(Collection<JoinProgramInvite> invitations) {

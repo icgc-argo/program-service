@@ -28,19 +28,18 @@ option objc_class_prefix = "PSP";
 
 service ProgramService {
 
-  rpc CreateProgram(CreateProgramRequest) returns (CreateProgramResponse);
-  rpc RemoveProgram(RemoveProgramRequest) returns (google.protobuf.Empty);
-  rpc UpdateProgram(UpdateProgramRequest) returns (UpdateProgramResponse);
-  rpc ListPrograms(google.protobuf.Empty) returns (ListProgramsResponse);
-  rpc GetProgram(GetProgramRequest) returns (GetProgramResponse);
+  rpc CreateProgram (CreateProgramRequest) returns (CreateProgramResponse);
+  rpc RemoveProgram (RemoveProgramRequest) returns (google.protobuf.Empty);
+  rpc UpdateProgram (UpdateProgramRequest) returns (UpdateProgramResponse);
+  rpc ListPrograms (google.protobuf.Empty) returns (ListProgramsResponse);
+  rpc GetProgram (GetProgramRequest) returns (GetProgramResponse);
 
-  rpc InviteUser(InviteUserRequest) returns (InviteUserResponse);
-  rpc JoinProgram(JoinProgramRequest) returns (JoinProgramResponse);
+  rpc InviteUser (InviteUserRequest) returns (InviteUserResponse);
+  rpc JoinProgram (JoinProgramRequest) returns (JoinProgramResponse);
 
   rpc RemoveUser(RemoveUserRequest) returns (RemoveUserResponse);
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
   rpc UpdateUser(UpdateUserRequest) returns (google.protobuf.Empty);
-
 }
 
 message Program {

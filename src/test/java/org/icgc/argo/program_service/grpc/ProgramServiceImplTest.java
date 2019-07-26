@@ -260,7 +260,7 @@ class ProgramServiceImplTest {
       egoInvitations);
 
     val request = createListUsersRequest(programName);
-    val expectedInvite = createUserDetails(user, null, null);
+    val expectedUserDetails = createUserDetails(user, null, null);
 
     val responseObserver = mock(StreamObserver.class);
 
@@ -268,8 +268,8 @@ class ProgramServiceImplTest {
     val argument = ArgumentCaptor.forClass(ListUsersResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
-    val actual= Set.copyOf(argument.getValue().getUserDetailsList());
-    val expected = Set.of(expectedInvite);
+    val actual = Set.copyOf(argument.getValue().getUserDetailsList());
+    val expected = Set.of(expectedUserDetails);
 
     // Ensure that we haven't listed the same user twice
     assertEquals(1, argument.getValue().getUserDetailsList().size());
@@ -363,8 +363,6 @@ class ProgramServiceImplTest {
     return ListUsersRequest.newBuilder().
       setProgramShortName(StringValue.of(shortName)).build();
   }
-
-
 
   UserDetails createUserDetails(User user, LocalDateTime accepted, InviteStatus status) {
     val builder = UserDetails.newBuilder().setUser(user);
