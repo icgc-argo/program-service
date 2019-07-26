@@ -16,7 +16,6 @@ import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.grpc.interceptor.ExceptionInterceptor;
-import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
@@ -26,6 +25,7 @@ import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
@@ -88,8 +88,10 @@ public class ProgramServiceAuthorizationTest {
 
     val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
     val invitationService = mock(InvitationService.class);
-    when(invitationService.getInvitation(invitationUUID)).thenReturn(joinProgramInvite());
-    when(invitationService.getInvitation(invitationUUID2)).thenReturn(badJoinProgramInvite());
+    val egoUser = new EgoUser().setEmail(userId().getValue());
+    val badUser = new EgoUser().setEmail("y@invalid.com");
+    when(invitationService.acceptInvite(invitationUUID)).thenReturn(egoUser);
+    when(invitationService.acceptInvite(invitationUUID2)).thenReturn(badUser);
     when(invitationService.inviteUser(entity(), userId().getValue(), "TEST", "USER",
       UserRole.COLLABORATOR)).thenReturn(invitationUUID);
 
@@ -160,7 +162,7 @@ public class ProgramServiceAuthorizationTest {
 
       EndpointTest.of("inviteUser", () -> client.inviteUser(inviteUserRequest())),      // 4-7 Program Admin
       EndpointTest.of("updateUser", () -> client.updateUser(updateUserRequest())),
-      EndpointTest.of("listUser", () -> client.listUser(listUserRequest())),
+      EndpointTest.of("listUser", () -> client.listUsers(listUsersRequest())),
       EndpointTest.of("removeUser", () -> client.removeUser(removeUserRequest())),
 
       EndpointTest.of("getProgram", () -> client.getProgram(getProgramRequest())),    //8  Program User
@@ -389,8 +391,8 @@ public class ProgramServiceAuthorizationTest {
     return UpdateUserRequest.newBuilder().setUserId(userId()).setShortName(programName()).build();
   }
 
-  ListUserRequest listUserRequest() {
-    return ListUserRequest.newBuilder().setProgramShortName(programName()).build();
+  ListUsersRequest listUsersRequest() {
+    return ListUsersRequest.newBuilder().setProgramShortName(programName()).build();
   }
 
   JoinProgramRequest joinProgramRequest() {
@@ -399,16 +401,6 @@ public class ProgramServiceAuthorizationTest {
 
   JoinProgramRequest badJoinProgramRequest() {
     return JoinProgramRequest.newBuilder().setJoinProgramInvitationId(invitationId2).build();
-  }
-
-  JoinProgramInvite joinProgramInvite() {
-    return new JoinProgramInvite().setUserEmail("x@test.com").setId(invitationUUID).setProgram(entity()).setStatus(
-      JoinProgramInvite.Status.PENDING);
-  }
-
-  JoinProgramInvite badJoinProgramInvite() {
-    return new JoinProgramInvite().setUserEmail("wrong-user@sorry.com").setId(invitationUUID2).setProgram(entity()).setStatus(
-      JoinProgramInvite.Status.PENDING);
   }
 
   RemoveUserRequest removeUserRequest() {

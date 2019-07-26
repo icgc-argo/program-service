@@ -48,6 +48,7 @@ import java.util.*;
 import static org.apache.commons.lang.math.RandomUtils.nextInt;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -104,7 +105,7 @@ class ProgramServiceImplTest {
   }
 
   @Test
-  void listUser() {
+  void listUsers() {
 
     val responseObserver = mock(StreamObserver.class);
 
@@ -127,16 +128,16 @@ class ProgramServiceImplTest {
     when(egoService.getUsersInProgram(programName1)).thenReturn(List.of(user1));
 
     val invitations = List.of(invite1);
-    val request = createListUserRequest(programName1);
+    val request = createListUsersRequest(programName1);
 
-    val expected = programConverter.invitationsToListUserResponse(invitations);
+    val expected = programConverter.invitationsToListUsersResponse(invitations);
 
-    programServiceImpl.listUser(request, responseObserver);
+    programServiceImpl.listUsers(request, responseObserver);
     verify(responseObserver).onNext(expected);
   }
 
   @Test
-  void listUser1() {
+  void listUsers1() {
     // Case 1: No pending invitations, 1 user in ego with matching
     // invitation information in the invitation table
     val programName1 = "TEST-CA";
@@ -150,19 +151,19 @@ class ProgramServiceImplTest {
     val egoInvitations = new TreeMap<String, JoinProgramInvite>();
     egoInvitations.put(user1.getEmail().getValue(), invite1);
 
-    val service = setupListUserTest("TEST-CA", pendingInvitations, egoUsers,
+    val service = setupListUsersTest("TEST-CA", pendingInvitations, egoUsers,
       egoInvitations);
 
-    val request = createListUserRequest(programName1);
-    val expected = programConverter.invitationsToListUserResponse(List.of(invite1));
+    val request = createListUsersRequest(programName1);
+    val expected = programConverter.invitationsToListUsersResponse(List.of(invite1));
     val responseObserver = mock(StreamObserver.class);
 
-    service.listUser(request, responseObserver);
+    service.listUsers(request, responseObserver);
     verify(responseObserver).onNext(expected);
   }
 
   @Test
-  void listUser2() {
+  void listUsers2() {
     // Case 2: Two pending invitations, and two ego users -- one has
     // a matching invitation record in the invitation table, and the other doesn't.
     val programName = "TEST-CA";
@@ -180,32 +181,32 @@ class ProgramServiceImplTest {
     val egoInvitations = new TreeMap<String, JoinProgramInvite>();
     egoInvitations.put(user1.getEmail().getValue(), invite1);
 
-    val service = setupListUserTest("TEST-CA", pendingInvitations, egoUsers,
+    val service = setupListUsersTest("TEST-CA", pendingInvitations, egoUsers,
       egoInvitations);
 
-    val request = createListUserRequest(programName);
+    val request = createListUsersRequest(programName);
     val invitations = new ArrayList<JoinProgramInvite>(pendingInvitations);
     invitations.add(invite1);
     invite2.setStatus(null);
     invite2.setAcceptedAt(null);
     invitations.add(invite2);
 
-    val expected = programConverter.invitationsToListUserResponse(invitations);
+    val expected = programConverter.invitationsToListUsersResponse(invitations);
     val responseObserver = mock(StreamObserver.class);
 
-    service.listUser(request, responseObserver);
-    val argument = ArgumentCaptor.forClass(ListUserResponse.class);
+    service.listUsers(request, responseObserver);
+    val argument = ArgumentCaptor.forClass(ListUsersResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
-    val actualInvitations = Set.copyOf(argument.getValue().getInvitationsList());
-    val expectedInvitations = Set.copyOf(expected.getInvitationsList());
+    val actualInvitations = Set.copyOf(argument.getValue().getUserDetailsList());
+    val expectedInvitations = Set.copyOf(expected.getUserDetailsList());
 
     assertTrue(actualInvitations.containsAll(expectedInvitations));
     assertTrue(expectedInvitations.containsAll(actualInvitations));
   }
 
   @Test
-  void listUser3() {
+  void listUsers3() {
     // Case 3: An ego user who has pending status in the database.
     val programName = "TEST-CA";
     val program = mockProgram(programName);
@@ -219,29 +220,29 @@ class ProgramServiceImplTest {
     val egoInvitations = new TreeMap<String, JoinProgramInvite>();
     egoInvitations.put(user.getEmail().getValue(), invite);
 
-    val service = setupListUserTest("TEST-CA", pendingInvitations, egoUsers,
+    val service = setupListUsersTest("TEST-CA", pendingInvitations, egoUsers,
       egoInvitations);
 
-    val request = createListUserRequest(programName);
+    val request = createListUsersRequest(programName);
     val invitations = new ArrayList<JoinProgramInvite>(pendingInvitations);
 
-    val expected = programConverter.invitationsToListUserResponse(invitations);
+    val expected = programConverter.invitationsToListUsersResponse(invitations);
     val responseObserver = mock(StreamObserver.class);
 
-    service.listUser(request, responseObserver);
-    val argument = ArgumentCaptor.forClass(ListUserResponse.class);
+    service.listUsers(request, responseObserver);
+    val argument = ArgumentCaptor.forClass(ListUsersResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
-    val actualInvitationList = argument.getValue().getInvitationsList();
+    val actualInvitationList = argument.getValue().getUserDetailsList();
     // Ensure that we haven't listed the same user twice
     assertEquals(1, actualInvitationList.size());
     val actualInvite = actualInvitationList.get(0);
-    val expectedInvite = expected.getInvitationsList().get(0);
+    val expectedInvite = expected.getUserDetailsList().get(0);
     assertEquals(expectedInvite, actualInvite);
   }
 
   @Test
-  void listUser4() {
+  void listUsers4() {
     // Case 4: An ego user who is not in the database.
     // Make sure the user's status and accepted date is null.
 
@@ -255,30 +256,30 @@ class ProgramServiceImplTest {
     val egoUsers = List.of(user);
     val egoInvitations = new TreeMap<@Email String, JoinProgramInvite>();
 
-    val service = setupListUserTest("TEST-CA", pendingInvitations, egoUsers,
+    val service = setupListUsersTest("TEST-CA", pendingInvitations, egoUsers,
       egoInvitations);
 
-    val request = createListUserRequest(programName);
-    val expectedInvite = createInvitation(user, null, null);
+    val request = createListUsersRequest(programName);
+    val expectedInvite = createUserDetails(user, null, null);
 
     val responseObserver = mock(StreamObserver.class);
 
-    service.listUser(request, responseObserver);
-    val argument = ArgumentCaptor.forClass(ListUserResponse.class);
+    service.listUsers(request, responseObserver);
+    val argument = ArgumentCaptor.forClass(ListUsersResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
-    val actualInvitations = Set.copyOf(argument.getValue().getInvitationsList());
-    val expectedInvitations = Set.of(expectedInvite);
+    val actual= Set.copyOf(argument.getValue().getUserDetailsList());
+    val expected = Set.of(expectedInvite);
 
     // Ensure that we haven't listed the same user twice
-    assertEquals(1, argument.getValue().getInvitationsList().size());
+    assertEquals(1, argument.getValue().getUserDetailsList().size());
 
-    assertTrue(actualInvitations.containsAll(expectedInvitations));
-    assertTrue(expectedInvitations.containsAll(actualInvitations));
+    assertTrue(actual.containsAll(expected));
+    assertTrue(expected.containsAll(actual));
   }
 
   @Test
-  void listUser5() {
+  void listUsers5() {
     // Case 5: An ego user who is pending in the database.
     // Make sure the user's status and accepted date is null.
 
@@ -292,26 +293,26 @@ class ProgramServiceImplTest {
     val egoUsers = List.of(user);
     val egoInvitations = new TreeMap<@Email String, JoinProgramInvite>();
 
-    val service = setupListUserTest("TEST-CA", pendingInvitations, egoUsers,
+    val service = setupListUsersTest("TEST-CA", pendingInvitations, egoUsers,
       egoInvitations);
 
-    val request = createListUserRequest(programName);
-    val expectedInvite = createInvitation(user, null, null);
+    val request = createListUsersRequest(programName);
+    val expectedUserDetails = createUserDetails(user, null, null);
 
     val responseObserver = mock(StreamObserver.class);
 
-    service.listUser(request, responseObserver);
-    val argument = ArgumentCaptor.forClass(ListUserResponse.class);
+    service.listUsers(request, responseObserver);
+    val argument = ArgumentCaptor.forClass(ListUsersResponse.class);
 
     verify(responseObserver).onNext(argument.capture());
-    val actualInvitations = Set.copyOf(argument.getValue().getInvitationsList());
-    val expectedInvitations = Set.of(expectedInvite);
+    val actual = Set.copyOf(argument.getValue().getUserDetailsList());
+    val expected = Set.of(expectedUserDetails);
 
     // Ensure that we haven't listed the same user twice
-    assertEquals(1, argument.getValue().getInvitationsList().size());
+    assertEquals(1, argument.getValue().getUserDetailsList().size());
 
-    assertTrue(actualInvitations.containsAll(expectedInvitations));
-    assertTrue(expectedInvitations.containsAll(actualInvitations));
+    assertTrue(actual.containsAll(expected));
+    assertTrue(expected.containsAll(actual));
   }
 
   User fromInvite(JoinProgramInvite invite) {
@@ -325,7 +326,19 @@ class ProgramServiceImplTest {
       build();
   }
 
-  ProgramServiceImpl setupListUserTest(
+  @Test
+  void testInvitationExpiry() {
+    val programName = "TEST-CA";
+    val program = mockProgram(programName);
+    val invite = createPendingInvitation(program);
+    assertFalse(invite.isExpired());
+    assertEquals(JoinProgramInvite.Status.PENDING, invite.getStatus());
+    invite.setExpiresAt(LocalDateTime.now().minusDays(1));
+    assertTrue(invite.isExpired());
+    assertEquals(JoinProgramInvite.Status.EXPIRED, invite.getStatus());
+  }
+
+  ProgramServiceImpl setupListUsersTest(
     String programName,
     List<JoinProgramInvite> pendingInvitations,
     List<User> egoUsers,
@@ -346,13 +359,15 @@ class ProgramServiceImplTest {
       invitationService, authorizationService);
   }
 
-  ListUserRequest createListUserRequest(String shortName) {
-    return ListUserRequest.newBuilder().
+  ListUsersRequest createListUsersRequest(String shortName) {
+    return ListUsersRequest.newBuilder().
       setProgramShortName(StringValue.of(shortName)).build();
   }
 
-  Invitation createInvitation(User user, LocalDateTime accepted, InviteStatus status) {
-    val builder = Invitation.newBuilder().setUser(user);
+
+
+  UserDetails createUserDetails(User user, LocalDateTime accepted, InviteStatus status) {
+    val builder = UserDetails.newBuilder().setUser(user);
     if (status == null) {
       return builder.build();
     }

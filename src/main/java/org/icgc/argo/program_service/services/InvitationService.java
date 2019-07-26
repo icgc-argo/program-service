@@ -3,20 +3,16 @@ package org.icgc.argo.program_service.services;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.converter.CommonConverter;
-import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
-import org.icgc.argo.program_service.proto.Invitation;
-import org.icgc.argo.program_service.proto.InviteStatus;
-import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -60,15 +56,13 @@ public class InvitationService {
     return invitationRepository.findAllByProgramShortName(programShortName);
   }
 
-  public JoinProgramInvite getInvitation(@NonNull UUID invitationId) throws NotFoundException {
-    return invitationRepository
+  @Transactional
+  public EgoUser acceptInvite(@NonNull UUID invitationId) throws NotFoundException {
+    val invitation = invitationRepository
       .findById(invitationId)
       .orElseThrow(() ->
         new NotFoundException(format("Cannot find invitation with id '%s' ", invitationId)));
-  }
 
-  @Transactional
-  public EgoUser acceptInvite(@NonNull JoinProgramInvite invitation) {
     invitation.accept();
     invitationRepository.save(invitation);
     egoService.joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());

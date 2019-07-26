@@ -173,12 +173,12 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void joinProgram(JoinProgramRequest request, StreamObserver<JoinProgramResponse> responseObserver) {
     val str = request.getJoinProgramInvitationId().getValue();
     val id = commonConverter.stringToUUID(str);
-    val invitation = invitationService.getInvitation(id);
+    val invitation = invitationService.acceptInvite(id);
 
-    authorizationService.requireEmail(invitation.getUserEmail());
+    authorizationService.requireEmail(invitation.getEmail());
 
     try {
-      val responseUser = invitationService.acceptInvite(invitation);
+      val responseUser = invitationService.acceptInvite(id);
       val response = programConverter.egoUserToJoinProgramResponse(responseUser);
       responseObserver.onNext(response);
       responseObserver.onCompleted();
@@ -200,21 +200,19 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-  public void listUser(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
-    ListUserResponse response;
-
-    val shortName = request.getProgramShortName().getValue();
-    authorizationService.requireProgramAdmin(shortName);
-
+  public void listUsers(ListUsersRequest request, StreamObserver<ListUsersResponse> responseObserver) {
+    ListUsersResponse response;
     val programShortName = request.getProgramShortName().getValue();
+    authorizationService.requireProgramAdmin(programShortName);
+
     val users = egoService.getUsersInProgram(programShortName);
-    val status = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToInvitation(user,
+    val userDetails = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
       invitationService.getInvitation(programShortName, user.getEmail().getValue())));
 
-    status.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
-      programConverter::joinProgramInviteToInvitation ));
+    userDetails.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
+      programConverter::joinProgramInviteToUserDetails ));
 
-    response = ListUserResponse.newBuilder().addAllInvitations(status).build();
+    response = ListUsersResponse.newBuilder().addAllUserDetails(userDetails).build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }

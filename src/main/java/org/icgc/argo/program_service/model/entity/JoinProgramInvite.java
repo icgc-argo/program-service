@@ -44,7 +44,7 @@ import java.util.UUID;
 @Valid
 public class JoinProgramInvite {
 
-  public enum Status {PENDING, ACCEPTED, REVOKED}
+  public enum Status {PENDING, ACCEPTED, REVOKED, EXPIRED}
 
   @Id
   @Getter
@@ -87,6 +87,12 @@ public class JoinProgramInvite {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Status status;
+  public Status getStatus() {
+    if (status == Status.PENDING && isExpired()) {
+        status = Status.EXPIRED;
+      }
+    return status;
+  }
 
   public JoinProgramInvite(ProgramEntity program, String userEmail, String firstName, String lastName, UserRole role) {
     this.createdAt = LocalDateTime.now(ZoneOffset.UTC);

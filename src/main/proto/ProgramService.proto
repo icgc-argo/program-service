@@ -38,7 +38,7 @@ service ProgramService {
   rpc JoinProgram(JoinProgramRequest) returns (JoinProgramResponse);
 
   rpc RemoveUser(RemoveUserRequest) returns (RemoveUserResponse);
-  rpc ListUser(ListUserRequest) returns (ListUserResponse);
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
   rpc UpdateUser(UpdateUserRequest) returns (google.protobuf.Empty);
 
 }
@@ -91,13 +91,14 @@ enum InviteStatus {
   REVOKED = 0;
   PENDING = 1;
   ACCEPTED = 2;
+  EXPIRED = 3;
 }
 
 message InviteStatusValue {
   InviteStatus value = 1;
 }
 
-message Invitation {
+message UserDetails {
   User user = 1;
   InviteStatusValue status = 2;
   google.protobuf.Timestamp accepted_at = 3;
@@ -151,12 +152,12 @@ message RemoveUserResponse {
   google.protobuf.StringValue message = 1;
 }
 
-message ListUserRequest {
+message ListUsersRequest {
   google.protobuf.StringValue program_short_name = 1;
 }
 
-message ListUserResponse {
-  repeated Invitation invitations = 1;
+message ListUsersResponse {
+  repeated UserDetails userDetails = 1;
 }
 
 message UpdateUserRequest {
