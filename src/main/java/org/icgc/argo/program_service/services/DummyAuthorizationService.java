@@ -1,11 +1,9 @@
 package org.icgc.argo.program_service.services;
 
-import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-@Profile("default")
+@Profile("!auth")
 @Service
 public class DummyAuthorizationService implements AuthorizationService {
   @Override
