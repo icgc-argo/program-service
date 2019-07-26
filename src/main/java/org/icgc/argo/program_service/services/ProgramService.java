@@ -45,6 +45,7 @@ import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
 import static org.icgc.argo.program_service.model.join.ProgramCountry.createProgramCountry;
 import static org.icgc.argo.program_service.model.join.ProgramInstitution.createProgramInstitution;
@@ -171,19 +172,35 @@ public class ProgramService {
 
     val cancers = cancerRepository.findAllByNameIn(program.getCancerTypesList());
     val primarySites = primarySiteRepository.findAllByNameIn(program.getPrimarySitesList());
-    val institutions = institutionRepository.findAllByNameIn(program.getInstitutionsList());
     val regions = regionRepository.findAllByNameIn(program.getRegionsList());
     val countries = countryRepository.findAllByNameIn(program.getCountriesList());
 
+    // Verify input
     if (cancers.size() != program.getCancerTypesList().size()
       || primarySites.size() != program.getPrimarySitesList().size()
-      || institutions.size() != program.getInstitutionsList().size()
       || countries.size() != program.getCountriesList().size()
       || regions.size() != program.getRegionsList().size()) {
       throw Status.INVALID_ARGUMENT
         .augmentDescription(
           "Cannot create program, Must provide valid cancer, primary site, institution, country, and region.")
         .asRuntimeException();
+    }
+
+    // Add new institutions if we must
+    List<InstitutionEntity> institutions = institutionRepository.findAllByNameIn(program.getInstitutionsList()); // MUTABLE
+    if (institutions.size() != program.getInstitutionsList().size()) {
+      // Add new ones
+      val existing = institutions.stream().map(InstitutionEntity::getName).collect(toUnmodifiableSet());
+      program.getInstitutionsList().stream().filter(i -> !existing.contains(i)).forEach( i -> {
+          val newInstitute = new InstitutionEntity();
+          newInstitute.setName(i);
+          institutionRepository.save(newInstitute);
+        }
+      );
+      institutions = institutionRepository.findAllByNameIn(program.getInstitutionsList());
+      if (institutions.size() != program.getInstitutionsList().size()) {
+        throw new IllegalStateException("Was unable to add new institutions"); // Final Sanity Check
+      }
     }
 
     val p = programRepository.save(programEntity);
