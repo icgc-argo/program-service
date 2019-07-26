@@ -269,7 +269,10 @@ public interface ProgramConverter {
     }
 
     val accepted = CommonConverter.INSTANCE.localDateTimeToTimestamp(invite.get().getAcceptedAt());
-    return builder2.setAcceptedAt(accepted).build();
+    if (accepted != null) {
+      return builder2.setAcceptedAt(accepted).build();
+    }
+    return builder2.build();
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
