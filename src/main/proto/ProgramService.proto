@@ -161,9 +161,9 @@ message ListUserResponse {
 }
 
 message UpdateUserRequest {
-  google.protobuf.StringValue user_id = 1;
-  UserRoleValue role = 4;
-  google.protobuf.StringValue short_name = 5;
+  google.protobuf.StringValue user_email= 1;
+  UserRoleValue role = 2;
+  google.protobuf.StringValue short_name = 3;
 }
 
 message InviteUserRequest {
