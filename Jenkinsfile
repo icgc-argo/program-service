@@ -76,6 +76,16 @@ spec:
             }
         }
 
+        stage('Deploy to argo-dev') {
+            when { branch 'development' }
+            steps {
+                build(job: "/ARGO/provision/program-service", parameters: [
+                     [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'dev' ],
+                     [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set-string image.tag=${commit}" ]
+                ])
+            }
+        }
+
         stage('Deploy to argo-qa') {
             when { branch 'master' }
             steps {
