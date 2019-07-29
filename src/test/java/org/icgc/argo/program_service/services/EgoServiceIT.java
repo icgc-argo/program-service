@@ -90,7 +90,7 @@ class EgoServiceIT {
   private static final String ADMIN_USER_EMAIL = "lexishuhanli@gmail.com";
   private static final String COLLABORATOR_USER_EMAIL = "TestPS@dummy.com";
   private static final String UPDATE_USER_TEST_EMAIL = "Test_update_user_PS@dummy.com";
-  private static final String PROGRAM_NAME = "TEST-PROGRAM-A-DK";
+  private static final String PROGRAM_NAME = "PROGRAM-DK";
 
   @BeforeAll
   void setUp() {
