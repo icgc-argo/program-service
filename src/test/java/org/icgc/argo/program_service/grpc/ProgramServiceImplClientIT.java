@@ -62,14 +62,16 @@ class ProgramServiceImplClientIT {
       .setShortName(stringValue(randomProgramName()))
       .setMembershipType(membershipTypeValue(ASSOCIATE))
       .setWebsite(stringValue("http://site.org"))
-      .setInstitutions(stringValue("oicr"))
-      .setRegions(stringValue(""))
+      .addInstitutions("OICR")
+      .addRegions("North America")
       .setName(stringValue(RandomString.make(15)))
       .setCommitmentDonors(int32Value(234))
-      .setCountries(stringValue("canada"))
+      .addCountries("Canada")
       .setSubmittedDonors(int32Value(244))
       .setGenomicDonors(int32Value(333))
-      .setDescription(stringValue("nothing"));
+      .setDescription(stringValue("nothing"))
+      .addCancerTypes("Blood cancer")
+      .addPrimarySites("Blood");
 
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
     val response = blockingStub.createProgram(createProgramRequest);
@@ -83,14 +85,16 @@ class ProgramServiceImplClientIT {
       .setShortName(name)
       .setMembershipType(membershipTypeValue(ASSOCIATE))
       .setWebsite(stringValue("http://site.org"))
-      .setInstitutions(stringValue("oicr"))
-      .setRegions(stringValue(""))
+      .addInstitutions("OICR")
+      .addRegions("North America")
       .setName(stringValue(RandomString.make(15)))
       .setCommitmentDonors(int32Value(234))
-      .setCountries(stringValue("canada"))
+      .addCountries("Canada")
       .setSubmittedDonors(int32Value(244))
       .setGenomicDonors(int32Value(333))
-      .setDescription(stringValue("nothing"));
+      .setDescription(stringValue("nothing"))
+      .addCancerTypes("Blood cancer")
+      .addPrimarySites("Blood");
 
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
     val response = blockingStub.createProgram(createProgramRequest);

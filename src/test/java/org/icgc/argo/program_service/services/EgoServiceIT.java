@@ -122,10 +122,12 @@ class EgoServiceIT {
       .setSubmittedDonors(int32Value(0))
       .setMembershipType(membershipTypeValue(ASSOCIATE))
       .setWebsite(stringValue("https://example.com"))
-      .setCountries(stringValue("Canada"))
-      .setInstitutions(stringValue("oicr"))
-      .setRegions(stringValue("toronto"))
       .setDescription(stringValue(""))
+      .addCountries("Canada")
+      .addRegions("North America")
+      .addInstitutions("OICR")
+      .addCancerTypes("Blood cancer")
+      .addPrimarySites("Blood")
       .build();
 
     egoService.setUpProgram(PROGRAM_NAME);

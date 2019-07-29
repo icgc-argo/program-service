@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SqlFields {
+
   public static final String ID = "id";
   public static final String SHORTNAME = "short_name";
   public static final String NAME = "name";
@@ -34,11 +35,11 @@ public class SqlFields {
   public static final String WEBSITE = "website";
   public static final String CREATEDAT = "created_at";
   public static final String UPDATEDAT = "updated_at";
-  public static final String INSTITUTIONS = "institutions";
-  public static final String REGIONS = "regions";
-  public static final String COUNTRIES = "countries";
   public static final String PROGRAMID_JOIN = "program_id";
   public static final String CANCERID_JOIN = "cancer_id";
   public static final String SITEID_JOIN = "primary_site_id";
+  public static final String COUNTRYID_JOIN = "country_id";
+  public static final String INSTITUTIONID_JOIN = "institution_id";
+  public static final String REGIONID_JOIN = "region_id";
 
 }

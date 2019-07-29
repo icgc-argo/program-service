@@ -20,7 +20,6 @@ package org.icgc.argo.program_service.model.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
@@ -28,7 +27,6 @@ import org.hibernate.annotations.GenericGenerator;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.model.join.ProgramCancer;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -69,9 +67,5 @@ public class CancerEntity implements NameableEntity<UUID> {
               fetch = FetchType.LAZY,
               orphanRemoval = true)
   private Set<ProgramCancer> programCancers = newHashSet();
-
-  public void addProgramCancer(@NonNull ProgramCancer programCancer){
-    this.programCancers.add(programCancer);
-  }
 
 }
