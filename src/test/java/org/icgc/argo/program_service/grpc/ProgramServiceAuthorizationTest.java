@@ -2,21 +2,22 @@ package org.icgc.argo.program_service.grpc;
 
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
-import io.grpc.ServerInterceptors;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
+import io.grpc.*;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.testing.GrpcCleanupRule;
 import lombok.AllArgsConstructor;
 import lombok.val;
+import org.hibernate.engine.spi.Managed;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.grpc.interceptor.ExceptionInterceptor;
+import org.icgc.argo.program_service.model.entity.CountryEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.model.join.ProgramCountry;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
@@ -36,12 +37,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.useDefaultDateFormatsOnly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 
 public class ProgramServiceAuthorizationTest {
   UUID invitationUUID = UUID.randomUUID();
@@ -114,7 +121,7 @@ public class ProgramServiceAuthorizationTest {
       commonConverter, mockEgoService, invitationService, authorizationService);
 
     val serverName = InProcessServerBuilder.generateName();
-    val channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
+    ManagedChannel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
     val authInterceptor = new EgoAuthInterceptor(egoService);
     val exceptionInterceptor = new ExceptionInterceptor();
 
@@ -138,22 +145,9 @@ public class ProgramServiceAuthorizationTest {
     return MetadataUtils.attachHeaders(client, headers);
   }
 
-  public Exception catchException(Runnable r) {
-    Exception exception = null;
-    try {
-      r.run();
-    } catch (Exception ex) {
-      exception = ex;
-    }
-    return exception;
-  }
-
-  <T> List<T> list(T... values) {
-    return Arrays.asList(values);
-  }
 
   AuthorizationTest runTests(String testName, ProgramServiceGrpc.ProgramServiceBlockingStub client) {
-    val tests = list(
+    val tests = List.of(
       EndpointTest.of("wrongEmail", () -> client.joinProgram(badJoinProgramRequest())), // 0 -- No one
 
       EndpointTest.of("createProgam", () -> client.createProgram(createProgramRequest())), // 1 -3 DCC Admin
@@ -170,65 +164,87 @@ public class ProgramServiceAuthorizationTest {
       EndpointTest.of("joinProgram", () -> client.joinProgram(joinProgramRequest()))
     );
 
+
     val t = new AuthorizationTest(testName, tests);
     t.run();
+
     return t;
+  }
+
+  void closeChannel(Channel channel) {
+    if (channel instanceof ManagedChannel) {
+      ((ManagedChannel) channel).shutdownNow();
+      try {
+        ((ManagedChannel) channel).awaitTermination(30, TimeUnit.MILLISECONDS);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   @Test
   void noAuthentication() throws Exception {
     // no authentication token (should fail for all calls with status UNAUTHENTICATED)
-    val client = getClient();
+    val c = getClient();
 
-    val tests = runTests("NoAuthentication", client);
+    val tests = runTests("NoAuthentication", c);
     assert tests.threwStatusException(Status.UNAUTHENTICATED);
+    closeChannel(c.getChannel());
 
   }
 
   @Test
   void expired() throws Exception {
     // expired token (should fail all calls with status UNAUTHORIZED)
-    val client = addAuthHeader(getClient(), expiredToken());
+    val c= getClient();
+    val client = addAuthHeader(c, expiredToken());
 
     val tests = runTests("ExpiredToken", client);
+    closeChannel(c.getChannel());
     assert tests.threwStatusException(Status.PERMISSION_DENIED);
   }
 
   @Test
   void invalid() throws Exception {
     // invalid (non-parseable) token (should fail all calls with status UNAUTHORIZED)
-    val client = addAuthHeader(getClient(), invalidToken());
+    val c = getClient();
+    val client = addAuthHeader(c, invalidToken());
 
     val tests = runTests("InvalidToken", client);
+    closeChannel(c.getChannel());
     assert tests.threwStatusException(Status.PERMISSION_DENIED);
   }
 
   @Test
   void wrongKey() throws Exception {
     // DCCAdmin level authentication -- signed with an invalid key
-    val client = addAuthHeader(getClient(), tokenWrongKey());
+    val c= getClient();
+    val tests = runTests("WrongKey",addAuthHeader(c, tokenWrongKey()) );
+    closeChannel(c.getChannel());
 
-    val tests = runTests("WrongKey", client);
     assert tests.threwStatusException(Status.PERMISSION_DENIED);
   }
 
   @Test
   void noPermissions() throws Exception {
     // User token for a user with no permissions yet.
-    val client = addAuthHeader(getClient(), tokenNoPermissions());
+    val c = getClient();
+    val client = addAuthHeader(c, tokenNoPermissions());
     val tests = runTests("NoPermissions", client);
 
     assert tests.threwStatusException(Status.PERMISSION_DENIED,0,9);
     assert tests.threwNoExceptions(9);
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
+    closeChannel(c.getChannel());
     assert programs.getProgramsCount() == 0;
   }
 
   @Test
   void wrongAdmin() throws Exception {
     // Admin level access to a different program shouldn't give us anything.
-    val client = addAuthHeader(getClient(), tokenAdminUserWrongProgram());
+    val c = getClient();
+    val client = addAuthHeader(c, tokenAdminUserWrongProgram());
     val tests = runTests("WrongAdmin", client);
 
     assert tests.threwStatusException(Status.PERMISSION_DENIED,0,9);
@@ -236,44 +252,51 @@ public class ProgramServiceAuthorizationTest {
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
     assert programs.getProgramsCount() == 1;
+    closeChannel(c.getChannel());
     assertThat(programs.getProgramsList().get(0).getProgram().getShortName().getValue()).isEqualTo("TEST-DK");
   }
 
   @Test
   void DCCAdmin() throws Exception {
     // DCCAdmin level authentication -- signed with an invalid key
-    val client = addAuthHeader(getClient(), tokenDCCAdmin());
+    val c = getClient();
+    val client = addAuthHeader(c, tokenDCCAdmin());
 
     val tests = runTests("DCCAdmin", client);
     assert tests.threwStatusException(Status.PERMISSION_DENIED,0,1);
     assert tests.threwNoExceptions(1);
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
+    closeChannel(c.getChannel());
     assertThat(programs.getProgramsCount()).isEqualTo(3);
   }
 
   @Test
   void programAdmin() throws Exception {
-    val client = addAuthHeader(getClient(), tokenAdminUser());
+    val c = getClient();
+    val client = addAuthHeader(c, tokenAdminUser());
 
     val tests = runTests("programAdmin", client);
     assert tests.threwStatusException(Status.PERMISSION_DENIED, 0, 4);
     assert tests.threwNoExceptions(4);
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
+    closeChannel(c.getChannel());
     assertThat(programs.getProgramsCount()).isEqualTo(1);
     assertThat(programs.getProgramsList().get(0).getProgram().getShortName().getValue()).isEqualTo("TEST-CA");
   }
 
   @Test
   void programUser() throws Exception {
-    val client = addAuthHeader(getClient(), tokenProgramUser());
+    val c = getClient();
+    val client = addAuthHeader(c, tokenProgramUser());
 
     val tests = runTests("programUser", client);
     assert tests.threwStatusException(Status.PERMISSION_DENIED, 0, 8);
     assert tests.threwNoExceptions(8);
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
+    closeChannel(c.getChannel());
     assertThat(programs.getProgramsCount()).isEqualTo(1);
     assertThat(programs.getProgramsList().get(0).getProgram().getShortName().getValue()).isEqualTo("TEST-CA");
   }
@@ -322,24 +345,38 @@ public class ProgramServiceAuthorizationTest {
 
   ProgramEntity entity() {
     val created = LocalDateTime.now();
-    return new ProgramEntity().setShortName(programName().getValue()).setName("").setSubmittedDonors(1).
-      setCommitmentDonors(10000).setCountries("CA").setCreatedAt(created).setDescription("Fake").setGenomicDonors(10).
+    val p = new ProgramEntity();
+    val c = countries(p, "CA");
+    return p.setShortName(programName().getValue()).setName("").setSubmittedDonors(1).
+      setCommitmentDonors(10000).setProgramCountries(c).
+      setCreatedAt(created).setDescription("Fake").setGenomicDonors(10).
       setMembershipType(MembershipType.ASSOCIATE).setProgramCancers(Set.of()).setProgramPrimarySites(Set.of()).
       setWebsite("http://org.com");
   }
 
+  Set<ProgramCountry> countries(ProgramEntity programEntity, String... names) {
+    val n = Arrays.asList(names);
+    return mapToSet(n, name -> ProgramCountry.createProgramCountry(programEntity, countryEntity(name)).get());
+  }
+  CountryEntity countryEntity(String name) {
+    val c = new CountryEntity().setName(name).setId(UUID.randomUUID());
+    return c;
+  }
   ProgramEntity entity2() {
     val created = LocalDateTime.now();
-    return new ProgramEntity().setShortName("TEST-DK").setName("").setSubmittedDonors(2).
-      setCommitmentDonors(20000).setCountries("DK").setCreatedAt(created).setDescription("Fake 2").setGenomicDonors(20).
+    val p = new ProgramEntity();
+    return p.setShortName("TEST-DK").setName("").setSubmittedDonors(2).
+      setCommitmentDonors(20000).setProgramCountries(countries(p, "DK")).
+      setCreatedAt(created).setDescription("Fake 2").setGenomicDonors(20).
       setMembershipType(MembershipType.ASSOCIATE).setProgramCancers(Set.of()).setProgramPrimarySites(Set.of()).
       setWebsite("http://org.com");
   }
 
   ProgramEntity entity3() {
     val created = LocalDateTime.now();
-    return new ProgramEntity().setShortName("OTHER-CA").setName("").setSubmittedDonors(3).
-      setCommitmentDonors(30000).setCountries("CA").setCreatedAt(created).setDescription("Fake 3").setGenomicDonors(30).
+    val p = new ProgramEntity();
+    return p.setShortName("OTHER-CA").setName("").setSubmittedDonors(3).
+      setCommitmentDonors(30000).setProgramCountries(countries(p,"CA")).setCreatedAt(created).setDescription("Fake 3").setGenomicDonors(30).
       setMembershipType(MembershipType.FULL).setProgramCancers(Set.of()).setProgramPrimarySites(Set.of()).
       setWebsite("http://org.com");
   }
@@ -425,11 +462,15 @@ class EndpointTest implements Runnable {
   }
 
   public void run() {
+    // Stop GRPC from logging the exception that we're about to catch. We do our own handling; we don't need it
+    // screaming irrelevant error messages at level SEVERE when our tests are actually working fine!
+    Logger.getLogger("io.grpc").setLevel(Level.OFF);
     try {
       code.run();
     } catch (Exception ex) {
       exception = ex;
     }
+    Logger.getLogger("io.grpc").setLevel(Level.INFO);
   }
 
   boolean threwStatusException(String testName, Status status) {

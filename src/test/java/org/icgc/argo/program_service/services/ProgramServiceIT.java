@@ -76,25 +76,13 @@ class ProgramServiceIT {
 
   @BeforeAll
   void setUp() {
+    System.err.printf("Setting up...\n");
     egoService = new EgoService(repository, converter, client, inviteRepository);
 
     try {
-      val program = new ProgramEntity()
-              .setShortName(name)
-              .setId(UUID.randomUUID())
-              .setName("TEST-NAME")
-              .setCommitmentDonors(10)
-              .setSubmittedDonors(10)
-              .setGenomicDonors(10)
-              .setDescription("this is a test program")
-              .setMembershipType(MembershipType.ASSOCIATE)
-              .setWebsite("http://www.site.org")
-              .setCreatedAt(LocalDateTime.now())
-              .setUpdatedAt(LocalDateTime.now());
-      programRepository.save(program);
       egoService.cleanUpProgram(name);
     } catch(Throwable t) {
-      log.error(t.getMessage());
+      System.err.printf("Caught throwable with message: %s", t.getMessage());
     }
   }
 
