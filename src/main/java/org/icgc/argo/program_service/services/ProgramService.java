@@ -166,7 +166,7 @@ public class ProgramService {
         || program.getCountriesList().isEmpty()) {
       throw Status.INVALID_ARGUMENT
           .augmentDescription(
-            "Cannot create program, Must provide at least one of each: cancer, primary site, institution, country, and region.")
+            "Cannot create program. Must provide at least one of each: cancer, primary site, institution, country, and region.")
           .asRuntimeException();
     }
 
@@ -182,7 +182,7 @@ public class ProgramService {
       || regions.size() != program.getRegionsList().size()) {
       throw Status.INVALID_ARGUMENT
         .augmentDescription(
-          "Cannot create program, Must provide valid cancer, primary site, institution, country, and region.")
+          "Cannot create program. Must provide valid cancer, primary site, country, and region.")
         .asRuntimeException();
     }
 

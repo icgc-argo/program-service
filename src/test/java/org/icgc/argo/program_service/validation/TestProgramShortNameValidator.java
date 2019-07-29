@@ -21,22 +21,18 @@ package org.icgc.argo.program_service.validation;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.val;
-import org.junit.BeforeClass;
 import org.junit.jupiter.api.Test;
-
 import javax.validation.Valid;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
-
 import static junit.framework.TestCase.assertEquals;
 
 class TestProgramShortNameValidator {
   ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
   Validator validator = validatorFactory.getValidator();
-
 
   @Test
   public void testValidator() {
@@ -44,17 +40,23 @@ class TestProgramShortNameValidator {
     validate("ABC123", false);
     // too short
     validate("CA", false);
-    // ok (Canada is a valid country code)
-    validate("TEST-CA", true);
+    // too long
+    validate("12345678P-CA", false);
+    // must contain dash before country code
+    validate("12345678CA", false);
     // not ok (UK is not a valid country code )
     validate("TEST-UK", false);
     // GB is a valid country code (Great Britain)
-    // Short name must have dash
-    validate("TESTGB", false);
     // dashes are legal (DK is Denmark)
     validate("---DK", false);
     // lowercase is invalid
     validate("testgb", false);
+
+    validate("9A-FO3-CA", true);
+    // underscore is allowed
+    validate("9A_FOO3-CA", true);
+    // Can only contain numbers
+    validate("12345678-CA", true);
   }
 
   private void validate(String name, boolean ok) {
