@@ -21,7 +21,7 @@ package org.icgc.argo.program_service.services;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.val;
 import org.apache.commons.lang.RandomStringUtils;
-import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
+import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -52,7 +52,7 @@ class MailServiceIT {
   MailService mailService;
 
   @Mock
-  JoinProgramInvite invite;
+  JoinProgramInviteEntity invite;
 
   @Mock
   ProgramEntity mockProgramEntity;

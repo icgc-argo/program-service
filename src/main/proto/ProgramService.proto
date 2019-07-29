@@ -34,8 +34,9 @@ service ProgramService {
   rpc ListPrograms (google.protobuf.Empty) returns (ListProgramsResponse);
   rpc GetProgram (GetProgramRequest) returns (GetProgramResponse);
 
-  rpc InviteUser (InviteUserRequest) returns (InviteUserResponse);
-  rpc JoinProgram (JoinProgramRequest) returns (JoinProgramResponse);
+  rpc InviteUser(InviteUserRequest) returns (InviteUserResponse);
+  rpc GetJoinProgramInvite(GetJoinProgramInviteRequest) returns (GetJoinProgramInviteResponse);
+  rpc JoinProgram(JoinProgramRequest) returns (JoinProgramResponse);
 
   rpc RemoveUser (RemoveUserRequest) returns (RemoveUserResponse);
   rpc ListUsers (ListUserRequest) returns (ListUserResponse);
@@ -199,10 +200,46 @@ message JoinProgramRequest {
   google.protobuf.StringValue department = 5;
 }
 
+message Invitation {
+  google.protobuf.StringValue id = 1;
+}
+
 message JoinProgramResponse {
   User user = 1;
 }
 
 message RemoveProgramRequest {
   google.protobuf.StringValue program_short_name = 1;
+}
+
+message GetJoinProgramInviteRequest {
+  google.protobuf.StringValue invite_id = 1;
+}
+
+message JoinProgramInvite {
+  google.protobuf.StringValue id = 1;
+
+  google.protobuf.Timestamp created_at = 2;
+
+  google.protobuf.Timestamp expires_at = 3;
+
+  google.protobuf.Timestamp accepted_at = 4;
+
+  Program program = 5;
+
+  google.protobuf.StringValue user_email = 6;
+
+  google.protobuf.StringValue first_name = 7;
+
+  google.protobuf.StringValue last_name = 8;
+
+  UserRole role = 9;
+
+  google.protobuf.BoolValue emailSent = 10;
+
+  InviteStatus status = 11;
+}
+
+message GetJoinProgramInviteResponse {
+  JoinProgramInvite invitation = 1;
 }

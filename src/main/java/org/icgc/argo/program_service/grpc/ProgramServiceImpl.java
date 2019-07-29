@@ -39,12 +39,14 @@ import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
+
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
+
+import static io.grpc.Status.NOT_FOUND;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
-import static io.grpc.Status.NOT_FOUND;
 
 @Slf4j
 @Component
@@ -258,5 +260,18 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   private String getExceptionMessage(NestedRuntimeException e) {
     return e.getMostSpecificCause().getMessage();
+  }
+
+  @Override
+  public void getJoinProgramInvite(GetJoinProgramInviteRequest request, StreamObserver<GetJoinProgramInviteResponse> responseObserver) {
+    val joinProgramInvite = invitationService.getInvitation(UUID.fromString(request.getInviteId().getValue()));
+    if (joinProgramInvite.isEmpty()) {
+      responseObserver.onError(Status.NOT_FOUND.withDescription("Invitation is not found").asRuntimeException());
+      return;
+    }
+    val invitation = programConverter.joinProgramInviteEntityToJoinProgramInvite(joinProgramInvite.get());
+    val response = GetJoinProgramInviteResponse.newBuilder().setInvitation(invitation).build();
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
   }
 }
