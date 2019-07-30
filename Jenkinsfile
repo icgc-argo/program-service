@@ -1,5 +1,4 @@
-def commit = "UNKNOWN"
-
+def commit = "UNKNOWN" 
 pipeline {
     agent {
         kubernetes {
@@ -61,7 +60,7 @@ spec:
         stage('Build') {
             steps {
                 container('docker') {
-                    withCredentials([usernamePassword(credentialsId:'8d0aaceb-2a19-4f92-ae37-5b61e4c0feb8', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    withCredentials([usernamePassword(credentialsId:'argoDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         sh 'docker login -u $USERNAME -p $PASSWORD'
                     }
                     script {
@@ -76,9 +75,43 @@ spec:
             }
         }
 
+        stage('Deploy to argo-dev') {
+            when { branch 'develop' }
+            steps {
+               container('docker') {
+                    withCredentials([usernamePassword(credentialsId:'argoDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker login -u $USERNAME -p $PASSWORD'
+                    }
+
+                    // the network=host needed to download dependencies using the host network (since we are inside 'docker'
+                    // container)
+                    sh "docker build --network=host -f Dockerfile . -t icgcargo/program-service:edge"
+                    sh "docker push icgcargo/program-service:edge"
+               }
+                build(job: "/ARGO/provision/program-service", parameters: [
+                     [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'dev' ],
+                     [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set-string image.tag=${commit}" ]
+                ])
+            }
+        }
+
         stage('Deploy to argo-qa') {
             when { branch 'master' }
             steps {
+               container('docker') {
+                    withCredentials([usernamePassword(credentialsId:'argoDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker login -u $USERNAME -p $PASSWORD'
+                    }
+
+                    // the network=host needed to download dependencies using the host network (since we are inside 'docker'
+                    // container)
+                    sh "docker build --network=host -f Dockerfile . -t icgcargo/program-service:latest"
+                    sh "docker push icgcargo/program-service:latest"
+                    withCredentials([usernamePassword(credentialsId: 'argoGithub', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                        sh "git tag ${commit}"
+                        sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/icgc-argo/program-service --tags"
+                    }
+                }
                 build(job: "/ARGO/provision/program-service", parameters: [
                      [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'qa' ],
                      [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set-string image.tag=${commit}" ]
@@ -93,4 +126,5 @@ spec:
             junit "**/TEST-*.xml"
        }
     }
+ 
 }
