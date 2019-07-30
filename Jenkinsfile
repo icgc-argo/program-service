@@ -1,5 +1,4 @@
-def commit = "UNKNOWN"
-
+def commit = "UNKNOWN" 
 pipeline {
     agent {
         kubernetes {
@@ -126,4 +125,5 @@ spec:
             junit "**/TEST-*.xml"
        }
     }
+  }
 }
