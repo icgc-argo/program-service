@@ -110,7 +110,8 @@ spec:
                     withCredentials([usernamePassword(credentialsId: 'argoGithub', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                         sh "git tag ${commit}"
                         sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/icgc-argo/program-service --tags"
-               }
+                    }
+                }
                 build(job: "/ARGO/provision/program-service", parameters: [
                      [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'qa' ],
                      [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set-string image.tag=${commit}" ]
@@ -125,5 +126,5 @@ spec:
             junit "**/TEST-*.xml"
        }
     }
-  }
+ 
 }
