@@ -457,7 +457,7 @@ public class ProgramServiceAuthorizationTest {
   }
 
   UpdateUserRequest updateUserRequest() {
-    return UpdateUserRequest.newBuilder().setUserId(userId()).setShortName(programName()).build();
+    return UpdateUserRequest.newBuilder().setUserEmail(userId()).setShortName(programName()).build();
   }
 
   ListUsersRequest listUsersRequest() {
