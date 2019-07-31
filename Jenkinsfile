@@ -53,7 +53,7 @@ spec:
             steps {
                 container('java') {
                     sh "./fly.sh migrate"
-                    sh "./mvnw verify"
+                    sh "./mvnw clean verify"
                 }
             }
         }
