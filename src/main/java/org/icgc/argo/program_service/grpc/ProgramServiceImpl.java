@@ -39,6 +39,8 @@ import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
@@ -215,7 +217,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     authorizationService.requireProgramAdmin(programShortName);
 
     val users = egoService.getUsersInProgram(programShortName);
-    val userDetails = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
+    Set<UserDetails> userDetails = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
       invitationService.getInvitation(programShortName, user.getEmail().getValue())));
 
     userDetails.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
