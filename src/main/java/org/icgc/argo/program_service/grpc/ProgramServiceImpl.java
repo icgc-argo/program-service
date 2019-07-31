@@ -227,11 +227,11 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void updateUser(UpdateUserRequest request, StreamObserver<Empty> responseObserver) {
-    val userId = commonConverter.stringToUUID(request.getUserId());
+    val email =request.getUserEmail().getValue();
     val role = request.getRole().getValue();
-    val shortname = commonConverter.unboxStringValue(request.getShortName());
+    val programShortName = commonConverter.unboxStringValue(request.getShortName());
     try {
-      egoService.updateUserRole(userId, shortname, role);
+      egoService.updateUserRole(email, programShortName, role);
     } catch (NotFoundException e) {
       log.error("Exception throw in updateUser: {}", e.getMessage());
       e.printStackTrace();
