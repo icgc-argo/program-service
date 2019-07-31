@@ -88,14 +88,13 @@ public interface ProgramConverter {
   Program programEntityToProgram(ProgramEntity entity);
 
   @AfterMapping
-  default Program updateProgramFromEntity(ProgramEntity entity, Program program) {
-    return program.toBuilder()
+  default void updateProgramFromEntity(ProgramEntity entity, @MappingTarget Program.Builder programBuilder) {
+    programBuilder
             .addAllCancerTypes(entity.listCancerTypes())
             .addAllPrimarySites(entity.listPrimarySites())
             .addAllInstitutions(entity.listInstitutions())
             .addAllCountries(entity.listCountries())
-            .addAllRegions(entity.listRegions())
-            .build();
+            .addAllRegions(entity.listRegions());
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -117,8 +116,7 @@ public interface ProgramConverter {
   UpdateProgramResponse programEntityToUpdateProgramResponse(ProgramEntity p);
 
   default ProgramDetails ProgramEntityToProgramDetails(ProgramEntity value) {
-    val p = programEntityToProgram(value);
-    val program = updateProgramFromEntity(value, p);
+    val program = programEntityToProgram(value);
     return ProgramDetails.newBuilder()
             .setProgram(program)
             .setMetadata(programEntityToMetadata(value))
