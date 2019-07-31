@@ -72,7 +72,7 @@ class ProgramServiceIT {
   @Autowired
   ProgramRepository programRepository;
 
-  private static final String name="TEST-PROGRAM-X-CA";
+  private static final String name="TEST-X-CA";
 
   @BeforeAll
   void setUp() {
