@@ -243,8 +243,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void updateUser(UpdateUserRequest request, StreamObserver<Empty> responseObserver) {
-    val programShortName = commonConverter.unboxStringValue(request.getShortName());    val shortname = request.getShortName().getValue();
-    authorizationService.requireProgramAdmin(programShortname);
+    val programShortName = request.getShortName().getValue();
+    authorizationService.requireProgramAdmin(programShortName);
 
     val email =request.getUserEmail().getValue();
     val role = request.getRole().getValue();
