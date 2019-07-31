@@ -1,19 +1,28 @@
 package org.icgc.argo.program_service.services;
 
 import io.grpc.Status;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import static java.lang.String.format;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 @Profile("auth")
-@Service
+@Slf4j
 public class EgoAuthorizationService implements AuthorizationService {
+  private String dccAdminPermission;
+
+  public EgoAuthorizationService(String dccAdminPermission) {
+    this.dccAdminPermission = dccAdminPermission;
+    log.info(format("Created egoAuthorization service with permission='%s'",dccAdminPermission));
+  }
+
   public EgoToken getEgoToken() {
     return EgoAuthInterceptor.EGO_TOKEN.get();
   }
@@ -32,12 +41,9 @@ public class EgoAuthorizationService implements AuthorizationService {
 
   @Override
   public boolean isDCCAdmin(){
-    val type = fromToken().getType();
+    val permissions = getPermissions();
 
-    if (type == null) {
-      return false;
-    }
-    return type.equalsIgnoreCase("ADMIN");
+    return permissions.contains(dccAdminPermission);
   }
 
   private Set<String> getPermissions() {

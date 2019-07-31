@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.*;
 
 public class AuthorizationServiceTest {
   AuthorizationService authorizationService(EgoToken token) {
-    return new EgoAuthorizationService(){
+    return new EgoAuthorizationService("PROGRAMSERVICE.WRITE"){
       @Override
       public EgoToken getEgoToken() {
         return token;
@@ -53,9 +53,16 @@ public class AuthorizationServiceTest {
     val exception3 = testRequireDCCAdmin(mockToken("USER"));
     assertPermissionDenied(exception3);
 
-    // Right Authorization
+    // Ensure that Ego ADMIN doesn't mean DCC ADMIN
     val exception4 = testRequireDCCAdmin(mockToken("ADMIN"));
-    assertThat(exception4).isNull();
+    assertPermissionDenied(exception4);
+
+    // Write access to some program doesn't mean DCC Admin
+    val exception5 = testRequireDCCAdmin(mockToken("USER", "PROGRAM-ABC.WRITE"));
+    assertPermissionDenied(exception5);
+
+    val exception6 = testRequireDCCAdmin(mockToken( "USER", "PROGRAMSERVICE.WRITE"));
+    assertThat(exception6).isNull();
   }
 
   private Exception testRequireDCCAdmin(EgoToken token) {
@@ -75,6 +82,7 @@ public class AuthorizationServiceTest {
     val program="TEST-CA";
     val readPermission = "PROGRAM-TEST-CA.READ";
     val writePermission = "PROGRAM-TEST-CA.WRITE";
+    val dccAdminPermission = "PROGRAMSERVICE.WRITE";
     val exception = testRequireProgramAdmin(null, program);
     assertUnauthenticated(exception);
 
@@ -90,9 +98,9 @@ public class AuthorizationServiceTest {
     val exception4 = testRequireProgramAdmin(mockToken("USER"), program);
     assertPermissionDenied(exception4);
 
-    // DCC Admin, No permissions
+    // Ego Admin, No permissions
     val exception5 = testRequireProgramAdmin(mockToken("ADMIN"), program);
-    assertThat(exception5).isNull();
+    assertPermissionDenied(exception5);
 
     // Right program, wrong permission
     val exception6 = testRequireProgramAdmin(mockToken("USER",readPermission), program);
@@ -111,9 +119,13 @@ public class AuthorizationServiceTest {
       null);
     assertPermissionDenied(exception9);
 
-    // DCC permissions, null program
-    val exception10 = testRequireProgramAdmin(mockToken("ADMIN"), null);
+    // DCC Admin, null program
+    val exception10 = testRequireProgramAdmin(mockToken("ADMIN", dccAdminPermission), null);
     assertThat(exception10).isNull();
+
+    // DCC Admin, right program
+    val exception11 = testRequireProgramAdmin(mockToken("ADMIN", dccAdminPermission), null);
+    assertThat(exception11).isNull();
   }
 
   private Exception testRequireProgramAdmin(EgoToken token, String programShortName) {
@@ -132,6 +144,8 @@ public class AuthorizationServiceTest {
     val program="TEST-CA";
     val readPermission = "PROGRAM-TEST-CA.READ";
     val writePermission = "PROGRAM-TEST-CA.WRITE";
+    val dccAdminPermission = "PROGRAMSERVICE.WRITE";
+
     val exception = testRequireProgramUser(null, program);
     assertUnauthenticated(exception);
 
@@ -147,9 +161,9 @@ public class AuthorizationServiceTest {
     val exception4 = testRequireProgramUser(mockToken("USER"), program);
     assertPermissionDenied(exception4);
 
-    // DCC Admin, No permissions
+    // EGO Admin, No permissions
     val exception5 = testRequireProgramUser(mockToken("ADMIN"), program);
-    assertThat(exception5).isNull();
+    assertPermissionDenied(exception5);
 
     // Right program, right permission
     val exception6 = testRequireProgramUser(mockToken("USER",readPermission), program);
@@ -170,8 +184,12 @@ public class AuthorizationServiceTest {
     assertPermissionDenied(exception9);
 
     // DCC permissions, null program
-    val exception10 = testRequireProgramUser(mockToken("ADMIN"), null);
+    val exception10 = testRequireProgramUser(mockToken("USER", dccAdminPermission), null);
     assertThat(exception10).isNull();
+
+    // DCC Admin, right program
+    val exception11 = testRequireProgramAdmin(mockToken("USER", dccAdminPermission), program);
+    assertThat(exception11).isNull();
   }
 
   private Exception testRequireProgramUser(EgoToken token, String programShortName) {

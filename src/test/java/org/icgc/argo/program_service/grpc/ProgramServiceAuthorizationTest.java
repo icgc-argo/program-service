@@ -9,7 +9,6 @@ import io.grpc.stub.MetadataUtils;
 import io.grpc.testing.GrpcCleanupRule;
 import lombok.AllArgsConstructor;
 import lombok.val;
-import org.hibernate.engine.spi.Managed;
 import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
@@ -37,14 +36,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.useDefaultDateFormatsOnly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -59,7 +56,7 @@ public class ProgramServiceAuthorizationTest {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   private ProgramServiceGrpc.ProgramServiceBlockingStub getClient() throws IOException {
-    val authorizationService = new EgoAuthorizationService();
+    val authorizationService = new EgoAuthorizationService("PROGRAMSERVICE.WRITE");
     val key = "-----BEGIN PUBLIC KEY-----\n"
       + "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2e08i2xE07jzorq8Xm/K\n"
       + "nNutxwwHElMFbjz1upGpZTHDfs29oHLd4J9XqjCYzKDkBg0Hs3gZY3AsEQycg+RK\n"
@@ -240,6 +237,49 @@ public class ProgramServiceAuthorizationTest {
     assert programs.getProgramsCount() == 0;
   }
 
+
+
+  @Test
+  void egoAdmin() throws Exception {
+    // Ego's Admin level authentication shouldn't give us anything
+    val c = getClient();
+    val client = addAuthHeader(c, tokenEgoAdmin());
+
+    val tests = runTests("EgoAdmin", client);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED,0,9);
+    assert tests.threwNoExceptions(9);
+
+    val programs = client.listPrograms(Empty.getDefaultInstance());
+    closeChannel(c.getChannel());
+    assertThat(programs.getProgramsCount()).isEqualTo(0);
+  }
+
+  @Test
+  void dccAdminWrongKey() throws Exception {
+    // DCCAdmin with an invalid signature shouldn't give us anything
+    val c = getClient();
+    val client = addAuthHeader(c, tokenDCCAdminWrongKey());
+
+    val tests = runTests("DCCAdminWrongKey", client);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED);
+    closeChannel(c.getChannel());
+  }
+
+  @Test
+  void dccAdmin() throws Exception {
+    // DCCAdmin should let us to do anything except join an invitation with the wrong email address.
+    val c = getClient();
+    val client = addAuthHeader(c, tokenDCCAdmin());
+
+    val tests = runTests("DCCAdmin", client);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED, 0, 1); // wrongEmail should fail
+    assert tests.threwNoExceptions(1);
+
+    val programs = client.listPrograms(Empty.getDefaultInstance());
+    closeChannel(c.getChannel());
+    assertThat(programs.getProgramsCount()).isEqualTo(3);
+  }
+
   @Test
   void wrongAdmin() throws Exception {
     // Admin level access to a different program shouldn't give us anything.
@@ -257,26 +297,11 @@ public class ProgramServiceAuthorizationTest {
   }
 
   @Test
-  void DCCAdmin() throws Exception {
-    // DCCAdmin level authentication -- signed with an invalid key
-    val c = getClient();
-    val client = addAuthHeader(c, tokenDCCAdmin());
-
-    val tests = runTests("DCCAdmin", client);
-    assert tests.threwStatusException(Status.PERMISSION_DENIED,0,1);
-    assert tests.threwNoExceptions(1);
-
-    val programs = client.listPrograms(Empty.getDefaultInstance());
-    closeChannel(c.getChannel());
-    assertThat(programs.getProgramsCount()).isEqualTo(3);
-  }
-
-  @Test
   void programAdmin() throws Exception {
     val c = getClient();
     val client = addAuthHeader(c, tokenAdminUser());
 
-    val tests = runTests("programAdmin", client);
+    val tests = runTests("ProgramAdmin", client);
     assert tests.threwStatusException(Status.PERMISSION_DENIED, 0, 4);
     assert tests.threwNoExceptions(4);
 
@@ -291,7 +316,7 @@ public class ProgramServiceAuthorizationTest {
     val c = getClient();
     val client = addAuthHeader(c, tokenProgramUser());
 
-    val tests = runTests("programUser", client);
+    val tests = runTests("ProgramUser", client);
     assert tests.threwStatusException(Status.PERMISSION_DENIED, 0, 8);
     assert tests.threwNoExceptions(8);
 
@@ -301,7 +326,6 @@ public class ProgramServiceAuthorizationTest {
     assertThat(programs.getProgramsList().get(0).getProgram().getShortName().getValue()).isEqualTo("TEST-CA");
   }
 
-  // Wrong Email
 
   String invalidToken() {
     return "ABCDEFG";
@@ -319,8 +343,16 @@ public class ProgramServiceAuthorizationTest {
     return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MjA1Mzg3MjAzNCwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJVU0VSIiwicGVybWlzc2lvbnMiOltdfX0sInNjb3BlIjpbXX0.cIR1aSeuvGzmtztNssWfIv16sJvdHFHwdQNv21MsS-iZsfv28lwsV6zNl1msmVzKS-pnBnJ5BLlUI0bmjt1-DX5-IV4B1EiQ0TlFq4bie1EEKmjc8y_1g7sut0fNQUvMlWlqXpqvvM2w1JXmlCdo2LjLQCqqkC9mzebwm0pBKz6T3u4hA2FxHqZaIVh6-lCraL4RL2Qw0kIePwy7G7djytoteezJmeDGmAHd-sHPG1fz__nxRDP-rSH3J7Y8uYAOTsZbFFqlBh5_XJQ2GEtf1kzxb2TLicXcw-f73Df3RtyZ394jcyTpnftuwo2xO9G_KDOSVOxaAB_DsE19EGF6vg";
   }
 
-  String tokenDCCAdmin() {
+  String tokenEgoAdmin() {
     return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MjA1Mzg3MjAzNCwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJBRE1JTiIsInBlcm1pc3Npb25zIjpbXX19LCJzY29wZSI6W119.GjMTZzPzMemM33o2dSGmgxBQN8vT-KZxnl-5tPTzno9XCeNcBNIB-xte93o_MMyE9NxcLYhsQO1C5KMNgbhll9LHLNUU90M-Ez2zqEY-UcOlkDZglA6teyaRUTswA46jlgW8axOTqLh3WpSKUD5t5-2eBNTF6gNyRz_jl9fX5Z7kvzV0h-eus9yWr3jLSi4SfV8lAILFv65JR_20dQ-NCgi4uULoYtFEmJsp4E9xLWR_hpu7EcjyKcXG8Qs_4iK_biXKyBZ8Xtl0oUGojWKoBJdD0Uybvl0Uo5_hkuIfiYspeiohYdC-ls_KWmYUfoUhtB1qRBcYcynMH1AfTOuXjQ";
+  }
+
+  String tokenDCCAdmin() {
+    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MjA1Mzg3MjAzNCwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJBRE1JTiIsInBlcm1pc3Npb25zIjpbIlBST0dSQU1TRVJWSUNFLldSSVRFIiwiUFJPR1JBTVNFUlZJQ0UuUkVBRCJdfX0sInNjb3BlIjpbXX0.uPA0HxLJVWNSzm4fd_VsG2Bw9widazlE0tN2JcFmiOmeaI4RdTXyexfJH9LsyvabNA1oBU99NUvTDYBiGriK-e51F4LS27fXdQUBeyUy1Wo2q6d9WBFFNjXIFp3qXlEW399NcjMgIfKd0P9gAncjrhSSPNW_6Ddv3KGKxFZp63GMKc7vGmEbWTK3-BsDfhYRNZJ3xV5VuRkBazqHF8KGKCOhZwrdN0yaY1gxIX4u-ZuRUxHIGR-GQFZaOfyQ9xL-7ba8kGKkWRpQGUYQ5CSA0NfVGggwLLGLoHAlTD026McLh-EcqL201_a40JjCRAFai4GcqtYx_j7QMb808pt-Rg";
+  }
+
+  String tokenDCCAdminWrongKey() {
+    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MjA1Mzg3MjAzNCwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJBRE1JTiIsInBlcm1pc3Npb25zIjpbIlBST0dSQU1TRVJWSUNFLldSSVRFIiwiUFJPR1JBTVNFUlZJQ0UuUkVBRCJdfX0sInNjb3BlIjpbXX0.L2x3cX9E2_5NYmCm3-sk0iCiefzDTpZqaqjBj51NsEi8fVWqe_Z1Vft9Rrdnymkf247BRCozeOEnwE5jnchMsDOaxRr8kOXH1OU-W8Gj0gzGuln5Pq1KGxY1i2XUKcFwr3U9-i2a2H__TrcBCxIZdX_IIn228wpUDNEMgeHBvstNpPSkHo7jrrf-5JgPVxrAIzWqz6NcpRoDYfoMPZco15l-2pt4qdI3xcRFnstnzSd5Q5bNnvw9coxE9IpisqI2XGTbuVijFMHdqgCcIZzG0FI-m_50et7Ke-qMqd9mdPxYmpgqtmD-iNvDqsEfPjx-zOdDhZfo4AOPHJASDw8l3Q";
   }
 
   String tokenAdminUser() {
@@ -448,9 +480,9 @@ public class ProgramServiceAuthorizationTest {
 
 // Helper classes
 
- /**
-  * Remote Procedure call test
-  */
+/***
+ * Utility class for tests of a given RemoteProcedureCall endpoint.
+ */
 @AllArgsConstructor
 class EndpointTest implements Runnable {
   String rpcName;
@@ -473,6 +505,12 @@ class EndpointTest implements Runnable {
     Logger.getLogger("io.grpc").setLevel(Level.INFO);
   }
 
+  /***
+   * Checks whether the test returned an RuntimeStatusException with the given status; prints a message to stderr if so.
+   * @param testName
+   * @param status
+   * @return true if the test returned a RuntimeStatusException with the given status, false otherwise.
+   */
   boolean threwStatusException(String testName, Status status) {
     if (exception == null) {
       System.err.printf("In test %s, call to %s did not raise an exception (expected) %s\n", testName, rpcName, status);
@@ -491,6 +529,11 @@ class EndpointTest implements Runnable {
     return true;
   }
 
+  /***
+   * Checks whether the test threw an exception; prints a message to stderr if so
+   * @param testName
+   * @return false if an exception was thrown, otherwise true.
+   */
   boolean threwNoExceptions(String testName) {
     if (exception != null) {
       System.err.printf("In test %s, call to %s threw %s\n", testName, rpcName, exception.getMessage());
@@ -501,6 +544,9 @@ class EndpointTest implements Runnable {
 }
 
 @AllArgsConstructor
+  /***
+   * A class for running a series of endpoint tests, and testing the outcomes against expected results.
+   */
 class AuthorizationTest implements Runnable {
   String testName;
   List<EndpointTest> tests;
@@ -509,14 +555,29 @@ class AuthorizationTest implements Runnable {
     tests.stream().forEach(t -> t.run());
   }
 
+  /***
+   * Check whether all the tests threw no exceptions.
+   * @return false if one of the tests threw an exception, true otherwise.
+   */
   boolean threwNoExceptions() {
     return threwNoExceptions(0, tests.size());
   }
 
+  /***
+    * Check whether all the tests from <start> threw no exceptions.
+   * @param start The number of the test to start with.
+    * @return false if one of the tests threw an exception, true otherwise.
+   */
   boolean threwNoExceptions(Integer start) {
     return threwNoExceptions(start, tests.size());
   }
 
+  /***
+   * Check whether all tests starting with start, and less than stop threw no exceptions.
+   * @param start The number of the test to start with.
+   * @param stop  The number of the test to stop before.
+   * @return
+   */
   boolean threwNoExceptions(Integer start, Integer stop) {
     boolean ok = true;
     for (int i = start; i < stop; i++) {
@@ -528,14 +589,30 @@ class AuthorizationTest implements Runnable {
     return ok;
   }
 
+  /***
+   * Check whether all of the tests threw a RuntimeStatusException with the expected Status
+   * @param expectedStatus The status of the RunTimeStatusException we expect.
+   * @return false if one of the tests threw
+   */
   boolean threwStatusException(Status expectedStatus) {
     return threwStatusException(expectedStatus, 0, tests.size());
   }
 
+  /***
+   * Check whether all of the tests  starting from start threw a RuntimeStatusException with the expected Status
+   * @param expectedStatus The status of the RunTimeStatusException we expect.
+   * @param start The number of the test to start from
+   * @return false if one of the tests threw
+   */
   boolean threwStatusException(Status expectedStatus, Integer start) {
     return threwStatusException(expectedStatus, start, tests.size());
   }
 
+  /***
+   * Check whether all of the tests between start and stop threw a RuntimeStatusException with the expected status.
+   * @param expectedStatus The status of the RunTimeStatusException we expect.
+   * @return false if one of the tests threw
+   */
   boolean threwStatusException(Status expectedStatus, Integer start, Integer stop) {
     boolean ok = true;
 
