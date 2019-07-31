@@ -38,10 +38,6 @@ import java.util.UUID;
 public interface ProgramConverter {
   ProgramConverter INSTANCE = new ProgramConverterImpl(CommonConverter.INSTANCE);
 
-  /**
-   * From Proto Converters
-   */
-
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
@@ -63,9 +59,6 @@ public interface ProgramConverter {
   @Mapping(target = "programRegions", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
-  /**
-   * To Proto Converters
-   */
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
   @Mapping(target = "mergeFrom", ignore = true)
@@ -297,14 +290,22 @@ public interface ProgramConverter {
   @Mapping(target = "mergeExpiresAt", ignore = true)
   @Mapping(target = "mergeAcceptedAt", ignore = true)
   @Mapping(target = "mergeProgram", ignore = true)
-  @Mapping(target = "mergeUserEmail", ignore = true)
-  @Mapping(target = "mergeFirstName", ignore = true)
-  @Mapping(target = "mergeLastName", ignore = true)
-  @Mapping(target = "roleValue", ignore = true)
   @Mapping(target = "mergeEmailSent", ignore = true)
   @Mapping(target = "statusValue", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "user", ignore = true)
+  @Mapping(target = "mergeUser", ignore = true)
   JoinProgramInvite joinProgramInviteEntityToJoinProgramInvite(JoinProgramInviteEntity entity);
+
+  @AfterMapping
+  default void setUser(JoinProgramInviteEntity entity, @MappingTarget JoinProgramInvite.Builder joinProgramInvite) {
+    val userRole = UserRoleValue.newBuilder().setValue(entity.getRole());
+    val user = User.newBuilder().setEmail(StringValue.of(entity.getUserEmail()))
+            .setFirstName(StringValue.of(entity.getFirstName()))
+            .setLastName(StringValue.of(entity.getLastName()))
+            .setRole(userRole).build();
+    joinProgramInvite.setUser(user);
+  }
 }

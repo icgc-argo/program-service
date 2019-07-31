@@ -222,12 +222,9 @@ message JoinProgramInvite {
   google.protobuf.Timestamp expires_at = 3;
   google.protobuf.Timestamp accepted_at = 4;
   Program program = 5;
-  google.protobuf.StringValue user_email = 6;
-  google.protobuf.StringValue first_name = 7;
-  google.protobuf.StringValue last_name = 8;
-  UserRole role = 9;
-  google.protobuf.BoolValue emailSent = 10;
-  InviteStatus status = 11;
+  User user = 6;
+  google.protobuf.BoolValue emailSent = 7;
+  InviteStatus status = 8;
 }
 
 message GetJoinProgramInviteResponse {
