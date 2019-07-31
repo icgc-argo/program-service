@@ -21,7 +21,7 @@ package org.icgc.argo.program_service.converter;
 import com.google.protobuf.StringValue;
 import lombok.NonNull;
 import lombok.val;
-import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
+import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
@@ -37,10 +37,6 @@ import java.util.UUID;
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ProgramConverter {
   ProgramConverter INSTANCE = new ProgramConverterImpl(CommonConverter.INSTANCE);
-
-  /**
-   * From Proto Converters
-   */
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
@@ -63,9 +59,6 @@ public interface ProgramConverter {
   @Mapping(target = "programRegions", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
-  /**
-   * To Proto Converters
-   */
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
   @Mapping(target = "mergeFrom", ignore = true)
@@ -88,14 +81,14 @@ public interface ProgramConverter {
   Program programEntityToProgram(ProgramEntity entity);
 
   @AfterMapping
-  default Program updateProgramFromEntity(ProgramEntity entity, Program program) {
-    return program.toBuilder()
+  @NonNull
+  default void updateProgramFromEntity(ProgramEntity entity, @MappingTarget Program.Builder programBuilder) {
+    programBuilder
             .addAllCancerTypes(entity.listCancerTypes())
             .addAllPrimarySites(entity.listPrimarySites())
             .addAllInstitutions(entity.listInstitutions())
             .addAllCountries(entity.listCountries())
-            .addAllRegions(entity.listRegions())
-            .build();
+            .addAllRegions(entity.listRegions());
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -117,8 +110,7 @@ public interface ProgramConverter {
   UpdateProgramResponse programEntityToUpdateProgramResponse(ProgramEntity p);
 
   default ProgramDetails ProgramEntityToProgramDetails(ProgramEntity value) {
-    val p = programEntityToProgram(value);
-    val program = updateProgramFromEntity(value, p);
+    val program = programEntityToProgram(value);
     return ProgramDetails.newBuilder()
             .setProgram(program)
             .setMetadata(programEntityToMetadata(value))
@@ -184,7 +176,7 @@ public interface ProgramConverter {
   @Mapping(target = "type", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "email", source = "userEmail")
-  EgoUser joinProgramInviteToEgoUser(JoinProgramInvite invite);
+  EgoUser joinProgramInviteToEgoUser(JoinProgramInviteEntity invite);
 
   default JoinProgramResponse egoUserToJoinProgramResponse(EgoUser egoUser) {
     return egoUserToJoinProgramResponse(0, egoUser);
@@ -215,7 +207,7 @@ public interface ProgramConverter {
     return v.getValue();
   }
 
-  InviteStatus JoinProgramInviteStatusToInviteStatus(JoinProgramInvite.Status status);
+  InviteStatus JoinProgramInviteStatusToInviteStatus(JoinProgramInviteEntity.Status status);
 
   default InviteStatus unboxInviteStatusValue(InviteStatusValue status) {
     return status.getValue();
@@ -236,7 +228,7 @@ public interface ProgramConverter {
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "email", source = "userEmail")
-  User JoinProgramInviteToUser(JoinProgramInvite invitation);
+  User JoinProgramInviteToUser(JoinProgramInviteEntity invitation);
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
@@ -248,13 +240,13 @@ public interface ProgramConverter {
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "user", source = "invitation")
-  UserDetails joinProgramInviteToUserDetails(Integer dummy, JoinProgramInvite invitation);
+  UserDetails joinProgramInviteToUserDetails(Integer dummy, JoinProgramInviteEntity invitation);
 
-  default UserDetails joinProgramInviteToUserDetails(JoinProgramInvite invitation) {
+  default UserDetails joinProgramInviteToUserDetails(JoinProgramInviteEntity invitation) {
     return joinProgramInviteToUserDetails(0, invitation);
   }
 
-  default UserDetails userWithOptionalJoinProgramInviteToUserDetails(User user, Optional<JoinProgramInvite> invite) {
+  default UserDetails userWithOptionalJoinProgramInviteToUserDetails(User user, Optional<JoinProgramInviteEntity> invite) {
     val builder = UserDetails.newBuilder().setUser(user);
 
     if (invite.isEmpty()) {
@@ -285,10 +277,37 @@ public interface ProgramConverter {
   @Mapping(target = "userDetailsOrBuilderList", ignore = true)
   @Mapping(target = "userDetailsBuilderList", ignore = true)
   @Mapping(target = "userDetailsList", source = "invitations")
-  ListUserResponse invitationsToListUserResponse(Integer dummy, Collection<JoinProgramInvite> invitations);
+  ListUserResponse invitationsToListUserResponse(Integer dummy, Collection<JoinProgramInviteEntity> invitations);
 
-  default ListUserResponse invitationsToListUserResponse(Collection<JoinProgramInvite> invitations) {
+  default ListUserResponse invitationsToListUserResponse(Collection<JoinProgramInviteEntity> invitations) {
     return invitationsToListUserResponse(0, invitations);
   }
 
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  @Mapping(target = "mergeCreatedAt", ignore = true)
+  @Mapping(target = "mergeExpiresAt", ignore = true)
+  @Mapping(target = "mergeAcceptedAt", ignore = true)
+  @Mapping(target = "mergeProgram", ignore = true)
+  @Mapping(target = "mergeEmailSent", ignore = true)
+  @Mapping(target = "statusValue", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "user", ignore = true)
+  @Mapping(target = "mergeUser", ignore = true)
+  JoinProgramInvite joinProgramInviteEntityToJoinProgramInvite(JoinProgramInviteEntity entity);
+
+  @AfterMapping
+  @NonNull
+  default void setUser(JoinProgramInviteEntity entity, @MappingTarget JoinProgramInvite.Builder joinProgramInvite) {
+    val userRole = UserRoleValue.newBuilder().setValue(entity.getRole());
+    val user = User.newBuilder().setEmail(StringValue.of(entity.getUserEmail()))
+            .setFirstName(StringValue.of(entity.getFirstName()))
+            .setLastName(StringValue.of(entity.getLastName()))
+            .setRole(userRole).build();
+    joinProgramInvite.setUser(user);
+  }
 }

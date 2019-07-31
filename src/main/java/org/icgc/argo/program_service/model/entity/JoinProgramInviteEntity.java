@@ -39,7 +39,7 @@ import java.util.UUID;
 @FieldNameConstants
 @NoArgsConstructor
 @Valid
-public class JoinProgramInvite {
+public class JoinProgramInviteEntity {
 
   public enum Status {PENDING, ACCEPTED, REVOKED, EXPIRED}
 
@@ -91,7 +91,7 @@ public class JoinProgramInvite {
     return status;
   }
 
-  public JoinProgramInvite(ProgramEntity program, String userEmail, String firstName, String lastName, UserRole role) {
+  public JoinProgramInviteEntity(ProgramEntity program, String userEmail, String firstName, String lastName, UserRole role) {
     this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
     this.expiresAt = this.createdAt.plusHours(48);
     this.acceptedAt = null;
