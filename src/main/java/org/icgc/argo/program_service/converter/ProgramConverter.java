@@ -81,6 +81,7 @@ public interface ProgramConverter {
   Program programEntityToProgram(ProgramEntity entity);
 
   @AfterMapping
+  @NonNull
   default void updateProgramFromEntity(ProgramEntity entity, @MappingTarget Program.Builder programBuilder) {
     programBuilder
             .addAllCancerTypes(entity.listCancerTypes())
@@ -300,6 +301,7 @@ public interface ProgramConverter {
   JoinProgramInvite joinProgramInviteEntityToJoinProgramInvite(JoinProgramInviteEntity entity);
 
   @AfterMapping
+  @NonNull
   default void setUser(JoinProgramInviteEntity entity, @MappingTarget JoinProgramInvite.Builder joinProgramInvite) {
     val userRole = UserRoleValue.newBuilder().setValue(entity.getRole());
     val user = User.newBuilder().setEmail(StringValue.of(entity.getUserEmail()))
