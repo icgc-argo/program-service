@@ -337,6 +337,10 @@ class ProgramServiceImplTest {
 
     val joinProgramInvite = mock(JoinProgramInviteEntity.class);
     when(joinProgramInvite.getId()).thenReturn(randomUUID);
+    when(joinProgramInvite.getRole()).thenReturn(UserRole.ADMIN);
+    when(joinProgramInvite.getUserEmail()).thenReturn("admin@example.com");
+    when(joinProgramInvite.getFirstName()).thenReturn("First");
+    when(joinProgramInvite.getLastName()).thenReturn("Last");
 
     when(invitationService.getInvitation(any())).thenReturn(Optional.of(joinProgramInvite));
 
