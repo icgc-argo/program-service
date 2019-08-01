@@ -1,6 +1,9 @@
 package org.icgc.argo.program_service.services;
 
 import io.grpc.Status;
+import lombok.extern.slf4j.Slf4j;
+
+import static java.lang.String.format;
 
 public interface AuthorizationService {
   boolean isDCCAdmin();
@@ -15,26 +18,26 @@ public interface AuthorizationService {
     return "PROGRAM-" + programShortName + ".WRITE";
   }
 
-  default void require(boolean condition) {
+  default void require(boolean condition, String message) {
     if (!condition) {
       throw Status.fromCode(Status.Code.PERMISSION_DENIED).asRuntimeException();
     }
   }
 
   default void requireDCCAdmin() {
-    require(isDCCAdmin());
+    require(isDCCAdmin(), "not dCCAdmin");
   }
 
   default void requirePermission(String permission) {
-    require(isAuthorized(permission));
+    require(isAuthorized(permission),format("does not have permission '%s'",permission));
   }
 
   default void requireProgramAdmin(String programShortName) {
-    require(canWrite(programShortName));
+    requirePermission(writePermission(programShortName));
   }
 
   default void requireProgramUser(String programShortName) {
-    require(canRead(programShortName));
+    requirePermission(readPermission(programShortName));
   }
 
   default boolean canRead(String programShortName) {
@@ -46,7 +49,7 @@ public interface AuthorizationService {
   }
 
   default void requireEmail(String email) {
-    require(hasEmail(email));
+    require(hasEmail(email), format("is not signed in as user '%s'", email));
   }
 
   default boolean isAuthorized(String permission) {

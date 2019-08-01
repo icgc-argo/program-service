@@ -1,17 +1,17 @@
 package org.icgc.argo.program_service.services;
 
 import io.grpc.Status;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.springframework.context.annotation.Profile;
-import static java.lang.String.format;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.Set;
+
+import static java.lang.String.format;
 
 @Profile("auth")
 @Slf4j
@@ -20,7 +20,7 @@ public class EgoAuthorizationService implements AuthorizationService {
 
   public EgoAuthorizationService(String dccAdminPermission) {
     this.dccAdminPermission = dccAdminPermission;
-    log.info(format("Created egoAuthorization service with permission='%s'",dccAdminPermission));
+    log.info(format("Created egoAuthorization service with permission='%s'", dccAdminPermission));
   }
 
   public EgoToken getEgoToken() {
@@ -30,17 +30,18 @@ public class EgoAuthorizationService implements AuthorizationService {
   private EgoToken fromToken() {
     val token = getEgoToken();
     if (token == null) {
+      log.warn("RPC call was not authenticated");
       throw Status.fromCode(Status.Code.UNAUTHENTICATED).asRuntimeException();
     }
     return token;
   }
 
-  public boolean hasPermission(String permission) {
+  public boolean hasPermission(@NotNull String permission) {
     return getPermissions().contains(permission);
   }
 
   @Override
-  public boolean isDCCAdmin(){
+  public boolean isDCCAdmin() {
     val permissions = getPermissions();
 
     return permissions.contains(dccAdminPermission);
@@ -50,9 +51,9 @@ public class EgoAuthorizationService implements AuthorizationService {
     val permissions = fromToken().getPermissions();
 
     if (permissions == null) {
-      return new HashSet<>();
+      return Collections.unmodifiableSet(Collections.EMPTY_SET);
     }
-    return new HashSet<>(Arrays.asList(permissions));
+    return Collections.unmodifiableSet(Set.of(permissions));
   }
 
   public boolean hasEmail(String email) {
@@ -63,6 +64,13 @@ public class EgoAuthorizationService implements AuthorizationService {
     }
 
     return authenticatedEmail.equalsIgnoreCase(email);
+  }
+
+  public void require(boolean condition, String message) {
+    if (!condition) {
+      log.warn("Permission denied", message);
+      throw Status.fromCode(Status.Code.PERMISSION_DENIED).asRuntimeException();
+    }
   }
 
 }

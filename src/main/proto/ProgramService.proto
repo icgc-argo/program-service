@@ -28,14 +28,16 @@ option objc_class_prefix = "PSP";
 
 service ProgramService {
 
-  rpc CreateProgram (CreateProgramRequest) returns (CreateProgramResponse);
-  rpc RemoveProgram (RemoveProgramRequest) returns (google.protobuf.Empty);
-  rpc UpdateProgram (UpdateProgramRequest) returns (UpdateProgramResponse);
-  rpc ListPrograms (google.protobuf.Empty) returns (ListProgramsResponse);
-  rpc GetProgram (GetProgramRequest) returns (GetProgramResponse);
+  rpc CreateProgram(CreateProgramRequest) returns (CreateProgramResponse);
+  rpc RemoveProgram(RemoveProgramRequest) returns (google.protobuf.Empty);
+  rpc UpdateProgram(UpdateProgramRequest) returns (UpdateProgramResponse);
+  rpc ListPrograms(google.protobuf.Empty) returns (ListProgramsResponse);
+  rpc GetProgram(GetProgramRequest) returns (GetProgramResponse);
 
-  rpc InviteUser (InviteUserRequest) returns (InviteUserResponse);
-  rpc JoinProgram (JoinProgramRequest) returns (JoinProgramResponse);
+  rpc InviteUser(InviteUserRequest) returns (InviteUserResponse);
+  rpc GetJoinProgramInvite(GetJoinProgramInviteRequest) returns (GetJoinProgramInviteResponse);
+
+  rpc JoinProgram(JoinProgramRequest) returns (JoinProgramResponse);
 
   rpc RemoveUser(RemoveUserRequest) returns (RemoveUserResponse);
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
@@ -198,10 +200,34 @@ message JoinProgramRequest {
   google.protobuf.StringValue department = 5;
 }
 
+message Invitation {
+  google.protobuf.StringValue id = 1;
+}
+
+
 message JoinProgramResponse {
   User user = 1;
 }
 
 message RemoveProgramRequest {
   google.protobuf.StringValue program_short_name = 1;
+}
+
+message GetJoinProgramInviteRequest {
+  google.protobuf.StringValue invite_id = 1;
+}
+
+message JoinProgramInvite {
+  google.protobuf.StringValue id = 1;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp expires_at = 3;
+  google.protobuf.Timestamp accepted_at = 4;
+  Program program = 5;
+  User user = 6;
+  google.protobuf.BoolValue emailSent = 7;
+  InviteStatus status = 8;
+}
+
+message GetJoinProgramInviteResponse {
+  JoinProgramInvite invitation = 1;
 }
