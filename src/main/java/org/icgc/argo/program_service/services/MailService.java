@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
+import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailAuthenticationException;
@@ -53,7 +53,7 @@ public class MailService {
     this.velocityEngine = velocityEngine;
   }
 
-  public boolean sendInviteEmail(JoinProgramInvite invitation) {
+  public boolean sendInviteEmail(JoinProgramInviteEntity invitation) {
     val msg = mailSender.createMimeMessage();
 
     try {

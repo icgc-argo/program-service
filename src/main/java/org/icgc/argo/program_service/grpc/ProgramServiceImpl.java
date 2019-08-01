@@ -39,12 +39,15 @@ import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
+
+import static io.grpc.Status.NOT_FOUND;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
-import static io.grpc.Status.NOT_FOUND;
 
 @Slf4j
 @Component
@@ -93,6 +96,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
+  @Transactional
   public void getProgram(GetProgramRequest request, StreamObserver<GetProgramResponse> responseObserver) {
     val shortName = request.getShortName().getValue();
     val programEntity = programService.getProgram(shortName);
@@ -144,6 +148,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
+  @Transactional
   public void inviteUser(InviteUserRequest request, StreamObserver<InviteUserResponse> responseObserver) {
     val programResult = programService.getProgram(request.getProgramShortName().getValue());
     UUID inviteId;
@@ -227,11 +232,11 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void updateUser(UpdateUserRequest request, StreamObserver<Empty> responseObserver) {
-    val userId = commonConverter.stringToUUID(request.getUserId());
+    val email =request.getUserEmail().getValue();
     val role = request.getRole().getValue();
-    val shortname = commonConverter.unboxStringValue(request.getShortName());
+    val programShortName = commonConverter.unboxStringValue(request.getShortName());
     try {
-      egoService.updateUserRole(userId, shortname, role);
+      egoService.updateUserRole(email, programShortName, role);
     } catch (NotFoundException e) {
       log.error("Exception throw in updateUser: {}", e.getMessage());
       e.printStackTrace();
@@ -258,5 +263,19 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   private String getExceptionMessage(NestedRuntimeException e) {
     return e.getMostSpecificCause().getMessage();
+  }
+
+  @Override
+  @Transactional
+  public void getJoinProgramInvite(GetJoinProgramInviteRequest request, StreamObserver<GetJoinProgramInviteResponse> responseObserver) {
+    val joinProgramInvite = invitationService.getInvitation(UUID.fromString(request.getInviteId().getValue()));
+    if (joinProgramInvite.isEmpty()) {
+      responseObserver.onError(Status.NOT_FOUND.withDescription("Invitation is not found").asRuntimeException());
+      return;
+    }
+    val invitation = programConverter.joinProgramInviteEntityToJoinProgramInvite(joinProgramInvite.get());
+    val response = GetJoinProgramInviteResponse.newBuilder().setInvitation(invitation).build();
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
   }
 }
