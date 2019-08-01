@@ -223,7 +223,7 @@ message JoinProgramInvite {
   google.protobuf.Timestamp accepted_at = 4;
   Program program = 5;
   User user = 6;
-  google.protobuf.BoolValue emailSent = 7;
+  google.protobuf.BoolValue email_sent = 7;
   InviteStatus status = 8;
 }
 
