@@ -38,10 +38,6 @@ import java.util.UUID;
 public interface ProgramConverter {
   ProgramConverter INSTANCE = new ProgramConverterImpl(CommonConverter.INSTANCE);
 
-  /**
-   * From Proto Converters
-   */
-
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
@@ -63,9 +59,6 @@ public interface ProgramConverter {
   @Mapping(target = "programRegions", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
-  /**
-   * To Proto Converters
-   */
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
   @Mapping(target = "mergeFrom", ignore = true)
@@ -90,7 +83,7 @@ public interface ProgramConverter {
   @AfterMapping
   default void updateProgramFromEntity(@NonNull ProgramEntity entity,
     @NonNull @MappingTarget Program.Builder programBuilder) {
-      programBuilder.addAllRegions(entity.listRegions());
+    programBuilder.addAllRegions(entity.listRegions());
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -284,8 +277,6 @@ public interface ProgramConverter {
   default ListUsersResponse invitationsToListUsersResponse(Collection<JoinProgramInviteEntity> invitations) {
     return invitationsToListUsersResponse(0, invitations);
   }
-
-
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)

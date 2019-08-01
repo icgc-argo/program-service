@@ -36,7 +36,6 @@ service ProgramService {
 
   rpc InviteUser(InviteUserRequest) returns (InviteUserResponse);
   rpc GetJoinProgramInvite(GetJoinProgramInviteRequest) returns (GetJoinProgramInviteResponse);
-
   rpc JoinProgram(JoinProgramRequest) returns (JoinProgramResponse);
 
   rpc RemoveUser(RemoveUserRequest) returns (RemoveUserResponse);
@@ -203,7 +202,6 @@ message JoinProgramRequest {
 message Invitation {
   google.protobuf.StringValue id = 1;
 }
-
 
 message JoinProgramResponse {
   User user = 1;

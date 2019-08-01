@@ -28,7 +28,7 @@ import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
-import org.icgc.argo.program_service.repositories.query.*;
+import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -41,7 +41,6 @@ import java.time.ZoneId;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toUnmodifiableList;

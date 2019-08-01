@@ -301,7 +301,8 @@ class ProgramServiceImplTest {
     val request = createListUsersRequest(programName);
     val expectedUserDetails = createUserDetails(user, null, null);
 
-    val responseObserver = mock(StreamObserver.class);
+    @SuppressWarnings("unchecked")
+    val responseObserver = (StreamObserver<ListUsersResponse>) mock(StreamObserver.class);
 
     service.listUsers(request, responseObserver);
     val argument = ArgumentCaptor.forClass(ListUsersResponse.class);
@@ -319,12 +320,22 @@ class ProgramServiceImplTest {
 
 
   @Test
+  void testInvitationExpiry() {
+    val programName = "TEST-CA";
+    val program = mockProgram(programName);
+    val invite = createPendingInvitation(program);
+    assertFalse(invite.isExpired());
+    assertEquals(JoinProgramInviteEntity.Status.PENDING, invite.getStatus());
+    invite.setExpiresAt(LocalDateTime.now().minusDays(1));
+    assertTrue(invite.isExpired());
+    assertEquals(JoinProgramInviteEntity.Status.EXPIRED, invite.getStatus());
+  }
+
   void getInvite() {
     val randomUUID = UUID.randomUUID();
 
     @SuppressWarnings("unchecked")
-    val responseObserver = (StreamObserver<GetJoinProgramInviteResponse>) mock(
-      StreamObserver.class);
+    val responseObserver = (StreamObserver<GetJoinProgramInviteResponse>) mock(StreamObserver.class);
     val request = mock(GetJoinProgramInviteRequest.class);
     when(request.getInviteId()).thenReturn(StringValue.newBuilder().setValue(randomUUID.toString()).build());
 
@@ -344,6 +355,7 @@ class ProgramServiceImplTest {
     Assertions.assertThat(respArg.getValue().getInvitation().getId().getValue()).isEqualTo(randomUUID.toString())
       .as("Should return an response whose invitation's id is the randomUUID");
   }
+
   User fromInvite(JoinProgramInviteEntity invite) {
     val roleValue = UserRoleValue.newBuilder().setValue(invite.getRole()).build();
 
@@ -355,17 +367,6 @@ class ProgramServiceImplTest {
       build();
   }
 
-  @Test
-  void testInvitationExpiry() {
-    val programName = "TEST-CA";
-    val program = mockProgram(programName);
-    val invite = createPendingInvitation(program);
-    assertFalse(invite.isExpired());
-    assertEquals(JoinProgramInviteEntity.Status.PENDING, invite.getStatus());
-    invite.setExpiresAt(LocalDateTime.now().minusDays(1));
-    assertTrue(invite.isExpired());
-    assertEquals(JoinProgramInviteEntity.Status.EXPIRED, invite.getStatus());
-  }
 
   ProgramServiceImpl setupListUsersTest(
     String programName,
@@ -413,7 +414,7 @@ class ProgramServiceImplTest {
   }
 
   JoinProgramInviteEntity createInvitationWithStatus(ProgramEntity program,
-    JoinProgramInviteEntity.Status status) {
+                                                     JoinProgramInviteEntity.Status status) {
     val created = LocalDateTime.now();
 
     val firstName = RandomStringUtils.randomAlphabetic(5);

@@ -29,7 +29,7 @@ public interface JoinProgramInviteRepository extends JpaRepository<JoinProgramIn
   List<JoinProgramInviteEntity> findAllByProgramShortName(String programShortName);
   List<JoinProgramInviteEntity> findAllByProgramShortNameAndStatus(String programShortName, JoinProgramInviteEntity.Status status);
   Optional<JoinProgramInviteEntity> findTopByProgramShortNameAndUserEmailOrderByCreatedAtDesc(String programShortName,
-    String userEmail);
+                                                                                              String userEmail);
   void deleteAllByProgramShortName(String programShortName);
 }
 
