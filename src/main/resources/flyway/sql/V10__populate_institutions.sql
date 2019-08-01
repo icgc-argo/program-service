@@ -1,11 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Delete two dummy institutions --
-DELETE FROM program_institution WHERE institution_id IN (SELECT id FROM institution WHERE NAME = 'OICR');
-DELETE FROM program_institution WHERE institution_id IN (SELECT id FROM institution WHERE NAME = 'FBI');
-DELETE FROM institution WHERE name = 'OICR';
-DELETE FROM institution WHERE name = 'FBI';
-
 INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'A.A.Kharkevich Institute of Information Transmission Problems');
 INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Aarhus University');
 INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Aarhus University Hospital');
@@ -441,3 +435,9 @@ INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Wythenshawe Hosp
 INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Xi''an Jiaotong University');
 INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Yale University');
 INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Yokohama City University Graduate School of Medicine');
+
+-- Delete two dummy institutions --
+DELETE FROM program_institution WHERE institution_id IN (SELECT id FROM institution WHERE NAME = 'OICR');
+DELETE FROM program_institution WHERE institution_id IN (SELECT id FROM institution WHERE NAME = 'FBI');
+DELETE FROM institution WHERE name = 'OICR';
+DELETE FROM institution WHERE name = 'FBI';
