@@ -23,6 +23,7 @@ import lombok.NonNull;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.mapstruct.AfterMapping;
@@ -80,6 +81,56 @@ public interface ProgramConverter {
   @Mapping(target = "regionsList", ignore = true)
   Program programEntityToProgram(ProgramEntity entity);
 
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  Cancer cancerEntityToCancer(CancerEntity entity);
+
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  PrimarySite primarySiteEntityRToPrimarySite(PrimarySiteEntity entity);
+
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  Country countryEntityToCountry(CountryEntity entity);
+
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  Region regionEntityToRegion(RegionEntity entity);
+
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  Institution institutionEntityToInstitution(InstitutionEntity entity);
+
   @AfterMapping
   default void updateProgramFromEntity(@NonNull ProgramEntity entity, @NonNull @MappingTarget Program.Builder programBuilder) {
     programBuilder
@@ -129,6 +180,78 @@ public interface ProgramConverter {
   //  https://github.com/mapstruct/mapstruct/issues/607#issuecomment-309547739
   @Mapping(target = "programsList", source = "programEntities")
   ListProgramsResponse programEntitiesToListProgramsResponse(Integer dummy, Collection<ProgramEntity> programEntities);
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "removeCancers", ignore = true)
+  @Mapping(target = "cancersOrBuilderList", ignore = true)
+  @Mapping(target = "cancersBuilderList", ignore = true)
+  @Mapping(target = "cancersList", source = "cancerEntities")
+  ListCancersResponse cancerEntitiesToListCancersResponse(Integer dummy, Collection<CancerEntity> cancerEntities);
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "removePrimarySites", ignore = true)
+  @Mapping(target = "primarySitesOrBuilderList", ignore = true)
+  @Mapping(target = "primarySitesBuilderList", ignore = true)
+  @Mapping(target = "primarySitesList", source = "primarySiteEntities")
+  ListPrimarySitesResponse primarySiteEntitiesToListPrimarySitesResponse(Integer dummy, Collection<PrimarySiteEntity> primarySiteEntities );
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "removeCountries", ignore = true)
+  @Mapping(target = "countriesOrBuilderList", ignore = true)
+  @Mapping(target = "countriesBuilderList", ignore = true)
+  @Mapping(target = "countriesList", source = "countryEntities")
+  ListCountriesResponse countryEntitiesToListCountriesResponse(Integer dummy, Collection<CountryEntity> countryEntities );
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "removeRegions", ignore = true)
+  @Mapping(target = "regionsOrBuilderList", ignore = true)
+  @Mapping(target = "regionsBuilderList", ignore = true)
+  @Mapping(target = "regionsList", source = "regionEntities")
+  ListRegionsResponse regionEntitiesToListRegionsResponse(Integer dummy, Collection<RegionEntity> regionEntities);
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "removeInstitutions", ignore = true)
+  @Mapping(target = "institutionsOrBuilderList", ignore = true)
+  @Mapping(target = "institutionsBuilderList", ignore = true)
+  @Mapping(target = "institutionsList", source = "institutionEntities")
+  ListInstitutionsResponse institutionEntitiesToListInstitutionsResponse(Integer dummy, Collection<InstitutionEntity> institutionEntities);
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "removeInstitutions", ignore = true)
+  @Mapping(target = "institutionsOrBuilderList", ignore = true)
+  @Mapping(target = "institutionsBuilderList", ignore = true)
+  @Mapping(target = "institutionsList", source = "institutionEntities")
+  AddInstitutionsResponse institutionsToAddInstitutionsResponse(Integer dummy, Collection<InstitutionEntity> institutionEntities);
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
@@ -187,6 +310,30 @@ public interface ProgramConverter {
 
   default ListProgramsResponse programEntitiesToListProgramsResponse(Collection<ProgramEntity> programEntities) {
     return programEntitiesToListProgramsResponse(0, programEntities);
+  }
+
+  default ListCancersResponse cancerEntitiesToListCancersResponse(Collection<CancerEntity> cancerEntities){
+    return cancerEntitiesToListCancersResponse(0, cancerEntities);
+  }
+
+  default ListPrimarySitesResponse primarySiteEntitiesToListPrimarySitesResponse(Collection<PrimarySiteEntity> primarySiteEntities){
+    return primarySiteEntitiesToListPrimarySitesResponse(0, primarySiteEntities);
+  }
+
+  default ListCountriesResponse countryEntitiesToListCountriesResponse(Collection<CountryEntity> countryEntities){
+    return countryEntitiesToListCountriesResponse(0, countryEntities);
+  }
+
+  default ListRegionsResponse regionEntitiesToListRegionsResponse(Collection<RegionEntity> regionEntities){
+    return  regionEntitiesToListRegionsResponse(0, regionEntities);
+  }
+
+  default ListInstitutionsResponse institutionEntitiesToListInstitutionsResponse(Collection<InstitutionEntity> institutionEntities){
+    return institutionEntitiesToListInstitutionsResponse(0, institutionEntities);
+  }
+
+  default AddInstitutionsResponse institutionsToAddInstitutionsResponse(Collection<InstitutionEntity> institutionEntities){
+    return institutionsToAddInstitutionsResponse(0, institutionEntities);
   }
 
   default InviteUserResponse inviteIdToInviteUserResponse(@NonNull UUID inviteId) {

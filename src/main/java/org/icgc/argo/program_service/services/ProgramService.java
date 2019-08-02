@@ -51,7 +51,7 @@ import static org.icgc.argo.program_service.model.join.ProgramInstitution.create
 import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
 import static org.icgc.argo.program_service.model.join.ProgramRegion.createProgramRegion;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
-import static org.icgc.argo.program_service.utils.EntityService.checkExistenceByName;
+import static org.icgc.argo.program_service.utils.EntityService.*;
 
 @Service
 @Validated
@@ -314,4 +314,37 @@ public class ProgramService {
                 .listAll());
     return List.copyOf(new LinkedHashSet<ProgramEntity>(programs));
   }
+
+  public List<CancerEntity> listCancers() {
+    val cancers = cancerRepository.findAll();
+    return List.copyOf(new LinkedHashSet<CancerEntity>(cancers));
+  }
+
+  public List<PrimarySiteEntity> listPrimarySites() {
+    val sites = primarySiteRepository.findAll();
+    return List.copyOf(new LinkedHashSet<PrimarySiteEntity>(sites));
+  }
+
+  public List<CountryEntity> listCountries(){
+    val countries = countryRepository.findAll();
+    return List.copyOf(new LinkedHashSet<CountryEntity>(countries));
+  }
+
+  public List<RegionEntity> listRegions(){
+    val regions = regionRepository.findAll();
+    return List.copyOf(new LinkedHashSet<RegionEntity>(regions));
+  }
+
+  public List<InstitutionEntity> listInstitutions() {
+    val institutions = institutionRepository.findAll();
+    return List.copyOf(new LinkedHashSet<InstitutionEntity>(institutions));
+  }
+
+  public List<InstitutionEntity> addInstitutions(@NonNull List<String> names){
+    checkEmpty(names);
+    checkDuplicate(InstitutionEntity.class, institutionRepository, names);
+    val entities = names.stream().map(name -> new InstitutionEntity().setName(name)).collect(toUnmodifiableList());
+    return institutionRepository.saveAll(entities);
+  }
+
 }

@@ -54,46 +54,21 @@ class ProgramServiceTest {
 
   @Mock private ProgramConverter programConverter;
 
-  @Mock ProgramCancerRepository programCancerRepository;
+  @Mock private ProgramCancerRepository programCancerRepository;
 
-  @Mock ProgramPrimarySiteRepository programPrimarySiteRepository;
+  @Mock private ProgramPrimarySiteRepository programPrimarySiteRepository;
 
-  @Mock ProgramInstitutionRepository programInstitutionRepository;
+  @Mock private ProgramInstitutionRepository programInstitutionRepository;
 
-  @Mock ProgramCountryRepository programCountryRepository;
+  @Mock private ProgramCountryRepository programCountryRepository;
 
-  @Mock ProgramRegionRepository programRegionRepository;
+  @Mock private ProgramRegionRepository programRegionRepository;
 
-  @Mock InstitutionRepository institutionRepository;
+  @Mock private InstitutionRepository institutionRepository;
 
-  @Mock RegionRepository regionRepository;
+  @Mock private RegionRepository regionRepository;
 
-  @Mock CountryRepository countryRepository;
-
-  void setup() {
-    program = Program.newBuilder()
-            .addAllCancerTypes(List.of("Blood cancer", "Brain cancer"))
-            .addAllPrimarySites(List.of("Blood", "Brain"))
-            .addAllInstitutions(List.of("OICR"))
-            .addAllCountries(List.of("Canada"))
-            .addAllRegions(List.of("North America"))
-            .build();
-  }
-
-//  @Test
-//  void createProgram() {
-//    setup();
-//
-//    val shortName = RandomString.make(33);
-//    val inputProgramEntity = new ProgramEntity().setName(RandomString.make(10)).setShortName(shortName);
-//    assertThat(inputProgramEntity.getCreatedAt()).isNull();
-//    assertThat(inputProgramEntity.getUpdatedAt()).isNull();
-//    when(programConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
-//    val outputEntity = programService.createProgram(program);
-//    assertThat(outputEntity.getCreatedAt()).isNotNull();
-//    assertThat(outputEntity.getUpdatedAt()).isNotNull();
-//    verify(programRepository).save(inputProgramEntity);
-//  }
+  @Mock private CountryRepository countryRepository;
 
   @Test
   void listPrograms() {
