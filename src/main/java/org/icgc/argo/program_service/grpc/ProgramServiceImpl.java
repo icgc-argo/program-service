@@ -202,7 +202,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       val programShortName = request.getProgramShortName().getValue();
       val users = egoService.getUsersInProgram(programShortName);
       status = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
-        invitationService.getInvitation(programShortName, user.getEmail().getValue())));
+        invitationService.getLatestInvitation(programShortName, user.getEmail().getValue())));
 
       status.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
         programConverter::joinProgramInviteToUserDetails));
@@ -269,7 +269,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   @Transactional
   public void getJoinProgramInvite(GetJoinProgramInviteRequest request, StreamObserver<GetJoinProgramInviteResponse> responseObserver) {
-    val joinProgramInvite = invitationService.getInvitation(UUID.fromString(request.getInviteId().getValue()));
+    val joinProgramInvite = invitationService.getInvitationById(UUID.fromString(request.getInviteId().getValue()));
     if (joinProgramInvite.isEmpty()) {
       responseObserver.onError(Status.NOT_FOUND.withDescription("Invitation is not found").asRuntimeException());
       return;

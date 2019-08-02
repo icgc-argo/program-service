@@ -110,7 +110,7 @@ class ProgramServiceImplTest {
     val invite1 = createInvitation(program1);
 
     when(invitationService.listPendingInvitations(programName1)).thenReturn(List.of());
-    when(invitationService.getInvitation(programName1, invite1.getUserEmail())).thenReturn(Optional.of(invite1));
+    when(invitationService.getLatestInvitation(programName1, invite1.getUserEmail())).thenReturn(Optional.of(invite1));
 
     val roleValue = UserRoleValue.newBuilder().setValue(invite1.getRole()).build();
 
@@ -313,6 +313,49 @@ class ProgramServiceImplTest {
   }
 
   @Test
+  void testUser6() {
+    // Case 6: Only the latest invitation should be retrieved for a user with multiple invitations.
+    // All revoked or invalid invitations should not be retrieved.
+    val programName = "TEST-CA";
+    val program = mockProgram(programName);
+
+    val pendingInvitations = List.of(createPendingInvitation(program),
+      createPendingInvitation(program));
+
+    val invite1 = createInvitation(program);
+    val invite2 = createInvitation(program);
+    val user1 = fromInvite(invite1);
+    val user2 = fromInvite(invite2);
+    val egoUsers = List.of(user1, user2);
+
+    val egoInvitations = new TreeMap<String, JoinProgramInviteEntity>();
+    egoInvitations.put(user1.getEmail().getValue(), invite1);
+
+    val service = setupListUserTest("TEST-CA", pendingInvitations, egoUsers,
+      egoInvitations);
+
+    val request = createListUserRequest(programName);
+    val invitations = new ArrayList<JoinProgramInviteEntity>(pendingInvitations);
+    invitations.add(invite1);
+    invite2.setStatus(null);
+    invite2.setAcceptedAt(null);
+    invitations.add(invite2);
+
+    val expected = programConverter.invitationsToListUserResponse(invitations);
+    val responseObserver = mock(StreamObserver.class);
+
+    service.listUsers(request, responseObserver);
+    val argument = ArgumentCaptor.forClass(ListUserResponse.class);
+
+    verify(responseObserver).onNext(argument.capture());
+    val actualInvitations = Set.copyOf(argument.getValue().getUserDetailsList());
+    val expectedInvitations = Set.copyOf(expected.getUserDetailsList());
+
+    assertTrue(actualInvitations.containsAll(expectedInvitations));
+    assertTrue(expectedInvitations.containsAll(actualInvitations));
+  }
+
+  @Test
   void testInvitationExpiry() {
     val programName = "TEST-CA";
     val program = mockProgram(programName);
@@ -340,7 +383,7 @@ class ProgramServiceImplTest {
     when(joinProgramInvite.getFirstName()).thenReturn("First");
     when(joinProgramInvite.getLastName()).thenReturn("Last");
 
-    when(invitationService.getInvitation(any())).thenReturn(Optional.of(joinProgramInvite));
+    when(invitationService.getInvitationById(any())).thenReturn(Optional.of(joinProgramInvite));
 
     programServiceImpl.getJoinProgramInvite(request, responseObserver);
 
@@ -372,7 +415,7 @@ class ProgramServiceImplTest {
     EgoService egoService = mock(EgoService.class);
 
     for (val key : egoInvitations.keySet()) {
-      when(invitationService.getInvitation(programName, key)).thenReturn(Optional.of(egoInvitations.get(key)));
+      when(invitationService.getLatestInvitation(programName, key)).thenReturn(Optional.of(egoInvitations.get(key)));
     }
 
     when(invitationService.listPendingInvitations(programName)).thenReturn(pendingInvitations);

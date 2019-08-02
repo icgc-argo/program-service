@@ -70,11 +70,6 @@ public class InvitationService {
   }
 
   @Transactional
-  public List<JoinProgramInviteEntity> listInvitations(@NonNull String programShortName) {
-    return invitationRepository.findAllByProgramShortName(programShortName);
-  }
-
-  @Transactional
   public EgoUser acceptInvite(@NonNull UUID invitationId) throws NotFoundException {
     val invitation = invitationRepository
       .findById(invitationId)
@@ -97,7 +92,7 @@ public class InvitationService {
     return egoService.convertInvitationToEgoUser(invitation);
   }
 
-  public Optional<JoinProgramInviteEntity> getInvitation(String programShortName, String email) {
+  public Optional<JoinProgramInviteEntity> getLatestInvitation(String programShortName, String email) {
     val invitations = listInvitations(programShortName, email);
     val validInvitations = invitations.stream().filter(i -> i.getStatus() != INVALID && i.getStatus() != REVOKED).
       collect(Collectors.toList());
@@ -112,7 +107,7 @@ public class InvitationService {
 
   }
 
-  public Optional<JoinProgramInviteEntity> getInvitation(UUID invitationId) {
+  public Optional<JoinProgramInviteEntity> getInvitationById(UUID invitationId) {
     return invitationRepository.findById(invitationId);
   }
 
