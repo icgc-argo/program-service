@@ -33,9 +33,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.apache.commons.lang.RandomStringUtils.randomAlphabetic;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.argo.program_service.UtilsTest.*;
 import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -75,7 +76,7 @@ class ProgramServiceImplClientIT {
 
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
     val response = blockingStub.createProgram(createProgramRequest);
-    assertThat(response.getCreatedAt().toString()).isNotEmpty();
+    assertFalse(response.getCreatedAt().toString().equals(""));
   }
 
   @Test
@@ -107,13 +108,13 @@ class ProgramServiceImplClientIT {
       .setProgramShortName(name)
       .build();
     val inviteUserResponse = blockingStub.inviteUser(inviteUserRequest);
-    assertThat(inviteUserResponse.getInviteId().getValue()).isNotEmpty();
+    assertFalse(inviteUserResponse.getInviteId().getValue().equals(""));
   }
 
   @Test
   public void invite_new_user_user_gets_added(){
     entityGenerator.setUpProgramEntity(PROGRAM_SHORT_NAME);
-    assertThat(egoClient.getUser(NEW_USER_EMAIL).isPresent()).isFalse();
+    assertFalse(egoClient.getUser(NEW_USER_EMAIL).isPresent());
 
     val request = InviteUserRequest.newBuilder()
             .setEmail(commonConverter.boxString(NEW_USER_EMAIL))
@@ -123,15 +124,15 @@ class ProgramServiceImplClientIT {
             .build();
     val response = blockingStub.inviteUser(request);
 
-    assertThat(response.getInviteId()).isNotNull();
-    assertThat(egoClient.getUser(NEW_USER_EMAIL).isPresent()).isTrue();
+    assertNotNull(response.getInviteId());
+    assertTrue(egoClient.getUser(NEW_USER_EMAIL).isPresent());
     val user = egoClient.getUser(NEW_USER_EMAIL).get();
 
-    assertThat(egoClient.getUser(NEW_USER_EMAIL).get().getFirstName()).isEqualTo("Hermione");
-    assertThat(egoClient.getUser(NEW_USER_EMAIL).get().getLastName()).isEqualTo("Granger");
+    assertEquals("Hermione", egoClient.getUser(NEW_USER_EMAIL).get().getFirstName());
+    assertEquals("Granger", egoClient.getUser(NEW_USER_EMAIL).get().getLastName());
 
     egoClient.deleteUserById(user.getId());
-    assertThat(egoClient.getUser(NEW_USER_EMAIL).isPresent()).isFalse();
+    assertFalse(egoClient.getUser(NEW_USER_EMAIL).isPresent());
   }
 
   String randomProgramName() {

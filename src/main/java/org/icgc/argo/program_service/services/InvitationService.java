@@ -1,5 +1,7 @@
 package org.icgc.argo.program_service.services;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -17,11 +19,15 @@ import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity.Status.*;
 
 @Service
 @Slf4j
@@ -45,7 +51,19 @@ public class InvitationService {
     @NotBlank @NotNull String firstName,
     @NotBlank @NotNull String lastName,
     @NotNull UserRole role) {
+    val programShortName = program.getShortName();
     val invitation = new JoinProgramInviteEntity(program, userEmail, firstName, lastName, role);
+    val previousInvitations = invitationRepository.findAllByProgramShortNameAndUserEmail(programShortName, userEmail);
+
+    // 1) If there is an accepted invitation, then return an error saying the user has accepted the invitation
+    if (previousInvitations.stream().anyMatch(i -> i.getStatus() == ACCEPTED)) {
+      throw Status.ALREADY_EXISTS.augmentDescription("Invitation was already accepted").asRuntimeException();
+    }
+    // 2) If there is a PENDING invitation, then that previous invitation should be set to INVALID.
+    //If a previous invitation is EXPIRED,REVOKED or INVALID, leave them as is.
+    previousInvitations.stream().filter(i -> i.getStatus() == PENDING).map(i -> i.setStatus(INVALID)).
+      forEach(i -> invitationRepository.save(i));
+
     invitationRepository.save(invitation);
     mailService.sendInviteEmail(invitation);
     return invitation.getId();
@@ -62,6 +80,17 @@ public class InvitationService {
       .findById(invitationId)
       .orElseThrow(() ->
         new NotFoundException(format("Cannot find invitation with id '%s' ", invitationId)));
+
+    if (invitation.getStatus() != PENDING) {
+      if (invitation.getStatus() == null) {
+        throw Status.FAILED_PRECONDITION.augmentDescription(
+          "Cannot accept invitation because it is in state(NULL), not PENDING").asRuntimeException();
+      }
+      throw Status.FAILED_PRECONDITION.augmentDescription(
+        format("Cannot accept invitation because it is in state(%s), not PENDING", invitation.getStatus().toString())).
+        asRuntimeException();
+    }
+
     invitation.accept();
     invitationRepository.save(invitation);
     egoService.joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
@@ -69,7 +98,18 @@ public class InvitationService {
   }
 
   public Optional<JoinProgramInviteEntity> getInvitation(String programShortName, String email) {
-    return invitationRepository.findTopByProgramShortNameAndUserEmailOrderByCreatedAtDesc(programShortName, email);
+    val invitations = listInvitations(programShortName, email);
+    val validInvitations = invitations.stream().filter(i -> i.getStatus() != INVALID && i.getStatus() != REVOKED).
+      collect(Collectors.toList());
+    if (validInvitations.size() == 0) {
+      return Optional.empty();
+    }
+    return Optional.of(validInvitations.get(0));
+  }
+
+  public void revoke(String programShortName, String email) {
+    val previousInvitations = invitationRepository.findAllByProgramShortNameAndUserEmail(programShortName, email);
+
   }
 
   public Optional<JoinProgramInviteEntity> getInvitation(UUID invitationId) {
@@ -77,6 +117,10 @@ public class InvitationService {
   }
 
   public List<JoinProgramInviteEntity> listPendingInvitations(String programShortName) {
-    return invitationRepository.findAllByProgramShortNameAndStatus(programShortName, JoinProgramInviteEntity.Status.PENDING);
+    return invitationRepository.findAllByProgramShortNameAndStatus(programShortName, PENDING);
+  }
+
+  public List<JoinProgramInviteEntity> listInvitations(String programShortName, String email) {
+    return invitationRepository.findAllByProgramShortNameAndUserEmailOrderByCreatedAtDesc(programShortName, email);
   }
 }

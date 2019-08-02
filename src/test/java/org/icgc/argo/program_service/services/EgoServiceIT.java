@@ -47,9 +47,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.assertTrue;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.argo.program_service.UtilsTest.*;
 import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
+import static org.junit.Assert.*;
 
 @SpringBootTest
 @ActiveProfiles({ "test", "default" })
@@ -157,15 +157,15 @@ class EgoServiceIT {
   @Test
   public void updateUser() {
     val user = egoService.getEgoClient().getUser(UPDATE_USER_TEST_EMAIL);
-    assertThat(user.isPresent()).isTrue();
+    assertTrue(user.isPresent());
 
     // add user to COLLABORATOR group
-    assertThat(egoService.joinProgram(UPDATE_USER_TEST_EMAIL, programEntity.getShortName(), UserRole.COLLABORATOR)).isTrue();
+    assertTrue(egoService.joinProgram(UPDATE_USER_TEST_EMAIL, programEntity.getShortName(), UserRole.COLLABORATOR));
 
     val groupBefore = egoService.getEgoClient().getGroupsByUserId(user.get().getId()).
       collect(Collectors.toUnmodifiableList());
-    assertThat(groupBefore.size()).isEqualTo(1);
-    groupBefore.forEach(group -> assertThat(group.getName()).isEqualTo("PROGRAM-"+PROGRAM_NAME +"-COLLABORATOR"));
+    assertEquals(groupBefore.size(), 1);
+    groupBefore.forEach(group -> assertEquals(group.getName(), "PROGRAM-"+PROGRAM_NAME +"-COLLABORATOR"));
 
     // expected group is ADMIN group
     val shortname = PROGRAM_NAME;
@@ -176,21 +176,21 @@ class EgoServiceIT {
     // verify if user role is updated to ADMIN
     val groupAfter = egoService.getEgoClient().getGroupsByUserId(user.get().getId())
       .collect(Collectors.toUnmodifiableList());
-    assertThat(groupAfter.size()).isEqualTo(1);
-    groupAfter.forEach(group -> assertThat(group.getId()).isEqualTo(adminGroupId));
+    assertEquals(groupAfter.size(), 1);
+    groupAfter.forEach(group -> assertEquals(group.getId(), adminGroupId));
 
     // remove test user from admin group
-    assertThat(egoService.leaveProgram(user.get().getEmail(), programEntity.getShortName())).isTrue();
+    assertTrue(egoService.leaveProgram(user.get().getEmail(), programEntity.getShortName()));
 
     //verify if the user is removed from a admin group
     val groupsLeft = egoService.getEgoClient().getGroupsByUserId(user.get().getId())
       .collect(Collectors.toUnmodifiableList());
-    assertThat(groupsLeft.size()).isEqualTo(0);
+    assertEquals(groupsLeft.size(),0);
   }
 
   @Test
   void egoServiceInitialization() {
-    assertThat(ReflectionTestUtils.getField(egoService, "egoPublicKey")).isNotNull();
+    assertNotNull(ReflectionTestUtils.getField(egoService, "egoPublicKey"));
   }
 
   @Test
@@ -198,24 +198,24 @@ class EgoServiceIT {
     val egoUser1 = client.getUser(TEST_EMAIL);
     val egoUser2 = client.getUser(ADMIN_USER_EMAIL);
     val egoUser3 = client.getUser(COLLABORATOR_USER_EMAIL);
-    assertThat(egoUser1.isPresent()).isTrue();
-    assertThat(egoUser2.isPresent()).isTrue();
-    assertThat(egoUser3.isPresent()).isTrue();
+    assertTrue(egoUser1.isPresent());
+    assertTrue(egoUser2.isPresent());
+    assertTrue(egoUser3.isPresent());
   }
 
   @Test
   void joinAndLeaveProgram() {
     val result = egoService.joinProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName(), UserRole.ADMIN);
-    assertThat(result).isTrue();
+    assertTrue(result);
 
     val user = client.getUser(COLLABORATOR_USER_EMAIL);
-    assertThat(user.isPresent()).isTrue();
+    assertTrue(user.isPresent());
 
     val groupId = client.getGroupByName("PROGRAM-"+PROGRAM_NAME+"-ADMIN").get().getId();
-    assertThat(client.isMember(groupId, COLLABORATOR_USER_EMAIL)).isTrue();
+    assertTrue(client.isMember(groupId, COLLABORATOR_USER_EMAIL));
 
     egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName());
-    assertThat(client.isMember(groupId, COLLABORATOR_USER_EMAIL)).isFalse();
+    assertFalse(client.isMember(groupId, COLLABORATOR_USER_EMAIL));
   }
 
   @Test
@@ -229,22 +229,22 @@ class EgoServiceIT {
     val collaboratorGroupId = client.getGroupByName("PROGRAM-"+PROGRAM_NAME+"-COLLABORATOR").get().getId();
 
     val adminJoin = egoService.joinProgram(ADMIN_USER_EMAIL, programEntity.getShortName(), UserRole.ADMIN);
-    assertThat(adminJoin).as("Can add ADMIN user to Program.").isTrue();
+    assertTrue("Can add ADMIN user to Program.", adminJoin);
 
     val collaboratorJoin = egoService.joinProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName(), UserRole.COLLABORATOR);
-    assertThat(collaboratorJoin).as("Can add COLLABORATOR user to Program.").isTrue();
+    assertTrue("Can add COLLABORATOR user to Program.", collaboratorJoin);
 
     val users = egoService.getUsersInProgram(programEntity.getShortName());
     users.forEach(user ->
       assertTrue(ifUserExists(user.getEmail().getValue(), expectedUsers)));
 
-    assertThat(egoService.leaveProgram(ADMIN_USER_EMAIL, programEntity.getShortName()))
-      .as("ADMIN user is removed from Program.").isTrue();
-    assertThat(egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName()))
-      .as("COLLABORATOR user is removed from Program.").isTrue();
+    assertTrue("ADMIN user is removed from Program.",
+      egoService.leaveProgram(ADMIN_USER_EMAIL, programEntity.getShortName()));
+    assertTrue("COLLABORATOR user is removed from Program.",
+      egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName()));
 
-    assertThat(client.isMember(adminGroupId, ADMIN_USER_EMAIL)).isFalse();
-    assertThat(client.isMember(collaboratorGroupId, COLLABORATOR_USER_EMAIL)).isFalse();
+    assertFalse(client.isMember(adminGroupId, ADMIN_USER_EMAIL));
+    assertFalse(client.isMember(collaboratorGroupId, COLLABORATOR_USER_EMAIL));
   }
 
   private boolean ifUserExists(String email, List<String> userList) {
@@ -263,11 +263,11 @@ class EgoServiceIT {
     // Groups are removed
     for (val groupName : List.of("PROGRAM-"+PROGRAM_NAME+"-BANNED", "PROGRAM-"+PROGRAM_NAME+"-CURATOR",
       "PROGRAM-"+PROGRAM_NAME+"-COLLABORATOR", "PROGRAM-"+PROGRAM_NAME+"-SUBMITTER", "PROGRAM-"+PROGRAM_NAME+"-ADMIN")) {
-      assertThat(ego.getGroupByName(groupName).isEmpty()).isTrue();
+      assertTrue(ego.getGroupByName(groupName).isEmpty());
     }
     // Policies are removed
-    assertThat(ego.getPolicyByName("PROGRAM-" + programEntity.getShortName()).isEmpty()).isTrue();
-    assertThat(ego.getPolicyByName("PROGRAMDATA-" + programEntity.getShortName()).isEmpty()).isTrue();
+    assertTrue(ego.getPolicyByName("PROGRAM-" + programEntity.getShortName()).isEmpty());
+    assertTrue(ego.getPolicyByName("PROGRAMDATA-" + programEntity.getShortName()).isEmpty());
   }
 
 }

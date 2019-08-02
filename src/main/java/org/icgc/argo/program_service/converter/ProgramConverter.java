@@ -206,7 +206,21 @@ public interface ProgramConverter {
     return v.getValue();
   }
 
-  InviteStatus JoinProgramInviteStatusToInviteStatus(JoinProgramInviteEntity.Status status);
+  default InviteStatusValue JoinProgramInviteStatusToInviteStatus(JoinProgramInviteEntity.Status status) {
+    switch(status) {
+    case ACCEPTED:
+      return InviteStatusValue.newBuilder().setValue(InviteStatus.ACCEPTED).build();
+    case EXPIRED:
+      return InviteStatusValue.newBuilder().setValue(InviteStatus.EXPIRED).build();
+    case PENDING:
+      return InviteStatusValue.newBuilder().setValue(InviteStatus.PENDING).build();
+    case INVALID:
+      return InviteStatusValue.newBuilder().build();
+    case REVOKED:
+      return InviteStatusValue.newBuilder().build();
+    }
+    return InviteStatusValue.newBuilder().build();
+  }
 
   default InviteStatus unboxInviteStatusValue(InviteStatusValue status) {
     return status.getValue();
@@ -253,9 +267,9 @@ public interface ProgramConverter {
     }
 
     val status = JoinProgramInviteStatusToInviteStatus(invite.get().getStatus());
-    val builder2 = builder.setStatus(boxInviteStatus(status));
+    val builder2 = builder.setStatus(boxInviteStatus(status.getValue()));
 
-    if (status == InviteStatus.PENDING) {
+    if (status.getValue() == InviteStatus.PENDING) {
       return builder2.build();
     }
 

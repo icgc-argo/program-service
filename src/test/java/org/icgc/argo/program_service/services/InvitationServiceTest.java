@@ -28,13 +28,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.springframework.test.util.ReflectionTestUtils;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import static org.assertj.core.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 class InvitationServiceTest {
@@ -52,22 +54,16 @@ class InvitationServiceTest {
     verify(invitationRepository).save(invitationCaptor.capture());
 
     val invitation = invitationCaptor.getValue();
-    assertThat(ReflectionTestUtils.getField(invitation, "program")).isEqualTo(programEntity);
-    assertThat(ReflectionTestUtils.getField(invitation, "userEmail")).isEqualTo("user@example.com");
-    assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "createdAt"))
-      .as("Creation time is within 5 seconds")
-      .isCloseTo(LocalDateTime.now(ZoneOffset.UTC), within(5, ChronoUnit.SECONDS));
-    assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "expiresAt"))
-      .as("Expire time should be after 47 hours")
-      .isAfter(LocalDateTime.now(ZoneOffset.UTC).plusHours(47));
-    assertThat(ReflectionTestUtils.getField(invitation, "status"))
-      .as("Status is appending").isEqualTo(JoinProgramInviteEntity.Status.PENDING);
-    assertThat(ReflectionTestUtils.getField(invitation, "firstName"))
-      .as("First name is first").isEqualTo("First");
-    assertThat(ReflectionTestUtils.getField(invitation, "lastName"))
-      .as("Last name is first").isEqualTo("Last");
-    assertThat(ReflectionTestUtils.getField(invitation, "role"))
-      .as("Role is admin").isEqualTo(UserRole.ADMIN);
+    assertEquals(ReflectionTestUtils.getField(invitation, "program"), programEntity);
+    assertEquals(ReflectionTestUtils.getField(invitation, "userEmail"), "user@example.com");
+    assertTrue(((LocalDateTime) (ReflectionTestUtils.getField(invitation, "createdAt"))).
+      isAfter(LocalDateTime.now(ZoneOffset.UTC).minusSeconds(5)));
+    assertTrue(((LocalDateTime) ReflectionTestUtils.getField(invitation, "expiresAt"))
+      .isAfter(LocalDateTime.now(ZoneOffset.UTC).plusHours(47)));
+    assertEquals(JoinProgramInviteEntity.Status.PENDING, ReflectionTestUtils.getField(invitation, "status"));
+    assertEquals( "First", ReflectionTestUtils.getField(invitation, "firstName"));
+    assertEquals( "Last", ReflectionTestUtils.getField(invitation, "lastName"));
+    assertEquals( UserRole.ADMIN, ReflectionTestUtils.getField(invitation, "role"));
 
     verify(mailService).sendInviteEmail(ArgumentMatchers.any());
   }
@@ -85,6 +81,7 @@ class InvitationServiceTest {
     when(invitation.getProgram()).thenReturn(program);
     when(invitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
     when(invitation.getId()).thenReturn(UUID.randomUUID());
+    when(invitation.getStatus()).thenReturn(JoinProgramInviteEntity.Status.PENDING);
     when(invitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
     invitationService.acceptInvite(invitation.getId());
     verify(egoService).joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
@@ -102,7 +99,7 @@ class InvitationServiceTest {
     val invitation1 = new JoinProgramInviteEntity();
     when(invitationRepository.findAllByProgramShortName(programShortName)).thenReturn(List.of(invitation1));
     val result = invitationService.listInvitations(programShortName);
-    assertThat(result).isEqualTo(List.of(invitation1));
+    assertEquals(result, List.of(invitation1));
   }
 
 }
