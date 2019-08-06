@@ -133,13 +133,9 @@ public interface ProgramConverter {
   Institution institutionEntityToInstitution(InstitutionEntity entity);
 
   @AfterMapping
-  default void updateProgramFromEntity(@NonNull ProgramEntity entity, @NonNull @MappingTarget Program.Builder programBuilder) {
-    programBuilder
-            .addAllCancerTypes(entity.listCancerTypes())
-            .addAllPrimarySites(entity.listPrimarySites())
-            .addAllInstitutions(entity.listInstitutions())
-            .addAllCountries(entity.listCountries())
-            .addAllRegions(entity.listRegions());
+  default void updateProgramFromEntity(@NonNull ProgramEntity entity,
+    @NonNull @MappingTarget Program.Builder programBuilder) {
+    programBuilder.addAllRegions(entity.listRegions());
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -364,10 +360,10 @@ public interface ProgramConverter {
   @Mapping(target = "userDetailsOrBuilderList", ignore = true)
   @Mapping(target = "userDetailsBuilderList", ignore = true)
   @Mapping(target = "userDetailsList", source = "invitations")
-  ListUserResponse invitationsToListUserResponse(Integer dummy, Collection<JoinProgramInviteEntity> invitations);
+  ListUsersResponse invitationsToListUsersResponse(Integer dummy, Collection<JoinProgramInviteEntity> invitations);
 
-  default ListUserResponse invitationsToListUserResponse(Collection<JoinProgramInviteEntity> invitations) {
-    return invitationsToListUserResponse(0, invitations);
+  default ListUsersResponse invitationsToListUsersResponse(Collection<JoinProgramInviteEntity> invitations) {
+    return invitationsToListUsersResponse(0, invitations);
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -389,11 +385,12 @@ public interface ProgramConverter {
 
   @AfterMapping
   default void setUser(@NonNull JoinProgramInviteEntity entity, @NonNull @MappingTarget JoinProgramInvite.Builder joinProgramInvite) {
-    val userRole = UserRoleValue.newBuilder().setValue(entity.getRole());
-    val user = User.newBuilder().setEmail(StringValue.of(entity.getUserEmail()))
-            .setFirstName(StringValue.of(entity.getFirstName()))
-            .setLastName(StringValue.of(entity.getLastName()))
-            .setRole(userRole).build();
-    joinProgramInvite.setUser(user);
+  val userRole = UserRoleValue.newBuilder().setValue(entity.getRole());
+  val user = User.newBuilder().setEmail(StringValue.of(entity.getUserEmail()))
+    .setFirstName(StringValue.of(entity.getFirstName()))
+    .setLastName(StringValue.of(entity.getLastName()))
+    .setRole(userRole).build();
+  joinProgramInvite.setUser(user);
   }
+
 }

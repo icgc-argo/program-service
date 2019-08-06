@@ -87,6 +87,8 @@ app:
 ###############################################################################
 spring:
   profiles: auth
+  app:
+    dccAdminPermission: PROGRAMSERVICE.WRITE
 
 ---
 ###############################################################################
@@ -120,4 +122,4 @@ app:
   egoClientSecret: "ps-clientsecret"
   grpcEnabled: true
   mail-enabled: false
-
+  dccAdminPermission: PROGRAMSERVICE.WRITE

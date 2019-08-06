@@ -62,6 +62,7 @@ public class InvitationService {
       .findById(invitationId)
       .orElseThrow(() ->
         new NotFoundException(format("Cannot find invitation with id '%s' ", invitationId)));
+
     invitation.accept();
     invitationRepository.save(invitation);
     egoService.joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());

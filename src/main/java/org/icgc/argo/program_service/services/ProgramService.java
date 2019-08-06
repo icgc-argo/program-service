@@ -35,10 +35,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -51,6 +49,7 @@ import static org.icgc.argo.program_service.model.join.ProgramInstitution.create
 import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
 import static org.icgc.argo.program_service.model.join.ProgramRegion.createProgramRegion;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
+import static org.icgc.argo.program_service.utils.EntityService.checkExistenceByName;
 import static org.icgc.argo.program_service.utils.EntityService.*;
 
 @Service

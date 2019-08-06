@@ -21,8 +21,6 @@ package org.icgc.argo.program_service.services;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
@@ -36,8 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -76,25 +72,13 @@ class ProgramServiceIT {
 
   @BeforeAll
   void setUp() {
+    System.err.printf("Setting up...\n");
     egoService = new EgoService(repository, converter, client, inviteRepository);
 
     try {
-      val program = new ProgramEntity()
-              .setShortName(name)
-              .setId(UUID.randomUUID())
-              .setName("TEST-NAME")
-              .setCommitmentDonors(10)
-              .setSubmittedDonors(10)
-              .setGenomicDonors(10)
-              .setDescription("this is a test program")
-              .setMembershipType(MembershipType.ASSOCIATE)
-              .setWebsite("http://www.site.org")
-              .setCreatedAt(LocalDateTime.now())
-              .setUpdatedAt(LocalDateTime.now());
-      programRepository.save(program);
       egoService.cleanUpProgram(name);
     } catch(Throwable t) {
-      log.error(t.getMessage());
+      System.err.printf("Caught throwable with message: %s", t.getMessage());
     }
   }
 
