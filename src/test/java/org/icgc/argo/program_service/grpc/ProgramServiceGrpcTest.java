@@ -75,7 +75,6 @@ public class ProgramServiceGrpcTest {
   private final String INSTITUTION_2 = "Example Lab";
   private final String EXISTING_INSTITUTION_1 = "Aarhus University";
   private final String EXISTING_INSTITUTION_2 = "Biobyte solutions GmbH";
-  private final String PROGRAM_SHORT_NAME = "PROGRAM-CA";
   private final String NEW_USER_EMAIL = "hermionegranger@gmail.com";
 
 
@@ -103,10 +102,10 @@ public class ProgramServiceGrpcTest {
   @Test
   public void createProgram(){
     val program = Program.newBuilder()
-            .setShortName(stringValue(PROGRAM_SHORT_NAME))
+            .setShortName(stringValue(randomProgramName()))
             .setMembershipType(membershipTypeValue(ASSOCIATE))
             .setWebsite(stringValue("http://site.org"))
-            .addInstitutions("OICR")
+            .addInstitutions("Ontario Institute for Cancer Research")
             .addRegions("North America")
             .setName(stringValue(RandomString.make(15)))
             .setCommitmentDonors(int32Value(234))
@@ -129,7 +128,7 @@ public class ProgramServiceGrpcTest {
             .setShortName(name)
             .setMembershipType(membershipTypeValue(ASSOCIATE))
             .setWebsite(stringValue("http://site.org"))
-            .addInstitutions("OICR")
+            .addInstitutions("Ontario Institute for Cancer Research")
             .addRegions("North America")
             .setName(stringValue(RandomString.make(15)))
             .setCommitmentDonors(int32Value(234))
