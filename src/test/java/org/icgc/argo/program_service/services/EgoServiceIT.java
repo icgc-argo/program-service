@@ -125,7 +125,7 @@ class EgoServiceIT {
       .setDescription(stringValue(""))
       .addCountries("Canada")
       .addRegions("North America")
-      .addInstitutions("OICR")
+      .addInstitutions("Ontario Institute for Cancer Research")
       .addCancerTypes("Blood cancer")
       .addPrimarySites("Blood")
       .build();

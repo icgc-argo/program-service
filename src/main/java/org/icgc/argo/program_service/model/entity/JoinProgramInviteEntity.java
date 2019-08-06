@@ -86,8 +86,8 @@ public class JoinProgramInviteEntity {
   private Status status;
   public Status getStatus() {
     if (status == Status.PENDING && isExpired()) {
-      status = Status.EXPIRED;
-    }
+        status = Status.EXPIRED;
+      }
     return status;
   }
 

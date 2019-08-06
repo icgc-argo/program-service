@@ -52,6 +52,7 @@ import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.create
 import static org.icgc.argo.program_service.model.join.ProgramRegion.createProgramRegion;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.EntityService.checkExistenceByName;
+import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 
 @Service
 @Validated

@@ -74,7 +74,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_LOCATIONS: "classpath:flyway/sql,classpath:db/migration"
-      SPRING_PROFILES: demo
+      SPRING_PROFILES: demo, auth
+      #GOOGLE_CLIENT_CLIENTID: 
     expose:
       - "8080"
     ports:

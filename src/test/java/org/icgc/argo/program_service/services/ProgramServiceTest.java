@@ -21,7 +21,7 @@ package org.icgc.argo.program_service.services;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.model.entity.*;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
 import org.junit.Ignore;
@@ -32,6 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -99,7 +100,7 @@ class ProgramServiceTest {
   void listPrograms() {
     val programEntity = mock(ProgramEntity.class);
     when(programRepository.findAll((Specification<ProgramEntity>) Mockito.any()))
-            .thenReturn(List.of(programEntity));
+      .thenReturn(List.of(programEntity));
     val programs = programService.listPrograms();
     assertTrue(programs.contains(programEntity));
   }
