@@ -312,32 +312,27 @@ public class ProgramService {
                 .setFetchCountries(true)
                 .setFetchRegions(true)
                 .listAll());
-    return List.copyOf(new LinkedHashSet<ProgramEntity>(programs));
+    return List.copyOf(programs);
   }
 
   public List<CancerEntity> listCancers() {
-    val cancers = cancerRepository.findAll();
-    return List.copyOf(new LinkedHashSet<CancerEntity>(cancers));
+    return List.copyOf(cancerRepository.findAll());
   }
 
   public List<PrimarySiteEntity> listPrimarySites() {
-    val sites = primarySiteRepository.findAll();
-    return List.copyOf(new LinkedHashSet<PrimarySiteEntity>(sites));
+    return List.copyOf(primarySiteRepository.findAll());
   }
 
   public List<CountryEntity> listCountries(){
-    val countries = countryRepository.findAll();
-    return List.copyOf(new LinkedHashSet<CountryEntity>(countries));
+    return List.copyOf(countryRepository.findAll());
   }
 
   public List<RegionEntity> listRegions(){
-    val regions = regionRepository.findAll();
-    return List.copyOf(new LinkedHashSet<RegionEntity>(regions));
+    return List.copyOf(regionRepository.findAll());
   }
 
   public List<InstitutionEntity> listInstitutions() {
-    val institutions = institutionRepository.findAll();
-    return List.copyOf(new LinkedHashSet<InstitutionEntity>(institutions));
+    return List.copyOf(institutionRepository.findAll());
   }
 
   public List<InstitutionEntity> addInstitutions(@NonNull List<String> names){

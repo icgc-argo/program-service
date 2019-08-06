@@ -30,10 +30,11 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+
+import static java.util.stream.Collectors.toList;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ProgramConverter {
@@ -99,7 +100,7 @@ public interface ProgramConverter {
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "mergeId", ignore = true)
-  PrimarySite primarySiteEntityRToPrimarySite(PrimarySiteEntity entity);
+  PrimarySite primarySiteEntityToPrimarySite(PrimarySiteEntity entity);
 
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
@@ -184,78 +185,6 @@ public interface ProgramConverter {
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
-  @Mapping(target = "unknownFields", ignore = true)
-  @Mapping(target = "mergeUnknownFields", ignore = true)
-  @Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "removeCancers", ignore = true)
-  @Mapping(target = "cancersOrBuilderList", ignore = true)
-  @Mapping(target = "cancersBuilderList", ignore = true)
-  @Mapping(target = "cancersList", source = "cancerEntities")
-  ListCancersResponse cancerEntitiesToListCancersResponse(Integer dummy, Collection<CancerEntity> cancerEntities);
-
-  @Mapping(target = "mergeFrom", ignore = true)
-  @Mapping(target = "clearField", ignore = true)
-  @Mapping(target = "clearOneof", ignore = true)
-  @Mapping(target = "unknownFields", ignore = true)
-  @Mapping(target = "mergeUnknownFields", ignore = true)
-  @Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "removePrimarySites", ignore = true)
-  @Mapping(target = "primarySitesOrBuilderList", ignore = true)
-  @Mapping(target = "primarySitesBuilderList", ignore = true)
-  @Mapping(target = "primarySitesList", source = "primarySiteEntities")
-  ListPrimarySitesResponse primarySiteEntitiesToListPrimarySitesResponse(Integer dummy, Collection<PrimarySiteEntity> primarySiteEntities );
-
-  @Mapping(target = "mergeFrom", ignore = true)
-  @Mapping(target = "clearField", ignore = true)
-  @Mapping(target = "clearOneof", ignore = true)
-  @Mapping(target = "unknownFields", ignore = true)
-  @Mapping(target = "mergeUnknownFields", ignore = true)
-  @Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "removeCountries", ignore = true)
-  @Mapping(target = "countriesOrBuilderList", ignore = true)
-  @Mapping(target = "countriesBuilderList", ignore = true)
-  @Mapping(target = "countriesList", source = "countryEntities")
-  ListCountriesResponse countryEntitiesToListCountriesResponse(Integer dummy, Collection<CountryEntity> countryEntities );
-
-  @Mapping(target = "mergeFrom", ignore = true)
-  @Mapping(target = "clearField", ignore = true)
-  @Mapping(target = "clearOneof", ignore = true)
-  @Mapping(target = "unknownFields", ignore = true)
-  @Mapping(target = "mergeUnknownFields", ignore = true)
-  @Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "removeRegions", ignore = true)
-  @Mapping(target = "regionsOrBuilderList", ignore = true)
-  @Mapping(target = "regionsBuilderList", ignore = true)
-  @Mapping(target = "regionsList", source = "regionEntities")
-  ListRegionsResponse regionEntitiesToListRegionsResponse(Integer dummy, Collection<RegionEntity> regionEntities);
-
-  @Mapping(target = "mergeFrom", ignore = true)
-  @Mapping(target = "clearField", ignore = true)
-  @Mapping(target = "clearOneof", ignore = true)
-  @Mapping(target = "unknownFields", ignore = true)
-  @Mapping(target = "mergeUnknownFields", ignore = true)
-  @Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "removeInstitutions", ignore = true)
-  @Mapping(target = "institutionsOrBuilderList", ignore = true)
-  @Mapping(target = "institutionsBuilderList", ignore = true)
-  @Mapping(target = "institutionsList", source = "institutionEntities")
-  ListInstitutionsResponse institutionEntitiesToListInstitutionsResponse(Integer dummy, Collection<InstitutionEntity> institutionEntities);
-
-  @Mapping(target = "mergeFrom", ignore = true)
-  @Mapping(target = "clearField", ignore = true)
-  @Mapping(target = "clearOneof", ignore = true)
-  @Mapping(target = "unknownFields", ignore = true)
-  @Mapping(target = "mergeUnknownFields", ignore = true)
-  @Mapping(target = "allFields", ignore = true)
-  @Mapping(target = "removeInstitutions", ignore = true)
-  @Mapping(target = "institutionsOrBuilderList", ignore = true)
-  @Mapping(target = "institutionsBuilderList", ignore = true)
-  @Mapping(target = "institutionsList", source = "institutionEntities")
-  AddInstitutionsResponse institutionsToAddInstitutionsResponse(Integer dummy, Collection<InstitutionEntity> institutionEntities);
-
-  @Mapping(target = "mergeFrom", ignore = true)
-  @Mapping(target = "clearField", ignore = true)
-  @Mapping(target = "clearOneof", ignore = true)
   @Mapping(target = "mergeMessage", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
@@ -313,27 +242,39 @@ public interface ProgramConverter {
   }
 
   default ListCancersResponse cancerEntitiesToListCancersResponse(Collection<CancerEntity> cancerEntities){
-    return cancerEntitiesToListCancersResponse(0, cancerEntities);
+    return ListCancersResponse.newBuilder()
+            .addAllCancers(cancerEntities.stream().map(this::cancerEntityToCancer).collect(toList()))
+            .build();
   }
 
   default ListPrimarySitesResponse primarySiteEntitiesToListPrimarySitesResponse(Collection<PrimarySiteEntity> primarySiteEntities){
-    return primarySiteEntitiesToListPrimarySitesResponse(0, primarySiteEntities);
+    return ListPrimarySitesResponse.newBuilder()
+            .addAllPrimarySites(primarySiteEntities.stream().map(this::primarySiteEntityToPrimarySite).collect(toList()))
+            .build();
   }
 
   default ListCountriesResponse countryEntitiesToListCountriesResponse(Collection<CountryEntity> countryEntities){
-    return countryEntitiesToListCountriesResponse(0, countryEntities);
+    return ListCountriesResponse.newBuilder()
+            .addAllCountries(countryEntities.stream().map(this::countryEntityToCountry).collect(toList()))
+            .build();
   }
 
   default ListRegionsResponse regionEntitiesToListRegionsResponse(Collection<RegionEntity> regionEntities){
-    return  regionEntitiesToListRegionsResponse(0, regionEntities);
+    return ListRegionsResponse.newBuilder()
+            .addAllRegions(regionEntities.stream().map(this::regionEntityToRegion).collect(toList()))
+            .build();
   }
 
   default ListInstitutionsResponse institutionEntitiesToListInstitutionsResponse(Collection<InstitutionEntity> institutionEntities){
-    return institutionEntitiesToListInstitutionsResponse(0, institutionEntities);
+    return ListInstitutionsResponse.newBuilder()
+            .addAllInstitutions(institutionEntities.stream().map(this::institutionEntityToInstitution).collect(toList()))
+            .build();
   }
 
   default AddInstitutionsResponse institutionsToAddInstitutionsResponse(Collection<InstitutionEntity> institutionEntities){
-    return institutionsToAddInstitutionsResponse(0, institutionEntities);
+    return AddInstitutionsResponse.newBuilder()
+            .addAllInstitutions(institutionEntities.stream().map(this::institutionEntityToInstitution).collect(toList()))
+            .build();
   }
 
   default InviteUserResponse inviteIdToInviteUserResponse(@NonNull UUID inviteId) {

@@ -144,7 +144,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onCompleted();
     } catch (NotFoundException | NoSuchElementException e) {
       log.error("Exception throw in updateProgram: {}", e.getMessage());
-      e.printStackTrace();
       throw status(NOT_FOUND, e.getMessage());
     }
   }
@@ -181,7 +180,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onCompleted();
     } catch (NotFoundException e) {
       log.error("Exception throw in joinProgram: {}", e.getMessage());
-      e.printStackTrace();
       throw status(NOT_FOUND, e.getMessage());
     }
   }
@@ -241,7 +239,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       egoService.updateUserRole(email, programShortName, role);
     } catch (NotFoundException e) {
       log.error("Exception throw in updateUser: {}", e.getMessage());
-      e.printStackTrace();
       throw status(NOT_FOUND, e.getMessage());
     }
     responseObserver.onNext(Empty.getDefaultInstance());
@@ -256,7 +253,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       programService.removeProgram(request.getProgramShortName().getValue());
     } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
       log.error("Exception throw in removeProgram: {}", e.getMessage());
-      e.printStackTrace();
       throw status(NOT_FOUND, getExceptionMessage(e));
     }
     responseObserver.onNext(Empty.getDefaultInstance());
@@ -317,7 +313,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onCompleted();
     } catch (DataIntegrityViolationException e){
       log.error("Exception throw in addInstitutions: {}", e.getMessage());
-      e.printStackTrace();
       throw status(UNKNOWN, e.getMessage());
     }
   }
