@@ -22,11 +22,15 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.velocity.app.VelocityEngine;
+import org.icgc.argo.program_service.services.EgoAuthorizationService;
 import org.icgc.argo.program_service.utils.NoOpJavaMailSender;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -38,6 +42,7 @@ import java.time.Duration;
 import java.util.Properties;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.String.format;
 
 /**
  * Ego external configuration, served as metadata for application.yml
@@ -91,6 +96,10 @@ public class AppProperties {
   @NotNull
   private Boolean mailEnabled;
 
+  /* can be null except for when auth is enabled */
+  private String dccAdminPermission;
+
+
   @Bean
   @ConditionalOnProperty(
     prefix = APP,
@@ -108,6 +117,15 @@ public class AppProperties {
     props.put("resource.loader", "class");
     props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
     return new VelocityEngine(props);
+  }
+
+  @Bean
+  @Profile("auth")
+  public EgoAuthorizationService egoAuthorizationService() {
+    val permission = dccAdminPermission;
+    log.info(format("Started EgoAuthorization service with dccAdminPermission='%s'", permission));
+    assert permission != null;
+    return new EgoAuthorizationService(permission);
   }
 
   @Bean
