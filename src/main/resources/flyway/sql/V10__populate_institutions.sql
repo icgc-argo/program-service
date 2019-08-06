@@ -436,8 +436,13 @@ INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Xi''an Jiaotong 
 INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Yale University');
 INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Yokohama City University Graduate School of Medicine');
 
+-- Update programs that used to associate with 'OICR' to be associated with a valid institution --
+UPDATE program_institution
+SET institution_id =
+    (SELECT id FROM institution WHERE name = 'Ontario Institute for Cancer Research')
+WHERE program_id IN
+    (SELECT program_id FROM program_institution);
+
 -- Delete two dummy institutions --
-DELETE FROM program_institution WHERE institution_id IN (SELECT id FROM institution WHERE NAME = 'OICR');
-DELETE FROM program_institution WHERE institution_id IN (SELECT id FROM institution WHERE NAME = 'FBI');
 DELETE FROM institution WHERE name = 'OICR';
 DELETE FROM institution WHERE name = 'FBI';
