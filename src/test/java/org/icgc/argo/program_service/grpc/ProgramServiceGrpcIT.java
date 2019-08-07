@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @Transactional
-public class ProgramServiceGrpcTest {
+public class ProgramServiceGrpcIT {
 
   @Autowired
   private ProgramServiceImpl programServiceImpl;
