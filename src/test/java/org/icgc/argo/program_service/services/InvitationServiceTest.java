@@ -215,8 +215,29 @@ class InvitationServiceTest {
     val latest4 = testGetLatestInvitation(program, email, List.of(invite3, invite2, invite1));
     assertTrue(latest4.isEmpty());
 
+  }
+
+  @Test
+  void revokeInvitation() {
+    String program="TEST-CA";
+    val programEntity = mock(ProgramEntity.class);
+    when(programEntity.getShortName()).thenReturn(program);
+
+    val email = "user@example.com";
+
+    val invitationRepository = mock(JoinProgramInviteRepository.class);
+    val invitations = List.of(createInvite(programEntity, email, JoinProgramInviteEntity.Status.PENDING),
+      createInvite(programEntity, email, JoinProgramInviteEntity.Status.ACCEPTED));
+
+    when(invitationRepository.findAllByProgramShortNameAndUserEmail(program, email)).thenReturn(invitations);
+    val egoService = mock(EgoService.class);
+    val mailService = mock(MailService.class);
+
+    val invitationService = new InvitationService(mailService, invitationRepository, egoService);
+    invitationService.revoke(program, email);
 
   }
+
   Optional<JoinProgramInviteEntity> testGetLatestInvitation(String program, String email, List<JoinProgramInviteEntity> invites) {
     val invitationRepository = mock(JoinProgramInviteRepository.class);
     val egoService = mock(EgoService.class);

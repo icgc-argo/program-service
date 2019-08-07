@@ -102,9 +102,11 @@ public class InvitationService {
     return Optional.of(validInvitations.get(0));
   }
 
+  @Transactional
   public void revoke(String programShortName, String email) {
     val previousInvitations = invitationRepository.findAllByProgramShortNameAndUserEmail(programShortName, email);
-
+    previousInvitations.stream().filter(i -> i.getStatus() == PENDING || i.getStatus() == ACCEPTED).
+      map(i -> i.setStatus(REVOKED)).forEach(i -> invitationRepository.save(i));
   }
 
   public Optional<JoinProgramInviteEntity> getInvitationById(UUID invitationId) {
