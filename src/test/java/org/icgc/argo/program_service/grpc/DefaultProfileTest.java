@@ -18,7 +18,7 @@
 
 package org.icgc.argo.program_service.grpc;
 
-import io.grpc.*;
+import io.grpc.Channel;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -28,14 +28,15 @@ import lombok.val;
 import org.icgc.argo.program_service.proto.CreateProgramRequest;
 import org.icgc.argo.program_service.proto.CreateProgramResponse;
 import org.icgc.argo.program_service.proto.ProgramServiceGrpc;
-import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.test.context.ActiveProfiles;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 // TODO: This test doesn't work, it should be converted to integration test
 @ActiveProfiles("default")
@@ -57,14 +58,13 @@ public class DefaultProfileTest {
     serverName = InProcessServerBuilder.generateName();
     // Create a client channel and register for automatic graceful shutdown.
     channel =
-            grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
+      grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
   }
 
   @SneakyThrows
   @Test
-  public void egoInterceptorDisabled(){
+  public void egoInterceptorDisabled() {
     val target = new ProgramServiceGrpc.ProgramServiceImplBase() {
-      @EgoAuthInterceptor.EgoAuth(typesAllowed = {"ADMIN"})
       public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
         responseObserver.onNext(CreateProgramResponse.newBuilder().build().getDefaultInstance());
         responseObserver.onCompleted();
@@ -72,7 +72,8 @@ public class DefaultProfileTest {
     };
 
     // Create a server, add service, start, and register for automatic graceful shutdown.
-    grpcCleanup.register(InProcessServerBuilder.forName(serverName).directExecutor().addService(target).build().start());
+    grpcCleanup
+      .register(InProcessServerBuilder.forName(serverName).directExecutor().addService(target).build().start());
     val blockingStub = ProgramServiceGrpc.newBlockingStub(channel);
 
     //EgoService is not initialized under default profile

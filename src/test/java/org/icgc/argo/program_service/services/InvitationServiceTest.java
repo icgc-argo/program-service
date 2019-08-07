@@ -19,7 +19,7 @@
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
-import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
+import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
@@ -48,7 +48,7 @@ class InvitationServiceTest {
 
     val invitationService = new InvitationService(mailService, invitationRepository, egoService);
     invitationService.inviteUser(programEntity, "user@example.com", "First", "Last", UserRole.ADMIN);
-    val invitationCaptor = ArgumentCaptor.forClass(JoinProgramInvite.class);
+    val invitationCaptor = ArgumentCaptor.forClass(JoinProgramInviteEntity.class);
     verify(invitationRepository).save(invitationCaptor.capture());
 
     val invitation = invitationCaptor.getValue();
@@ -61,7 +61,7 @@ class InvitationServiceTest {
       .as("Expire time should be after 47 hours")
       .isAfter(LocalDateTime.now(ZoneOffset.UTC).plusHours(47));
     assertThat(ReflectionTestUtils.getField(invitation, "status"))
-      .as("Status is appending").isEqualTo(JoinProgramInvite.Status.PENDING);
+      .as("Status is appending").isEqualTo(JoinProgramInviteEntity.Status.PENDING);
     assertThat(ReflectionTestUtils.getField(invitation, "firstName"))
       .as("First name is first").isEqualTo("First");
     assertThat(ReflectionTestUtils.getField(invitation, "lastName"))
@@ -79,7 +79,7 @@ class InvitationServiceTest {
     val mailService = mock(MailService.class);
 
     val invitationService = new InvitationService(mailService, invitationRepository, egoService);
-    val invitation = mock(JoinProgramInvite.class);
+    val invitation = mock(JoinProgramInviteEntity.class);
     val program = new ProgramEntity();
     program.setShortName("TEST1");
     when(invitation.getProgram()).thenReturn(program);
@@ -99,7 +99,7 @@ class InvitationServiceTest {
     val mailService = mock(MailService.class);
 
     val invitationService = new InvitationService(mailService, invitationRepository, egoService);
-    val invitation1 = new JoinProgramInvite();
+    val invitation1 = new JoinProgramInviteEntity();
     when(invitationRepository.findAllByProgramShortName(programShortName)).thenReturn(List.of(invitation1));
     val result = invitationService.listInvitations(programShortName);
     assertThat(result).isEqualTo(List.of(invitation1));

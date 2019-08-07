@@ -125,7 +125,7 @@ class EgoServiceIT {
       .setDescription(stringValue(""))
       .addCountries("Canada")
       .addRegions("North America")
-      .addInstitutions("OICR")
+      .addInstitutions("Ontario Institute for Cancer Research")
       .addCancerTypes("Blood cancer")
       .addPrimarySites("Blood")
       .build();
@@ -169,7 +169,7 @@ class EgoServiceIT {
 
     // expected group is ADMIN group
     val shortname = PROGRAM_NAME;
-    egoService.updateUserRole(user.get().getId(), shortname, UserRole.ADMIN);
+    egoService.updateUserRole(user.get().getEmail(), shortname, UserRole.ADMIN);
     val adminGroupName = "PROGRAM-"+ PROGRAM_NAME +"-ADMIN";
     val adminGroupId = egoService.getEgoClient().getGroupByName(adminGroupName).get().getId();
 
@@ -180,7 +180,7 @@ class EgoServiceIT {
     groupAfter.forEach(group -> assertThat(group.getId()).isEqualTo(adminGroupId));
 
     // remove test user from admin group
-    assertThat(egoService.leaveProgram(user.get().getId(), programEntity.getShortName())).isTrue();
+    assertThat(egoService.leaveProgram(user.get().getEmail(), programEntity.getShortName())).isTrue();
 
     //verify if the user is removed from a admin group
     val groupsLeft = egoService.getEgoClient().getGroupsByUserId(user.get().getId())

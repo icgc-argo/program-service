@@ -3,7 +3,7 @@ package org.icgc.argo.program_service.services;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.model.entity.JoinProgramInvite;
+import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.UserRole;
@@ -45,14 +45,14 @@ public class InvitationService {
     @NotBlank @NotNull String firstName,
     @NotBlank @NotNull String lastName,
     @NotNull UserRole role) {
-    val invitation = new JoinProgramInvite(program, userEmail, firstName, lastName, role);
+    val invitation = new JoinProgramInviteEntity(program, userEmail, firstName, lastName, role);
     invitationRepository.save(invitation);
     mailService.sendInviteEmail(invitation);
     return invitation.getId();
   }
 
   @Transactional
-  public List<JoinProgramInvite> listInvitations(@NonNull String programShortName) {
+  public List<JoinProgramInviteEntity> listInvitations(@NonNull String programShortName) {
     return invitationRepository.findAllByProgramShortName(programShortName);
   }
 
@@ -62,17 +62,22 @@ public class InvitationService {
       .findById(invitationId)
       .orElseThrow(() ->
         new NotFoundException(format("Cannot find invitation with id '%s' ", invitationId)));
+
     invitation.accept();
     invitationRepository.save(invitation);
     egoService.joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
     return egoService.convertInvitationToEgoUser(invitation);
   }
 
-  public Optional<JoinProgramInvite> getInvitation(String programShortName, String email) {
+  public Optional<JoinProgramInviteEntity> getInvitation(String programShortName, String email) {
     return invitationRepository.findTopByProgramShortNameAndUserEmailOrderByCreatedAtDesc(programShortName, email);
   }
 
-  public List<JoinProgramInvite> listPendingInvitations(String programShortName) {
-    return invitationRepository.findAllByProgramShortNameAndStatus(programShortName, JoinProgramInvite.Status.PENDING);
+  public Optional<JoinProgramInviteEntity> getInvitation(UUID invitationId) {
+    return invitationRepository.findById(invitationId);
+  }
+
+  public List<JoinProgramInviteEntity> listPendingInvitations(String programShortName) {
+    return invitationRepository.findAllByProgramShortNameAndStatus(programShortName, JoinProgramInviteEntity.Status.PENDING);
   }
 }

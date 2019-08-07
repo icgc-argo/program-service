@@ -28,7 +28,7 @@ import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
-import org.icgc.argo.program_service.repositories.query.*;
+import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -41,7 +41,6 @@ import java.time.ZoneId;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toUnmodifiableList;
@@ -53,6 +52,7 @@ import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.create
 import static org.icgc.argo.program_service.model.join.ProgramRegion.createProgramRegion;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.EntityService.checkExistenceByName;
+import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 
 @Service
 @Validated
@@ -113,34 +113,7 @@ public class ProgramService {
   }
 
   public ProgramEntity getProgram(@NonNull String name) {
-    val program = findProgramByShortName(name);
-    val uuid = program.getId();
-    val primarySites =
-        primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(uuid));
-    val cancers = cancerRepository.findAll(CancerSpecification.containsProgram(uuid));
-    val institutions =
-        institutionRepository.findAll(InstitutionSpecification.containsProgram(uuid));
-    val regions = regionRepository.findAll(RegionSpecification.containsProgram(uuid));
-    val countries = countryRepository.findAll(CountrySpecification.containsProgram(uuid));
-
-    List<ProgramCancer> programCancers =
-        mapToList(cancers, x -> createProgramCancer(program, x).get());
-    List<ProgramPrimarySite> programPrimarySites =
-        mapToList(primarySites, x -> createProgramPrimarySite(program, x).get());
-    List<ProgramInstitution> programInstitutions =
-        mapToList(institutions, x -> createProgramInstitution(program, x).get());
-    List<ProgramRegion> programRegions =
-        mapToList(regions, x -> createProgramRegion(program, x).get());
-    List<ProgramCountry> programCountries =
-        mapToList(countries, x -> createProgramCountry(program, x).get());
-
-    program.setProgramCancers(new TreeSet<>(programCancers));
-    program.setProgramPrimarySites(new TreeSet<>(programPrimarySites));
-    program.setProgramInstitutions(new TreeSet<>(programInstitutions));
-    program.setProgramRegions(new TreeSet<>(programRegions));
-    program.setProgramCountries(new TreeSet<>(programCountries));
-
-    return program;
+    return findProgramByShortName(name);
   }
 
   @Transactional

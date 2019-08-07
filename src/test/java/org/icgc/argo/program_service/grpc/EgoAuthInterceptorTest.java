@@ -120,49 +120,4 @@ public class EgoAuthInterceptorTest {
       };
     }
   }
-
-  @Test
-  public void egoAuthInterceptor_egoAuthAnnotation() throws IOException {
-    ProgramServiceImplBase target = new ProgramServiceImplBase() {
-      @EgoAuthInterceptor.EgoAuth(typesAllowed = {"ADMIN"})
-      public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
-        responseObserver.onNext(CreateProgramResponse.getDefaultInstance());
-        responseObserver.onCompleted();
-      }
-    };
-    AspectJProxyFactory factory = new AspectJProxyFactory(target);
-    factory.setProxyTargetClass(true);
-    factory.addAspect(EgoAuthInterceptor.EgoAuth.EgoAuthAspect.class);
-    ProgramServiceImplBase proxy = factory.getProxy();
-
-    // Create a server, add service, start, and register for automatic graceful shutdown.
-    grpcCleanup.register(InProcessServerBuilder.forName(serverName).directExecutor()
-            .addService(ServerInterceptors.intercept(proxy, new EgoAuthInterceptor(egoService))).build().start());
-    val jwtClientInterceptor = new JwtClientInterceptor();
-    val blockingStub = ProgramServiceGrpc.newBlockingStub(channel).withInterceptors(jwtClientInterceptor);
-
-    try {
-      jwtClientInterceptor.token = "123";
-      given(egoService.verifyToken("123")).willReturn(Optional.empty());
-      blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
-      fail("Expect an status runtime exception to be thrown");
-    } catch (StatusRuntimeException e) {
-      assertEquals(e.getStatus(), Status.fromCode(Status.Code.UNAUTHENTICATED));
-    }
-
-    try {
-      given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
-      given(egoToken.getType()).willReturn("USER");
-      blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
-      fail("Expect an status runtime exception to be thrown");
-    } catch (StatusRuntimeException e) {
-      assertEquals(e.getStatus(), Status.fromCode(Status.Code.PERMISSION_DENIED));
-    }
-
-    given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
-    given(egoToken.getType()).willReturn("ADMIN");
-    val resp = blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
-    assertThat(resp, instanceOf(CreateProgramResponse.class));
-
-  }
 }

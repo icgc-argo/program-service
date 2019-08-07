@@ -27,10 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor.EgoAuth;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.*;
+import org.icgc.argo.program_service.services.AuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.icgc.argo.program_service.services.ego.EgoService;
@@ -39,12 +39,17 @@ import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static io.grpc.Status.NOT_FOUND;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
-import static io.grpc.Status.NOT_FOUND;
 
 @Slf4j
 @Component
@@ -58,21 +63,26 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   private final ProgramConverter programConverter;
   private final CommonConverter commonConverter;
   private final EgoService egoService;
+  private final AuthorizationService authorizationService;
 
   @Autowired
   public ProgramServiceImpl(@NonNull ProgramService programService, @NonNull ProgramConverter programConverter,
-    @NonNull CommonConverter commonConverter, @NonNull EgoService egoService,InvitationService invitationService) {
+    @NonNull CommonConverter commonConverter, @NonNull EgoService egoService,InvitationService invitationService,
+    AuthorizationService authorizationService) {
     this.programService = programService;
     this.programConverter = programConverter;
     this.egoService = egoService;
     this.commonConverter = commonConverter;
     this.invitationService = invitationService;
+    this.authorizationService = authorizationService;
   }
+
 
   //TODO: need better error response. If a duplicate program is created, get "2 UNKNOWN" error. Should atleast have a message in it
   @Override
-  @EgoAuth(typesAllowed = { "ADMIN" })
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
+    authorizationService.requireDCCAdmin();
+
     val program = request.getProgram();
     val admins = request.getAdminsList();
 
@@ -93,8 +103,11 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
+  @Transactional
   public void getProgram(GetProgramRequest request, StreamObserver<GetProgramResponse> responseObserver) {
     val shortName = request.getShortName().getValue();
+    authorizationService.requireProgramUser(shortName);
+
     val programEntity = programService.getProgram(shortName);
     val programDetails = programConverter.ProgramEntityToProgramDetails(programEntity);
     val response = GetProgramResponse.newBuilder().setProgram(programDetails).build();
@@ -120,8 +133,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-  @EgoAuth(typesAllowed = { "ADMIN" })
   public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver) {
+    authorizationService.requireDCCAdmin();
+
     val program = request.getProgram();
     val updatingProgram = programConverter.programToProgramEntity(program);
     try {
@@ -144,8 +158,12 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
+  @Transactional
   public void inviteUser(InviteUserRequest request, StreamObserver<InviteUserResponse> responseObserver) {
-    val programResult = programService.getProgram(request.getProgramShortName().getValue());
+    val programShortName = request.getProgramShortName().getValue();
+    authorizationService.requireProgramAdmin(programShortName);
+
+    val programResult = programService.getProgram(programShortName);
     UUID inviteId;
 
     try {
@@ -167,8 +185,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void joinProgram(JoinProgramRequest request, StreamObserver<JoinProgramResponse> responseObserver) {
+    val str = request.getJoinProgramInvitationId().getValue();
+    val id = commonConverter.stringToUUID(str);
+    val invitation = invitationService.acceptInvite(id);
+
+    authorizationService.requireEmail(invitation.getEmail());
+
     try {
-      val responseUser = invitationService.acceptInvite(commonConverter.stringToUUID(request.getJoinProgramInvitationId()));
+      val responseUser = invitationService.acceptInvite(id);
       val response = programConverter.egoUserToJoinProgramResponse(responseUser);
       responseObserver.onNext(response);
       responseObserver.onCompleted();
@@ -181,7 +205,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
-    val programEntities = programService.listPrograms();
+      List<ProgramEntity> programEntities = programService.listPrograms().stream().
+        filter(p -> authorizationService.canRead(p.getShortName())).
+        collect(Collectors.toList());
     val listProgramsResponse = programConverter.programEntitiesToListProgramsResponse(programEntities);
 
     responseObserver.onNext(listProgramsResponse);
@@ -189,27 +215,19 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-  public void listUsers(ListUserRequest request, StreamObserver<ListUserResponse> responseObserver) {
-    ListUserResponse response;
-    Set<UserDetails> status;
+  public void listUsers(ListUsersRequest request, StreamObserver<ListUsersResponse> responseObserver) {
+    ListUsersResponse response;
+    val programShortName = request.getProgramShortName().getValue();
+    authorizationService.requireProgramAdmin(programShortName);
 
-    try {
-      val programShortName = request.getProgramShortName().getValue();
-      val users = egoService.getUsersInProgram(programShortName);
-      status = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
-        invitationService.getInvitation(programShortName, user.getEmail().getValue())));
+    val users = egoService.getUsersInProgram(programShortName);
+    Set<UserDetails> userDetails = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
+      invitationService.getInvitation(programShortName, user.getEmail().getValue())));
 
-      status.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
-        programConverter::joinProgramInviteToUserDetails));
+    userDetails.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
+      programConverter::joinProgramInviteToUserDetails ));
 
-      response = ListUserResponse.newBuilder().addAllUserDetails(status).build();
-    } catch (Throwable t) {
-      log.error("Exception in listUsers: {}", t.toString());
-      t.printStackTrace();
-      responseObserver.onError(status(t));
-      return;
-    }
-
+    response = ListUsersResponse.newBuilder().addAllUserDetails(userDetails).build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
@@ -218,6 +236,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void removeUser(RemoveUserRequest request, StreamObserver<RemoveUserResponse> responseObserver) {
     val programName = request.getProgramShortName().getValue();
+    authorizationService.requireProgramAdmin(programName);
+
     val email = request.getUserEmail().getValue();
     egoService.leaveProgram(email, programName);
     val response = programConverter.toRemoveUserResponse("User is successfully removed!");
@@ -227,11 +247,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void updateUser(UpdateUserRequest request, StreamObserver<Empty> responseObserver) {
-    val userId = commonConverter.stringToUUID(request.getUserId());
+    val programShortName = request.getShortName().getValue();
+    authorizationService.requireProgramAdmin(programShortName);
+
+    val email =request.getUserEmail().getValue();
     val role = request.getRole().getValue();
-    val shortname = commonConverter.unboxStringValue(request.getShortName());
+    
     try {
-      egoService.updateUserRole(userId, shortname, role);
+      egoService.updateUserRole(email, programShortName, role);
     } catch (NotFoundException e) {
       log.error("Exception throw in updateUser: {}", e.getMessage());
       e.printStackTrace();
@@ -243,6 +266,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
+    authorizationService.requireDCCAdmin();
+
     val shortName = request.getProgramShortName().getValue();
     try {
       egoService.cleanUpProgram(shortName);
@@ -259,4 +284,21 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   private String getExceptionMessage(NestedRuntimeException e) {
     return e.getMostSpecificCause().getMessage();
   }
+
+  @Override
+  @Transactional
+  public void getJoinProgramInvite(GetJoinProgramInviteRequest request,
+    StreamObserver<GetJoinProgramInviteResponse> responseObserver) {
+    val joinProgramInvite = invitationService.getInvitation(UUID.fromString(request.getInviteId().getValue()));
+    if (joinProgramInvite.isEmpty()) {
+      responseObserver.onError(Status.NOT_FOUND.withDescription("Invitation is not found").asRuntimeException());
+      return;
+    }
+    val invitation = programConverter.joinProgramInviteEntityToJoinProgramInvite(joinProgramInvite.get());
+    val response = GetJoinProgramInviteResponse.newBuilder().setInvitation(invitation).build();
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
+
+
 }

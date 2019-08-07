@@ -49,8 +49,8 @@ import static org.mockito.Mockito.*;
 
 class EgoServiceTest {
 
-  @Autowired
-  RestTemplate restTemplate;
+  //@Autowired
+  RestTemplate restTemplate=new RestTemplate();
 
   void verifyKey() {
     val rsaPublicKey = (RSAPublicKey) Utils.getPublicKey(publickKey, "RSA");
@@ -162,15 +162,15 @@ class EgoServiceTest {
     val mockProgramEgoGroup = Optional.of(new ProgramEgoGroupEntity());
     mockProgramEgoGroup.get().setEgoGroupId(collabGroupId);
     when(egoService.getEgoClient()).thenReturn(egoClient);
-    when(egoClient.getUserById(userId)).thenReturn(
-      new EgoUser().setStatus("APPROVED").setType("USER").setEmail(email).setId(userId));
+    when(egoClient.getUser(email)).thenReturn(
+      Optional.of(new EgoUser().setStatus("APPROVED").setType("USER").setEmail(email).setId(userId)));
     when(egoClient.getGroupsByUserId(userId)).thenReturn(groupStream);
     when(egoService.isCorrectGroupName(currentGroup, shortname)).thenReturn(true);
     when(egoService.isSameRole(newRole, currentGroup.getName())).thenReturn(false);
     when(egoService.getProgramEgoGroup(shortname, newRole)).thenReturn(mockProgramEgoGroup.get());
 
-    doCallRealMethod().when(egoService).updateUserRole(userId, shortname, newRole);
-    egoService.updateUserRole(userId, shortname, newRole);
+    doCallRealMethod().when(egoService).updateUserRole(email, shortname, newRole);
+    egoService.updateUserRole(email, shortname, newRole);
 
     verify(egoClient, times(1)).addUserToGroup(collabGroupId, userId);
   }

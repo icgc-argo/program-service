@@ -51,7 +51,7 @@ public class UpdateProgramTest {
     val programId = programToUpdate.getId();
     val updatingCancer = entityGenerator.setUpCancer("Soft Tissue cancer");
     val updatingPrimarySite = entityGenerator.setUpPrimarySite("Liver");
-    val updatingInstitution = entityGenerator.setUpInstitution("OICR");
+    val updatingInstitution = entityGenerator.setUpInstitution("Ontario Institute for Cancer Research");
     val updatingCountry = entityGenerator.setUpCountry("CA");
     val updatingRegion = entityGenerator.setUpRegion("NORTH AMERICA");
 
@@ -69,7 +69,7 @@ public class UpdateProgramTest {
 
     val cancers = List.of("Soft Tissue cancer");
     val primarySites = List.of("Liver");
-    val institutions = List.of("OICR");
+    val institutions = List.of("Ontario Institute for Cancer Research");
     val regions = List.of("NORTH AMERICA");
     val countries = List.of("CA");
 
@@ -109,13 +109,13 @@ public class UpdateProgramTest {
     entityGenerator.setUpPrimarySite("Brain");
     entityGenerator.setUpPrimarySite("Skin");
 
-    entityGenerator.setUpInstitution("OICR");
+    entityGenerator.setUpInstitution("Ontario Institute for Cancer Research");
     entityGenerator.setUpCountry("CA");
     entityGenerator.setUpRegion("NORTH AMERICA");
 
     val cancers = List.of("Liver cancer", "Brain cancer", "Skin cancer");
     val primarySites = List.of("Liver");
-    val institutions = List.of("OICR");
+    val institutions = List.of("Ontario Institute for Cancer Research");
     val regions = List.of("NORTH AMERICA");
     val countries = List.of("CA");
     programService.updateProgram(programToUpdate, cancers, primarySites, institutions, countries, regions);
@@ -151,13 +151,13 @@ public class UpdateProgramTest {
     entityGenerator.setUpCancer("Brain cancer");
     entityGenerator.setUpPrimarySite("Liver");
     entityGenerator.setUpPrimarySite("Brain");
-    entityGenerator.setUpInstitution("OICR");
+    entityGenerator.setUpInstitution("Ontario Institute for Cancer Research");
     entityGenerator.setUpCountry("CA");
     entityGenerator.setUpRegion("NORTH AMERICA");
 
     val cancers = List.of("Soft Tissue cancer", "Brain cancer");
     val primarySites = List.of("Liver", "Brain");
-    val institutions = List.of("OICR");
+    val institutions = List.of("Ontario Institute for Cancer Research");
     val regions = List.of("NORTH AMERICA");
     val countries = List.of("CA");
     programService.updateProgram(programToUpdate, cancers, primarySites, institutions, countries, regions);
@@ -185,13 +185,13 @@ public class UpdateProgramTest {
     entityGenerator.setUpPrimarySite("Brain");
     entityGenerator.setUpPrimarySite("Bone");
     entityGenerator.setUpPrimarySite("Skin");
-    entityGenerator.setUpInstitution("OICR");
+    entityGenerator.setUpInstitution("Ontario Institute for Cancer Research");
     entityGenerator.setUpCountry("CA");
     entityGenerator.setUpRegion("NORTH AMERICA");
 
     val cancers = List.of("Soft Tissue cancer");
     val primarySites = List.of("Liver", "Brain");
-    val institutions = List.of("OICR");
+    val institutions = List.of("Ontario Institute for Cancer Research");
     val regions = List.of("NORTH AMERICA");
     val countries = List.of("CA");
     programService.updateProgram(programToUpdate, cancers, primarySites, institutions, countries, regions);
@@ -221,13 +221,13 @@ public class UpdateProgramTest {
     entityGenerator.setUpCancer("Bone cancer");
     entityGenerator.setUpPrimarySite("Liver");
     entityGenerator.setUpPrimarySite("Brain");
-    entityGenerator.setUpInstitution("OICR");
+    entityGenerator.setUpInstitution("Ontario Institute for Cancer Research");
     entityGenerator.setUpCountry("CA");
     entityGenerator.setUpRegion("NORTH AMERICA");
 
     val cancers = List.of("Soft Tissue cancer", "Skin cancer");
     val primarySites = List.of("Liver", "Brain");
-    val institutions = List.of("OICR");
+    val institutions = List.of("Ontario Institute for Cancer Research");
     val regions = List.of("NORTH AMERICA");
     val countries = List.of("CA");
 
@@ -258,13 +258,13 @@ public class UpdateProgramTest {
     entityGenerator.setUpCancer("Skin cancer");
     entityGenerator.setUpPrimarySite("Liver");
     entityGenerator.setUpPrimarySite("Brain");
-    entityGenerator.setUpInstitution("OICR");
+    entityGenerator.setUpInstitution("Ontario Institute for Cancer Research");
     entityGenerator.setUpCountry("CA");
     entityGenerator.setUpRegion("NORTH AMERICA");
 
     val cancers = List.of("Soft Tissue cancer", "Skin cancer");
     val primarySites = List.of("Liver", "Brain");
-    val institutions = List.of("OICR");
+    val institutions = List.of("Ontario Institute for Cancer Research");
     val regions = List.of("NORTH AMERICA");
     val countries = List.of("CA");
     programService.updateProgram(programToUpdate, cancers, primarySites, institutions, countries, regions);
