@@ -36,18 +36,20 @@ import org.icgc.argo.program_service.services.ProgramService;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.NestedRuntimeException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static io.grpc.Status.NOT_FOUND;
+import static io.grpc.Status.UNKNOWN;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 
@@ -76,7 +78,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     this.invitationService = invitationService;
     this.authorizationService = authorizationService;
   }
-
 
   //TODO: need better error response. If a duplicate program is created, get "2 UNKNOWN" error. Should atleast have a message in it
   @Override
@@ -152,7 +153,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onCompleted();
     } catch (NotFoundException | NoSuchElementException e) {
       log.error("Exception throw in updateProgram: {}", e.getMessage());
-      e.printStackTrace();
       throw status(NOT_FOUND, e.getMessage());
     }
   }
@@ -198,7 +198,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       responseObserver.onCompleted();
     } catch (NotFoundException e) {
       log.error("Exception throw in joinProgram: {}", e.getMessage());
-      e.printStackTrace();
       throw status(NOT_FOUND, e.getMessage());
     }
   }
@@ -252,12 +251,11 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
     val email =request.getUserEmail().getValue();
     val role = request.getRole().getValue();
-    
+
     try {
       egoService.updateUserRole(email, programShortName, role);
     } catch (NotFoundException e) {
       log.error("Exception throw in updateUser: {}", e.getMessage());
-      e.printStackTrace();
       throw status(NOT_FOUND, e.getMessage());
     }
     responseObserver.onNext(Empty.getDefaultInstance());
@@ -274,16 +272,70 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       programService.removeProgram(request.getProgramShortName().getValue());
     } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
       log.error("Exception throw in removeProgram: {}", e.getMessage());
-      e.printStackTrace();
       throw status(NOT_FOUND, getExceptionMessage(e));
     }
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
   }
 
+  @Override
+  public void listCancers(Empty request, StreamObserver<ListCancersResponse> responseObserver) {
+    val cancers = programService.listCancers();
+    val listCancersResponse = programConverter.cancerEntitiesToListCancersResponse(cancers);
+    responseObserver.onNext(listCancersResponse);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void listPrimarySites(Empty request, StreamObserver<ListPrimarySitesResponse> responseObserver) {
+    val sites = programService.listPrimarySites();
+    val listPrimarySitesResponse = programConverter.primarySiteEntitiesToListPrimarySitesResponse(sites);
+    responseObserver.onNext(listPrimarySitesResponse);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void listCountries(Empty request, StreamObserver<ListCountriesResponse> responseObserver) {
+    val countries = programService.listCountries();
+    val listCountriesResponse = programConverter.countryEntitiesToListCountriesResponse(countries);
+    responseObserver.onNext(listCountriesResponse);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void listRegions(Empty request, StreamObserver<ListRegionsResponse> responseObserver) {
+    val regions = programService.listRegions();
+    val listRegionsResponse = programConverter.regionEntitiesToListRegionsResponse(regions);
+    responseObserver.onNext(listRegionsResponse);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void listInstitutions(Empty request, StreamObserver<ListInstitutionsResponse> responseObserver) {
+    val institutions = programService.listInstitutions();
+    val listInstitutionsResponse = programConverter.institutionEntitiesToListInstitutionsResponse(institutions);
+    responseObserver.onNext(listInstitutionsResponse);
+    responseObserver.onCompleted();
+  }
+
   private String getExceptionMessage(NestedRuntimeException e) {
     return e.getMostSpecificCause().getMessage();
   }
+
+  @Override
+  public void addInstitutions(AddInstitutionsRequest request, StreamObserver<AddInstitutionsResponse> responseObserver) {
+    val names = request.getNamesList().stream().map(name -> commonConverter.unboxStringValue(name)).collect(toImmutableList());
+    try {
+      val institutions = programService.addInstitutions(names);
+      val response = programConverter.institutionsToAddInstitutionsResponse(institutions);
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (DataIntegrityViolationException e){
+      log.error("Exception throw in addInstitutions: {}", e.getMessage());
+      throw status(UNKNOWN, e.getMessage());
+    }
+  }
+
 
   @Override
   @Transactional
@@ -299,6 +351,5 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
-
 
 }
