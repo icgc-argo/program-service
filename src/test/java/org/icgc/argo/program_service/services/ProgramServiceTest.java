@@ -19,7 +19,6 @@
 package org.icgc.argo.program_service.services;
 
 import lombok.val;
-import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.Program;
@@ -30,9 +29,7 @@ import org.junit.runner.RunWith;
 import org.mockito.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,46 +52,21 @@ class ProgramServiceTest {
 
   @Mock private ProgramConverter programConverter;
 
-  @Mock ProgramCancerRepository programCancerRepository;
+  @Mock private ProgramCancerRepository programCancerRepository;
 
-  @Mock ProgramPrimarySiteRepository programPrimarySiteRepository;
+  @Mock private ProgramPrimarySiteRepository programPrimarySiteRepository;
 
-  @Mock ProgramInstitutionRepository programInstitutionRepository;
+  @Mock private ProgramInstitutionRepository programInstitutionRepository;
 
-  @Mock ProgramCountryRepository programCountryRepository;
+  @Mock private ProgramCountryRepository programCountryRepository;
 
-  @Mock ProgramRegionRepository programRegionRepository;
+  @Mock private ProgramRegionRepository programRegionRepository;
 
-  @Mock InstitutionRepository institutionRepository;
+  @Mock private InstitutionRepository institutionRepository;
 
-  @Mock RegionRepository regionRepository;
+  @Mock private RegionRepository regionRepository;
 
-  @Mock CountryRepository countryRepository;
-
-  void setup() {
-    program = Program.newBuilder()
-            .addAllCancerTypes(List.of("Blood cancer", "Brain cancer"))
-            .addAllPrimarySites(List.of("Blood", "Brain"))
-            .addAllInstitutions(List.of("OICR"))
-            .addAllCountries(List.of("Canada"))
-            .addAllRegions(List.of("North America"))
-            .build();
-  }
-
-//  @Test
-//  void createProgram() {
-//    setup();
-//
-//    val shortName = RandomString.make(33);
-//    val inputProgramEntity = new ProgramEntity().setName(RandomString.make(10)).setShortName(shortName);
-//    assertThat(inputProgramEntity.getCreatedAt()).isNull();
-//    assertThat(inputProgramEntity.getUpdatedAt()).isNull();
-//    when(programConverter.programToProgramEntity(program)).thenReturn(inputProgramEntity);
-//    val outputEntity = programService.createProgram(program);
-//    assertThat(outputEntity.getCreatedAt()).isNotNull();
-//    assertThat(outputEntity.getUpdatedAt()).isNotNull();
-//    verify(programRepository).save(inputProgramEntity);
-//  }
+  @Mock private CountryRepository countryRepository;
 
   @Test
   void listPrograms() {
