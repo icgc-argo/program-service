@@ -187,9 +187,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void joinProgram(JoinProgramRequest request, StreamObserver<JoinProgramResponse> responseObserver) {
     val str = request.getJoinProgramInvitationId().getValue();
     val id = commonConverter.stringToUUID(str);
-    val invitation = invitationService.acceptInvite(id);
+    
+    val invitation = invitationService.getInvitationById(id);
 
-    authorizationService.requireEmail(invitation.getEmail());
+    if (invitation.isEmpty()) {
+      throw NOT_FOUND.asRuntimeException();
+    }
+
+    authorizationService.requireEmail(invitation.get().getUserEmail());
 
     try {
       val responseUser = invitationService.acceptInvite(id);

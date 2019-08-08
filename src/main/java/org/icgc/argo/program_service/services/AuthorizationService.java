@@ -1,17 +1,18 @@
 package org.icgc.argo.program_service.services;
 
 import io.grpc.Status;
-import lombok.extern.slf4j.Slf4j;
 
 import static java.lang.String.format;
 
 public interface AuthorizationService {
   boolean isDCCAdmin();
+
   boolean hasPermission(String permission);
+
   boolean hasEmail(String email);
 
   private String readPermission(String programShortName) {
-    return "PROGRAM-"+ programShortName +".READ";
+    return "PROGRAM-" + programShortName + ".READ";
   }
 
   private String writePermission(String programShortName) {
@@ -20,7 +21,7 @@ public interface AuthorizationService {
 
   default void require(boolean condition, String message) {
     if (!condition) {
-      throw Status.fromCode(Status.Code.PERMISSION_DENIED).asRuntimeException();
+      throw Status.PERMISSION_DENIED.augmentDescription(message).asRuntimeException();
     }
   }
 
@@ -29,7 +30,7 @@ public interface AuthorizationService {
   }
 
   default void requirePermission(String permission) {
-    require(isAuthorized(permission),format("does not have permission '%s'",permission));
+    require(isAuthorized(permission), format("does not have permission '%s'", permission));
   }
 
   default void requireProgramAdmin(String programShortName) {
@@ -41,7 +42,7 @@ public interface AuthorizationService {
   }
 
   default boolean canRead(String programShortName) {
-    return isAuthorized(readPermission(programShortName));
+    return isAuthorized(readPermission(programShortName)) || isAuthorized(writePermission(programShortName));
   }
 
   default boolean canWrite(String programShortName) {

@@ -20,7 +20,7 @@ public class EgoAuthorizationService implements AuthorizationService {
 
   public EgoAuthorizationService(String dccAdminPermission) {
     this.dccAdminPermission = dccAdminPermission;
-    log.info(format("Created egoAuthorization service with permission='%s'", dccAdminPermission));
+    log.info(format("Created egoAuthorization service with dccAdmin permission='%s'", dccAdminPermission));
   }
 
   public EgoToken getEgoToken() {
@@ -37,7 +37,10 @@ public class EgoAuthorizationService implements AuthorizationService {
   }
 
   public boolean hasPermission(@NotNull String permission) {
-    return getPermissions().contains(permission);
+    log.info(format("Want permission: %s", permission));
+    val status=getPermissions().contains(permission);
+    log.info(format("hasPermission returns %s", status));
+    return status;
   }
 
   @Override
@@ -53,6 +56,7 @@ public class EgoAuthorizationService implements AuthorizationService {
     if (permissions == null) {
       return Collections.unmodifiableSet(Collections.EMPTY_SET);
     }
+    log.info(format("Got permissions: %s", Set.of(permissions)));
     return Collections.unmodifiableSet(Set.of(permissions));
   }
 
