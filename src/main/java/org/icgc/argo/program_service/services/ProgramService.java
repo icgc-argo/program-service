@@ -35,10 +35,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -52,7 +50,7 @@ import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.create
 import static org.icgc.argo.program_service.model.join.ProgramRegion.createProgramRegion;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.EntityService.checkExistenceByName;
-import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
+import static org.icgc.argo.program_service.utils.EntityService.*;
 
 @Service
 @Validated
@@ -313,6 +311,34 @@ public class ProgramService {
                 .setFetchCountries(true)
                 .setFetchRegions(true)
                 .listAll());
-    return List.copyOf(new LinkedHashSet<ProgramEntity>(programs));
+    return List.copyOf(programs);
   }
+
+  public List<CancerEntity> listCancers() {
+    return List.copyOf(cancerRepository.findAll());
+  }
+
+  public List<PrimarySiteEntity> listPrimarySites() {
+    return List.copyOf(primarySiteRepository.findAll());
+  }
+
+  public List<CountryEntity> listCountries(){
+    return List.copyOf(countryRepository.findAll());
+  }
+
+  public List<RegionEntity> listRegions(){
+    return List.copyOf(regionRepository.findAll());
+  }
+
+  public List<InstitutionEntity> listInstitutions() {
+    return List.copyOf(institutionRepository.findAll());
+  }
+
+  public List<InstitutionEntity> addInstitutions(@NonNull List<String> names){
+    checkEmpty(names);
+    checkDuplicate(InstitutionEntity.class, institutionRepository, names);
+    val entities = names.stream().map(name -> new InstitutionEntity().setName(name)).collect(toUnmodifiableList());
+    return institutionRepository.saveAll(entities);
+  }
+
 }

@@ -1,440 +1,443 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'A.A.Kharkevich Institute of Information Transmission Problems');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Aarhus University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Aarhus University Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'AbbVie');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Academia Sinica');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Academic Medical Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Addenbrooke’s Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Al Maather');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Analytical Biological Services Inc.');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Anatomic Mayo Clinic');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Anatomical St Vincent’s Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Annai Systems, Inc.');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Argmix Consulting');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Bar-Ilan University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Barcelona Institute of Science and Technology (BIST)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Barcelona Supercomputing Center (BSC)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Barking Havering and Redbridge University Hospitals NHS Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Baylor College of Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'BC Cancer Agency');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Beatson West of Scotland Cancer Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Beijing Genomics Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Berlin Institute for MedicalMax Delbrück Center for Molecular Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Berlin Institute of Health (BIH) and Charité - Universitätsmedizin Berlin');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Berlin Institute of Health and Charitè - Universitätsmedizin Berlin');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Beth Israel Deaconess Medical Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'BGI-Shenzhen');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Biobyte solutions GmbH');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'BioCentre Léon Bérard');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Bioinformatics Core');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Bioplatforms Australia');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Boston Children''s Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Brandeis University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Brigham and Women''s Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'British Columbia Cancer Agency');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Broad Institute of MIT and Harvard');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Buck Institute for Research on Aging');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Cambridge University Hospitals NHS Foundation Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Carleton College');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Case Western Reserve University School of Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'CEA - Institute de Génomique');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Cedars-Sinai Medical Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Center for Psychiatric North Shore University Health System');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Centre de recherche des Cordeliers');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Centre Léon Bérard');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Charité Universitätsmedizin Berlin');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Children''s Hospital of Philadelphia');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Children''s Medical Research Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'China National Gene Bank-Shenzhen');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Chinese Academy of Sciences');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Chinese Cancer Genome Consortium');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Christian-Albrechts-University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'CIBER Epidemiología y Salud Pública (CIBERESP)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'CIBIO/InBIO - Research Center in Biodiversity and Genetic Resources');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Cleveland Clinic');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Columbia University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'CRUK Beatson Institute for Cancer Research');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'CRUK Manchester Institute and Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'CSRA Incorporated');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Cureline Inc.');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Dana Farber Cancer Insititute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Dana-Farber Cancer Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'DLR Project Management Agency');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Duke University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Duke University Medical Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Duke-NUS Medical School');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Earlham Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Edinburgh Royal Infirmary');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Electronics and Telecommunications Research Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Emory University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Erasmus Medical Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Erasmus Medical Center Rotterdam');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'ETH Zurich');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'European Bioinformatics Institute (EMBL-EBI)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'European Molecular Biology Laboratory (EMBL)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Ewha Womans University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Experimental Mayo Clinic');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Federal Ministry of Education and Research');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Fourth Military Medical University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Fox Chase Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Friedrich-Ebert-Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Fundeni Clinical Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Gachon University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Garvan Institute of Medical Research');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Geneplus-Shenzhen');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Genome Canada');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Genome Institute of Singapore');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Georg-Augusts-University of Göttingen');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Georgia Regents University Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'German Cancer Aid');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'German Cancer Consortium (DKTK)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'German Cancer Research Center (DKFZ)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'German Center for Infection Research (DZIF)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Ghent University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Giovanni Paolo II / I.R.C.C.S. Cancer Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Glasgow Royal Infirmary');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Gloucester Royal Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Government of India');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Greater Poland Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'GZA Hospitals St.-Augustinus');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Hallym University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Hanyang University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Harvard Medical School');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Harvard University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'HCA Laboratories');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Hefei University of Technology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Heidelberg Academy of Sciences and Humanities');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Heidelberg Institute for Stem Cell Technology and Experimental Medicine (HI-STEM)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Heidelberg University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Heidelberg University Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Heinrich Heine University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Helen F. Graham Cancer Center at Christiana Care Health Systems');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Henry Ford Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Hiroshima University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Hokkaido University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Hong Kong University of Science and Technology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Hopp Children''s Cancer Center (KiTZ)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Huazhong University of Science and Technology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'HudsonAlpha Institute for Biotechnology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Icahn School of Medicine at Mount Sinai');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Icelandic Cancer Society');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'ICM Institut Régional du Cancer');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Imperial College');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Indiana University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Indivumed GmbH');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'INSERM Unit 830');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institució Catalana de Recerca i Estudis Avançats (ICREA)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institut Bergonié');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institut d’Investigacions Biomèdiques August Pi i Sunyer (IDIBAPS)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institut Gustave Roussy');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institut Hospital del Mar d''Investigacions Mèdiques (IMIM)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institut Jules Bordet');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institut National du Cancer (INCA)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institute for Medical Informatics Statistics and Epidemiology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institute for Pathology and Molecular University Hospital Zurich');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institute for Research in Biomedicine (IRB Barcelona)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institute for Systems Biology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institute of Charité – University Medicine Berlin');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institute of Christian-Albrechts-University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institute of Human Genetics Ulm University and Ulm University Medical Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institute of Molecular and Cell Biology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institute of Ulm University and University Hospital of Ulm');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institute of University Medical Center Hamburg-Eppendorf');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Institute of University of Wuerzburg');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Instituto Carlos Slim de la Salud');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Instituto Universitario de Oncologıa-IUOPA');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'International Agency for Research on Cancer');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'International Genomics Consortium');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Istituto Neurologico Besta');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'James Cook University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Japan Agency for Medical Research and Development');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Japan Science and Technology Agency');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Johns Hopkins Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Johns Hopkins Medical Institutions');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Johns Hopkins School of Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Johns Hopkins University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Jules Bordet Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Karolinska Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Keimyung University Dongsan Medical Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Keio University School of Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Khon Kaen University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'King''s College London and Guy''s and St Thomas'' NHS Foundation Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'King''s College London School of Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Korea Advanced Institute of Science and Technology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Korea University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Kyushu University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'La Trobe University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Leibniz Institute for Experimental Virology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Leibniz Institute of Baltic Sea Research');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Leibniz Institute on Aging - Fritz Lipmann Institute (FLI)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Leidos Biomedical Research Inc.');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'LLC Biobank');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Los Alamos National Laboratory');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Ludwig Center at Harvard');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Lund University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Lunenfeld-Tanenbaum Research Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Maastricht University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Macquarie University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Massachusetts General Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Massachusetts General Hospital Center for Cancer Research');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Massachusetts Institute of Technology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Max Planck Institute for Molecular Genetics');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Mayo Clinic');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'McGill University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'McGill University and Genome Quebec Innovation Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'McGill University and Génome Québec Innovation Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Medical College of Wisconsin');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Memorial Sloan Kettering Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Memorial Sloan-Kettering Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Michael E. DeBakey Veterans Affairs Medical Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Mount Sinai Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'MRC University of Cambridge');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'MRC-University of Glasgow Centre for Virus Research');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'National Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'National Cancer Center Hospital (NCCH)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'National Cancer Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'National Cancer Centre Korea');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'National Cancer Centre Singapore');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'National Center for Tumor Diseases (NCT) Heidelberg');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'National Heart Centre Singapore');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'National Institute of Biomedical Genomics');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'National Institute of Environmental Health Sciences (NIEHS)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'National Institutes of Health');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'National University of Singapore');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Nationwide Children''s Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Nationwide Children’s Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'New York Genome Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'New York University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'NIHR Cambridge Biomedical Research Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Nijmegen Centre for Molecular Life Sciences');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Ninewells Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Norfolk and Norwich University Hospital NHS Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'NorthShore University Health System');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Northwestern University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Norwegian University of Science and Technology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Nottingham University Hospitals NHS Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'NYU Langone Medical Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Ohio State University College of Medicine and Arthur G. James Comprehensive Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Oncology and Immunology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Oncology-Karolinska Institutet');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Ontario Institute for Cancer Research');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Oregon Health & Science University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Osaka International Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Osaka University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Oslo University Hospital Ulleval');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Oxford Nanopore Technologies');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'PDXen Biosystems Inc.');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Pediatric Hematology and Oncology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Peking University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Peking University Cancer Hospital & Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Penrose St. Francis Health Services');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Polish Academy of Sciences');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Poznan University of Medical Sciences');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'PraxisClinic am Johannisplatz');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Princess Alexandra Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Princess Margaret Cancer Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Princeton University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Prostate Cancer Canada');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'QIMR Berghofer Medical Research Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Queen Elizabeth University Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Queen Mary University of London');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Queen''s University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'RIKEN Center for Integrative Medical Sciences');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Robert-Bosch-Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Roswell Park Cancer Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Royal Children’s Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Royal Marsden NHS Foundation Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Royal National Orthopaedic Hospital - Stanmore');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Royal Prince Alfred Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Royal Stoke University Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Royal Surrey County Hospital NHS Foundation Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'SA Pathology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Sage Bionetworks');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Salford Royal NHS Foundation Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Samsung Genome Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Sangmyung University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'School of Medicine and Health Science');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Senckenberg Institute of University of Frankfurt Medical School');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Seoul National University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Seoul National University Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Seven Bridges');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Shanghai Jiaotong University School of Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'SIB Swiss Institute of Bioinformatics');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Sidra Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Simon Fraser University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Singapore General Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Skolkovo Institute of Science and Technology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Spanish Ministry of Science and Innovation');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Spanish National Cancer Research Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'St James''s University Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'St Thomas''s Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'St. Jude Children''s Research Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'St.-Antonius-Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Stanford University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Stanford University School of Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Sungkyunkwan University School of Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Swiss Institute of Bioinformatics');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Sylvester Comprehensive Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Syntekabio Inc');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Syntekabio Inc.');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Tallinn University of Technology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Tampere University Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Tata Institute of Fundamental Research');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Tata Memorial Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Technical University of Denmark');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Barcelona Institute of Science and Technology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Chinese University of Hong Kong');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Francis Crick Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Hebrew University Faculty of Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Hospital for Sick Children');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Institute of Cancer Research');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Jackson Laboratory for Genomic Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Johns Hopkins Medical Institutions');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The McDonnell Genome Institute at Washington University in St Louis');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Netherlands Cancer Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Norwegian Radium Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Ohio State University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Ohio State University Comprehensive Cancer Center (OSUCCC – James)');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Prince Charles Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Royal Brisbane & Women''s Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Sidney Kimmel Comprehensive Cancer Center at Johns Hopkins University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The University of Auckland');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The University of Cambridge School of Clinical Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The University of Chicago');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The University of Melbourne');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The University of Queensland');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The University of Sydney');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The University of Texas Health Science Center at Houston');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The University of Texas MD Anderson Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The University of Tokyo');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Wellcome Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'The Westmead Institute for Medical Research');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Tokyo Medical and Dental University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Tokyo Women’s Medical University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Toronto General Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'UC San Diego School of Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'UdG');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Ulm University and Ulm University Medical Center of Ulm');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Ulsan University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Universidade de Santiago de Compostela');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Universidade de Vigo');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Universitat Autònoma de Barcelona');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Universitat Pompeu Fabra');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Université Claude Bernard Lyon 1');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University and Hospital Trust of Verona');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University and Hospital Trust of Verona University and Hospital Trust of Verona');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University California at Davis');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Clinics');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University College London');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University College London Cancer Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Health Network');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Hospital and University of Bern');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Hospital Muenster - Pediatric Hematology and Oncology');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Hospital of Minjoz');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Hospital Schleswig-Holstein');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Hospital Southampton NHS Foundation Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Hospital Zurich');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Hospitals Birmingham NHS Foundation Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Hospitals Cleveland Medical Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Hospitals Coventry and Warwickshire NHS Trust');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Kiel');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University Medical Center Hamburg-Eppendorf');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Alabama at Birmingham');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Antwerp');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Barcelona');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Bergen');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Bern');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of British Columbia');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Calgary');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of California');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of California Los Angeles');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of California San Diego');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of California San Francisco');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of California Santa Cruz');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Cambridge');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Chicago');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Cologne');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Copenhagen');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Duisburg-Essen');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Düsseldorf');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of East Anglia');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Edinburgh');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Florida');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Geneva');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Geneva Medical School');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Glasgow');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Helsinki');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Iceland');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Latvia');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Lausanne');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Leipzig');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Leuven');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Liverpool');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Ljubljana');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Manchester');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Melbourne');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Michigan Comprehensive Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Milano Bicocca');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Montreal');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Nebraska Medical Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Newcastle');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of North Carolina at Chapel Hill');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of NSW');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Oslo');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Ottawa');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Oxford');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Pavia');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Pennsylvania');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Pittsburgh');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Queensland');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Southern California');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of St Andrews');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Sydney');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Tasmania');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Texas Health Science Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Texas MD Anderson Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Tokyo');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Toronto');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Tübingen');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Ulm and University Hospital of Ulm');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Verona');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Western Australia');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Würzburg');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Zagreb');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Zurich');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'University of Zurich and Swiss Institute of Bioinformatics');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Universiy of Barcelona');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'UPMC Shadyside');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Uppsala University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'US National Institutes of Health');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Vall d''Hebron Institute of Oncology: VHIO');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Van Andel Research Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Vancouver Prostate Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Vanderbilt Ingram Cancer Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Vector Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Victorian Institute of Forensic Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Wakayama Medical University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Walter + Eliza Hall Institute');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Walter Reed National Military Medical Center');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Washington State University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Washington University in St Louis');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Washington University School of Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Weill Cornell Medical College');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Weill Cornell Medicine');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Weill Cornell Medicine and NewYork Presbyterian Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Wellcome Genome Campus');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Westdeutsches Tumorzentrum & German Cancer Consortium');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Western Sydney University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Westmead Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Westmead Institute for Medical Research');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Wolfson Wohl Cancer Research Centre');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Wythenshawe Hospital');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Xi''an Jiaotong University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Yale University');
-INSERT INTO institution (id, name) VALUES (uuid_generate_v4(), 'Yokohama City University Graduate School of Medicine');
+INSERT INTO institution (id, name)
+VALUES
+  (uuid_generate_v4(), 'A.A.Kharkevich Institute of Information Transmission Problems'),
+  (uuid_generate_v4(), 'Aarhus University'),
+  (uuid_generate_v4(), 'Aarhus University Hospital'),
+  (uuid_generate_v4(), 'AbbVie'),
+  (uuid_generate_v4(), 'Academia Sinica'),
+  (uuid_generate_v4(), 'Academic Medical Center'),
+  (uuid_generate_v4(), 'Addenbrooke’s Hospital'),
+  (uuid_generate_v4(), 'Al Maather'),
+  (uuid_generate_v4(), 'Analytical Biological Services Inc.'),
+  (uuid_generate_v4(), 'Anatomic Mayo Clinic'),
+  (uuid_generate_v4(), 'Anatomical St Vincent’s Hospital'),
+  (uuid_generate_v4(), 'Annai Systems, Inc.'),
+  (uuid_generate_v4(), 'Argmix Consulting'),
+  (uuid_generate_v4(), 'Bar-Ilan University'),
+  (uuid_generate_v4(), 'Barcelona Institute of Science and Technology (BIST)'),
+  (uuid_generate_v4(), 'Barcelona Supercomputing Center (BSC)'),
+  (uuid_generate_v4(), 'Barking Havering and Redbridge University Hospitals NHS Trust'),
+  (uuid_generate_v4(), 'Baylor College of Medicine'),
+  (uuid_generate_v4(), 'BC Cancer Agency'),
+  (uuid_generate_v4(), 'Beatson West of Scotland Cancer Centre'),
+  (uuid_generate_v4(), 'Beijing Genomics Institute'),
+  (uuid_generate_v4(), 'Berlin Institute for MedicalMax Delbrück Center for Molecular Medicine'),
+  (uuid_generate_v4(), 'Berlin Institute of Health (BIH) and Charité - Universitätsmedizin Berlin'),
+  (uuid_generate_v4(), 'Berlin Institute of Health and Charitè - Universitätsmedizin Berlin'),
+  (uuid_generate_v4(), 'Beth Israel Deaconess Medical Center'),
+  (uuid_generate_v4(), 'BGI-Shenzhen'),
+  (uuid_generate_v4(), 'Biobyte solutions GmbH'),
+  (uuid_generate_v4(), 'BioCentre Léon Bérard'),
+  (uuid_generate_v4(), 'Bioinformatics Core'),
+  (uuid_generate_v4(), 'Bioplatforms Australia'),
+  (uuid_generate_v4(), 'Boston Children''s Hospital'),
+  (uuid_generate_v4(), 'Brandeis University'),
+  (uuid_generate_v4(), 'Brigham and Women''s Hospital'),
+  (uuid_generate_v4(), 'British Columbia Cancer Agency'),
+  (uuid_generate_v4(), 'Broad Institute of MIT and Harvard'),
+  (uuid_generate_v4(), 'Buck Institute for Research on Aging'),
+  (uuid_generate_v4(), 'Cambridge University Hospitals NHS Foundation Trust'),
+  (uuid_generate_v4(), 'Carleton College'),
+  (uuid_generate_v4(), 'Case Western Reserve University School of Medicine'),
+  (uuid_generate_v4(), 'CEA - Institute de Génomique'),
+  (uuid_generate_v4(), 'Cedars-Sinai Medical Center'),
+  (uuid_generate_v4(), 'Center for Psychiatric North Shore University Health System'),
+  (uuid_generate_v4(), 'Centre de recherche des Cordeliers'),
+  (uuid_generate_v4(), 'Centre Léon Bérard'),
+  (uuid_generate_v4(), 'Charité Universitätsmedizin Berlin'),
+  (uuid_generate_v4(), 'Children''s Hospital of Philadelphia'),
+  (uuid_generate_v4(), 'Children''s Medical Research Institute'),
+  (uuid_generate_v4(), 'China National Gene Bank-Shenzhen'),
+  (uuid_generate_v4(), 'Chinese Academy of Sciences'),
+  (uuid_generate_v4(), 'Chinese Cancer Genome Consortium'),
+  (uuid_generate_v4(), 'Christian-Albrechts-University'),
+  (uuid_generate_v4(), 'CIBER Epidemiología y Salud Pública (CIBERESP)'),
+  (uuid_generate_v4(), 'CIBIO/InBIO - Research Center in Biodiversity and Genetic Resources'),
+  (uuid_generate_v4(), 'Cleveland Clinic'),
+  (uuid_generate_v4(), 'Columbia University'),
+  (uuid_generate_v4(), 'CRUK Beatson Institute for Cancer Research'),
+  (uuid_generate_v4(), 'CRUK Manchester Institute and Centre'),
+  (uuid_generate_v4(), 'CSRA Incorporated'),
+  (uuid_generate_v4(), 'Cureline Inc.'),
+  (uuid_generate_v4(), 'Dana Farber Cancer Insititute'),
+  (uuid_generate_v4(), 'Dana-Farber Cancer Institute'),
+  (uuid_generate_v4(), 'DLR Project Management Agency'),
+  (uuid_generate_v4(), 'Duke University'),
+  (uuid_generate_v4(), 'Duke University Medical Center'),
+  (uuid_generate_v4(), 'Duke-NUS Medical School'),
+  (uuid_generate_v4(), 'Earlham Institute'),
+  (uuid_generate_v4(), 'Edinburgh Royal Infirmary'),
+  (uuid_generate_v4(), 'Electronics and Telecommunications Research Institute'),
+  (uuid_generate_v4(), 'Emory University'),
+  (uuid_generate_v4(), 'Erasmus Medical Center'),
+  (uuid_generate_v4(), 'Erasmus Medical Center Rotterdam'),
+  (uuid_generate_v4(), 'ETH Zurich'),
+  (uuid_generate_v4(), 'European Bioinformatics Institute (EMBL-EBI)'),
+  (uuid_generate_v4(), 'European Molecular Biology Laboratory (EMBL)'),
+  (uuid_generate_v4(), 'Ewha Womans University'),
+  (uuid_generate_v4(), 'Experimental Mayo Clinic'),
+  (uuid_generate_v4(), 'Federal Ministry of Education and Research'),
+  (uuid_generate_v4(), 'Fourth Military Medical University'),
+  (uuid_generate_v4(), 'Fox Chase Cancer Center'),
+  (uuid_generate_v4(), 'Friedrich-Ebert-Hospital'),
+  (uuid_generate_v4(), 'Fundeni Clinical Institute'),
+  (uuid_generate_v4(), 'Gachon University'),
+  (uuid_generate_v4(), 'Garvan Institute of Medical Research'),
+  (uuid_generate_v4(), 'Geneplus-Shenzhen'),
+  (uuid_generate_v4(), 'Genome Canada'),
+  (uuid_generate_v4(), 'Genome Institute of Singapore'),
+  (uuid_generate_v4(), 'Georg-Augusts-University of Göttingen'),
+  (uuid_generate_v4(), 'Georgia Regents University Cancer Center'),
+  (uuid_generate_v4(), 'German Cancer Aid'),
+  (uuid_generate_v4(), 'German Cancer Consortium (DKTK)'),
+  (uuid_generate_v4(), 'German Cancer Research Center (DKFZ)'),
+  (uuid_generate_v4(), 'German Center for Infection Research (DZIF)'),
+  (uuid_generate_v4(), 'Ghent University'),
+  (uuid_generate_v4(), 'Giovanni Paolo II / I.R.C.C.S. Cancer Institute'),
+  (uuid_generate_v4(), 'Glasgow Royal Infirmary'),
+  (uuid_generate_v4(), 'Gloucester Royal Hospital'),
+  (uuid_generate_v4(), 'Government of India'),
+  (uuid_generate_v4(), 'Greater Poland Cancer Center'),
+  (uuid_generate_v4(), 'GZA Hospitals St.-Augustinus'),
+  (uuid_generate_v4(), 'Hallym University'),
+  (uuid_generate_v4(), 'Hanyang University'),
+  (uuid_generate_v4(), 'Harvard Medical School'),
+  (uuid_generate_v4(), 'Harvard University'),
+  (uuid_generate_v4(), 'HCA Laboratories'),
+  (uuid_generate_v4(), 'Hefei University of Technology'),
+  (uuid_generate_v4(), 'Heidelberg Academy of Sciences and Humanities'),
+  (uuid_generate_v4(), 'Heidelberg Institute for Stem Cell Technology and Experimental Medicine (HI-STEM)'),
+  (uuid_generate_v4(), 'Heidelberg University'),
+  (uuid_generate_v4(), 'Heidelberg University Hospital'),
+  (uuid_generate_v4(), 'Heinrich Heine University'),
+  (uuid_generate_v4(), 'Helen F. Graham Cancer Center at Christiana Care Health Systems'),
+  (uuid_generate_v4(), 'Henry Ford Hospital'),
+  (uuid_generate_v4(), 'Hiroshima University'),
+  (uuid_generate_v4(), 'Hokkaido University'),
+  (uuid_generate_v4(), 'Hong Kong University of Science and Technology'),
+  (uuid_generate_v4(), 'Hopp Children''s Cancer Center (KiTZ)'),
+  (uuid_generate_v4(), 'Huazhong University of Science and Technology'),
+  (uuid_generate_v4(), 'HudsonAlpha Institute for Biotechnology'),
+  (uuid_generate_v4(), 'Icahn School of Medicine at Mount Sinai'),
+  (uuid_generate_v4(), 'Icelandic Cancer Society'),
+  (uuid_generate_v4(), 'ICM Institut Régional du Cancer'),
+  (uuid_generate_v4(), 'Imperial College'),
+  (uuid_generate_v4(), 'Indiana University'),
+  (uuid_generate_v4(), 'Indivumed GmbH'),
+  (uuid_generate_v4(), 'INSERM Unit 830'),
+  (uuid_generate_v4(), 'Institució Catalana de Recerca i Estudis Avançats (ICREA)'),
+  (uuid_generate_v4(), 'Institut Bergonié'),
+  (uuid_generate_v4(), 'Institut d’Investigacions Biomèdiques August Pi i Sunyer (IDIBAPS)'),
+  (uuid_generate_v4(), 'Institut Gustave Roussy'),
+  (uuid_generate_v4(), 'Institut Hospital del Mar d''Investigacions Mèdiques (IMIM)'),
+  (uuid_generate_v4(), 'Institut Jules Bordet'),
+  (uuid_generate_v4(), 'Institut National du Cancer (INCA)'),
+  (uuid_generate_v4(), 'Institute for Medical Informatics Statistics and Epidemiology'),
+  (uuid_generate_v4(), 'Institute for Pathology and Molecular University Hospital Zurich'),
+  (uuid_generate_v4(), 'Institute for Research in Biomedicine (IRB Barcelona)'),
+  (uuid_generate_v4(), 'Institute for Systems Biology'),
+  (uuid_generate_v4(), 'Institute of Charité – University Medicine Berlin'),
+  (uuid_generate_v4(), 'Institute of Christian-Albrechts-University'),
+  (uuid_generate_v4(), 'Institute of Human Genetics Ulm University and Ulm University Medical Center'),
+  (uuid_generate_v4(), 'Institute of Molecular and Cell Biology'),
+  (uuid_generate_v4(), 'Institute of Ulm University and University Hospital of Ulm'),
+  (uuid_generate_v4(), 'Institute of University Medical Center Hamburg-Eppendorf'),
+  (uuid_generate_v4(), 'Institute of University of Wuerzburg'),
+  (uuid_generate_v4(), 'Instituto Carlos Slim de la Salud'),
+  (uuid_generate_v4(), 'Instituto Universitario de Oncologıa-IUOPA'),
+  (uuid_generate_v4(), 'International Agency for Research on Cancer'),
+  (uuid_generate_v4(), 'International Genomics Consortium'),
+  (uuid_generate_v4(), 'Istituto Neurologico Besta'),
+  (uuid_generate_v4(), 'James Cook University'),
+  (uuid_generate_v4(), 'Japan Agency for Medical Research and Development'),
+  (uuid_generate_v4(), 'Japan Science and Technology Agency'),
+  (uuid_generate_v4(), 'Johns Hopkins Hospital'),
+  (uuid_generate_v4(), 'Johns Hopkins Medical Institutions'),
+  (uuid_generate_v4(), 'Johns Hopkins School of Medicine'),
+  (uuid_generate_v4(), 'Johns Hopkins University'),
+  (uuid_generate_v4(), 'Jules Bordet Institute'),
+  (uuid_generate_v4(), 'Karolinska Institute'),
+  (uuid_generate_v4(), 'Keimyung University Dongsan Medical Center'),
+  (uuid_generate_v4(), 'Keio University School of Medicine'),
+  (uuid_generate_v4(), 'Khon Kaen University'),
+  (uuid_generate_v4(), 'King''s College London and Guy''s and St Thomas'' NHS Foundation Trust'),
+  (uuid_generate_v4(), 'King''s College London School of Medicine'),
+  (uuid_generate_v4(), 'Korea Advanced Institute of Science and Technology'),
+  (uuid_generate_v4(), 'Korea University'),
+  (uuid_generate_v4(), 'Kyushu University'),
+  (uuid_generate_v4(), 'La Trobe University'),
+  (uuid_generate_v4(), 'Leibniz Institute for Experimental Virology'),
+  (uuid_generate_v4(), 'Leibniz Institute of Baltic Sea Research'),
+  (uuid_generate_v4(), 'Leibniz Institute on Aging - Fritz Lipmann Institute (FLI)'),
+  (uuid_generate_v4(), 'Leidos Biomedical Research Inc.'),
+  (uuid_generate_v4(), 'LLC Biobank'),
+  (uuid_generate_v4(), 'Los Alamos National Laboratory'),
+  (uuid_generate_v4(), 'Ludwig Center at Harvard'),
+  (uuid_generate_v4(), 'Lund University'),
+  (uuid_generate_v4(), 'Lunenfeld-Tanenbaum Research Institute'),
+  (uuid_generate_v4(), 'Maastricht University'),
+  (uuid_generate_v4(), 'Macquarie University'),
+  (uuid_generate_v4(), 'Massachusetts General Hospital'),
+  (uuid_generate_v4(), 'Massachusetts General Hospital Center for Cancer Research'),
+  (uuid_generate_v4(), 'Massachusetts Institute of Technology'),
+  (uuid_generate_v4(), 'Max Planck Institute for Molecular Genetics'),
+  (uuid_generate_v4(), 'Mayo Clinic'),
+  (uuid_generate_v4(), 'McGill University'),
+  (uuid_generate_v4(), 'McGill University and Genome Quebec Innovation Centre'),
+  (uuid_generate_v4(), 'McGill University and Génome Québec Innovation Centre'),
+  (uuid_generate_v4(), 'Medical College of Wisconsin'),
+  (uuid_generate_v4(), 'Memorial Sloan Kettering Cancer Center'),
+  (uuid_generate_v4(), 'Memorial Sloan-Kettering Cancer Center'),
+  (uuid_generate_v4(), 'Michael E. DeBakey Veterans Affairs Medical Center'),
+  (uuid_generate_v4(), 'Mount Sinai Hospital'),
+  (uuid_generate_v4(), 'MRC University of Cambridge'),
+  (uuid_generate_v4(), 'MRC-University of Glasgow Centre for Virus Research'),
+  (uuid_generate_v4(), 'National Cancer Center'),
+  (uuid_generate_v4(), 'National Cancer Center Hospital (NCCH)'),
+  (uuid_generate_v4(), 'National Cancer Centre'),
+  (uuid_generate_v4(), 'National Cancer Centre Korea'),
+  (uuid_generate_v4(), 'National Cancer Centre Singapore'),
+  (uuid_generate_v4(), 'National Center for Tumor Diseases (NCT) Heidelberg'),
+  (uuid_generate_v4(), 'National Heart Centre Singapore'),
+  (uuid_generate_v4(), 'National Institute of Biomedical Genomics'),
+  (uuid_generate_v4(), 'National Institute of Environmental Health Sciences (NIEHS)'),
+  (uuid_generate_v4(), 'National Institutes of Health'),
+  (uuid_generate_v4(), 'National University of Singapore'),
+  (uuid_generate_v4(), 'Nationwide Children''s Hospital'),
+  (uuid_generate_v4(), 'Nationwide Children’s Hospital'),
+  (uuid_generate_v4(), 'New York Genome Center'),
+  (uuid_generate_v4(), 'New York University'),
+  (uuid_generate_v4(), 'NIHR Cambridge Biomedical Research Centre'),
+  (uuid_generate_v4(), 'Nijmegen Centre for Molecular Life Sciences'),
+  (uuid_generate_v4(), 'Ninewells Hospital'),
+  (uuid_generate_v4(), 'Norfolk and Norwich University Hospital NHS Trust'),
+  (uuid_generate_v4(), 'NorthShore University Health System'),
+  (uuid_generate_v4(), 'Northwestern University'),
+  (uuid_generate_v4(), 'Norwegian University of Science and Technology'),
+  (uuid_generate_v4(), 'Nottingham University Hospitals NHS Trust'),
+  (uuid_generate_v4(), 'NYU Langone Medical Center'),
+  (uuid_generate_v4(), 'Ohio State University College of Medicine and Arthur G. James Comprehensive Cancer Center'),
+  (uuid_generate_v4(), 'Oncology and Immunology'),
+  (uuid_generate_v4(), 'Oncology-Karolinska Institutet'),
+  (uuid_generate_v4(), 'Ontario Institute for Cancer Research'),
+  (uuid_generate_v4(), 'Oregon Health & Science University'),
+  (uuid_generate_v4(), 'Osaka International Cancer Center'),
+  (uuid_generate_v4(), 'Osaka University'),
+  (uuid_generate_v4(), 'Oslo University Hospital Ulleval'),
+  (uuid_generate_v4(), 'Oxford Nanopore Technologies'),
+  (uuid_generate_v4(), 'PDXen Biosystems Inc.'),
+  (uuid_generate_v4(), 'Pediatric Hematology and Oncology'),
+  (uuid_generate_v4(), 'Peking University'),
+  (uuid_generate_v4(), 'Peking University Cancer Hospital & Institute'),
+  (uuid_generate_v4(), 'Penrose St. Francis Health Services'),
+  (uuid_generate_v4(), 'Polish Academy of Sciences'),
+  (uuid_generate_v4(), 'Poznan University of Medical Sciences'),
+  (uuid_generate_v4(), 'PraxisClinic am Johannisplatz'),
+  (uuid_generate_v4(), 'Princess Alexandra Hospital'),
+  (uuid_generate_v4(), 'Princess Margaret Cancer Centre'),
+  (uuid_generate_v4(), 'Princeton University'),
+  (uuid_generate_v4(), 'Prostate Cancer Canada'),
+  (uuid_generate_v4(), 'QIMR Berghofer Medical Research Institute'),
+  (uuid_generate_v4(), 'Queen Elizabeth University Hospital'),
+  (uuid_generate_v4(), 'Queen Mary University of London'),
+  (uuid_generate_v4(), 'Queen''s University'),
+  (uuid_generate_v4(), 'RIKEN Center for Integrative Medical Sciences'),
+  (uuid_generate_v4(), 'Robert-Bosch-Hospital'),
+  (uuid_generate_v4(), 'Roswell Park Cancer Institute'),
+  (uuid_generate_v4(), 'Royal Children’s Hospital'),
+  (uuid_generate_v4(), 'Royal Marsden NHS Foundation Trust'),
+  (uuid_generate_v4(), 'Royal National Orthopaedic Hospital - Stanmore'),
+  (uuid_generate_v4(), 'Royal Prince Alfred Hospital'),
+  (uuid_generate_v4(), 'Royal Stoke University Hospital'),
+  (uuid_generate_v4(), 'Royal Surrey County Hospital NHS Foundation Trust'),
+  (uuid_generate_v4(), 'SA Pathology'),
+  (uuid_generate_v4(), 'Sage Bionetworks'),
+  (uuid_generate_v4(), 'Salford Royal NHS Foundation Trust'),
+  (uuid_generate_v4(), 'Samsung Genome Institute'),
+  (uuid_generate_v4(), 'Sangmyung University'),
+  (uuid_generate_v4(), 'School of Medicine and Health Science'),
+  (uuid_generate_v4(), 'Senckenberg Institute of University of Frankfurt Medical School'),
+  (uuid_generate_v4(), 'Seoul National University'),
+  (uuid_generate_v4(), 'Seoul National University Hospital'),
+  (uuid_generate_v4(), 'Seven Bridges'),
+  (uuid_generate_v4(), 'Shanghai Jiaotong University School of Medicine'),
+  (uuid_generate_v4(), 'SIB Swiss Institute of Bioinformatics'),
+  (uuid_generate_v4(), 'Sidra Medicine'),
+  (uuid_generate_v4(), 'Simon Fraser University'),
+  (uuid_generate_v4(), 'Singapore General Hospital'),
+  (uuid_generate_v4(), 'Skolkovo Institute of Science and Technology'),
+  (uuid_generate_v4(), 'Spanish Ministry of Science and Innovation'),
+  (uuid_generate_v4(), 'Spanish National Cancer Research Centre'),
+  (uuid_generate_v4(), 'St James''s University Hospital'),
+  (uuid_generate_v4(), 'St Thomas''s Hospital'),
+  (uuid_generate_v4(), 'St. Jude Children''s Research Hospital'),
+  (uuid_generate_v4(), 'St.-Antonius-Hospital'),
+  (uuid_generate_v4(), 'Stanford University'),
+  (uuid_generate_v4(), 'Stanford University School of Medicine'),
+  (uuid_generate_v4(), 'Sungkyunkwan University School of Medicine'),
+  (uuid_generate_v4(), 'Swiss Institute of Bioinformatics'),
+  (uuid_generate_v4(), 'Sylvester Comprehensive Cancer Center'),
+  (uuid_generate_v4(), 'Syntekabio Inc'),
+  (uuid_generate_v4(), 'Syntekabio Inc.'),
+  (uuid_generate_v4(), 'Tallinn University of Technology'),
+  (uuid_generate_v4(), 'Tampere University Hospital'),
+  (uuid_generate_v4(), 'Tata Institute of Fundamental Research'),
+  (uuid_generate_v4(), 'Tata Memorial Centre'),
+  (uuid_generate_v4(), 'Technical University of Denmark'),
+  (uuid_generate_v4(), 'The Barcelona Institute of Science and Technology'),
+  (uuid_generate_v4(), 'The Chinese University of Hong Kong'),
+  (uuid_generate_v4(), 'The Francis Crick Institute'),
+  (uuid_generate_v4(), 'The Hebrew University Faculty of Medicine'),
+  (uuid_generate_v4(), 'The Hospital for Sick Children'),
+  (uuid_generate_v4(), 'The Institute of Cancer Research'),
+  (uuid_generate_v4(), 'The Jackson Laboratory for Genomic Medicine'),
+  (uuid_generate_v4(), 'The Johns Hopkins Medical Institutions'),
+  (uuid_generate_v4(), 'The McDonnell Genome Institute at Washington University in St Louis'),
+  (uuid_generate_v4(), 'The Netherlands Cancer Institute'),
+  (uuid_generate_v4(), 'The Norwegian Radium Hospital'),
+  (uuid_generate_v4(), 'The Ohio State University'),
+  (uuid_generate_v4(), 'The Ohio State University Comprehensive Cancer Center (OSUCCC – James)'),
+  (uuid_generate_v4(), 'The Prince Charles Hospital'),
+  (uuid_generate_v4(), 'The Royal Brisbane & Women''s Hospital'),
+  (uuid_generate_v4(), 'The Sidney Kimmel Comprehensive Cancer Center at Johns Hopkins University'),
+  (uuid_generate_v4(), 'The University of Auckland'),
+  (uuid_generate_v4(), 'The University of Cambridge School of Clinical Medicine'),
+  (uuid_generate_v4(), 'The University of Chicago'),
+  (uuid_generate_v4(), 'The University of Melbourne'),
+  (uuid_generate_v4(), 'The University of Queensland'),
+  (uuid_generate_v4(), 'The University of Sydney'),
+  (uuid_generate_v4(), 'The University of Texas Health Science Center at Houston'),
+  (uuid_generate_v4(), 'The University of Texas MD Anderson Cancer Center'),
+  (uuid_generate_v4(), 'The University of Tokyo'),
+  (uuid_generate_v4(), 'The Wellcome Trust'),
+  (uuid_generate_v4(), 'The Westmead Institute for Medical Research'),
+  (uuid_generate_v4(), 'Tokyo Medical and Dental University'),
+  (uuid_generate_v4(), 'Tokyo Women’s Medical University'),
+  (uuid_generate_v4(), 'Toronto General Hospital'),
+  (uuid_generate_v4(), 'UC San Diego School of Medicine'),
+  (uuid_generate_v4(), 'UdG'),
+  (uuid_generate_v4(), 'Ulm University and Ulm University Medical Center of Ulm'),
+  (uuid_generate_v4(), 'Ulsan University'),
+  (uuid_generate_v4(), 'Universidade de Santiago de Compostela'),
+  (uuid_generate_v4(), 'Universidade de Vigo'),
+  (uuid_generate_v4(), 'Universitat Autònoma de Barcelona'),
+  (uuid_generate_v4(), 'Universitat Pompeu Fabra'),
+  (uuid_generate_v4(), 'Université Claude Bernard Lyon 1'),
+  (uuid_generate_v4(), 'University and Hospital Trust of Verona'),
+  (uuid_generate_v4(), 'University and Hospital Trust of Verona University and Hospital Trust of Verona'),
+  (uuid_generate_v4(), 'University California at Davis'),
+  (uuid_generate_v4(), 'University Clinics'),
+  (uuid_generate_v4(), 'University College London'),
+  (uuid_generate_v4(), 'University College London Cancer Institute'),
+  (uuid_generate_v4(), 'University Health Network'),
+  (uuid_generate_v4(), 'University Hospital'),
+  (uuid_generate_v4(), 'University Hospital and University of Bern'),
+  (uuid_generate_v4(), 'University Hospital Muenster - Pediatric Hematology and Oncology'),
+  (uuid_generate_v4(), 'University Hospital of Minjoz'),
+  (uuid_generate_v4(), 'University Hospital Schleswig-Holstein'),
+  (uuid_generate_v4(), 'University Hospital Southampton NHS Foundation Trust'),
+  (uuid_generate_v4(), 'University Hospital Zurich'),
+  (uuid_generate_v4(), 'University Hospitals Birmingham NHS Foundation Trust'),
+  (uuid_generate_v4(), 'University Hospitals Cleveland Medical Center'),
+  (uuid_generate_v4(), 'University Hospitals Coventry and Warwickshire NHS Trust'),
+  (uuid_generate_v4(), 'University Kiel'),
+  (uuid_generate_v4(), 'University Medical Center Hamburg-Eppendorf'),
+  (uuid_generate_v4(), 'University of Alabama at Birmingham'),
+  (uuid_generate_v4(), 'University of Antwerp'),
+  (uuid_generate_v4(), 'University of Barcelona'),
+  (uuid_generate_v4(), 'University of Bergen'),
+  (uuid_generate_v4(), 'University of Bern'),
+  (uuid_generate_v4(), 'University of British Columbia'),
+  (uuid_generate_v4(), 'University of Calgary'),
+  (uuid_generate_v4(), 'University of California'),
+  (uuid_generate_v4(), 'University of California Los Angeles'),
+  (uuid_generate_v4(), 'University of California San Diego'),
+  (uuid_generate_v4(), 'University of California San Francisco'),
+  (uuid_generate_v4(), 'University of California Santa Cruz'),
+  (uuid_generate_v4(), 'University of Cambridge'),
+  (uuid_generate_v4(), 'University of Chicago'),
+  (uuid_generate_v4(), 'University of Cologne'),
+  (uuid_generate_v4(), 'University of Copenhagen'),
+  (uuid_generate_v4(), 'University of Duisburg-Essen'),
+  (uuid_generate_v4(), 'University of Düsseldorf'),
+  (uuid_generate_v4(), 'University of East Anglia'),
+  (uuid_generate_v4(), 'University of Edinburgh'),
+  (uuid_generate_v4(), 'University of Florida'),
+  (uuid_generate_v4(), 'University of Geneva'),
+  (uuid_generate_v4(), 'University of Geneva Medical School'),
+  (uuid_generate_v4(), 'University of Glasgow'),
+  (uuid_generate_v4(), 'University of Helsinki'),
+  (uuid_generate_v4(), 'University of Iceland'),
+  (uuid_generate_v4(), 'University of Latvia'),
+  (uuid_generate_v4(), 'University of Lausanne'),
+  (uuid_generate_v4(), 'University of Leipzig'),
+  (uuid_generate_v4(), 'University of Leuven'),
+  (uuid_generate_v4(), 'University of Liverpool'),
+  (uuid_generate_v4(), 'University of Ljubljana'),
+  (uuid_generate_v4(), 'University of Manchester'),
+  (uuid_generate_v4(), 'University of Melbourne'),
+  (uuid_generate_v4(), 'University of Michigan Comprehensive Cancer Center'),
+  (uuid_generate_v4(), 'University of Milano Bicocca'),
+  (uuid_generate_v4(), 'University of Montreal'),
+  (uuid_generate_v4(), 'University of Nebraska Medical Centre'),
+  (uuid_generate_v4(), 'University of Newcastle'),
+  (uuid_generate_v4(), 'University of North Carolina at Chapel Hill'),
+  (uuid_generate_v4(), 'University of NSW'),
+  (uuid_generate_v4(), 'University of Oslo'),
+  (uuid_generate_v4(), 'University of Ottawa'),
+  (uuid_generate_v4(), 'University of Oxford'),
+  (uuid_generate_v4(), 'University of Pavia'),
+  (uuid_generate_v4(), 'University of Pennsylvania'),
+  (uuid_generate_v4(), 'University of Pittsburgh'),
+  (uuid_generate_v4(), 'University of Queensland'),
+  (uuid_generate_v4(), 'University of Southern California'),
+  (uuid_generate_v4(), 'University of St Andrews'),
+  (uuid_generate_v4(), 'University of Sydney'),
+  (uuid_generate_v4(), 'University of Tasmania'),
+  (uuid_generate_v4(), 'University of Texas Health Science Center'),
+  (uuid_generate_v4(), 'University of Texas MD Anderson Cancer Center'),
+  (uuid_generate_v4(), 'University of Tokyo'),
+  (uuid_generate_v4(), 'University of Toronto'),
+  (uuid_generate_v4(), 'University of Tübingen'),
+  (uuid_generate_v4(), 'University of Ulm and University Hospital of Ulm'),
+  (uuid_generate_v4(), 'University of Verona'),
+  (uuid_generate_v4(), 'University of Western Australia'),
+  (uuid_generate_v4(), 'University of Würzburg'),
+  (uuid_generate_v4(), 'University of Zagreb'),
+  (uuid_generate_v4(), 'University of Zurich'),
+  (uuid_generate_v4(), 'University of Zurich and Swiss Institute of Bioinformatics'),
+  (uuid_generate_v4(), 'Universiy of Barcelona'),
+  (uuid_generate_v4(), 'UPMC Shadyside'),
+  (uuid_generate_v4(), 'Uppsala University'),
+  (uuid_generate_v4(), 'US National Institutes of Health'),
+  (uuid_generate_v4(), 'Vall d''Hebron Institute of Oncology: VHIO'),
+  (uuid_generate_v4(), 'Van Andel Research Institute'),
+  (uuid_generate_v4(), 'Vancouver Prostate Centre'),
+  (uuid_generate_v4(), 'Vanderbilt Ingram Cancer Center'),
+  (uuid_generate_v4(), 'Vector Institute'),
+  (uuid_generate_v4(), 'Victorian Institute of Forensic Medicine'),
+  (uuid_generate_v4(), 'Wakayama Medical University'),
+  (uuid_generate_v4(), 'Walter + Eliza Hall Institute'),
+  (uuid_generate_v4(), 'Walter Reed National Military Medical Center'),
+  (uuid_generate_v4(), 'Washington State University'),
+  (uuid_generate_v4(), 'Washington University in St Louis'),
+  (uuid_generate_v4(), 'Washington University School of Medicine'),
+  (uuid_generate_v4(), 'Weill Cornell Medical College'),
+  (uuid_generate_v4(), 'Weill Cornell Medicine'),
+  (uuid_generate_v4(), 'Weill Cornell Medicine and NewYork Presbyterian Hospital'),
+  (uuid_generate_v4(), 'Wellcome Genome Campus'),
+  (uuid_generate_v4(), 'Westdeutsches Tumorzentrum & German Cancer Consortium'),
+  (uuid_generate_v4(), 'Western Sydney University'),
+  (uuid_generate_v4(), 'Westmead Hospital'),
+  (uuid_generate_v4(), 'Westmead Institute for Medical Research'),
+  (uuid_generate_v4(), 'Wolfson Wohl Cancer Research Centre'),
+  (uuid_generate_v4(), 'Wythenshawe Hospital'),
+  (uuid_generate_v4(), 'Xi''an Jiaotong University'),
+  (uuid_generate_v4(), 'Yale University'),
+  (uuid_generate_v4(), 'Yokohama City University Graduate School of Medicine')
+ ON CONFLICT DO NOTHING;
 
 -- Update programs that used to associate with 'OICR' to be associated with a valid institution --
 UPDATE program_institution

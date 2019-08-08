@@ -23,16 +23,18 @@ import lombok.NonNull;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+
+import static java.util.stream.Collectors.toList;
 
 @Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
 public interface ProgramConverter {
@@ -79,6 +81,56 @@ public interface ProgramConverter {
   @Mapping(target = "countriesList", ignore = true)
   @Mapping(target = "regionsList", ignore = true)
   Program programEntityToProgram(ProgramEntity entity);
+
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  Cancer cancerEntityToCancer(CancerEntity entity);
+
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  PrimarySite primarySiteEntityToPrimarySite(PrimarySiteEntity entity);
+
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  Country countryEntityToCountry(CountryEntity entity);
+
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  Region regionEntityToRegion(RegionEntity entity);
+
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "mergeName", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "mergeId", ignore = true)
+  Institution institutionEntityToInstitution(InstitutionEntity entity);
 
   @AfterMapping
   default void updateProgramFromEntity(@NonNull ProgramEntity entity,
@@ -183,6 +235,42 @@ public interface ProgramConverter {
 
   default ListProgramsResponse programEntitiesToListProgramsResponse(Collection<ProgramEntity> programEntities) {
     return programEntitiesToListProgramsResponse(0, programEntities);
+  }
+
+  default ListCancersResponse cancerEntitiesToListCancersResponse(Collection<CancerEntity> cancerEntities){
+    return ListCancersResponse.newBuilder()
+            .addAllCancers(cancerEntities.stream().map(this::cancerEntityToCancer).collect(toList()))
+            .build();
+  }
+
+  default ListPrimarySitesResponse primarySiteEntitiesToListPrimarySitesResponse(Collection<PrimarySiteEntity> primarySiteEntities){
+    return ListPrimarySitesResponse.newBuilder()
+            .addAllPrimarySites(primarySiteEntities.stream().map(this::primarySiteEntityToPrimarySite).collect(toList()))
+            .build();
+  }
+
+  default ListCountriesResponse countryEntitiesToListCountriesResponse(Collection<CountryEntity> countryEntities){
+    return ListCountriesResponse.newBuilder()
+            .addAllCountries(countryEntities.stream().map(this::countryEntityToCountry).collect(toList()))
+            .build();
+  }
+
+  default ListRegionsResponse regionEntitiesToListRegionsResponse(Collection<RegionEntity> regionEntities){
+    return ListRegionsResponse.newBuilder()
+            .addAllRegions(regionEntities.stream().map(this::regionEntityToRegion).collect(toList()))
+            .build();
+  }
+
+  default ListInstitutionsResponse institutionEntitiesToListInstitutionsResponse(Collection<InstitutionEntity> institutionEntities){
+    return ListInstitutionsResponse.newBuilder()
+            .addAllInstitutions(institutionEntities.stream().map(this::institutionEntityToInstitution).collect(toList()))
+            .build();
+  }
+
+  default AddInstitutionsResponse institutionsToAddInstitutionsResponse(Collection<InstitutionEntity> institutionEntities){
+    return AddInstitutionsResponse.newBuilder()
+            .addAllInstitutions(institutionEntities.stream().map(this::institutionEntityToInstitution).collect(toList()))
+            .build();
   }
 
   default InviteUserResponse inviteIdToInviteUserResponse(@NonNull UUID inviteId) {

@@ -48,7 +48,6 @@ spec:
     }
     stages {
         stage('Test') {
-            // TODO: integration test
             steps {
                 container('java') {
                     sh "./fly.sh migrate"
