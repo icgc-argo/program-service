@@ -203,12 +203,13 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
+  @Transactional
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
-      List<ProgramEntity> programEntities = programService.listPrograms().stream().
-        filter(p -> authorizationService.canRead(p.getShortName())).
-        collect(Collectors.toList());
+      List<ProgramEntity> programEntities = programService.listPrograms()
+              .stream()
+              .filter(p -> authorizationService.canRead(p.getShortName()))
+              .collect(Collectors.toList());
     val listProgramsResponse = programConverter.programEntitiesToListProgramsResponse(programEntities);
-
     responseObserver.onNext(listProgramsResponse);
     responseObserver.onCompleted();
   }
