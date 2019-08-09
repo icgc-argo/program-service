@@ -302,8 +302,7 @@ public class ProgramService {
   }
 
   public List<ProgramEntity> listPrograms() {
-    val programs = programRepository.findAll();
-    return programs.stream().map(program -> getProgram(program.getShortName())).collect(Collectors.toList());
+    return List.copyOf(programRepository.findAll());
   }
 
   public List<CancerEntity> listCancers() {
