@@ -32,17 +32,17 @@ import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
+
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
 import static java.lang.String.format;
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
@@ -115,9 +115,13 @@ class EgoServiceTest {
     egoService1.initAdmin(existingEmail, mockProgramEntity.getShortName());
     egoService1.initAdmin(nonExistingEmail, mockProgramEntity.getShortName());
 
-    assertThatExceptionOfType(IllegalStateException.class)
-      .isThrownBy(() -> egoService1.initAdmin(erroredEmail, mockProgramEntity.getShortName()))
-      .withMessageStartingWith("Could not create ego user");
+    Exception caught=null;
+    try {
+      egoService1.initAdmin(erroredEmail, mockProgramEntity.getShortName());
+    } catch (IllegalStateException e) {
+      caught = e;
+    }
+    assertNotNull("Could not create ego user", caught);
 
     // Verify expected behaviour for existing user case
     verify(egoService1, times(1)).joinProgram(existingEmail, mockProgramEntity.getShortName(), UserRole.ADMIN);

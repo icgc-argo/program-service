@@ -35,8 +35,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
+import java.util.Arrays;
+
 import static java.lang.String.format;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 @SpringBootTest
@@ -87,8 +89,8 @@ class ProgramServiceIT {
     egoService.setUpProgram(name);
 
     // Policies are created
-    assertThat(client.getPolicyByName("PROGRAM-" + name).isPresent()).isTrue();
-    assertThat(client.getPolicyByName("PROGRAMDATA-" + name).isPresent()).isTrue();
+    assertTrue(client.getPolicyByName("PROGRAM-" + name).isPresent());
+    assertTrue(client.getPolicyByName("PROGRAMDATA-" + name).isPresent());
 
     for(UserRole role: UserRole.values()) {
       if (role == UserRole.UNRECOGNIZED) { continue; }
@@ -102,12 +104,14 @@ class ProgramServiceIT {
     System.err.println("verifying role" + role);
     val name = format("PROGRAM-%s-%s", shortName, role.toString());
     val group = client.getGroupByName(name);
-    assertThat(group.isPresent()).isTrue();
+    assertTrue(group.isPresent());
 
     val permissions = client.getGroupPermissions(group.get().getId());
-    assertThat(permissions.length).isEqualTo(2);
-    assertThat(permissions).anyMatch(permission -> permission.getAccessLevel().equals(egoService.getProgramMask(role)));
-    assertThat(permissions).anyMatch(permission -> permission.getAccessLevel().equals(egoService.getDataMask(role)));
+    assertEquals(2, permissions.length);
+    assertTrue(Arrays.asList(permissions).stream().
+        anyMatch(permission -> permission.getAccessLevel().equals(egoService.getProgramMask(role))));
+    assertTrue(Arrays.asList(permissions).stream().
+      anyMatch(permission -> permission.getAccessLevel().equals(egoService.getDataMask(role))));
   }
 
 
@@ -119,18 +123,18 @@ class ProgramServiceIT {
     } catch(Throwable t) {
       throwable = t;
     }
-    assertThat(throwable).isNotNull();
+    assertNotNull(throwable);
 
     // Groups are removed
-    assertThat(client.getGroupByName("PROGRAM-" + name + "-BANNED").isPresent()).isFalse();
-    assertThat(client.getGroupByName("PROGRAM-" + name + "-CURATOR").isPresent()).isFalse();
-    assertThat(client.getGroupByName("PROGRAM-" + name + "-COLLABORATOR").isPresent()).isFalse();
-    assertThat(client.getGroupByName("PROGRAM-" + name + "-SUBMITTER").isPresent()).isFalse();
-    assertThat(client.getGroupByName("PROGRAM-" + name + "-ADMIN").isPresent()).isFalse();
+    assertFalse( client.getGroupByName("PROGRAM-" + name + "-BANNED").isPresent());
+    assertFalse( client.getGroupByName("PROGRAM-" + name + "-CURATOR").isPresent());
+    assertFalse( client.getGroupByName("PROGRAM-" + name + "-COLLABORATOR").isPresent());
+    assertFalse( client.getGroupByName("PROGRAM-" + name + "-SUBMITTER").isPresent());
+    assertFalse( client.getGroupByName("PROGRAM-" + name + "-ADMIN").isPresent());
 
     // Policies are removed
-    assertThat(client.getPolicyByName("PROGRAM-" + name).isPresent()).isFalse();
-    assertThat(client.getPolicyByName("PROGRAMDATA-" + name).isPresent()).isFalse();
+    assertFalse( client.getPolicyByName("PROGRAM-" + name).isPresent());
+    assertFalse( client.getPolicyByName("PROGRAMDATA-" + name).isPresent());
   }
 
 }

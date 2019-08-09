@@ -30,7 +30,6 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Profile("!auth")
-
 @Component
 public class NoopAuthInterceptor implements AuthInterceptor{
 

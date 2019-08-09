@@ -275,7 +275,6 @@ public class EgoService {
     return userResults;
   }
 
-  @Transactional
   public void cleanUpProgram(@NonNull String programShortName) {
     programEgoGroupRepository.findAllByProgramShortName(programShortName).forEach(programEgoGroup -> {
       val egoGroupId = programEgoGroup.getEgoGroupId();

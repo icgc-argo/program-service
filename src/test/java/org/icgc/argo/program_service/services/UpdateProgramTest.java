@@ -16,8 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -61,11 +60,11 @@ public class UpdateProgramTest {
     val existingRegions = regionRepository.findAll(RegionSpecification.containsProgram(programId));
     val existingCountries = countryRepository.findAll(CountrySpecification.containsProgram(programId));
 
-    assertThat(existingCancers.isEmpty()).isTrue();
-    assertThat(existingPrimarySites.isEmpty()).isTrue();
-    assertThat(existingInstitutions.isEmpty());
-    assertThat(existingCountries.isEmpty());
-    assertThat(existingRegions.isEmpty());
+    assertTrue( existingCancers.isEmpty());
+    assertTrue( existingPrimarySites.isEmpty());
+    assertTrue(existingInstitutions.isEmpty());
+    assertTrue(existingCountries.isEmpty());
+    assertTrue(existingRegions.isEmpty());
 
     val cancers = List.of("Soft Tissue cancer");
     val primarySites = List.of("Liver");
@@ -81,20 +80,20 @@ public class UpdateProgramTest {
     val updatedCountries = countryRepository.findAll(CountrySpecification.containsProgram(programId));
     val updatedRegions = regionRepository.findAll(RegionSpecification.containsProgram(programId));
 
-    assertThat(updatedCancers.size()).isEqualTo(1);
-    assertThat(updatedCancers.contains(updatingCancer)).isTrue();
+    assertEquals(1, updatedCancers.size());
+    assertTrue( updatedCancers.contains(updatingCancer));
 
-    assertThat(updatedPrimarySites.size()).isEqualTo(1);
-    assertThat(updatedPrimarySites.contains(updatingPrimarySite)).isTrue();
+    assertEquals(1, updatedPrimarySites.size());
+    assertTrue( updatedPrimarySites.contains(updatingPrimarySite));
 
-    assertThat(updatedInstitutions.size()).isEqualTo(1);
-    assertThat(updatedInstitutions.contains(updatingInstitution)).isTrue();
+    assertEquals(1, updatedInstitutions.size());
+    assertTrue( updatedInstitutions.contains(updatingInstitution));
 
-    assertThat(updatedCountries.size()).isEqualTo(1);
-    assertThat(updatedCountries.contains(updatingCountry)).isTrue();
+    assertEquals(1, updatedCountries.size());
+    assertTrue( updatedCountries.contains(updatingCountry));
 
-    assertThat(updatedRegions.size()).isEqualTo(1);
-    assertThat(updatedRegions.contains(updatingRegion)).isTrue();
+    assertEquals(1, updatedRegions.size());
+    assertTrue( updatedRegions.contains(updatingRegion));
   }
 
   @Test
@@ -123,11 +122,11 @@ public class UpdateProgramTest {
     val cancersBeforeUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
     val primarySitesBeforeUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
 
-    assertThat(cancersBeforeUpdate.size()).isEqualTo(3);
-    assertThat(cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers)).isTrue();
+    assertEquals(3, cancersBeforeUpdate.size());
+    assertTrue( cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers));
 
-    assertThat(primarySitesBeforeUpdate.size()).isEqualTo(1);
-    assertThat(primarySitesBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites)).isTrue();
+    assertEquals(1, primarySitesBeforeUpdate.size());
+    assertTrue( primarySitesBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites));
 
     val cancers2 = List.of("Liver cancer");
     val primarySites2 = List.of("Liver", "Brain", "Skin");
@@ -136,11 +135,11 @@ public class UpdateProgramTest {
     val cancersAfterUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
     val primarySitesAfterUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
 
-    assertThat(cancersAfterUpdate.size()).isEqualTo(1);
-    assertThat(cancersAfterUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers2)).isTrue();
+    assertEquals(1, cancersAfterUpdate.size());
+    assertTrue( cancersAfterUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers2));
 
-    assertThat(primarySitesAfterUpdate.size()).isEqualTo(3);
-    assertThat(primarySitesAfterUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites2)).isTrue();
+    assertEquals(3, primarySitesAfterUpdate.size());
+    assertTrue( primarySitesAfterUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites2));
   }
 
   @Test
@@ -165,15 +164,15 @@ public class UpdateProgramTest {
     val cancersBeforeUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
     val primarySiteBeforeUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
 
-    assertThat(cancersBeforeUpdate.size()).isEqualTo(2);
-    assertThat(cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers)).isTrue();
+    assertEquals(2, cancersBeforeUpdate.size());
+    assertTrue( cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers));
 
-    assertThat(primarySiteBeforeUpdate.size()).isEqualTo(2);
-    assertThat(primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites)).isTrue();
+    assertEquals(2, primarySiteBeforeUpdate.size());
+    assertTrue( primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites));
 
     val exception = assertThrows(RuntimeException.class,
             ()-> programService.updateProgram(programToUpdate, Collections.EMPTY_LIST, Collections.EMPTY_LIST, institutions, countries, regions));
-    assertThat(exception.getMessage()).isEqualTo("INVALID_ARGUMENT: Cannot update program, a program must have at least one of each: cancer, primary site, institution, country, and region.");
+    assertEquals("INVALID_ARGUMENT: Cannot update program, a program must have at least one of each: cancer, primary site, institution, country, and region.", exception.getMessage());
   }
 
   @Test
@@ -199,17 +198,17 @@ public class UpdateProgramTest {
     val cancersBeforeUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
     val primarySiteBeforeUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
 
-    assertThat(cancersBeforeUpdate.size()).isEqualTo(1);
-    assertThat(cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers)).isTrue();
+    assertEquals(1, cancersBeforeUpdate.size());
+    assertTrue( cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers));
 
-    assertThat(primarySiteBeforeUpdate.size()).isEqualTo(2);
-    assertThat(primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites)).isTrue();
+    assertEquals(2, primarySiteBeforeUpdate.size());
+    assertTrue( primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites));
 
     val cancers2 = List.of("Unicorn cancer");
     val primarySites2 = List.of("Bone", "Skin");
     val exception = assertThrows(NotFoundException.class,
             () -> programService.updateProgram(programToUpdate, cancers2, primarySites2, institutions, countries, regions));
-    assertThat(exception.getMessage().contains("Unicorn cancer"));
+    assertTrue(exception.getMessage().contains("Unicorn cancer"));
   }
 
   @Test
@@ -236,18 +235,18 @@ public class UpdateProgramTest {
     val cancersBeforeUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
     val primarySiteBeforeUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
 
-    assertThat(cancersBeforeUpdate.size()).isEqualTo(2);
-    assertThat(cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers)).isTrue();
+    assertEquals(2, cancersBeforeUpdate.size());
+    assertTrue( cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers));
 
-    assertThat(primarySiteBeforeUpdate.size()).isEqualTo(2);
-    assertThat(primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites)).isTrue();
+    assertEquals(2, primarySiteBeforeUpdate.size());
+    assertTrue( primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites));
 
     val cancers2 = List.of("Bone cancer");
     val primarySites2 = List.of("Unicorn", "Hair");
     val exception = assertThrows(NotFoundException.class,
             () -> programService.updateProgram(programToUpdate, cancers2, primarySites2, institutions, countries, regions));
-    assertThat(exception.getMessage().contains("Unicorn"));
-    assertThat(exception.getMessage().contains("Hair"));
+    assertTrue(exception.getMessage().contains("Unicorn"));
+    assertTrue(exception.getMessage().contains("Hair"));
   }
 
   @Test
@@ -272,17 +271,17 @@ public class UpdateProgramTest {
     val cancersBeforeUpdate = cancerRepository.findAll(CancerSpecification.containsProgram(programId));
     val primarySiteBeforeUpdate = primarySiteRepository.findAll(PrimarySiteSpecification.containsProgram(programId));
 
-    assertThat(cancersBeforeUpdate.size()).isEqualTo(2);
-    assertThat(cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers)).isTrue();
+    assertEquals(2, cancersBeforeUpdate.size());
+    assertTrue( cancersBeforeUpdate.stream().map(CancerEntity::getName).collect(toList()).containsAll(cancers));
 
-    assertThat(primarySiteBeforeUpdate.size()).isEqualTo(2);
-    assertThat(primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites)).isTrue();
+    assertEquals(2, primarySiteBeforeUpdate.size());
+    assertTrue( primarySiteBeforeUpdate.stream().map(PrimarySiteEntity::getName).collect(toList()).containsAll(primarySites));
 
     val cancers2 = List.of("Fingernail cancer");
     val primarySites2 = List.of("Unicorn", "Hair");
     val exception = assertThrows(NotFoundException.class,
             () -> programService.updateProgram(programToUpdate, cancers2, primarySites2, institutions, countries, regions));
-    assertThat(exception.getMessage().contains("Fingernail cancer"));
+    assertTrue(exception.getMessage().contains("Fingernail cancer"));
   }
 
 }

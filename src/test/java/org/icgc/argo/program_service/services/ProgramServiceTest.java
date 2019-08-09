@@ -32,7 +32,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.junit4.SpringRunner;
 import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @Ignore("This is a service level unit test only testing the glue")
@@ -74,7 +74,7 @@ class ProgramServiceTest {
     when(programRepository.findAll((Specification<ProgramEntity>) Mockito.any()))
       .thenReturn(List.of(programEntity));
     val programs = programService.listPrograms();
-    assertThat(programs).contains(programEntity);
+    assertTrue(programs.contains(programEntity));
   }
 
 }

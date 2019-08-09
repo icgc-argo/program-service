@@ -36,7 +36,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
@@ -75,12 +76,13 @@ class MailServiceIT {
     when(invite.getProgram()).thenReturn(mockProgramEntity);
     mailService.sendInviteEmail(invite);
     val messages = restTemplate.getForObject("https://" + mailhogHost + "/api/v2/search?kind=containing&query=" + randomEmail, JsonNode.class);
-    assertThat(messages.at("/total").asInt()).isGreaterThan(0);
-    assertThat(messages.at("/items/0/From/Mailbox").asText()).isEqualTo("noreply");
-    assertThat(messages.at("/items/0/From/Domain").asText()).isEqualTo("oicr.on.ca");
-    assertThat(messages.at("/items/0/To/0/Mailbox").asText()).isEqualTo(randomUserName);
-    assertThat(messages.at("/items/0/To/0/Domain").asText()).isEqualTo("program-service.com");
-    assertThat(messages.at("/items/0/Content/Body").asText()).contains("Albert").contains("Einstein");
+    assertTrue(messages.at("/total").asInt() > 0);
+    assertEquals("noreply", messages.at("/items/0/From/Mailbox").asText());
+    assertEquals("oicr.on.ca", messages.at("/items/0/From/Domain").asText());
+    assertEquals(randomUserName, messages.at("/items/0/To/0/Mailbox").asText());
+    assertEquals("program-service.com", messages.at("/items/0/To/0/Domain").asText());
+    assertTrue(messages.at("/items/0/Content/Body").asText().contains("Albert"));
+    assertTrue(messages.at("/items/0/Content/Body").asText().contains("Einstein"));
   }
 
 }
