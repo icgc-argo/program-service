@@ -28,6 +28,7 @@ import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
+import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -39,7 +40,6 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
@@ -302,7 +302,16 @@ public class ProgramService {
   }
 
   public List<ProgramEntity> listPrograms() {
-    return List.copyOf(programRepository.findAll());
+    val programs =
+            programRepository.findAll(
+                    new ProgramSpecificationBuilder()
+                            .setFetchCancers(true)
+                            .setFetchPrimarySites(true)
+                            .setFetchInstitutions(true)
+                            .setFetchCountries(true)
+                            .setFetchRegions(true)
+                            .listAll(true));
+    return List.copyOf(programs);
   }
 
   public List<CancerEntity> listCancers() {

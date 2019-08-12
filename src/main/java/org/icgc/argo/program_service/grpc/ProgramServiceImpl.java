@@ -203,7 +203,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-  @Transactional
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
       List<ProgramEntity> programEntities = programService.listPrograms()
               .stream()
