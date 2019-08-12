@@ -79,7 +79,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     this.authorizationService = authorizationService;
   }
 
-  //TODO: need better error response. If a duplicate program is created, get "2 UNKNOWN" error. Should atleast have a message in it
   @Override
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     authorizationService.requireDCCAdmin();
@@ -265,6 +264,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
+  @Transactional
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
     authorizationService.requireDCCAdmin();
 
