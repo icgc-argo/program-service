@@ -299,11 +299,11 @@ public class ProgramService {
    * @param systemList The system collection.
    */
   @SuppressWarnings("unchecked")
-  private void compareLists(String errorTemplate, List userCol, List systemCol) {
-    if (userCol.size() > systemCol.size()) { // Couldn't find all of them
+  static void compareLists(String errorTemplate, List userList, List systemList) {
+    if (userList.size() > systemList.size()) { // Couldn't find all of them
       val badInput = new StringBuilder();
-      userCol.forEach(item -> {
-        if (!systemCol.contains(item)) {
+      userList.forEach(item -> {
+        if (!systemList.contains(item)) {
           badInput.append(" ");
           badInput.append(item.toString());
         }
