@@ -146,16 +146,11 @@ public class ProgramService {
     val regions = regionRepository.findAllByNameIn(program.getRegionsList());
     val countries = countryRepository.findAllByNameIn(program.getCountriesList());
 
-    // Verify input
-    if (cancers.size() != program.getCancerTypesList().size()
-      || primarySites.size() != program.getPrimarySitesList().size()
-      || countries.size() != program.getCountriesList().size()
-      || regions.size() != program.getRegionsList().size()) {
-      throw Status.INVALID_ARGUMENT
-        .augmentDescription(
-          "Cannot create program. Must provide valid cancer, primary site, country, and region.")
-        .asRuntimeException();
-    }
+    // Verify inputs, throwing exceptions on bad inputs
+    compareLists("Cannot create program, invalid cancers provided:%s", cancers, program.getCancerTypesList());
+    compareLists("Cannot create program, invalid primary sites provided:%s", primarySites, program.getPrimarySitesList());
+    compareLists("Cannot create program, invalid countries provided:%s", countries, program.getCountriesList());
+    compareLists("Cannot create program, invalid regions provided:%s", regions, program.getRegionsList());
 
     // Add new institutions if we must
     List<InstitutionEntity> institutions = institutionRepository.findAllByNameIn(program.getInstitutionsList()); // MUTABLE
@@ -293,6 +288,32 @@ public class ProgramService {
             .map(Optional::get)
             .collect(toUnmodifiableList());
     programRegionRepository.saveAll(programRegions);
+  }
+
+  /**
+   * Compares the user provided list against the list stored in the system.
+   * Throws an exception if it determines that the users provided a collection that cannot
+   * be found by the system.
+   *
+   * Precondition: System List should always be a subset of User List
+   *
+   * @param errorTemplate String template for the exception message.
+   * @param userList The user provided collection.
+   * @param systemList The system collection.
+   */
+  @SuppressWarnings("unchecked")
+  static void compareLists(String errorTemplate, List userList, List systemList) {
+    if (userList.size() > systemList.size()) { // Couldn't find all of them
+      val badInput = new StringBuilder();
+      userList.forEach(item -> {
+        if (!systemList.contains(item)) {
+          badInput.append(" ");
+          badInput.append(item.toString());
+        }
+      });
+      val message = String.format(errorTemplate, badInput.toString());
+      throw Status.INVALID_ARGUMENT.augmentDescription(message).asRuntimeException();
+    }
   }
 
   public void removeProgram(String name) throws EmptyResultDataAccessException {
