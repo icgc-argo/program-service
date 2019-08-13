@@ -46,6 +46,7 @@ public class InvitationService {
     this.egoService = egoService;
   }
 
+  @Transactional
   public UUID inviteUser(@NotNull ProgramEntity program,
     @Email @NotNull String userEmail,
     @NotBlank @NotNull String firstName,
@@ -77,10 +78,6 @@ public class InvitationService {
         new NotFoundException(format("Cannot find invitation with id '%s' ", invitationId)));
 
     if (invitation.getStatus() != PENDING) {
-      if (invitation.getStatus() == null) {
-        throw Status.FAILED_PRECONDITION.augmentDescription(
-          "Cannot accept invitation because it is in state(NULL), not PENDING").asRuntimeException();
-      }
       throw Status.FAILED_PRECONDITION.augmentDescription(
         format("Cannot accept invitation because it is in state(%s), not PENDING", invitation.getStatus().toString())).
         asRuntimeException();
@@ -94,12 +91,10 @@ public class InvitationService {
 
   public Optional<JoinProgramInviteEntity> getLatestInvitation(String programShortName, String email) {
     val invitations = listInvitations(programShortName, email);
-    val validInvitations = invitations.stream().filter(i -> i.getStatus() != INVALID && i.getStatus() != REVOKED).
-      collect(Collectors.toList());
-    if (validInvitations.size() == 0) {
-      return Optional.empty();
-    }
-    return Optional.of(validInvitations.get(0));
+    return invitations.stream().
+      filter(i -> i.getStatus() != INVALID && i.getStatus() != REVOKED).
+      findFirst();
+
   }
 
   @Transactional

@@ -26,10 +26,8 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
+
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -290,20 +288,12 @@ public interface ProgramConverter {
     return v.getValue();
   }
 
-  default InviteStatusValue JoinProgramInviteStatusToInviteStatus(JoinProgramInviteEntity.Status status) {
-    switch(status) {
-    case ACCEPTED:
-      return InviteStatusValue.newBuilder().setValue(InviteStatus.ACCEPTED).build();
-    case EXPIRED:
-      return InviteStatusValue.newBuilder().setValue(InviteStatus.EXPIRED).build();
-    case PENDING:
-      return InviteStatusValue.newBuilder().setValue(InviteStatus.PENDING).build();
-    case INVALID:
-      return InviteStatusValue.newBuilder().build();
-    case REVOKED:
-      return InviteStatusValue.newBuilder().build();
-    }
-    return InviteStatusValue.newBuilder().build();
+  @ValueMapping(source = "INVALID", target = MappingConstants.NULL)
+  @ValueMapping(source = "REVOKED", target = MappingConstants.NULL)
+  InviteStatus joinProgramInviteStatusToInviteStatus(JoinProgramInviteEntity.Status status);
+
+  default InviteStatusValue joinProgramInviteStatusToInviteStatusValue(JoinProgramInviteEntity.Status status){
+    return boxInviteStatus(joinProgramInviteStatusToInviteStatus(status));
   }
 
   default InviteStatus unboxInviteStatusValue(InviteStatusValue status) {
@@ -350,8 +340,8 @@ public interface ProgramConverter {
       return builder.build();
     }
 
-    val status = JoinProgramInviteStatusToInviteStatus(invite.get().getStatus());
-    val builder2 = builder.setStatus(boxInviteStatus(status.getValue()));
+    val status = joinProgramInviteStatusToInviteStatusValue(invite.get().getStatus());
+    val builder2 = builder.setStatus(status);
 
     if (status.getValue() == InviteStatus.PENDING) {
       return builder2.build();
