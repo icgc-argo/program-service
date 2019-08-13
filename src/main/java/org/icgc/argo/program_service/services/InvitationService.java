@@ -78,6 +78,11 @@ public class InvitationService {
         new NotFoundException(format("Cannot find invitation with id '%s' ", invitationId)));
 
     if (invitation.getStatus() != PENDING) {
+      if (invitation.getStatus() == null) {
+        throw Status.FAILED_PRECONDITION.augmentDescription(
+          "Cannot accept invitation because it is in state(NULL), not PENDING").asRuntimeException();
+      }
+
       throw Status.FAILED_PRECONDITION.augmentDescription(
         format("Cannot accept invitation because it is in state(%s), not PENDING", invitation.getStatus().toString())).
         asRuntimeException();
@@ -94,7 +99,7 @@ public class InvitationService {
     return invitations.stream().
       filter(i -> i.getStatus() != INVALID && i.getStatus() != REVOKED).
       findFirst();
-
+    
   }
 
   @Transactional
