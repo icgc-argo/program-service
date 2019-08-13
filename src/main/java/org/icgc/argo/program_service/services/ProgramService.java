@@ -291,9 +291,12 @@ public class ProgramService {
   }
 
   /**
-   * Compares the user provided collection against the colleciton stored in the system.
+   * Compares the user provided list against the list stored in the system.
    * Throws an exception if it determines that the users provided a collection that cannot
    * be found by the system.
+   *
+   * Precondition: System List should always be a subset of User List
+   *
    * @param errorTemplate String template for the exception message.
    * @param userList The user provided collection.
    * @param systemList The system collection.
