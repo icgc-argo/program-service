@@ -20,50 +20,17 @@ package org.icgc.argo.program_service.services;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.proto.Program;
-import org.icgc.argo.program_service.repositories.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-
 import java.util.List;
 
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class ProgramServiceTest {
-
-  @InjectMocks private ProgramService programService;
-
-  @Mock private Program program;
-
-  @Mock private ProgramRepository programRepository;
-
-  @Mock private CancerRepository cancerRepository;
-
-  @Mock private PrimarySiteRepository primarySiteRepository;
-
-  @Mock private ProgramConverter programConverter;
-
-  @Mock private ProgramCancerRepository programCancerRepository;
-
-  @Mock private ProgramPrimarySiteRepository programPrimarySiteRepository;
-
-  @Mock private ProgramInstitutionRepository programInstitutionRepository;
-
-  @Mock private ProgramCountryRepository programCountryRepository;
-
-  @Mock private ProgramRegionRepository programRegionRepository;
-
-  @Mock private InstitutionRepository institutionRepository;
-
-  @Mock private RegionRepository regionRepository;
-
-  @Mock private CountryRepository countryRepository;
 
   @Test
   public void testCompareListsGood() {

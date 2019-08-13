@@ -40,8 +40,9 @@ public abstract class AbstractSpecificationBuilder<T, ID> {
     };
   }
 
-  public Specification<T> listAll() {
+  public Specification<T> listAll(boolean distinct) {
     return (fromUser, query, builder) -> {
+      query.distinct(distinct);
       val root = setupFetchStrategy(fromUser);
       return null;
     };

@@ -26,11 +26,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.apache.commons.lang.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.argo.program_service.UtilsTest.*;
 import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -254,6 +256,25 @@ public class ProgramServiceGrpcIT {
     assertThat(response.getInstitutionsList().size()).isEqualTo(2);
     assertThat(names.contains(INSTITUTION_1)).isTrue();
     assertThat(names.contains(INSTITUTION_2)).isTrue();
+  }
+
+  @Test
+  public void listPrograms(){
+    val programEntity_1 = entityGenerator.setUpProgramEntity(randomProgramName());
+    val programEntity_2 = entityGenerator.setUpProgramEntity(randomProgramName());
+    val programEntity_3 = entityGenerator.setUpProgramEntity(randomProgramName());
+
+    val response = stub.listPrograms(Empty.getDefaultInstance());
+
+    assertTrue(response.getProgramsCount() == 3);
+    val nameList = response.getProgramsList().stream()
+            .map(ProgramDetails::getProgram)
+            .map(Program::getShortName)
+            .map(CommonConverter.INSTANCE :: unboxStringValue)
+            .collect(toUnmodifiableList());
+    assertTrue(nameList.contains(programEntity_1.getShortName()));
+    assertTrue(nameList.contains(programEntity_2.getShortName()));
+    assertTrue(nameList.contains(programEntity_3.getShortName()));
   }
 
 }

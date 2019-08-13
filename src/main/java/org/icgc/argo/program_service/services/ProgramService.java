@@ -342,14 +342,14 @@ public class ProgramService {
 
   public List<ProgramEntity> listPrograms() {
     val programs =
-        programRepository.findAll(
-            new ProgramSpecificationBuilder()
-                .setFetchCancers(true)
-                .setFetchPrimarySites(true)
-                .setFetchInstitutions(true)
-                .setFetchCountries(true)
-                .setFetchRegions(true)
-                .listAll());
+            programRepository.findAll(
+                    new ProgramSpecificationBuilder()
+                            .setFetchCancers(true)
+                            .setFetchPrimarySites(true)
+                            .setFetchInstitutions(true)
+                            .setFetchCountries(true)
+                            .setFetchRegions(true)
+                            .listAll(true));
     return List.copyOf(programs);
   }
 

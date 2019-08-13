@@ -133,9 +133,13 @@ public interface ProgramConverter {
   Institution institutionEntityToInstitution(InstitutionEntity entity);
 
   @AfterMapping
-  default void updateProgramFromEntity(@NonNull ProgramEntity entity,
-    @NonNull @MappingTarget Program.Builder programBuilder) {
-    programBuilder.addAllRegions(entity.listRegions());
+  default void updateProgramFromEntity(@NonNull ProgramEntity entity, @NonNull @MappingTarget Program.Builder programBuilder) {
+    programBuilder
+            .addAllCancerTypes(entity.listCancerTypes())
+            .addAllPrimarySites(entity.listPrimarySites())
+            .addAllInstitutions(entity.listInstitutions())
+            .addAllCountries(entity.listCountries())
+            .addAllRegions(entity.listRegions());
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
