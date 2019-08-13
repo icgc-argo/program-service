@@ -22,6 +22,7 @@ import io.grpc.Status;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgramCancer;
@@ -48,6 +50,7 @@ import static org.icgc.argo.program_service.model.join.ProgramCountry.createProg
 import static org.icgc.argo.program_service.model.join.ProgramInstitution.createProgramInstitution;
 import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
 import static org.icgc.argo.program_service.model.join.ProgramRegion.createProgramRegion;
+import static org.icgc.argo.program_service.utils.CollectionUtils.findDuplicates;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.EntityService.checkExistenceByName;
 import static org.icgc.argo.program_service.utils.EntityService.*;
@@ -59,7 +62,6 @@ public class ProgramService {
 
   /** Dependencies */
   private final ProgramRepository programRepository;
-
   private final CancerRepository cancerRepository;
   private final PrimarySiteRepository primarySiteRepository;
   private final InstitutionRepository institutionRepository;
@@ -121,10 +123,15 @@ public class ProgramService {
     return programEntity;
   }
 
-  // TODO: add existence check, and ensure program doesnt already exist. If it does, return a
-  // Conflict
   public ProgramEntity createProgram(@NonNull Program program)
       throws DataIntegrityViolationException {
+    val shortName = CommonConverter.INSTANCE.unboxStringValue(program.getShortName());
+    if(programRepository.findByShortName(shortName).isPresent()) {
+            throw Status.INVALID_ARGUMENT
+                    .augmentDescription(format("Program %s already exists.", shortName))
+                    .asRuntimeException();
+    }
+
     val programEntity = programConverter.programToProgramEntity(program);
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
@@ -155,18 +162,7 @@ public class ProgramService {
     // Add new institutions if we must
     List<InstitutionEntity> institutions = institutionRepository.findAllByNameIn(program.getInstitutionsList()); // MUTABLE
     if (institutions.size() != program.getInstitutionsList().size()) {
-      // Add new ones
-      val existing = institutions.stream().map(InstitutionEntity::getName).collect(toUnmodifiableSet());
-      program.getInstitutionsList().stream().filter(i -> !existing.contains(i)).forEach( i -> {
-          val newInstitute = new InstitutionEntity();
-          newInstitute.setName(i);
-          institutionRepository.save(newInstitute);
-        }
-      );
-      institutions = institutionRepository.findAllByNameIn(program.getInstitutionsList());
-      if (institutions.size() != program.getInstitutionsList().size()) {
-        throw new IllegalStateException("Was unable to add new institutions"); // Final Sanity Check
-      }
+      institutions = filterAndAddInstitutions(program.getInstitutionsList());
     }
 
     val p = programRepository.save(programEntity);
@@ -189,6 +185,28 @@ public class ProgramService {
     return programEntity;
   }
 
+  private List<InstitutionEntity> filterAndAddInstitutions(@NonNull List<String> names){
+    val duplicates = findDuplicates(names);
+    if(!duplicates.isEmpty()){
+      throw Status.INVALID_ARGUMENT
+              .augmentDescription(format("Please remove duplicate institutions %s in the list.", duplicates))
+              .asRuntimeException();
+    }
+    List<InstitutionEntity> institutions = institutionRepository.findAllByNameIn(names);
+    val existing = institutions.stream().map(InstitutionEntity::getName).collect(toUnmodifiableSet());
+    names.stream().filter(i -> !existing.contains(i)).forEach( i -> {
+              val newInstitute = new InstitutionEntity();
+              newInstitute.setName(i);
+              institutionRepository.save(newInstitute);
+            }
+    );
+    institutions = institutionRepository.findAllByNameIn(names);
+    if (institutions.size() != names.size()) {
+      throw new IllegalStateException("Was unable to add new institutions"); // Final Sanity Check
+    }
+    return institutions;
+  }
+
   @Transactional
   public ProgramEntity updateProgram(
       @NonNull ProgramEntity updatingProgram,
@@ -205,7 +223,7 @@ public class ProgramService {
         || regions.isEmpty()) {
       throw Status.INVALID_ARGUMENT
           .augmentDescription(
-              "Cannot update program, a program must have at least one of each: cancer, primary site, institution, country, and region.")
+              "Cannot update program. Cancer, primary site, institution, country, and region cannot be empty.")
           .asRuntimeException();
     }
 
@@ -253,12 +271,12 @@ public class ProgramService {
 
   private void processInstitutions(
       @NonNull ProgramEntity programToUpdate, @NonNull List<String> names) {
-    val institutionEntities =
-        checkExistenceByName(InstitutionEntity.class, institutionRepository, names);
-
+    val existing = institutionRepository.findAllByNameIn(names);
+    // Add new institutions
+    val entities = names.size() != existing.size() ? filterAndAddInstitutions(names) : existing;
     programInstitutionRepository.deleteAllByProgramId(programToUpdate.getId());
     val programInstitutions =
-        institutionEntities.stream()
+        entities.stream()
             .map(c -> createProgramInstitution(programToUpdate, c))
             .map(Optional::get)
             .collect(toUnmodifiableList());
@@ -324,14 +342,14 @@ public class ProgramService {
 
   public List<ProgramEntity> listPrograms() {
     val programs =
-        programRepository.findAll(
-            new ProgramSpecificationBuilder()
-                .setFetchCancers(true)
-                .setFetchPrimarySites(true)
-                .setFetchInstitutions(true)
-                .setFetchCountries(true)
-                .setFetchRegions(true)
-                .listAll());
+            programRepository.findAll(
+                    new ProgramSpecificationBuilder()
+                            .setFetchCancers(true)
+                            .setFetchPrimarySites(true)
+                            .setFetchInstitutions(true)
+                            .setFetchCountries(true)
+                            .setFetchRegions(true)
+                            .listAll(true));
     return List.copyOf(programs);
   }
 

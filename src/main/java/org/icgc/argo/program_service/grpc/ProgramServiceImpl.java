@@ -45,11 +45,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static io.grpc.Status.NOT_FOUND;
 import static io.grpc.Status.UNKNOWN;
+import static java.util.stream.Collectors.toList;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 
@@ -79,7 +79,6 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     this.authorizationService = authorizationService;
   }
 
-  //TODO: need better error response. If a duplicate program is created, get "2 UNKNOWN" error. Should atleast have a message in it
   @Override
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     authorizationService.requireDCCAdmin();
@@ -204,11 +203,11 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
-      List<ProgramEntity> programEntities = programService.listPrograms().stream().
-        filter(p -> authorizationService.canRead(p.getShortName())).
-        collect(Collectors.toList());
+      List<ProgramEntity> programEntities = programService.listPrograms()
+              .stream()
+              .filter(p -> authorizationService.canRead(p.getShortName()))
+              .collect(toList());
     val listProgramsResponse = programConverter.programEntitiesToListProgramsResponse(programEntities);
-
     responseObserver.onNext(listProgramsResponse);
     responseObserver.onCompleted();
   }
@@ -265,6 +264,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
+  @Transactional
   public void removeProgram(RemoveProgramRequest request, StreamObserver<Empty> responseObserver) {
     authorizationService.requireDCCAdmin();
 
