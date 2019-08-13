@@ -287,14 +287,20 @@ public interface ProgramConverter {
   default MembershipType unboxMembershipTypeValue(@NonNull MembershipTypeValue v) {
     return v.getValue();
   }
-
-  @ValueMapping(source = "INVALID", target = MappingConstants.NULL)
-  @ValueMapping(source = "REVOKED", target = MappingConstants.NULL)
-  InviteStatus joinProgramInviteStatusToInviteStatus(JoinProgramInviteEntity.Status status);
-
-  default InviteStatusValue joinProgramInviteStatusToInviteStatusValue(JoinProgramInviteEntity.Status status){
-    return boxInviteStatus(joinProgramInviteStatusToInviteStatus(status));
+  
+default InviteStatusValue joinProgramInviteStatusToInviteStatusValue(JoinProgramInviteEntity.Status status) {
+  switch (status) {
+    case ACCEPTED:
+      return InviteStatusValue.newBuilder().setValue(InviteStatus.ACCEPTED).build();
+    case EXPIRED:
+      return InviteStatusValue.newBuilder().setValue(InviteStatus.EXPIRED).build();
+    case PENDING:
+      return InviteStatusValue.newBuilder().setValue(InviteStatus.PENDING).build();
+    default:
+      return InviteStatusValue.newBuilder().build();
   }
+}
+
 
   default InviteStatus unboxInviteStatusValue(InviteStatusValue status) {
     return status.getValue();
