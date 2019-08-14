@@ -25,19 +25,15 @@ public interface  AuthorizationService {
   }
 
   default void requireDCCAdmin() {
-    require(isDCCAdmin(), "not dCCAdmin");
-  }
-
-  default void requirePermission(String permission) {
-    require(isAuthorized(permission),format("does not have permission '%s'",permission));
+    require(isDCCAdmin(), "Not signed in as a DCC Administrator");
   }
 
   default void requireProgramAdmin(String programShortName) {
-    requirePermission(writePermission(programShortName));
+    require(canWrite(programShortName), format("No WRITE permission for program %s", programShortName));
   }
 
   default void requireProgramUser(String programShortName) {
-    requirePermission(readPermission(programShortName));
+    require(canRead(programShortName), format("NO READ permission for program %s", programShortName));
   }
 
   default boolean canRead(String programShortName) {
