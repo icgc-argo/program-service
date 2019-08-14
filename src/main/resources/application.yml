@@ -87,8 +87,8 @@ app:
 ###############################################################################
 spring:
   profiles: auth
-  app:
-    dccAdminPermission: PROGRAMSERVICE.WRITE
+app:
+  dccAdminPermission: PROGRAMSERVICE.WRITE
 
 ---
 ###############################################################################

@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 
 public class ProgramShortNameValidator implements ConstraintValidator<ProgramShortName, String> {
 
-  private final static Pattern pattern = Pattern.compile("^[A-Z1-9][-_A-Z1-9]{2,7}[-]([A-Z][A-Z])$");
+  private final static Pattern pattern = Pattern.compile("^[A-Z0-9][-_A-Z0-9]{2,7}[-]([A-Z][A-Z])$");
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {

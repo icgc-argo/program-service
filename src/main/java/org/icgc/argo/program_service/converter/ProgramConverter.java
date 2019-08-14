@@ -133,9 +133,13 @@ public interface ProgramConverter {
   Institution institutionEntityToInstitution(InstitutionEntity entity);
 
   @AfterMapping
-  default void updateProgramFromEntity(@NonNull ProgramEntity entity,
-    @NonNull @MappingTarget Program.Builder programBuilder) {
-    programBuilder.addAllRegions(entity.listRegions());
+  default void updateProgramFromEntity(@NonNull ProgramEntity entity, @NonNull @MappingTarget Program.Builder programBuilder) {
+    programBuilder
+            .addAllCancerTypes(entity.listCancerTypes())
+            .addAllPrimarySites(entity.listPrimarySites())
+            .addAllInstitutions(entity.listInstitutions())
+            .addAllCountries(entity.listCountries())
+            .addAllRegions(entity.listRegions());
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -290,7 +294,21 @@ public interface ProgramConverter {
     return v.getValue();
   }
 
-  InviteStatus JoinProgramInviteStatusToInviteStatus(JoinProgramInviteEntity.Status status);
+  default InviteStatusValue JoinProgramInviteStatusToInviteStatus(JoinProgramInviteEntity.Status status) {
+    switch(status) {
+    case ACCEPTED:
+      return InviteStatusValue.newBuilder().setValue(InviteStatus.ACCEPTED).build();
+    case EXPIRED:
+      return InviteStatusValue.newBuilder().setValue(InviteStatus.EXPIRED).build();
+    case PENDING:
+      return InviteStatusValue.newBuilder().setValue(InviteStatus.PENDING).build();
+    case INVALID:
+      return InviteStatusValue.newBuilder().build();
+    case REVOKED:
+      return InviteStatusValue.newBuilder().build();
+    }
+    return InviteStatusValue.newBuilder().build();
+  }
 
   default InviteStatus unboxInviteStatusValue(InviteStatusValue status) {
     return status.getValue();
@@ -337,9 +355,9 @@ public interface ProgramConverter {
     }
 
     val status = JoinProgramInviteStatusToInviteStatus(invite.get().getStatus());
-    val builder2 = builder.setStatus(boxInviteStatus(status));
+    val builder2 = builder.setStatus(boxInviteStatus(status.getValue()));
 
-    if (status == InviteStatus.PENDING) {
+    if (status.getValue() == InviteStatus.PENDING) {
       return builder2.build();
     }
 

@@ -4,7 +4,7 @@ import io.grpc.Status;
 
 import static java.lang.String.format;
 
-public interface AuthorizationService {
+public interface  AuthorizationService {
   boolean isDCCAdmin();
 
   boolean hasPermission(String permission);

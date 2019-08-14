@@ -18,6 +18,8 @@
 
 package org.icgc.argo.program_service.services;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -28,13 +30,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.springframework.test.util.ReflectionTestUtils;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import static org.assertj.core.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class InvitationServiceTest {
@@ -42,9 +45,12 @@ class InvitationServiceTest {
   @Test
   void inviteUser() {
     val programEntity = mock(ProgramEntity.class);
+    when(programEntity.getShortName()).thenReturn("TEST-CA");
+
     val egoService = mock(EgoService.class);
     val mailService = mock(MailService.class);
     val invitationRepository = mock(JoinProgramInviteRepository.class);
+    val email = "user@example.com";
 
     val invitationService = new InvitationService(mailService, invitationRepository, egoService);
     invitationService.inviteUser(programEntity, "user@example.com", "First", "Last", UserRole.ADMIN);
@@ -52,28 +58,103 @@ class InvitationServiceTest {
     verify(invitationRepository).save(invitationCaptor.capture());
 
     val invitation = invitationCaptor.getValue();
-    assertThat(ReflectionTestUtils.getField(invitation, "program")).isEqualTo(programEntity);
-    assertThat(ReflectionTestUtils.getField(invitation, "userEmail")).isEqualTo("user@example.com");
-    assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "createdAt"))
-      .as("Creation time is within 5 seconds")
-      .isCloseTo(LocalDateTime.now(ZoneOffset.UTC), within(5, ChronoUnit.SECONDS));
-    assertThat((LocalDateTime) ReflectionTestUtils.getField(invitation, "expiresAt"))
-      .as("Expire time should be after 47 hours")
-      .isAfter(LocalDateTime.now(ZoneOffset.UTC).plusHours(47));
-    assertThat(ReflectionTestUtils.getField(invitation, "status"))
-      .as("Status is appending").isEqualTo(JoinProgramInviteEntity.Status.PENDING);
-    assertThat(ReflectionTestUtils.getField(invitation, "firstName"))
-      .as("First name is first").isEqualTo("First");
-    assertThat(ReflectionTestUtils.getField(invitation, "lastName"))
-      .as("Last name is first").isEqualTo("Last");
-    assertThat(ReflectionTestUtils.getField(invitation, "role"))
-      .as("Role is admin").isEqualTo(UserRole.ADMIN);
-
+    assertEquals(ReflectionTestUtils.getField(invitation, "program"), programEntity);
+    assertEquals(ReflectionTestUtils.getField(invitation, "userEmail"), "user@example.com");
+    assertTrue(((LocalDateTime) (ReflectionTestUtils.getField(invitation, "createdAt"))).
+      isAfter(LocalDateTime.now(ZoneOffset.UTC).minusSeconds(5)));
+    assertTrue(((LocalDateTime) ReflectionTestUtils.getField(invitation, "expiresAt"))
+      .isAfter(LocalDateTime.now(ZoneOffset.UTC).plusHours(47)));
+    assertEquals(JoinProgramInviteEntity.Status.PENDING, ReflectionTestUtils.getField(invitation, "status"));
+    assertEquals("First", ReflectionTestUtils.getField(invitation, "firstName"));
+    assertEquals("Last", ReflectionTestUtils.getField(invitation, "lastName"));
+    assertEquals(UserRole.ADMIN, ReflectionTestUtils.getField(invitation, "role"));
     verify(mailService).sendInviteEmail(ArgumentMatchers.any());
+
+    val previousInvites1 = List.of(createInvite(programEntity, email, JoinProgramInviteEntity.Status.ACCEPTED),
+      createInvite(programEntity, email, JoinProgramInviteEntity.Status.EXPIRED));
+
+    // test for previously accepted invitations
+    StatusRuntimeException exception=null;
+    try {
+      testInviteUserWithPreviouslyAcceptedInvitations(previousInvites1);
+    } catch(StatusRuntimeException e) {
+      exception=e;
+    }
+    assertNotNull(exception);
+    assertTrue(exception.getStatus().getCode() == Status.Code.ALREADY_EXISTS);
+
+    // test that previous pending invitations get set to INVALID.
+    val previousInvites2= List.of(createInvite(programEntity, email, JoinProgramInviteEntity.Status.EXPIRED),
+      createInvite(programEntity, email, JoinProgramInviteEntity.Status.PENDING));
+    val saved_invitations = testInviteUserWithPreviouslyAcceptedInvitations(previousInvites2);
+    assertNotNull(saved_invitations);
+    assertEquals(2, saved_invitations.size());
+    assert(saved_invitations.get(0).getStatus() == JoinProgramInviteEntity.Status.INVALID);
+    assert(saved_invitations.get(1).getStatus() == JoinProgramInviteEntity.Status.PENDING);
+  }
+
+  JoinProgramInviteEntity createInvite(ProgramEntity programEntity, String email, JoinProgramInviteEntity.Status status) {
+    return new JoinProgramInviteEntity().setProgram(programEntity).setUserEmail(email).setId(UUID.randomUUID()).
+      setStatus(status).setCreatedAt(LocalDateTime.now()).setExpiresAt(LocalDateTime.now().plusDays(3));
+  }
+
+  @Test
+  List<JoinProgramInviteEntity> testInviteUserWithPreviouslyAcceptedInvitations(List<JoinProgramInviteEntity> invites) {
+    val programEntity = mock(ProgramEntity.class);
+    when(programEntity.getShortName()).thenReturn("TEST-CA");
+
+    val egoService = mock(EgoService.class);
+    val mailService = mock(MailService.class);
+    val invitationRepository = mock(JoinProgramInviteRepository.class);
+    val programName="TEST-CA";
+    val email="user@example.com";
+
+    when(invitationRepository.findAllByProgramShortNameAndUserEmail(programName, email)).
+      thenReturn(invites);
+
+    val invitationService = new InvitationService(mailService, invitationRepository, egoService);
+    invitationService.inviteUser(programEntity, "user@example.com", "First", "Last", UserRole.ADMIN);
+
+    val invitationCaptor = ArgumentCaptor.forClass(JoinProgramInviteEntity.class);
+    verify(invitationRepository, atMost(invites.size()+1)).save(invitationCaptor.capture());
+    val invitations = invitationCaptor.getAllValues();
+
+    return invitations;
+
+  }
+
+  @Test
+  void previousPendingInvitations() {
+    val programEntity = mock(ProgramEntity.class);
+    val egoService = mock(EgoService.class);
+    val mailService = mock(MailService.class);
+    val invitationRepository = mock(JoinProgramInviteRepository.class);
+
+    val invitationService = new InvitationService(mailService, invitationRepository, egoService);
+    invitationService.inviteUser(programEntity, "user@example.com", "First", "Last", UserRole.ADMIN);
+
   }
 
   @Test
   void acceptInvitation() {
+    // ensure that accepting an invitation works
+    testAcceptInvitation(JoinProgramInviteEntity.Status.PENDING);
+
+    // ensure that we throw a Status exception if we try to join an invitation in a non-pending state.
+    for(val status :JoinProgramInviteEntity.Status.values()) {
+      if (status == JoinProgramInviteEntity.Status.PENDING) { continue; }
+      Exception exception=null;
+      try {
+        testAcceptInvitation(status);
+      } catch(StatusRuntimeException e) {
+        exception = e;
+      }
+      assertNotNull(exception);
+    }
+
+  }
+
+  void testAcceptInvitation(JoinProgramInviteEntity.Status status) {
     val invitationRepository = mock(JoinProgramInviteRepository.class);
     val egoService = mock(EgoService.class);
     val mailService = mock(MailService.class);
@@ -85,24 +166,87 @@ class InvitationServiceTest {
     when(invitation.getProgram()).thenReturn(program);
     when(invitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
     when(invitation.getId()).thenReturn(UUID.randomUUID());
+    when(invitation.getStatus()).thenReturn(status);
     when(invitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
     invitationService.acceptInvite(invitation.getId());
-    verify(egoService).joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
+    verify(egoService)
+      .joinProgram(invitation.getUserEmail(), invitation.getProgram().getShortName(), invitation.getRole());
     verify(invitation).accept();
   }
 
   @Test
-  void listInvitations() {
-    val programShortName="TEST-CA";
+  void getLatestInvitation() {
+    String program="TEST-CA";
+    val programEntity = mock(ProgramEntity.class);
+    when(programEntity.getShortName()).thenReturn(program);
+    val email = "user@example.com";
+
+    val invite1=createInvite(programEntity, email, JoinProgramInviteEntity.Status.PENDING);
+    val invite2=createInvite(programEntity, email, JoinProgramInviteEntity.Status.PENDING);
+    val invite3=createInvite(programEntity, email, JoinProgramInviteEntity.Status.PENDING);
+
+    // Take the first valid one in the list (invite3)
+    val latest = testGetLatestInvitation(program, email, List.of(invite3, invite2, invite1));
+    assertTrue(latest.isPresent());
+    assertEquals(invite3.getId(), latest.get().getId());
+    assertEquals(JoinProgramInviteEntity.Status.PENDING, latest.get().getStatus());
+
+    // Ignore revoked and invalid entries. Ensure we recognize expired entries as expired.
+    invite3.setStatus(JoinProgramInviteEntity.Status.REVOKED);
+    invite2.setStatus(JoinProgramInviteEntity.Status.INVALID);
+    invite1.setExpiresAt(invite1.getCreatedAt()); // make invitation1 expired.
+
+    val latest2 = testGetLatestInvitation(program, email, List.of(invite3, invite2, invite1));
+    assertTrue(latest2.isPresent());
+    assertEquals(invite1.getId(), latest2.get().getId());
+    assertEquals(JoinProgramInviteEntity.Status.EXPIRED, latest2.get().getStatus());
+
+    // Now, invite2 is the first valid one
+    invite2.setStatus(JoinProgramInviteEntity.Status.EXPIRED);
+    val latest3 = testGetLatestInvitation(program, email, List.of(invite3, invite2, invite1));
+    assertTrue(latest3.isPresent());
+    assertEquals(invite2.getId(), latest3.get().getId());
+    assertEquals(JoinProgramInviteEntity.Status.EXPIRED, latest3.get().getStatus());
+
+    // all invalid => no invitation present
+    invite2.setStatus(JoinProgramInviteEntity.Status.REVOKED);
+    invite1.setStatus(JoinProgramInviteEntity.Status.INVALID);
+    invite3.setStatus(JoinProgramInviteEntity.Status.INVALID);
+    val latest4 = testGetLatestInvitation(program, email, List.of(invite3, invite2, invite1));
+    assertTrue(latest4.isEmpty());
+
+  }
+
+  @Test
+  void revokeInvitation() {
+    String program="TEST-CA";
+    val programEntity = mock(ProgramEntity.class);
+    when(programEntity.getShortName()).thenReturn(program);
+
+    val email = "user@example.com";
+
+    val invitationRepository = mock(JoinProgramInviteRepository.class);
+    val invitations = List.of(createInvite(programEntity, email, JoinProgramInviteEntity.Status.PENDING),
+      createInvite(programEntity, email, JoinProgramInviteEntity.Status.ACCEPTED));
+
+    when(invitationRepository.findAllByProgramShortNameAndUserEmail(program, email)).thenReturn(invitations);
+    val egoService = mock(EgoService.class);
+    val mailService = mock(MailService.class);
+
+    val invitationService = new InvitationService(mailService, invitationRepository, egoService);
+    invitationService.revoke(program, email);
+
+  }
+
+  Optional<JoinProgramInviteEntity> testGetLatestInvitation(String program, String email, List<JoinProgramInviteEntity> invites) {
     val invitationRepository = mock(JoinProgramInviteRepository.class);
     val egoService = mock(EgoService.class);
     val mailService = mock(MailService.class);
 
     val invitationService = new InvitationService(mailService, invitationRepository, egoService);
-    val invitation1 = new JoinProgramInviteEntity();
-    when(invitationRepository.findAllByProgramShortName(programShortName)).thenReturn(List.of(invitation1));
-    val result = invitationService.listInvitations(programShortName);
-    assertThat(result).isEqualTo(List.of(invitation1));
+    when(invitationRepository.findAllByProgramShortNameAndUserEmailOrderByCreatedAtDesc(program, email)).
+      thenReturn(invites);
+    val latestInvite = invitationService.getLatestInvitation(program, email);
+    return latestInvite;
   }
-
 }

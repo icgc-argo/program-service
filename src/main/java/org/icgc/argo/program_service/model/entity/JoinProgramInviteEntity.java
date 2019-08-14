@@ -41,7 +41,7 @@ import java.util.UUID;
 @Valid
 public class JoinProgramInviteEntity {
 
-  public enum Status {PENDING, ACCEPTED, REVOKED, EXPIRED}
+  public enum Status {PENDING, ACCEPTED, EXPIRED, REVOKED, INVALID}
 
   @Id
   @Getter

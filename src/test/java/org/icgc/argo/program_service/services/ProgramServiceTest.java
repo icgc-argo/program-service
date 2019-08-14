@@ -18,63 +18,51 @@
 
 package org.icgc.argo.program_service.services;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.proto.Program;
-import org.icgc.argo.program_service.repositories.*;
-import org.junit.Ignore;
-import org.junit.jupiter.api.Test;
+import org.junit.Assert;
+import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.junit4.SpringRunner;
-import java.util.*;
+import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
-
-@Ignore("This is a service level unit test only testing the glue")
+@Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
-class ProgramServiceTest {
-
-  @InjectMocks private ProgramService programService;
-
-  @Mock private Program program;
-
-  @Mock private ProgramRepository programRepository;
-
-  @Mock private CancerRepository cancerRepository;
-
-  @Mock private PrimarySiteRepository primarySiteRepository;
-
-  @Mock private ProgramConverter programConverter;
-
-  @Mock private ProgramCancerRepository programCancerRepository;
-
-  @Mock private ProgramPrimarySiteRepository programPrimarySiteRepository;
-
-  @Mock private ProgramInstitutionRepository programInstitutionRepository;
-
-  @Mock private ProgramCountryRepository programCountryRepository;
-
-  @Mock private ProgramRegionRepository programRegionRepository;
-
-  @Mock private InstitutionRepository institutionRepository;
-
-  @Mock private RegionRepository regionRepository;
-
-  @Mock private CountryRepository countryRepository;
+public class ProgramServiceTest {
 
   @Test
-  void listPrograms() {
-    val programEntity = mock(ProgramEntity.class);
-    when(programRepository.findAll((Specification<ProgramEntity>) Mockito.any()))
-      .thenReturn(List.of(programEntity));
-    val programs = programService.listPrograms();
-    assertThat(programs).contains(programEntity);
+  public void testCompareListsGood() {
+    val userList = List.of("foo");
+    val systemList = List.of("foo");
+    ProgramService.compareLists("%s", userList, systemList);
+    Assert.assertTrue(true); // Get here with no exception
+  }
+
+  @Test
+  public void testCompareListsBadInput() {
+    val userList = List.of("foo", "bar");
+    val systemList = List.of("bar");
+
+    try {
+      ProgramService.compareLists("%s", userList, systemList);
+    } catch (Exception e) {
+      Assert.assertEquals(e.getMessage(), "INVALID_ARGUMENT:  foo");
+    }
+  }
+
+  @Test
+  public void testCompareListsFullMessage() {
+    val userList = List.of("Blood", "Brain", "Breast", "Foobar");
+    val systemList = List.of("Blood", "Brain", "Breast");
+    val errorMessage = "Cannot create program, invalid primary sites provided:%s";
+    try {
+      ProgramService.compareLists(errorMessage, userList, systemList);
+    } catch (Exception e) {
+      log.info(e.toString());
+      Assert.assertEquals(e.getMessage(), String.format("INVALID_ARGUMENT: Cannot create program, invalid primary sites provided: %s", "Foobar"));
+    }
   }
 
 }
