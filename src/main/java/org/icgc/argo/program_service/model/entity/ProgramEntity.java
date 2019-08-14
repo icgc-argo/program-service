@@ -31,6 +31,7 @@ import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.validation.ProgramShortName;
 import javax.persistence.*;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PastOrPresent;
 import javax.validation.constraints.PositiveOrZero;
@@ -42,6 +43,7 @@ import java.util.UUID;
 
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
+//@Valid
 @Entity
 @Table(name = Tables.PROGRAM)
 @Data

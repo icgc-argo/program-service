@@ -17,6 +17,7 @@ import org.icgc.argo.program_service.grpc.interceptor.ExceptionInterceptor;
 import org.icgc.argo.program_service.model.entity.CountryEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCountry;
+import org.icgc.argo.program_service.properties.ValidationProperties;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
@@ -29,6 +30,7 @@ import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
+import javax.validation.ValidatorFactory;
 import java.io.IOException;
 import java.security.interfaces.RSAPublicKey;
 import java.time.LocalDateTime;
@@ -113,9 +115,11 @@ public class ProgramServiceAuthorizationTest {
     when(programService.getProgram(programName().getValue())).thenReturn(entity());
     when(programService.listPrograms()).thenReturn(List.of(entity(), entity2(), entity3()));
 
+    ValidationProperties properties = new ValidationProperties();
+    ValidatorFactory validatorFactory = properties.factory();
 
     val service = new ProgramServiceImpl(programService, programConverter,
-      commonConverter, mockEgoService, invitationService, authorizationService);
+      commonConverter, mockEgoService, invitationService, authorizationService, validatorFactory);
 
     val serverName = InProcessServerBuilder.generateName();
     ManagedChannel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());

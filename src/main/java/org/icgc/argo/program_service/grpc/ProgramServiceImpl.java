@@ -19,12 +19,15 @@
 package org.icgc.argo.program_service.grpc;
 
 import com.google.protobuf.Empty;
+import com.google.protobuf.StringValue;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.hibernate.validator.internal.engine.ConstraintViolationImpl;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -34,6 +37,7 @@ import org.icgc.argo.program_service.services.AuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.icgc.argo.program_service.services.ego.EgoService;
+import org.icgc.argo.program_service.utils.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -41,15 +45,28 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ValidatorFactory;
+import javax.validation.constraints.Email;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static io.grpc.Status.NOT_FOUND;
 import static io.grpc.Status.UNKNOWN;
 import static java.util.stream.Collectors.toList;
+
+import static java.lang.String.format;
+
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 
@@ -66,25 +83,31 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   private final CommonConverter commonConverter;
   private final EgoService egoService;
   private final AuthorizationService authorizationService;
+  private final ValidatorFactory validatorFactory;
 
   @Autowired
   public ProgramServiceImpl(@NonNull ProgramService programService, @NonNull ProgramConverter programConverter,
     @NonNull CommonConverter commonConverter, @NonNull EgoService egoService,InvitationService invitationService,
-    AuthorizationService authorizationService) {
+    AuthorizationService authorizationService,
+    ValidatorFactory validatorFactory) {
     this.programService = programService;
     this.programConverter = programConverter;
     this.egoService = egoService;
     this.commonConverter = commonConverter;
     this.invitationService = invitationService;
     this.authorizationService = authorizationService;
+    this.validatorFactory = validatorFactory;
   }
 
   @Override
+  @Transactional
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     authorizationService.requireDCCAdmin();
 
     val program = request.getProgram();
     val admins = request.getAdminsList();
+
+    validateCreateProgramRequest(request);
 
     val programEntity = programService.createWithSideEffectTransactional(program, (ProgramEntity pe) -> {
       egoService.setUpProgram(pe.getShortName());
@@ -100,6 +123,67 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val response = programConverter.programEntityToCreateProgramResponse(programEntity);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
+  }
+
+  private void validateCreateProgramRequest(CreateProgramRequest request) {
+    if (!request.hasProgram()) {
+      throw Status.INVALID_ARGUMENT.augmentDescription("Program must be specified").asRuntimeException();
+    }
+
+    if (request.getAdminsCount() == 0) {
+      throw Status.INVALID_ARGUMENT.augmentDescription("Program must have at least one administrator").asRuntimeException();
+    }
+
+    for(val user: request.getAdminsList()) {
+      validateUser(user);
+    }
+
+    validateProgram(request.getProgram());
+  }
+
+  private void validateUser(User user) {
+    val check = new EmailCheck(user.getEmail().getValue());
+
+    val constraints = validatorFactory.getValidator().validate(check);
+
+    if(constraints.size() != 0) {
+      throw Status.INVALID_ARGUMENT.augmentDescription(
+        format("Invalid email address '%s' for admin '%s %s'",
+          user.getEmail().getValue(),
+          user.getFirstName().getValue(),
+          user.getLastName().getValue())
+      ).asRuntimeException();
+    }
+  }
+
+  private void validateProgram(Program program) {
+    val programEntity = programConverter.programToProgramEntity(program);
+    programEntity.setCreatedAt(LocalDateTime.now());
+    programEntity.setUpdatedAt(LocalDateTime.now());
+
+    val constraints = validatorFactory.getValidator().validate(programEntity);
+    if (constraints.size() != 0) {
+      throw Status.INVALID_ARGUMENT.augmentDescription(
+        format("Invalid program: %s", formatConstraints(constraints))
+      ).asRuntimeException();
+    }
+  }
+
+  private String formatConstraints(Set<ConstraintViolation<ProgramEntity>> constraints) {
+    Set<String> s= mapToSet(constraints, c -> c.getPropertyPath() + " " + c.getMessage());
+
+    // remove redundant error message (null implies invalid)
+    if (s.contains("shortName is invalid") && s.contains("shortName must not be null")) {
+      s.remove("shortName is invalid");
+    }
+
+    return s.stream().sorted().collect(Collectors.joining(", "));
+  }
+
+  @AllArgsConstructor
+  class EmailCheck {
+    @Email
+    String email;
   }
 
   @Override
@@ -225,8 +309,10 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
 
     val users = egoService.getUsersInProgram(programShortName);
-    Set<UserDetails> userDetails = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
-      invitationService.getLatestInvitation(programShortName, user.getEmail().getValue())));
+    Set<UserDetails> userDetails = mapToSet(users,
+      user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
+        invitationService.getLatestInvitation(programShortName, user.getEmail().getValue())));
+
 
     userDetails.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
       programConverter::joinProgramInviteToUserDetails ));
