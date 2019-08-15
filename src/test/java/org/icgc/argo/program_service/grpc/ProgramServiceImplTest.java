@@ -18,7 +18,6 @@
 
 package org.icgc.argo.program_service.grpc;
 
-import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -33,6 +32,7 @@ import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.AuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
+import org.icgc.argo.program_service.services.ValidationService;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,9 +47,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.apache.commons.lang.math.RandomUtils.nextInt;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,192 +61,9 @@ class ProgramServiceImplTest {
   AuthorizationService authorizationService = mock(AuthorizationService.class);
   ValidationProperties properties = new ValidationProperties();
   ValidatorFactory validatorFactory = properties.factory();
-
+  ValidationService validationService = mock(ValidationService.class);
   ProgramServiceImpl programServiceImpl = new ProgramServiceImpl(programService, programConverter,
-    CommonConverter.INSTANCE, egoService, invitationService, authorizationService, validatorFactory);
-
-  @Test
-  void createProgramNoProgram() {
-    val request = mock(CreateProgramRequest.class);
-    val responseObserver = mock(StreamObserver.class);
-    try {
-      programServiceImpl.createProgram(request, responseObserver);
-      fail("Didn't throw exception for missing program");
-    } catch (Exception ex) {
-      assertEquals("Incorrect error message", "INVALID_ARGUMENT: Program must be specified",
-        ex.getMessage());
-    }
-
-  }
-
-  @Test
-  void createProgramNoAdmins() {
-    val responseObserver = mock(StreamObserver.class);
-    val program = Program.newBuilder().setName(StringValue.of("TEST1-CA"));
-    val admins = new ArrayList<User>();
-    val request = CreateProgramRequest.newBuilder().setProgram(program).
-      addAllAdmins(admins).build();
-
-    try {
-      programServiceImpl.createProgram(request, responseObserver);
-      fail("Didn't throw exception for missing administrators");
-    } catch (Exception ex) {
-      assertEquals("Incorrect error message",
-        "INVALID_ARGUMENT: Program must have at least one administrator",
-        ex.getMessage());
-    }
-  }
-
-  @Test
-  void createProgramInvalidEmail() {
-    val responseObserver = mock(StreamObserver.class);
-    val program = Program.newBuilder().setName(StringValue.of("TEST1-CA"));
-    val admins = List.of(User.newBuilder().
-      setEmail(StringValue.of("invalid")).
-      setFirstName(StringValue.of("Wont")).
-      setLastName(StringValue.of("Work")).
-      setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN).build()).
-      build());
-    val request = CreateProgramRequest.newBuilder().setProgram(program).
-      addAllAdmins(admins).build();
-
-    try {
-      programServiceImpl.createProgram(request, responseObserver);
-      fail("Didn't throw exception for invalid administrator email address");
-    } catch (Exception ex) {
-      assertEquals("Incorrect error message",
-        "INVALID_ARGUMENT: Invalid email address 'invalid' for admin 'Wont Work'",
-        ex.getMessage());
-    }
-  }
-
-  @Test
-  void createProgramEmptyProgram() {
-    val responseObserver = mock(StreamObserver.class);
-    val program = Program.newBuilder().build();
-    val admins = List.of(User.newBuilder().
-      setEmail(StringValue.of("valid@com.org")).
-      setFirstName(StringValue.of("Will ")).
-      setLastName(StringValue.of("Work")).
-      setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN).build()).
-      build());
-    val request = CreateProgramRequest.newBuilder().setProgram(program).
-      addAllAdmins(admins).build();
-
-    try {
-      programServiceImpl.createProgram(request, responseObserver);
-      fail("Didn't throw exception for invalid program short name");
-    } catch (Exception ex) {
-      assertEquals("Incorrect error message",
-        "INVALID_ARGUMENT: Invalid program: commitmentDonors must not be null, "
-          + "genomicDonors must not be null, membershipType must not be null, name must not be null, "
-          + "shortName must not be null, submittedDonors must not be null, website must not be null",
-        ex.getMessage());
-    }
-  }
-
-  @Test
-  void createProgramInvalidShortName() {
-    val responseObserver = mock(StreamObserver.class);
-
-    val admins = List.of(User.newBuilder().
-      setEmail(StringValue.of("valid@com.org")).
-      setFirstName(StringValue.of("Will ")).
-      setLastName(StringValue.of("Work")).
-      setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN).build()).
-      build());
-
-    val program = Program.newBuilder().
-      setCommitmentDonors(Int32Value.of(1000)).
-      setGenomicDonors(Int32Value.of(0)).
-      setMembershipType(MembershipTypeValue.newBuilder().setValueValue(MembershipType.ASSOCIATE_VALUE).build()).
-      setName(StringValue.of("A wonderful research program")).
-      setShortName(StringValue.of("Invalid shortname")).
-      setWebsite(StringValue.of("http://www.site.com")).
-      setSubmittedDonors(Int32Value.of(0)).
-      build();
-
-    val request = CreateProgramRequest.newBuilder().setProgram(program).
-      addAllAdmins(admins).build();
-
-    try {
-      programServiceImpl.createProgram(request, responseObserver);
-      fail("Didn't throw exception for invalid program short name");
-    } catch (Exception ex) {
-      assertEquals("Incorrect error message",
-        "INVALID_ARGUMENT: Invalid program: shortName is invalid",
-        ex.getMessage());
-    }
-  }
-
-  @Test
-  void createProgramInvalidWebSite() {
-    val responseObserver = mock(StreamObserver.class);
-
-    val admins = List.of(User.newBuilder().
-      setEmail(StringValue.of("valid@com.org")).
-      setFirstName(StringValue.of("Will ")).
-      setLastName(StringValue.of("Work")).
-      setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN).build()).
-      build());
-
-    val program = Program.newBuilder().
-      setCommitmentDonors(Int32Value.of(1000)).
-      setGenomicDonors(Int32Value.of(0)).
-      setMembershipType(MembershipTypeValue.newBuilder().setValueValue(MembershipType.ASSOCIATE_VALUE).build()).
-      setName(StringValue.of("A wonderful research program")).
-      setShortName(StringValue.of("TEST1-CA")).
-      setWebsite(StringValue.of("site")).
-      setSubmittedDonors(Int32Value.of(0)).
-      build();
-
-    val request = CreateProgramRequest.newBuilder().setProgram(program).
-      addAllAdmins(admins).build();
-
-    try {
-      programServiceImpl.createProgram(request, responseObserver);
-      fail("Didn't throw exception for invalid web site");
-    } catch (Exception ex) {
-      assertEquals("Incorrect error message",
-        "INVALID_ARGUMENT: Invalid program: website must be a valid URL",
-        ex.getMessage());
-    }
-  }
-
-  // Test currently stil in development
-//  @Test
-//  void createProgramMissingCancerTypes() {
-//    val responseObserver = mock(StreamObserver.class);
-//
-//    val admins = List.of(User.newBuilder().
-//      setEmail(StringValue.of("valid@com.org")).
-//      setFirstName(StringValue.of("Will ")).
-//      setLastName(StringValue.of("Work")).
-//      setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN).build()).
-//      build());
-//
-//    val program = Program.newBuilder().
-//      setCommitmentDonors(Int32Value.of(1000)).
-//      setGenomicDonors(Int32Value.of(0)).
-//      setMembershipType(MembershipTypeValue.newBuilder().setValueValue(MembershipType.ASSOCIATE_VALUE).build()).
-//      setName(StringValue.of("A wonderful research program")).
-//      setShortName(StringValue.of("TEST1-CA")).
-//      setWebsite(StringValue.of("http://www.site.com")).
-//      setSubmittedDonors(Int32Value.of(0)).
-//      build();
-//
-//    val request = CreateProgramRequest.newBuilder().setProgram(program).
-//      addAllAdmins(admins).build();
-//
-//    try {
-//      programServiceImpl.createProgram(request, responseObserver);
-//      fail("Didn't throw exception for missing cancer types");
-//    } catch (Exception ex) {
-//      assertEquals("Incorrect error message",
-//        "INVALID_ARGUMENT: Invalid program: website must be a valid URL",
-//        ex.getMessage());
-//    }
-//  }
+    CommonConverter.INSTANCE, egoService, invitationService, authorizationService, validationService);
 
   @Test
   void removeProgram() {
@@ -279,7 +96,6 @@ class ProgramServiceImplTest {
 
     when(invitationService.listPendingInvitations(programName1)).thenReturn(List.of());
     when(invitationService.getLatestInvitation(programName1, invite1.getUserEmail())).thenReturn(Optional.of(invite1));
-
 
     val roleValue = UserRoleValue.newBuilder().setValue(invite1.getRole()).build();
 
@@ -524,7 +340,6 @@ class ProgramServiceImplTest {
     assertTrue(expectedInvitations.containsAll(actualInvitations));
   }
 
-
   @Test
   void testInvitationExpiry() {
     val programName = "TEST-CA";
@@ -582,6 +397,7 @@ class ProgramServiceImplTest {
     InvitationService invitationService = mock(InvitationService.class);
     EgoService egoService = mock(EgoService.class);
     AuthorizationService authorizationService = mock(AuthorizationService.class);
+    ValidationService validationService = mock(ValidationService.class);
 
     for (val key : egoInvitations.keySet()) {
       when(invitationService.getLatestInvitation(programName, key)).thenReturn(Optional.of(egoInvitations.get(key)));
@@ -591,7 +407,7 @@ class ProgramServiceImplTest {
     when(egoService.getUsersInProgram(programName)).thenReturn(egoUsers);
 
     return new ProgramServiceImpl(programService, programConverter, CommonConverter.INSTANCE, egoService,
-      invitationService, authorizationService, validatorFactory);
+      invitationService, authorizationService, validationService);
   }
 
   ListUsersRequest createListUsersRequest(String shortName) {

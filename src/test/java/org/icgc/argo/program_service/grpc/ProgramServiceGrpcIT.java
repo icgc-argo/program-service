@@ -1,6 +1,7 @@
 package org.icgc.argo.program_service.grpc;
 
 import com.google.protobuf.Empty;
+import com.google.protobuf.StringValue;
 import io.grpc.Channel;
 import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -24,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toUnmodifiableList;
@@ -118,7 +120,13 @@ public class ProgramServiceGrpcIT {
             .addCancerTypes("Blood cancer")
             .addPrimarySites("Blood");
 
-    val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
+    val admins = List.of(User.newBuilder().setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN)).
+      setEmail(StringValue.of("x@test.com")).
+      setFirstName(StringValue.of("Test")).
+      setLastName(StringValue.of("User")).
+      build());
+
+    val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).addAllAdmins(admins).build();
     val response = stub.createProgram(createProgramRequest);
     assertThat(response.getCreatedAt().toString()).isNotEmpty();
   }
@@ -141,7 +149,13 @@ public class ProgramServiceGrpcIT {
             .addCancerTypes("Blood cancer")
             .addPrimarySites("Blood");
 
-    val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).build();
+    val admins = List.of(User.newBuilder().setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN)).
+      setEmail(StringValue.of("x@test.com")).
+      setFirstName(StringValue.of("Test")).
+      setLastName(StringValue.of("User")).
+      build());
+
+    val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).addAllAdmins(admins).build();
     val response = stub.createProgram(createProgramRequest);
 
     val inviteUserRequest = InviteUserRequest.newBuilder()

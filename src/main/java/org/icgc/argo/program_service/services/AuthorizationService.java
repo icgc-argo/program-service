@@ -29,16 +29,13 @@ public interface  AuthorizationService {
     require(isDCCAdmin(), "not dCCAdmin");
   }
 
-  default void requirePermission(String permission) {
-    require(isAuthorized(permission), format("does not have permission '%s'", permission));
-  }
 
   default void requireProgramAdmin(String programShortName) {
-    requirePermission(writePermission(programShortName));
+    require(canWrite(programShortName), format("No write permission for program %s", programShortName));
   }
 
   default void requireProgramUser(String programShortName) {
-    requirePermission(readPermission(programShortName));
+    require(canRead(programShortName), format("No read permission for program %s", programShortName));
   }
 
   default boolean canRead(String programShortName) {

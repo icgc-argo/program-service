@@ -1,6 +1,7 @@
 package org.icgc.argo.program_service.grpc;
 
 import com.google.protobuf.Empty;
+import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import io.grpc.*;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -15,6 +16,7 @@ import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.grpc.interceptor.ExceptionInterceptor;
 import org.icgc.argo.program_service.model.entity.CountryEntity;
+import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCountry;
 import org.icgc.argo.program_service.properties.ValidationProperties;
@@ -24,6 +26,7 @@ import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.icgc.argo.program_service.services.EgoAuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
+import org.icgc.argo.program_service.services.ValidationService;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
@@ -34,10 +37,7 @@ import javax.validation.ValidatorFactory;
 import java.io.IOException;
 import java.security.interfaces.RSAPublicKey;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,6 +52,7 @@ import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 public class ProgramServiceAuthorizationTest {
   UUID invitationUUID = UUID.randomUUID();
   UUID invitationUUID2 = UUID.randomUUID();
+  UUID invitationUUID3 = UUID.randomUUID();
   StringValue invitationId = StringValue.of(invitationUUID.toString());
   StringValue invitationId2 = StringValue.of(invitationUUID2.toString());
 
@@ -94,10 +95,11 @@ public class ProgramServiceAuthorizationTest {
 
     val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
     val invitationService = mock(InvitationService.class);
-    val egoUser = new EgoUser().setEmail(userId().getValue());
-    val badUser = new EgoUser().setEmail("y@invalid.com");
-    when(invitationService.acceptInvite(invitationUUID)).thenReturn(egoUser);
-    when(invitationService.acceptInvite(invitationUUID2)).thenReturn(badUser);
+
+    when(invitationService.getInvitationById(invitationUUID)).thenReturn(Optional.of(invite1()));
+    when(invitationService.getInvitationById(invitationUUID2)).thenReturn(Optional.of(invite2()));
+    when(invitationService.getInvitationById(invitationUUID3)).thenReturn(Optional.empty());
+
     when(invitationService.inviteUser(entity(), userId().getValue(), "TEST", "USER",
       UserRole.COLLABORATOR)).thenReturn(invitationUUID);
 
@@ -115,11 +117,11 @@ public class ProgramServiceAuthorizationTest {
     when(programService.getProgram(programName().getValue())).thenReturn(entity());
     when(programService.listPrograms()).thenReturn(List.of(entity(), entity2(), entity3()));
 
-    ValidationProperties properties = new ValidationProperties();
-    ValidatorFactory validatorFactory = properties.factory();
+    ValidationService v = mock(ValidationService.class);
+    when(v.validateCreateProgramRequest(any())).thenReturn(List.of());
 
     val service = new ProgramServiceImpl(programService, programConverter,
-      commonConverter, mockEgoService, invitationService, authorizationService, validatorFactory);
+      commonConverter, mockEgoService, invitationService, authorizationService, v);
 
     val serverName = InProcessServerBuilder.generateName();
     ManagedChannel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
@@ -240,8 +242,6 @@ public class ProgramServiceAuthorizationTest {
     closeChannel(c.getChannel());
     assert programs.getProgramsCount() == 0;
   }
-
-
 
   @Test
   void egoAdmin() throws Exception {
@@ -419,6 +419,10 @@ public class ProgramServiceAuthorizationTest {
 
   Program program() {
     return Program.newBuilder().
+      setMembershipType(MembershipTypeValue.newBuilder().setValue(MembershipType.FULL).build()).
+      setCommitmentDonors(Int32Value.of(1000)).
+      setSubmittedDonors(Int32Value.of(0)).
+      setGenomicDonors(Int32Value.of(0)).
       setName(programName()).
       setShortName(programName()).
       setWebsite(website()).
@@ -474,6 +478,14 @@ public class ProgramServiceAuthorizationTest {
 
   JoinProgramRequest badJoinProgramRequest() {
     return JoinProgramRequest.newBuilder().setJoinProgramInvitationId(invitationId2).build();
+  }
+
+  JoinProgramInviteEntity invite1() {
+    return new JoinProgramInviteEntity().setUserEmail(userId().getValue());
+  }
+
+  JoinProgramInviteEntity invite2() {
+    return new JoinProgramInviteEntity().setUserEmail("y@z.com");
   }
 
   RemoveUserRequest removeUserRequest() {
