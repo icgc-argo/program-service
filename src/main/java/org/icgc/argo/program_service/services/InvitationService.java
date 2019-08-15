@@ -105,6 +105,7 @@ public class InvitationService {
       map(i -> i.setStatus(REVOKED)).forEach(i -> invitationRepository.save(i));
   }
 
+
   public Optional<JoinProgramInviteEntity> getInvitationById(UUID invitationId) {
     return invitationRepository.findById(invitationId);
   }

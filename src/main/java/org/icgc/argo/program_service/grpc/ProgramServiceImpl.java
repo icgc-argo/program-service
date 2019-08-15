@@ -33,6 +33,7 @@ import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.AuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
+import org.icgc.argo.program_service.services.ValidationService;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.NestedRuntimeException;
@@ -41,17 +42,19 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static io.grpc.Status.NOT_FOUND;
 import static io.grpc.Status.UNKNOWN;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
-import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
-import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
+import static org.icgc.argo.program_service.utils.CollectionUtils.*;
 
 @Slf4j
 @Component
@@ -66,26 +69,35 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   private final CommonConverter commonConverter;
   private final EgoService egoService;
   private final AuthorizationService authorizationService;
+  private final ValidationService validationService;
 
   @Autowired
   public ProgramServiceImpl(@NonNull ProgramService programService, @NonNull ProgramConverter programConverter,
-    @NonNull CommonConverter commonConverter, @NonNull EgoService egoService,InvitationService invitationService,
-    AuthorizationService authorizationService) {
+    @NonNull CommonConverter commonConverter, @NonNull EgoService egoService, InvitationService invitationService,
+    AuthorizationService authorizationService,
+    ValidationService validationService) {
     this.programService = programService;
     this.programConverter = programConverter;
     this.egoService = egoService;
     this.commonConverter = commonConverter;
     this.invitationService = invitationService;
     this.authorizationService = authorizationService;
+    this.validationService = validationService;
   }
 
   @Override
+  @Transactional
   public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     authorizationService.requireDCCAdmin();
 
+    val errors = validationService.validateCreateProgramRequest(request);
+    if (errors.size() != 0) {
+      throw Status.INVALID_ARGUMENT.augmentDescription(
+        format("Cannot create program: Program errors are [%s]", join(errors, ","))
+      ).asRuntimeException();
+    }
     val program = request.getProgram();
     val admins = request.getAdminsList();
-
     val programEntity = programService.createWithSideEffectTransactional(program, (ProgramEntity pe) -> {
       egoService.setUpProgram(pe.getShortName());
       admins.forEach(admin -> {
@@ -94,12 +106,16 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
         val lastName = commonConverter.unboxStringValue(admin.getLastName());
         egoService.getOrCreateUser(email, firstName, lastName);
         invitationService.inviteUser(pe, email, firstName, lastName, UserRole.ADMIN);
-        });
+      });
     });
 
     val response = programConverter.programEntityToCreateProgramResponse(programEntity);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
+  }
+
+  private String formatErrors(List<String> errors) {
+    return errors.stream().sorted().collect(Collectors.joining(", "));
   }
 
   @Override
@@ -140,12 +156,12 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val updatingProgram = programConverter.programToProgramEntity(program);
     try {
       val updatedProgram = programService.updateProgram(
-              updatingProgram,
-              program.getCancerTypesList(),
-              program.getPrimarySitesList(),
-              program.getInstitutionsList(),
-              program.getCountriesList(),
-              program.getRegionsList()
+        updatingProgram,
+        program.getCancerTypesList(),
+        program.getPrimarySitesList(),
+        program.getInstitutionsList(),
+        program.getCountriesList(),
+        program.getRegionsList()
       );
       val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
       responseObserver.onNext(response);
@@ -186,9 +202,14 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void joinProgram(JoinProgramRequest request, StreamObserver<JoinProgramResponse> responseObserver) {
     val str = request.getJoinProgramInvitationId().getValue();
     val id = commonConverter.stringToUUID(str);
-    val invitation = invitationService.acceptInvite(id);
 
-    authorizationService.requireEmail(invitation.getEmail());
+    val invitation = invitationService.getInvitationById(id);
+
+    if (invitation.isEmpty()) {
+      throw NOT_FOUND.asRuntimeException();
+    }
+
+    authorizationService.requireEmail(invitation.get().getUserEmail());
 
     try {
       val responseUser = invitationService.acceptInvite(id);
@@ -203,10 +224,10 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
-      List<ProgramEntity> programEntities = programService.listPrograms()
-              .stream()
-              .filter(p -> authorizationService.canRead(p.getShortName()))
-              .collect(toList());
+    List<ProgramEntity> programEntities = programService.listPrograms()
+      .stream()
+      .filter(p -> authorizationService.canRead(p.getShortName()))
+      .collect(toList());
     val listProgramsResponse = programConverter.programEntitiesToListProgramsResponse(programEntities);
     responseObserver.onNext(listProgramsResponse);
     responseObserver.onCompleted();
@@ -218,19 +239,18 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val programShortName = request.getProgramShortName().getValue();
     authorizationService.requireProgramAdmin(programShortName);
 
-
     val users = egoService.getUsersInProgram(programShortName);
-    Set<UserDetails> userDetails = mapToSet(users, user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
-      invitationService.getLatestInvitation(programShortName, user.getEmail().getValue())));
+    Set<UserDetails> userDetails = mapToSet(users,
+      user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
+        invitationService.getLatestInvitation(programShortName, user.getEmail().getValue())));
 
     userDetails.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
-      programConverter::joinProgramInviteToUserDetails ));
+      programConverter::joinProgramInviteToUserDetails));
 
     response = ListUsersResponse.newBuilder().addAllUserDetails(userDetails).build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
-
 
   @Override
   public void removeUser(RemoveUserRequest request, StreamObserver<RemoveUserResponse> responseObserver) {
@@ -250,7 +270,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val programShortName = request.getShortName().getValue();
     authorizationService.requireProgramAdmin(programShortName);
 
-    val email =request.getUserEmail().getValue();
+    val email = request.getUserEmail().getValue();
     val role = request.getRole().getValue();
 
     try {
@@ -325,19 +345,20 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
-  public void addInstitutions(AddInstitutionsRequest request, StreamObserver<AddInstitutionsResponse> responseObserver) {
-    val names = request.getNamesList().stream().map(name -> commonConverter.unboxStringValue(name)).collect(toImmutableList());
+  public void addInstitutions(AddInstitutionsRequest request,
+    StreamObserver<AddInstitutionsResponse> responseObserver) {
+    val names = request.getNamesList().stream().map(name -> commonConverter.unboxStringValue(name))
+      .collect(toImmutableList());
     try {
       val institutions = programService.addInstitutions(names);
       val response = programConverter.institutionsToAddInstitutionsResponse(institutions);
       responseObserver.onNext(response);
       responseObserver.onCompleted();
-    } catch (DataIntegrityViolationException e){
+    } catch (DataIntegrityViolationException e) {
       log.error("Exception throw in addInstitutions: {}", e.getMessage());
       throw status(UNKNOWN, e.getMessage());
     }
   }
-
 
   @Override
   @Transactional

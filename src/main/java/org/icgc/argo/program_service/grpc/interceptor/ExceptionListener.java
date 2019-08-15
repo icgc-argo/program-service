@@ -87,9 +87,7 @@ public class ExceptionListener<ReqT, RespT> extends ServerCall.Listener<ReqT> {
      val metadata= new Metadata();
      val name = e.getClass().getName();
 
-     metadata.put(key("stacktrace"), Arrays.stream(e.getStackTrace()).
-       map(s -> s + "\n").
-       collect(Collectors.joining()));
+     metadata.put(key("stacktrace"), Arrays.asList(e.getStackTrace()).toString());
      metadata.put(key("name"), name);
      val msg = getConstraintMessage(e);
     return Status.INVALID_ARGUMENT.augmentDescription(msg).asRuntimeException(metadata);
@@ -115,9 +113,7 @@ public class ExceptionListener<ReqT, RespT> extends ServerCall.Listener<ReqT> {
     val metadata= new Metadata();
     val name = t.getClass().getName();
 
-    metadata.put(key("stacktrace"), Arrays.stream(t.getStackTrace()).
-      map(s -> s + "\n").
-      collect(Collectors.joining()));
+    metadata.put(key("stacktrace"), Arrays.asList(t.getStackTrace()).toString());
     metadata.put(key("name"), name);
 
     return Status.INTERNAL.augmentDescription(t.getMessage()).asRuntimeException(metadata);

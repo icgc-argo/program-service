@@ -32,12 +32,11 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static java.util.stream.Collectors.toUnmodifiableList;
-import static java.util.stream.Collectors.toUnmodifiableSet;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.*;
 import static java.util.stream.IntStream.range;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -50,10 +49,10 @@ public class CollectionUtils {
 
   public static <T> Collector<T, ImmutableSet.Builder<T>, ImmutableSet<T>> toImmutableSet() {
     return Collector.of(
-            ImmutableSet.Builder::new,
-            ImmutableSet.Builder::add,
-            (b1, b2) -> b1.addAll(b2.build()),
-            ImmutableSet.Builder::build);
+      ImmutableSet.Builder::new,
+      ImmutableSet.Builder::add,
+      (b1, b2) -> b1.addAll(b2.build()),
+      ImmutableSet.Builder::build);
   }
 
   public static <T, U> Set<U> mapToImmutableSet(Collection<T> collection, Function<T, U> mapper) {
@@ -66,6 +65,10 @@ public class CollectionUtils {
 
   public static <T, U> List<U> mapToList(Collection<T> collection, Function<T, U> mapper) {
     return collection.stream().map(mapper).collect(toList());
+  }
+
+  public static <T, U> List<U> mapToList(T[] array, Function<T, U> mapper) {
+    return mapToList(asList(array), mapper);
   }
 
   public static List<UUID> convertToUUIDImmutableList(Collection<String> uuids) {
@@ -84,13 +87,13 @@ public class CollectionUtils {
     val exitingSet = Sets.<T>newHashSet();
     val duplicateSet = Sets.<T>newHashSet();
     collection.forEach(
-        x -> {
-          if (exitingSet.contains(x)) {
-            duplicateSet.add(x);
-          } else {
-            exitingSet.add(x);
-          }
-        });
+      x -> {
+        if (exitingSet.contains(x)) {
+          duplicateSet.add(x);
+        } else {
+          exitingSet.add(x);
+        }
+      });
     return duplicateSet;
   }
 
@@ -106,8 +109,12 @@ public class CollectionUtils {
     return range(0, numberOfCalls).boxed().map(x -> callback.get()).collect(toImmutableList());
   }
 
-  public static boolean nullOrEmpty(Collection collection){
+  public static boolean nullOrEmpty(Collection collection) {
     return collection == null || collection.isEmpty();
+  }
+
+  public static <T> String join(Collection<T> collection, String separator) {
+    return collection.stream().map(o -> o.toString()).collect(Collectors.joining(separator));
   }
 
 }

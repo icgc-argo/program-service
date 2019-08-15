@@ -21,10 +21,8 @@ package org.icgc.argo.program_service.validation;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.val;
-import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.properties.ValidationProperties;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.validation.Valid;
@@ -38,6 +36,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import static junit.framework.TestCase.assertEquals;
+
 @Component
 public class TestProgramEntityValidation {
   ValidationProperties properties = new ValidationProperties();
