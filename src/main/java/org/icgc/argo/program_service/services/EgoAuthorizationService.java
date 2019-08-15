@@ -37,9 +37,9 @@ public class EgoAuthorizationService implements AuthorizationService {
   }
 
   public boolean hasPermission(@NotNull String permission) {
-    log.info(format("Want permission: %s", permission));
+    log.debug(format("Want permission: %s", permission));
     val status=getPermissions().contains(permission);
-    log.info(format("hasPermission returns %s", status));
+    log.debug(format("hasPermission returns %s", status));
     return status;
   }
 
@@ -56,12 +56,14 @@ public class EgoAuthorizationService implements AuthorizationService {
     if (permissions == null) {
       return Collections.unmodifiableSet(Collections.EMPTY_SET);
     }
-    log.info(format("Got permissions: %s", Set.of(permissions)));
+    log.debug(format("Got permissions: %s", Set.of(permissions)));
     return Collections.unmodifiableSet(Set.of(permissions));
   }
 
   public boolean hasEmail(String email) {
     val authenticatedEmail = fromToken().getEmail();
+    log.debug(format("Want email '%s'", email));
+    log.debug(format("Have email '%s'",authenticatedEmail));
 
     if (authenticatedEmail == null || email == null) {
       return false;
@@ -72,7 +74,7 @@ public class EgoAuthorizationService implements AuthorizationService {
 
   public void require(boolean condition, String message) {
     if (!condition) {
-      log.warn("Permission denied", message);
+      log.debug("Permission denied", message);
       throw Status.fromCode(Status.Code.PERMISSION_DENIED).asRuntimeException();
     }
   }
