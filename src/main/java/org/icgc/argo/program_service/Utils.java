@@ -18,6 +18,7 @@
 
 package org.icgc.argo.program_service;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
@@ -25,12 +26,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.security.spec.RSAPrivateKeySpec;
 import java.util.Base64;
 
 @Slf4j
@@ -54,6 +55,13 @@ public class Utils {
     }
 
     return publicKey;
+  }
+
+  @SneakyThrows
+  public static KeyPair generateRSAKeys() {
+    val keyGen = KeyPairGenerator.getInstance("RSA");
+    keyGen.initialize(2048);
+    return keyGen.generateKeyPair();
   }
 
   public static String toString(InputStream in) throws IOException {

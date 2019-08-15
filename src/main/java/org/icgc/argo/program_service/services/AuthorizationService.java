@@ -4,7 +4,7 @@ import io.grpc.Status;
 
 import static java.lang.String.format;
 
-public interface  AuthorizationService {
+public interface AuthorizationService {
   boolean isDCCAdmin();
 
   boolean hasPermission(String permission);
@@ -26,16 +26,15 @@ public interface  AuthorizationService {
   }
 
   default void requireDCCAdmin() {
-    require(isDCCAdmin(), "not dCCAdmin");
+    require(isDCCAdmin(), "Not signed in as a DCC Administrator");
   }
 
-
   default void requireProgramAdmin(String programShortName) {
-    require(canWrite(programShortName), format("No write permission for program %s", programShortName));
+    require(canWrite(programShortName), format("No WRITE permission for program %s", programShortName));
   }
 
   default void requireProgramUser(String programShortName) {
-    require(canRead(programShortName), format("No read permission for program %s", programShortName));
+    require(canRead(programShortName), format("NO READ permission for program %s", programShortName));
   }
 
   default boolean canRead(String programShortName) {
