@@ -40,6 +40,7 @@
 		<mockito.version>2.25.1</mockito.version>
 		<velocity.version>1.7</velocity.version>
 		<el.version>3.0.1-b09</el.version>
+		<wiremock.version>2.24.1</wiremock.version>
 		<!--Plugin Versions-->
 		<plugin.compiler.version>3.8.1</plugin.compiler.version>
 		<plugin.protobuf.version>0.6.1</plugin.protobuf.version>
@@ -57,7 +58,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -257,6 +257,12 @@
 		    <groupId>org.glassfish</groupId>
 		    <artifactId>javax.el</artifactId>
 		    <version>${el.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.tomakehurst</groupId>
+			<artifactId>wiremock</artifactId>
+			<version>${wiremock.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

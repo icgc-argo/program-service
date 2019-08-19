@@ -65,7 +65,6 @@ public class EgoService {
   private final EgoClient egoClient;
   private final ProgramEgoGroupRepository programEgoGroupRepository;
   private final ProgramConverter programConverter;
-  private RSAPublicKey egoPublicKey;
   private final JoinProgramInviteRepository invitationRepository;
 
   @Autowired
@@ -78,7 +77,6 @@ public class EgoService {
     this.programConverter = programConverter;
     this.egoClient = restClient;
     this.invitationRepository = invitationRepository;
-    setEgoPublicKey();
   }
 
   public EgoService(@NonNull ProgramEgoGroupRepository programEgoGroupRepository,
@@ -90,37 +88,6 @@ public class EgoService {
     this.programConverter = programConverter;
     this.egoClient = restClient;
     this.invitationRepository = invitationRepository;
-    this.egoPublicKey = key;
-  }
-
-  @Autowired
-  private void setEgoPublicKey() {
-    this.egoPublicKey = egoClient.getPublicKey();
-  }
-
-  public Optional<EgoToken> verifyToken(String jwtToken) {
-    try {
-      Algorithm algorithm = Algorithm.RSA256(this.egoPublicKey, null);
-      JWTVerifier verifier = JWT.require(algorithm)
-        .withIssuer("ego")
-        .build(); //Reusable verifier instance
-      val jwt = verifier.verify(jwtToken);
-      return parseToken(jwt);
-    } catch (JWTVerificationException e) {
-      throw Status.PERMISSION_DENIED.asRuntimeException();
-    } catch (NullPointerException e) {
-      throw Status.UNAUTHENTICATED.asRuntimeException();
-    }
-  }
-
-  private Optional<EgoToken> parseToken(DecodedJWT jwt) {
-    try {
-      EgoToken egoToken = new EgoToken(jwt, jwt.getClaim("context").as(Context.class));
-      return Optional.of(egoToken);
-    } catch (JWTDecodeException exception) {
-      //Invalid token
-      return Optional.empty();
-    }
   }
 
   //TODO: add transactional. If there are more programdb logic in the future and something fails, it will be able to roll back those changes.
