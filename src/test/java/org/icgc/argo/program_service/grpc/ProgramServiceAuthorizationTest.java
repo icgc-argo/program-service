@@ -1,20 +1,23 @@
 package org.icgc.argo.program_service.grpc;
 
 import com.google.protobuf.Empty;
+import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import io.grpc.*;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.testing.GrpcCleanupRule;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.AllArgsConstructor;
 import lombok.val;
-import org.icgc.argo.program_service.Utils;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.grpc.interceptor.ExceptionInterceptor;
 import org.icgc.argo.program_service.model.entity.CountryEntity;
+import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCountry;
 import org.icgc.argo.program_service.proto.*;
@@ -23,79 +26,63 @@ import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.icgc.argo.program_service.services.EgoAuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
+import org.icgc.argo.program_service.services.ValidationService;
+import org.icgc.argo.program_service.services.ego.Context;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.security.Key;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.argo.program_service.Utils.generateRSAKeys;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 
 public class ProgramServiceAuthorizationTest {
-  UUID invitationUUID = UUID.randomUUID();
-  UUID invitationUUID2 = UUID.randomUUID();
-  StringValue invitationId = StringValue.of(invitationUUID.toString());
-  StringValue invitationId2 = StringValue.of(invitationUUID2.toString());
+  private UUID invitationUUID = UUID.randomUUID();
+  private UUID invitationUUID2 = UUID.randomUUID();
+  private UUID invitationUUID3 = UUID.randomUUID();
+  private StringValue invitationId = StringValue.of(invitationUUID.toString());
+  private StringValue invitationId2 = StringValue.of(invitationUUID2.toString());
+  private Signer signer;
+  private RSAPublicKey publicKey;
 
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
+  private void setupKeys() {
+    if (publicKey != null) {
+      return;
+    }
+
+    val pair = generateRSAKeys();
+    publicKey = (RSAPublicKey) pair.getPublic();
+    signer = new Signer(pair.getPrivate());
+  }
+
   private ProgramServiceGrpc.ProgramServiceBlockingStub getClient() throws IOException {
-    val authorizationService = new EgoAuthorizationService("PROGRAMSERVICE.WRITE");
-    val key = "-----BEGIN PUBLIC KEY-----\n"
-      + "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2e08i2xE07jzorq8Xm/K\n"
-      + "nNutxwwHElMFbjz1upGpZTHDfs29oHLd4J9XqjCYzKDkBg0Hs3gZY3AsEQycg+RK\n"
-      + "9Z7yGepgVZhXszMo3KyCDAmM64P9Qtftlz4AfZmR4ypqsAlnruNMYum0WqWvKGFL\n"
-      + "85sGlkshemLlEQWuEDFJFvVHiWKq4b4BknU9r+t6QROkrAg6upWYUOaK7ZiIjeBS\n"
-      + "LYsDQy5jMiXgM6TYSZuebee7vNqZdm9HeUYis3X22yyU8FvfKfkgDFgCL9w/qIpv\n"
-      + "v7h48X+XVVH50Uwk0L2PTz7d1ohlhuOTEc71japcrQZtvU6IQEA7PtHkbABQsAYj\n"
-      + "jQIDAQAB\n"
-      + "-----END PUBLIC KEY-----";
-    val publicKey = (RSAPublicKey) Utils.getPublicKey(key, "RSA");
-
-    /*
-    In case we want to generate more tokens to test with...
-
-    -----BEGIN RSA PRIVATE KEY-----
-    MIIEpQIBAAKCAQEA2e08i2xE07jzorq8Xm/KnNutxwwHElMFbjz1upGpZTHDfs29oHLd4J9XqjCYzKDkBg0Hs3gZY3AsEQycg+RK9Z7yGepgVZhXs
-    zMo3KyCDAmM64P9Qtftlz4AfZmR4ypqsAlnruNMYum0WqWvKGFL85sGlkshemLlEQWuEDFJFvVHiWKq4b4BknU9r+t6QROkrAg6upWYUOaK7ZiIje
-    BSLYsDQy5jMiXgM6TYSZuebee7vNqZdm9HeUYis3X22yyU8FvfKfkgDFgCL9w/qIpvv7h48X+XVVH50Uwk0L2PTz7d1ohlhuOTEc71japcrQZtvU6
-    IQEA7PtHkbABQsAYjjQIDAQABAoIBAQCxhK+h/vLd6LYF48kXwEaymbwn/SMxiRFOaDfe31K2jN/rxhpmvcsBc6sMhoOhhJnaV/ji97zupGwxAy3nv
-    ipVhEFAXQxWDT+7SLxLbfaNaaYyHxVJwuzWG3p41YTiICZB+ZdM/fi2RhtVD8vrv74H1Ut7V/4QXMitogvVQuB/4pJRLcG9nvoASWojOay2PX5I6FH
-    olzsRUgH+PRgW0rKKEo0pgl6QxpJrvsgnNexX+WJA8ur/jlVttQwhpPf1VC+6LvlKKsT4zWhOdC87eCkvlpSUO6XY4Qfv84gjp/2vpm5aYTqOdEFx7
-    ua40r0bA2PoifdwrFANzARe7aXmZ+5hAoGBAPberrlAmT/q/nFAvQfINoNkXPFbGU5C9R57SoXFcYF0oyvYfrd6HWf0qKWEQkLN5IMsOEcfJoP5lsx
-    F/j2lhFshi0LfxhCRjDpWApWKCJMywyNPJms4M44y4LEhW+4JGtp/u2GaDcIuTf3wyauNWBDv9HyNqA7Kh5dhbKBzvX65AoGBAOH8hpNNk4ftKZxKa
-    Vu/Uim0FtLFGTCrhdkR10kxixPQsK3sGIyzqyzWaqtdUD+2N2SwsyTdRQc1f51xiJ1XpVpmbli8rIMBsTuqDDzjL9V225A/qeRjGRf3/99asd08oEo
-    Ybf7ldfs2KhijxW4+f5uxjb1eA+DtSUnPO/tyEIF1AoGBAKqXMHfVGtEfatoJ2VYSVREwfkVOJUt+W3HH0rRjvs6tMcAvp0jUOpPGbe+KWFtfeYPnP
-    7Bt5yiVhU39I/WndbGfmWMJzQ1P9m2tV7XMH6bQEiZJIIxA1udxYvEj0ynG4uaQE4UbdlxzsPNEu6cvUebKWdDj9njaHR5PdUffEtgJAoGAIFEYfaA
-    uZNXJiYwqnPAzM7uJOALvo0IkFfKzMshe9yp02apVqGlZJURUZMUnYLUSHtgWBkOOR4WjBkTiIH4UK2VSimYQ1Xs8eSfMMDjc8k3ZADvac8qoIAFbG
-    fnCTb0Jvw7XTAhMYuxQAM4KwcU2QnGVr2ruaxAD1wZHsaGSMrECgYEAlnQPAej0zwlYThPOX4um5VOEVhT6xTMZpHXQAXWnzu3r17+roPTZf0De+uW
-    vojUY3h5X3ra98Xsq+Ol1wWC4dy2MGncGBOIXdwfhVbg0Jim+PS4BI8GHKC6M4xKnTvsS/RW+klpFvotKj6Ocf4Hzz1f8XY9IxcRyOSjQkKYQbVg=
-
-    -----END RSA PRIVATE KEY-----
-     */
+    setupKeys();
+    val authorizationService = new EgoAuthorizationService(dccAdminPermission());
 
     val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
     val invitationService = mock(InvitationService.class);
-    val egoUser = new EgoUser().setEmail(userId().getValue());
-    val badUser = new EgoUser().setEmail("y@invalid.com");
-    when(invitationService.acceptInvite(invitationUUID)).thenReturn(egoUser);
-    when(invitationService.acceptInvite(invitationUUID2)).thenReturn(badUser);
+
+    when(invitationService.getInvitationById(invitationUUID)).thenReturn(Optional.of(invite1()));
+    when(invitationService.getInvitationById(invitationUUID2)).thenReturn(Optional.of(invite2()));
+    when(invitationService.getInvitationById(invitationUUID3)).thenReturn(Optional.empty());
+
     when(invitationService.inviteUser(entity(), userId().getValue(), "TEST", "USER",
       UserRole.COLLABORATOR)).thenReturn(invitationUUID);
 
@@ -104,6 +91,7 @@ public class ProgramServiceAuthorizationTest {
     val restClient = mock(EgoRESTClient.class);
 
     val invitationRepository = mock(JoinProgramInviteRepository.class);
+
     val egoService = new EgoService(programEgoGroupRepository, programConverter, restClient,
       invitationRepository, publicKey);
     val mockEgoService = mock(EgoService.class);
@@ -113,9 +101,11 @@ public class ProgramServiceAuthorizationTest {
     when(programService.getProgram(programName().getValue())).thenReturn(entity());
     when(programService.listPrograms()).thenReturn(List.of(entity(), entity2(), entity3()));
 
+    ValidationService v = mock(ValidationService.class);
+    when(v.validateCreateProgramRequest(any())).thenReturn(List.of());
 
     val service = new ProgramServiceImpl(programService, programConverter,
-      commonConverter, mockEgoService, invitationService, authorizationService);
+      commonConverter, mockEgoService, invitationService, authorizationService, v);
 
     val serverName = InProcessServerBuilder.generateName();
     ManagedChannel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
@@ -142,7 +132,6 @@ public class ProgramServiceAuthorizationTest {
     return MetadataUtils.attachHeaders(client, headers);
   }
 
-
   AuthorizationTest runTests(String testName, ProgramServiceGrpc.ProgramServiceBlockingStub client) {
     val tests = List.of(
       EndpointTest.of("wrongEmail", () -> client.joinProgram(badJoinProgramRequest())), // 0 -- No one
@@ -157,10 +146,9 @@ public class ProgramServiceAuthorizationTest {
       EndpointTest.of("removeUser", () -> client.removeUser(removeUserRequest())),
 
       EndpointTest.of("getProgram", () -> client.getProgram(getProgramRequest())),    //8  Program User
-      EndpointTest.of("listProgram",() -> client.listPrograms(Empty.getDefaultInstance())), // 9-10 Public
+      EndpointTest.of("listProgram", () -> client.listPrograms(Empty.getDefaultInstance())), // 9-10 Public
       EndpointTest.of("joinProgram", () -> client.joinProgram(joinProgramRequest()))
     );
-
 
     val t = new AuthorizationTest(testName, tests);
     t.run();
@@ -193,7 +181,7 @@ public class ProgramServiceAuthorizationTest {
   @Test
   void expired() throws Exception {
     // expired token (should fail all calls with status UNAUTHORIZED)
-    val c= getClient();
+    val c = getClient();
     val client = addAuthHeader(c, expiredToken());
 
     val tests = runTests("ExpiredToken", client);
@@ -215,8 +203,8 @@ public class ProgramServiceAuthorizationTest {
   @Test
   void wrongKey() throws Exception {
     // DCCAdmin level authentication -- signed with an invalid key
-    val c= getClient();
-    val tests = runTests("WrongKey",addAuthHeader(c, tokenWrongKey()) );
+    val c = getClient();
+    val tests = runTests("WrongKey", addAuthHeader(c, tokenWrongKey()));
     closeChannel(c.getChannel());
 
     assert tests.threwStatusException(Status.PERMISSION_DENIED);
@@ -229,15 +217,13 @@ public class ProgramServiceAuthorizationTest {
     val client = addAuthHeader(c, tokenNoPermissions());
     val tests = runTests("NoPermissions", client);
 
-    assert tests.threwStatusException(Status.PERMISSION_DENIED,0,9);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED, 0, 9);
     assert tests.threwNoExceptions(9);
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
     closeChannel(c.getChannel());
     assert programs.getProgramsCount() == 0;
   }
-
-
 
   @Test
   void egoAdmin() throws Exception {
@@ -246,7 +232,7 @@ public class ProgramServiceAuthorizationTest {
     val client = addAuthHeader(c, tokenEgoAdmin());
 
     val tests = runTests("EgoAdmin", client);
-    assert tests.threwStatusException(Status.PERMISSION_DENIED,0,9);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED, 0, 9);
     assert tests.threwNoExceptions(9);
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
@@ -287,7 +273,7 @@ public class ProgramServiceAuthorizationTest {
     val client = addAuthHeader(c, tokenAdminUserWrongProgram());
     val tests = runTests("WrongAdmin", client);
 
-    assert tests.threwStatusException(Status.PERMISSION_DENIED,0,9);
+    assert tests.threwStatusException(Status.PERMISSION_DENIED, 0, 9);
     assert tests.threwNoExceptions(9);
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
@@ -326,45 +312,68 @@ public class ProgramServiceAuthorizationTest {
     assertThat(programs.getProgramsList().get(0).getProgram().getShortName().getValue()).isEqualTo("TEST-CA");
   }
 
+  @Test
+  void testSigner() {
+    setupKeys();
+    val jwt = signer.getToken("n@ai", "PROGRAM-TEST-CA.WRITE");
+    System.err.printf("Token='%s'\n", jwt);
+
+    val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
+    val programConverter = ProgramConverter.INSTANCE;
+    val restClient = mock(EgoRESTClient.class);
+    val invitationRepository = mock(JoinProgramInviteRepository.class);
+
+    val egoService = new EgoService(programEgoGroupRepository, programConverter, restClient,
+      invitationRepository, publicKey);
+
+    val egoToken = egoService.verifyToken(jwt);
+    assert egoToken.isPresent();
+    System.err.printf("egoToken='%s'", egoToken.get());
+
+  }
 
   String invalidToken() {
     return "ABCDEFG";
   }
 
   String expiredToken() {
-    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MTU1Mzc4NTYzNSwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJVU0VSIiwicGVybWlzc2lvbnMiOlsiUFJPR1JBTS1URVNULUNBLlJFQUQiXX19LCJzY29wZSI6W119.AZmkUfZh5ZHafak7uFRBCVXgiGbA3AT8CvNgy7rOupBEi14wqFzrmDNLDA0LFvWKi4mSO6Z-lbRhipnlsSWKjY28d4kvfT8XhkWQoFQJ1Z8S5QOmVKNpg02vTZfOkAKYb9nSSB7Zw8rORZn60S2lNvSYxeTGCgS3uDjKreFTzfNSmHRTJcxpyiLzTkiJAezhE2QOwH4iUNPEcRCYT8TqWaIvnf849pExCeVb6vFg3LKixTJl2Aw69WTt8ujCMyZqURICibWkFRHsgaEhcqEMI5IJW8BnyHouiadiZHWFPcJmEAYMDwkA5z96WeaebDaN_bk5Z_qvgNY_x1hwRmXO_A";
+    return signer.getToken(email(), true, false, dccAdminPermission());
   }
 
   String tokenWrongKey() {
-    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MTU1Mzc4NTYzNSwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJBRE1JTiIsInBlcm1pc3Npb25zIjpbXX19LCJzY29wZSI6W119.qkXTFWfGy3zTiYoXuLwt1t_c5480fMpIen1sbYlVCTQtpcdSy4830DPahUACNBuAKptqqmvJb3Dskkrd-ubD-kSR5N23xRUebxw7XT-pRCpWZ2e3Y8z_E_p0ovH4I-QNqfaQ6dYMklQ5xQzyIBnl9xYI3uxebHFowkT8owE1GIl7ff0p29jheOFWdNtG6h5Cmij6L-n_tSFeyDs60nl3prjEzPmGRMIGpt5pB_xAYHCOgkb5uDAnyNRjnxa_cK0ynX4prUnXC7unfQGsJ3e1Ubb8L37ovOaAt3ASWUUjgjjYnHg1-9toVCO5m8miniDF4XPv4l9J9Nrv4ClZgBs-Dw";
+    val pair = generateRSAKeys();
+    val wrongSigner = new Signer(pair.getPrivate());
+    return wrongSigner.getToken(email(), "PROGRAM-TEST-CA.WRITE");
   }
 
   String tokenNoPermissions() {
-    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MjA1Mzg3MjAzNCwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJVU0VSIiwicGVybWlzc2lvbnMiOltdfX0sInNjb3BlIjpbXX0.cIR1aSeuvGzmtztNssWfIv16sJvdHFHwdQNv21MsS-iZsfv28lwsV6zNl1msmVzKS-pnBnJ5BLlUI0bmjt1-DX5-IV4B1EiQ0TlFq4bie1EEKmjc8y_1g7sut0fNQUvMlWlqXpqvvM2w1JXmlCdo2LjLQCqqkC9mzebwm0pBKz6T3u4hA2FxHqZaIVh6-lCraL4RL2Qw0kIePwy7G7djytoteezJmeDGmAHd-sHPG1fz__nxRDP-rSH3J7Y8uYAOTsZbFFqlBh5_XJQ2GEtf1kzxb2TLicXcw-f73Df3RtyZ394jcyTpnftuwo2xO9G_KDOSVOxaAB_DsE19EGF6vg";
+    return signer.getToken(email());
   }
 
   String tokenEgoAdmin() {
-    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MjA1Mzg3MjAzNCwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJBRE1JTiIsInBlcm1pc3Npb25zIjpbXX19LCJzY29wZSI6W119.GjMTZzPzMemM33o2dSGmgxBQN8vT-KZxnl-5tPTzno9XCeNcBNIB-xte93o_MMyE9NxcLYhsQO1C5KMNgbhll9LHLNUU90M-Ez2zqEY-UcOlkDZglA6teyaRUTswA46jlgW8axOTqLh3WpSKUD5t5-2eBNTF6gNyRz_jl9fX5Z7kvzV0h-eus9yWr3jLSi4SfV8lAILFv65JR_20dQ-NCgi4uULoYtFEmJsp4E9xLWR_hpu7EcjyKcXG8Qs_4iK_biXKyBZ8Xtl0oUGojWKoBJdD0Uybvl0Uo5_hkuIfiYspeiohYdC-ls_KWmYUfoUhtB1qRBcYcynMH1AfTOuXjQ";
+    return signer.getToken(email(), false, true);
   }
 
   String tokenDCCAdmin() {
-    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MjA1Mzg3MjAzNCwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJBRE1JTiIsInBlcm1pc3Npb25zIjpbIlBST0dSQU1TRVJWSUNFLldSSVRFIiwiUFJPR1JBTVNFUlZJQ0UuUkVBRCJdfX0sInNjb3BlIjpbXX0.uPA0HxLJVWNSzm4fd_VsG2Bw9widazlE0tN2JcFmiOmeaI4RdTXyexfJH9LsyvabNA1oBU99NUvTDYBiGriK-e51F4LS27fXdQUBeyUy1Wo2q6d9WBFFNjXIFp3qXlEW399NcjMgIfKd0P9gAncjrhSSPNW_6Ddv3KGKxFZp63GMKc7vGmEbWTK3-BsDfhYRNZJ3xV5VuRkBazqHF8KGKCOhZwrdN0yaY1gxIX4u-ZuRUxHIGR-GQFZaOfyQ9xL-7ba8kGKkWRpQGUYQ5CSA0NfVGggwLLGLoHAlTD026McLh-EcqL201_a40JjCRAFai4GcqtYx_j7QMb808pt-Rg";
+    return signer.getToken(email(), dccAdminPermission());
   }
 
   String tokenDCCAdminWrongKey() {
-    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MjA1Mzg3MjAzNCwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJBRE1JTiIsInBlcm1pc3Npb25zIjpbIlBST0dSQU1TRVJWSUNFLldSSVRFIiwiUFJPR1JBTVNFUlZJQ0UuUkVBRCJdfX0sInNjb3BlIjpbXX0.L2x3cX9E2_5NYmCm3-sk0iCiefzDTpZqaqjBj51NsEi8fVWqe_Z1Vft9Rrdnymkf247BRCozeOEnwE5jnchMsDOaxRr8kOXH1OU-W8Gj0gzGuln5Pq1KGxY1i2XUKcFwr3U9-i2a2H__TrcBCxIZdX_IIn228wpUDNEMgeHBvstNpPSkHo7jrrf-5JgPVxrAIzWqz6NcpRoDYfoMPZco15l-2pt4qdI3xcRFnstnzSd5Q5bNnvw9coxE9IpisqI2XGTbuVijFMHdqgCcIZzG0FI-m_50et7Ke-qMqd9mdPxYmpgqtmD-iNvDqsEfPjx-zOdDhZfo4AOPHJASDw8l3Q";
+    val pair = generateRSAKeys();
+    val wrongSigner = new Signer(pair.getPrivate());
+    return wrongSigner.getToken(email(), dccAdminPermission());
   }
 
   String tokenAdminUser() {
-    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MjA1Mzg3MjAzNCwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJVU0VSIiwicGVybWlzc2lvbnMiOlsiUFJPR1JBTS1URVNULUNBLldSSVRFIiwiUFJPR1JBTS1URVNULUNBLlJFQUQiXX19LCJzY29wZSI6W119.RZ2Qobnici__8NhDvMyvuqWD-UCICNeZlSqcEPWwgTg91Xbn04ApzYEi4m28ZGezJkyVwQBAM6iDbxZ1aOzLRJ2aHsnYl-xqX5gVOSbeGVEN_QGLQYF6hPEOfsFLpGCPb8nSfKTM4vmk-f8DELa3eHPC57ANi4pZMVx9ySlSAVFr6DhLgdVEK9d7pRwzHNJ4D3oCz-3bkIzlK6CTI1d6RDIfSQcueof2klOVu1irRc71u-yj3a-AgBiC3eFr27bDsomLgs7RMLbAkVz9tjY8Q0JZrPV8f0zRyTZbxihPYU6vLY1DYmnQcdL5_yZRZevDXVje_HSH5AZrUJ0ZOpgnxA";
+    return signer.getToken(email(), "PROGRAM-TEST-CA.WRITE");
   }
 
   String tokenProgramUser() {
-    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6MjA1Mzg3MjAzNCwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJVU0VSIiwicGVybWlzc2lvbnMiOlsiUFJPR1JBTS1URVNULUNBLlJFQUQiXX19LCJzY29wZSI6W119.JGUgOiPoQ6i7W0sGl_-kxoB2QQeazoTjWCSMvDrLdkw7L2QerltR9tN66TVqCvkfnkQuGhvqRkTSTESSWfO4qxNeYbpHhpW9z8XwbSwjF9OR1jWyvte7MDsglckx58bIhKVupsVE6JVmvg4czzxfci4MX4KXLTqiK8ZJTLiz9ylyTNg8Wmy5am0hPoBxdiFOPcx1k41-4EeeMaRt4Ywq4YY2QRHY2ssV_hUuXA4iAUmGhBu9BW8BfnkejUAz9MCO8ikuAShXjRqThHYuvjeD7yscGUtMRqHwxTaO0IuI9Ts6YbRdjpJK1QGaRgPV_jJ97b1klLdzMT71fJUnlGbZLw";
+    return signer.getToken(email(), "PROGRAM-TEST-CA.READ");
   }
 
   String tokenAdminUserWrongProgram() {
-    return "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1NTM3ODU2MzQsImV4cCI6NTA1Mzc4NTYzNSwic3ViIjoiY2MwODM2ZjktNzMyNC00MzAxLWE3ZDUtZDY5ODUwNTY1OWMyIiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwianRpIjoiODI0YzI4MzQtN2VlMy00ZTQyLTgwY2EtM2Q4NmRkMTFhODVkIiwiY29udGV4dCI6eyJzY29wZSI6W10sInVzZXIiOnsibmFtZSI6InhAdGVzdC5jb20iLCJlbWFpbCI6InhAdGVzdC5jb20iLCJzdGF0dXMiOiJBUFBST1ZFRCIsImZpcnN0TmFtZSI6IlRlc3QiLCJsYXN0TmFtZSI6IlVzZXIiLCJjcmVhdGVkQXQiOjE1NTI0OTMzMzA2MDcsImxhc3RMb2dpbiI6MTU1Mzc4NTYzNDYxNywicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInR5cGUiOiJVU0VSIiwicGVybWlzc2lvbnMiOlsiUFJPR1JBTS1URVNULURLLldSSVRFIiwiUFJPR1JBTS1URVNULURLLlJFQUQiXX19LCJzY29wZSI6W119.eza4_b03Iv9j9eG90dOjfFLcnUswAXHHzS-GRjo0Z5iWhBXIgm-EXbgIGdLfk9y6JQGJ0AzN55SR_ZsM-ZRBdh6ybcbKrxo6Tp0Xb1tWTKyTnscZu-8Fx9X2EipH4HC0dGTjQiQJNOd5UtFmRc9lg52OtXVGzoAXKYp61mNzxBaJ--8paVHRTfWqn0LScjku1oSKzkRSFo2Gg1besJkGelonxNZal8lTtNWf9Y67lcle4s_dwSXCH8Hc1RNpPqxN0hsq8E6EuArx9GAUqVujBsrHOv99FO5ys1Z1iHLcMfNYmIhwOlrRCHDFQTkll0B2of5etyHNqb2SUYdQNWXD4Q";
+    return signer.getToken(email(), "PROGRAM-TEST-DK.WRITE");
   }
 
   StringValue programName() {
@@ -390,10 +399,12 @@ public class ProgramServiceAuthorizationTest {
     val n = Arrays.asList(names);
     return mapToSet(n, name -> ProgramCountry.createProgramCountry(programEntity, countryEntity(name)).get());
   }
+
   CountryEntity countryEntity(String name) {
     val c = new CountryEntity().setName(name).setId(UUID.randomUUID());
     return c;
   }
+
   ProgramEntity entity2() {
     val created = LocalDateTime.now();
     val p = new ProgramEntity();
@@ -408,21 +419,34 @@ public class ProgramServiceAuthorizationTest {
     val created = LocalDateTime.now();
     val p = new ProgramEntity();
     return p.setShortName("OTHER-CA").setName("").setSubmittedDonors(3).
-      setCommitmentDonors(30000).setProgramCountries(countries(p,"CA")).setCreatedAt(created).setDescription("Fake 3").setGenomicDonors(30).
-      setMembershipType(MembershipType.FULL).setProgramCancers(Set.of()).setProgramPrimarySites(Set.of()).
-      setWebsite("http://org.com");
+      setCommitmentDonors(30000).setProgramCountries(countries(p, "CA")).setCreatedAt(created).setDescription("Fake 3")
+      .setGenomicDonors(30).
+        setMembershipType(MembershipType.FULL).setProgramCancers(Set.of()).setProgramPrimarySites(Set.of()).
+        setWebsite("http://org.com");
   }
 
   Program program() {
     return Program.newBuilder().
+      setMembershipType(MembershipTypeValue.newBuilder().setValue(MembershipType.FULL).build()).
+      setCommitmentDonors(Int32Value.of(1000)).
+      setSubmittedDonors(Int32Value.of(0)).
+      setGenomicDonors(Int32Value.of(0)).
       setName(programName()).
       setShortName(programName()).
       setWebsite(website()).
       build();
   }
 
+  String dccAdminPermission() {
+    return "PROGRAMSERVICE.WRITE";
+  }
+
+  String email() {
+    return "x@test.com";
+  }
+
   StringValue userId() {
-    return StringValue.of("x@test.com");
+    return StringValue.of(email());
   }
 
   UserRoleValue roleValue(UserRole role) {
@@ -472,10 +496,69 @@ public class ProgramServiceAuthorizationTest {
     return JoinProgramRequest.newBuilder().setJoinProgramInvitationId(invitationId2).build();
   }
 
+  JoinProgramInviteEntity invite1() {
+    return new JoinProgramInviteEntity().setUserEmail(userId().getValue());
+  }
+
+  JoinProgramInviteEntity invite2() {
+    return new JoinProgramInviteEntity().setUserEmail("y@z.com");
+  }
+
   RemoveUserRequest removeUserRequest() {
     return RemoveUserRequest.newBuilder().setProgramShortName(programName()).setUserEmail(userId()).build();
   }
 
+}
+
+@AllArgsConstructor
+class Signer {
+  private final Key privateKey;
+
+  public String getToken(String email, String... permissions) {
+    return getToken(email, false, false, permissions);
+  }
+
+  public String getToken(String email, boolean isExpired, boolean isEgoAdmin, String... permissions) {
+    val issued = Date.from(Instant.now());
+    // our jwt expires in one hour -- our test should take much less than that to run
+    Date expires;
+    if (isExpired) {
+      expires = Date.from(Instant.now().minusSeconds(1));
+    } else {
+      expires = Date.from(Instant.now().plusSeconds(3600));
+    }
+    val context = new Context();
+    val u = getUser(isEgoAdmin);
+    u.setCreatedAt(issued.toString());
+    u.setPermissions(permissions);
+    u.setEmail(email);
+    context.setUser(u);
+
+    return Jwts.builder()
+      .setIssuedAt(issued)
+      .setIssuer("ego")
+      .setExpiration(expires)
+      .claim("context", context)
+      .signWith(SignatureAlgorithm.RS256, privateKey)
+      .compact();
+  }
+
+  public Context.User getUser(boolean isAdmin) {
+    val u = new Context.User();
+
+    u.setName("Test User");
+    u.setFirstName("Test");
+    u.setLastName("Test");
+    if (isAdmin) {
+      u.setType("Admin");
+    } else {
+      u.setType("USER");
+    }
+    u.setGroups(new String[0]);
+
+    return u;
+
+  }
 }
 
 // Helper classes
@@ -564,9 +647,9 @@ class AuthorizationTest implements Runnable {
   }
 
   /***
-    * Check whether all the tests from <start> threw no exceptions.
+   * Check whether all the tests from <start> threw no exceptions.
    * @param start The number of the test to start with.
-    * @return false if one of the tests threw an exception, true otherwise.
+   * @return false if one of the tests threw an exception, true otherwise.
    */
   boolean threwNoExceptions(Integer start) {
     return threwNoExceptions(start, tests.size());

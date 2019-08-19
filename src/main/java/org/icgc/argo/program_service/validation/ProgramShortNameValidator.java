@@ -33,6 +33,9 @@ public class ProgramShortNameValidator implements ConstraintValidator<ProgramSho
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
+    if (value == null) {
+      return false;
+    }
     val matcher = pattern.matcher(value);
     val countries = new TreeSet<String>(Arrays.asList(Locale.getISOCountries()));
 

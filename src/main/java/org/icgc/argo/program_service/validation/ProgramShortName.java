@@ -32,7 +32,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Constraint(validatedBy = ProgramShortNameValidator.class)
 @Documented
 public @interface ProgramShortName {
-  String message() default "{ProgramShortName.invalid}";
+  String message() default "is invalid";
 
   Class<?>[] groups() default {};
 

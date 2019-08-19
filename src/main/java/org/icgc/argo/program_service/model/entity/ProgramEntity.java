@@ -30,6 +30,7 @@ import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.validation.ProgramShortName;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PastOrPresent;
@@ -110,10 +111,10 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-          mappedBy = ProgramInstitution.Fields.program,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.LAZY,
-          orphanRemoval = true
+    mappedBy = ProgramInstitution.Fields.program,
+    cascade = CascadeType.ALL,
+    fetch = FetchType.LAZY,
+    orphanRemoval = true
   )
   private Set<ProgramInstitution> programInstitutions = new TreeSet<>();
 
@@ -121,10 +122,10 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-          mappedBy = ProgramCountry.Fields.program,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.LAZY,
-          orphanRemoval = true
+    mappedBy = ProgramCountry.Fields.program,
+    cascade = CascadeType.ALL,
+    fetch = FetchType.LAZY,
+    orphanRemoval = true
   )
   private Set<ProgramCountry> programCountries = new TreeSet<>();
 
@@ -132,20 +133,20 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-          mappedBy = ProgramRegion.Fields.program,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.LAZY,
-          orphanRemoval = true
+    mappedBy = ProgramRegion.Fields.program,
+    cascade = CascadeType.ALL,
+    fetch = FetchType.LAZY,
+    orphanRemoval = true
   )
   private Set<ProgramRegion> programRegions = new TreeSet<>();
 
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-          mappedBy = ProgramCancer.Fields.program,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.LAZY,
-          orphanRemoval = true
+    mappedBy = ProgramCancer.Fields.program,
+    cascade = CascadeType.ALL,
+    fetch = FetchType.LAZY,
+    orphanRemoval = true
   )
   private Set<@NotNull ProgramCancer> programCancers = new TreeSet<>();
 
@@ -164,12 +165,20 @@ public class ProgramEntity implements NameableEntity<UUID> {
     return mapToList(getProgramCancers(), c -> c.getCancer().getName());
   }
 
-  public List<String> listPrimarySites() { return mapToList(getProgramPrimarySites(), p -> p.getPrimarySite().getName());}
+  public List<String> listPrimarySites() {
+    return mapToList(getProgramPrimarySites(), p -> p.getPrimarySite().getName());
+  }
 
-  public List<String> listInstitutions () { return mapToList(getProgramInstitutions(), i -> i.getInstitution().getName()); }
+  public List<String> listInstitutions() {
+    return mapToList(getProgramInstitutions(), i -> i.getInstitution().getName());
+  }
 
-  public List<String> listCountries() { return mapToList(getProgramCountries(), c -> c.getCountry().getName()); }
+  public List<String> listCountries() {
+    return mapToList(getProgramCountries(), c -> c.getCountry().getName());
+  }
 
-  public List<String> listRegions() { return mapToList(getProgramRegions(), r -> r.getRegion().getName()); }
+  public List<String> listRegions() {
+    return mapToList(getProgramRegions(), r -> r.getRegion().getName());
+  }
 
 }

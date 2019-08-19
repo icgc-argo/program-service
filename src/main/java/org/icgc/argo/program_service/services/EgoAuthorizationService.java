@@ -20,7 +20,7 @@ public class EgoAuthorizationService implements AuthorizationService {
 
   public EgoAuthorizationService(String dccAdminPermission) {
     this.dccAdminPermission = dccAdminPermission;
-    log.info(format("Created egoAuthorization service with permission='%s'", dccAdminPermission));
+    log.info(format("Created egoAuthorization service with dccAdmin permission='%s'", dccAdminPermission));
   }
 
   public EgoToken getEgoToken() {
@@ -37,7 +37,10 @@ public class EgoAuthorizationService implements AuthorizationService {
   }
 
   public boolean hasPermission(@NotNull String permission) {
-    return getPermissions().contains(permission);
+    log.debug(format("Want permission: %s", permission));
+    val status=getPermissions().contains(permission);
+    log.debug(format("hasPermission returns %s", status));
+    return status;
   }
 
   @Override
@@ -53,11 +56,14 @@ public class EgoAuthorizationService implements AuthorizationService {
     if (permissions == null) {
       return Collections.unmodifiableSet(Collections.EMPTY_SET);
     }
+    log.debug(format("Got permissions: %s", Set.of(permissions)));
     return Collections.unmodifiableSet(Set.of(permissions));
   }
 
   public boolean hasEmail(String email) {
     val authenticatedEmail = fromToken().getEmail();
+    log.debug(format("Want email '%s'", email));
+    log.debug(format("Have email '%s'",authenticatedEmail));
 
     if (authenticatedEmail == null || email == null) {
       return false;
@@ -68,7 +74,7 @@ public class EgoAuthorizationService implements AuthorizationService {
 
   public void require(boolean condition, String message) {
     if (!condition) {
-      log.warn("Permission denied", message);
+      log.debug("Permission denied", message);
       throw Status.fromCode(Status.Code.PERMISSION_DENIED).asRuntimeException();
     }
   }

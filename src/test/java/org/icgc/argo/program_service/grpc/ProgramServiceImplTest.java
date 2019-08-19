@@ -27,30 +27,29 @@ import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.properties.ValidationProperties;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.AuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
+import org.icgc.argo.program_service.services.ValidationService;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
 
+import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Email;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Consumer;
 
 import static org.apache.commons.lang.math.RandomUtils.nextInt;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,27 +59,11 @@ class ProgramServiceImplTest {
   InvitationService invitationService = mock(InvitationService.class);
   EgoService egoService = mock(EgoService.class);
   AuthorizationService authorizationService = mock(AuthorizationService.class);
-
+  ValidationProperties properties = new ValidationProperties();
+  ValidatorFactory validatorFactory = properties.factory();
+  ValidationService validationService = mock(ValidationService.class);
   ProgramServiceImpl programServiceImpl = new ProgramServiceImpl(programService, programConverter,
-    CommonConverter.INSTANCE, egoService, invitationService, authorizationService);
-
-  @Test
-  void createProgram() {
-    val request = mock(CreateProgramRequest.class);
-    val program = mock(Program.class);
-    val responseObserver = mock(StreamObserver.class);
-    when(request.getProgram()).thenReturn(program);
-    when(programService.createWithSideEffectTransactional(Mockito.anyObject(), Mockito.<Consumer>anyObject()))
-      .thenThrow(new DataIntegrityViolationException("test error"));
-    Exception exception = null;
-    try {
-      programServiceImpl.createProgram(request, responseObserver);
-    } catch (Exception ex) {
-      exception = ex;
-    }
-    assertNotNull(exception);
-    assertEquals("Capture the error message", "test error", exception.getMessage());
-  }
+    CommonConverter.INSTANCE, egoService, invitationService, authorizationService, validationService);
 
   @Test
   void removeProgram() {
@@ -92,23 +75,19 @@ class ProgramServiceImplTest {
       throw new EmptyResultDataAccessException(1);
     }).when(programService).removeProgram(any(String.class));
 
-    Exception exception = null;
     try {
       programServiceImpl.removeProgram(request, responseObserver);
     } catch (Exception ex) {
-      exception = ex;
-    }
-    assertNotNull(exception);
-    assertEquals(exception.getMessage(), "NOT_FOUND: Incorrect result size: expected 1, actual 0");
-    assertTrue(exception instanceof StatusRuntimeException);
-    val e = (StatusRuntimeException) exception;
-    assertEquals(e.getStatus().getCode(), Status.NOT_FOUND.getCode());
+      assertEquals("NOT_FOUND: Incorrect result size: expected 1, actual 0", ex.getMessage());
 
+      assertTrue(ex instanceof StatusRuntimeException);
+      val e = (StatusRuntimeException) ex;
+      assertEquals(Status.NOT_FOUND.getCode(), e.getStatus().getCode());
+    }
   }
 
   @Test
   void listUsers() {
-
     val responseObserver = mock(StreamObserver.class);
 
     val programName1 = "TEST-CA";
@@ -388,14 +367,14 @@ class ProgramServiceImplTest {
     when(joinProgramInvite.getFirstName()).thenReturn("First");
     when(joinProgramInvite.getLastName()).thenReturn("Last");
 
-    when(invitationService.getInvitationById(any())).thenReturn(Optional.of(joinProgramInvite));
-
+    when(invitationService.getLatestInvitation(any(), any())).thenReturn(Optional.of(joinProgramInvite));
     programServiceImpl.getJoinProgramInvite(request, responseObserver);
 
     val respArg = ArgumentCaptor.forClass(GetJoinProgramInviteResponse.class);
     verify(responseObserver).onNext(respArg.capture());
     assertEquals("Should return an response whose invitation's id is the randomUUID",
       respArg.getValue().getInvitation().getId().getValue(), randomUUID.toString());
+
   }
 
   User fromInvite(JoinProgramInviteEntity invite) {
@@ -418,6 +397,7 @@ class ProgramServiceImplTest {
     InvitationService invitationService = mock(InvitationService.class);
     EgoService egoService = mock(EgoService.class);
     AuthorizationService authorizationService = mock(AuthorizationService.class);
+    ValidationService validationService = mock(ValidationService.class);
 
     for (val key : egoInvitations.keySet()) {
       when(invitationService.getLatestInvitation(programName, key)).thenReturn(Optional.of(egoInvitations.get(key)));
@@ -427,7 +407,7 @@ class ProgramServiceImplTest {
     when(egoService.getUsersInProgram(programName)).thenReturn(egoUsers);
 
     return new ProgramServiceImpl(programService, programConverter, CommonConverter.INSTANCE, egoService,
-      invitationService, authorizationService);
+      invitationService, authorizationService, validationService);
   }
 
   ListUsersRequest createListUsersRequest(String shortName) {
