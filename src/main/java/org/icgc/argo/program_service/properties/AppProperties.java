@@ -24,6 +24,9 @@ import lombok.val;
 import org.apache.velocity.app.VelocityEngine;
 import org.icgc.argo.program_service.services.EgoAuthorizationService;
 import org.icgc.argo.program_service.utils.NoOpJavaMailSender;
+import org.icgc.argo.program_service.services.ego.EgoClient;
+import java.security.interfaces.RSAPublicKey;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -136,6 +139,11 @@ public class AppProperties {
         build();
     t.setUriTemplateHandler(new DefaultUriBuilderFactory(getEgoUrl()));
     return t;
+  }
+
+  @Bean
+  public RSAPublicKey egoPublicKey(EgoClient egoClient) {
+    return egoClient.getPublicKey();
   }
 }
 
