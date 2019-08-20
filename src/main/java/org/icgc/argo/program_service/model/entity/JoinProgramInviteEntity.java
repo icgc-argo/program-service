@@ -53,7 +53,6 @@ public class JoinProgramInviteEntity {
   private LocalDateTime createdAt;
 
   @Column(nullable = false)
-  @FutureOrPresent
   private LocalDateTime expiresAt;
 
   @PastOrPresent
