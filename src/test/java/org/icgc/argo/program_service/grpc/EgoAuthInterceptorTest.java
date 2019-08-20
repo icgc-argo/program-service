@@ -29,7 +29,7 @@ import org.icgc.argo.program_service.proto.CreateProgramResponse;
 import org.icgc.argo.program_service.proto.ProgramServiceGrpc;
 import org.icgc.argo.program_service.proto.ProgramServiceGrpc.ProgramServiceImplBase;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
-import org.icgc.argo.program_service.services.ego.EgoService;
+import org.icgc.argo.program_service.security.EgoSecurity;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.junit.Before;
 import org.junit.Rule;
@@ -37,12 +37,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
-
-import java.io.IOException;
 import java.util.Optional;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.given;
 
@@ -51,7 +47,7 @@ import static org.mockito.BDDMockito.given;
 public class EgoAuthInterceptorTest {
 
   @Mock
-  private EgoService egoService;
+  private EgoSecurity egoSecurity;
 
   @Mock
   private EgoToken egoToken;
@@ -88,18 +84,18 @@ public class EgoAuthInterceptorTest {
 
     // Create a server, add service, start, and register for automatic graceful shutdown.
     grpcCleanup.register(InProcessServerBuilder.forName(serverName).directExecutor()
-            .addService(ServerInterceptors.intercept(programServiceImplBase, new EgoAuthInterceptor(egoService))).build().start());
+            .addService(ServerInterceptors.intercept(programServiceImplBase, new EgoAuthInterceptor(egoSecurity))).build().start());
 
     val jwtClientInterceptor = new JwtClientInterceptor();
     val blockingStub = ProgramServiceGrpc.newBlockingStub(channel).withInterceptors(jwtClientInterceptor);
 
     jwtClientInterceptor.token = "123";
-    given(egoService.verifyToken("123")).willReturn(Optional.of(egoToken));
+    given(egoSecurity.verifyToken("123")).willReturn(Optional.of(egoToken));
 
     blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
     assertNotNull(this.egoTokenSpy);
 
-    given(egoService.verifyToken("321")).willReturn(Optional.empty());
+    given(egoSecurity.verifyToken("321")).willReturn(Optional.empty());
     jwtClientInterceptor.token = "321";
     blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
     assertNull(this.egoTokenSpy);

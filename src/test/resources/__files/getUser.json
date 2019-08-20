@@ -1,0 +1,19 @@
+{
+  "limit": 100,
+  "offset": 0,
+  "count": 1,
+  "resultSet": [
+    {
+      "id": "f0cfd733-3f41-46a7-b400-c1774dac4b21",
+      "name": "test_user@example.com",
+      "email": "test_user@example.com",
+      "status": "APPROVED",
+      "firstName": "Test",
+      "lastName": "User",
+      "createdAt": "2019-06-24T19:12:46.046+0000",
+      "lastLogin": "2019-07-16T15:09:49.870+0000",
+      "preferredLanguage": "ENGLISH",
+      "type": "ADMIN"
+    }
+  ]
+}
