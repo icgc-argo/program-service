@@ -1,0 +1,37 @@
+{
+  "count": 2,
+  "limit": 0,
+  "offset": 0,
+  "resultSet": [
+    {
+      "createdAt": "2019-08-14T18:32:56.052Z",
+      "email": "User.One@example.com",
+      "firstName": "User",
+      "id": "f73a4fad-5484-44d2-9206-aadabe56ab9c",
+      "lastLogin": "2019-08-14T18:32:56.052Z",
+      "lastName": "One",
+      "name": "User.One@example.com",
+      "permissions": [
+        "string"
+      ],
+      "preferredLanguage": "ENGLISH",
+      "status": "APPROVED",
+      "type": "USER"
+    },
+    {
+      "createdAt": "2019-08-14T18:32:56.052Z",
+      "email": "test_user@example.com",
+      "firstName": "Test",
+      "id": "c6afa552-9119-4b88-ba37-960d09057f9c",
+      "lastLogin": "2019-08-14T18:32:56.052Z",
+      "lastName": "User",
+      "name": "test_user@example.com",
+      "permissions": [
+        "string"
+      ],
+      "preferredLanguage": "ENGLISH",
+      "status": "APPROVED",
+      "type": "USER"
+    }
+  ]
+}

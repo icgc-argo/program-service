@@ -21,18 +21,15 @@ import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCountry;
 import org.icgc.argo.program_service.proto.*;
-import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
+import org.icgc.argo.program_service.security.EgoSecurity;
 import org.icgc.argo.program_service.services.EgoAuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.icgc.argo.program_service.services.ValidationService;
 import org.icgc.argo.program_service.services.ego.Context;
-import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.security.Key;
 import java.security.interfaces.RSAPublicKey;
@@ -76,7 +73,6 @@ public class ProgramServiceAuthorizationTest {
     setupKeys();
     val authorizationService = new EgoAuthorizationService(dccAdminPermission());
 
-    val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
     val invitationService = mock(InvitationService.class);
 
     when(invitationService.getInvitationById(invitationUUID)).thenReturn(Optional.of(invite1()));
@@ -88,12 +84,8 @@ public class ProgramServiceAuthorizationTest {
 
     val programConverter = ProgramConverter.INSTANCE;
     val commonConverter = CommonConverter.INSTANCE;
-    val restClient = mock(EgoRESTClient.class);
 
-    val invitationRepository = mock(JoinProgramInviteRepository.class);
-
-    val egoService = new EgoService(programEgoGroupRepository, programConverter, restClient,
-      invitationRepository, publicKey);
+    val egoSecurity = new EgoSecurity(publicKey);
     val mockEgoService = mock(EgoService.class);
 
     val programService = mock(ProgramService.class);
@@ -109,7 +101,7 @@ public class ProgramServiceAuthorizationTest {
 
     val serverName = InProcessServerBuilder.generateName();
     ManagedChannel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
-    val authInterceptor = new EgoAuthInterceptor(egoService);
+    val authInterceptor = new EgoAuthInterceptor(egoSecurity);
     val exceptionInterceptor = new ExceptionInterceptor();
 
     // Create a server, add service, start, and register for automatic graceful shutdown.
@@ -149,6 +141,7 @@ public class ProgramServiceAuthorizationTest {
       EndpointTest.of("listProgram", () -> client.listPrograms(Empty.getDefaultInstance())), // 9-10 Public
       EndpointTest.of("joinProgram", () -> client.joinProgram(joinProgramRequest()))
     );
+
 
     val t = new AuthorizationTest(testName, tests);
     t.run();
@@ -224,6 +217,7 @@ public class ProgramServiceAuthorizationTest {
     closeChannel(c.getChannel());
     assert programs.getProgramsCount() == 0;
   }
+
 
   @Test
   void egoAdmin() throws Exception {
@@ -318,18 +312,10 @@ public class ProgramServiceAuthorizationTest {
     val jwt = signer.getToken("n@ai", "PROGRAM-TEST-CA.WRITE");
     System.err.printf("Token='%s'\n", jwt);
 
-    val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
-    val programConverter = ProgramConverter.INSTANCE;
-    val restClient = mock(EgoRESTClient.class);
-    val invitationRepository = mock(JoinProgramInviteRepository.class);
-
-    val egoService = new EgoService(programEgoGroupRepository, programConverter, restClient,
-      invitationRepository, publicKey);
-
-    val egoToken = egoService.verifyToken(jwt);
+    val egoSecurity = new EgoSecurity(publicKey);
+    val egoToken = egoSecurity.verifyToken(jwt);
     assert egoToken.isPresent();
     System.err.printf("egoToken='%s'", egoToken.get());
-
   }
 
   String invalidToken() {
