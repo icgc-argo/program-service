@@ -24,17 +24,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.apache.commons.lang.RandomStringUtils.randomAlphabetic;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.argo.program_service.UtilsTest.*;
 import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -81,7 +80,6 @@ public class ProgramServiceGrpcIT {
   private final String EXISTING_INSTITUTION_2 = "Biobyte solutions GmbH";
   private final String NEW_USER_EMAIL = "hermionegranger@gmail.com";
 
-
   @Before
   public void before() throws IOException {
 
@@ -90,35 +88,35 @@ public class ProgramServiceGrpcIT {
     serverName = InProcessServerBuilder.generateName();
     // Create a client channel and register for automatic graceful shutdown.
     channel =
-            grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
+      grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
 
     // Create a server, add service, start, and register for automatic graceful shutdown.
     grpcCleanup.register(
-            InProcessServerBuilder.forName(serverName)
-                    .directExecutor()
-                    .addService(programServiceImpl)
-                    .build()
-                    .start());
+      InProcessServerBuilder.forName(serverName)
+        .directExecutor()
+        .addService(programServiceImpl)
+        .build()
+        .start());
 
     stub = ProgramServiceGrpc.newBlockingStub(channel);
   }
 
   @Test
-  public void createProgram(){
+  public void createProgram() {
     val program = Program.newBuilder()
-            .setShortName(stringValue(randomProgramName()))
-            .setMembershipType(membershipTypeValue(ASSOCIATE))
-            .setWebsite(stringValue("http://site.org"))
-            .addInstitutions("Ontario Institute for Cancer Research")
-            .addRegions("North America")
-            .setName(stringValue(RandomString.make(15)))
-            .setCommitmentDonors(int32Value(234))
-            .addCountries("Canada")
-            .setSubmittedDonors(int32Value(244))
-            .setGenomicDonors(int32Value(333))
-            .setDescription(stringValue("nothing"))
-            .addCancerTypes("Blood cancer")
-            .addPrimarySites("Blood");
+      .setShortName(stringValue(randomProgramName()))
+      .setMembershipType(membershipTypeValue(ASSOCIATE))
+      .setWebsite(stringValue("http://site.org"))
+      .addInstitutions("Ontario Institute for Cancer Research")
+      .addRegions("North America")
+      .setName(stringValue(RandomString.make(15)))
+      .setCommitmentDonors(int32Value(234))
+      .addCountries("Canada")
+      .setSubmittedDonors(int32Value(244))
+      .setGenomicDonors(int32Value(333))
+      .setDescription(stringValue("nothing"))
+      .addCancerTypes("Blood cancer")
+      .addPrimarySites("Blood");
 
     val admins = List.of(User.newBuilder().setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN)).
       setEmail(StringValue.of("x@test.com")).
@@ -128,26 +126,30 @@ public class ProgramServiceGrpcIT {
 
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).addAllAdmins(admins).build();
     val response = stub.createProgram(createProgramRequest);
-    assertThat(response.getCreatedAt().toString()).isNotEmpty();
+    assertFalse(isEmpty(response.getCreatedAt()));
+  }
+
+  boolean isEmpty(Object o) {
+    return o == null || o.toString().length() == 0;
   }
 
   @Test
   public void joinAndLeaveProgram() {
     val name = stringValue(randomProgramName());
     val program = Program.newBuilder()
-            .setShortName(name)
-            .setMembershipType(membershipTypeValue(ASSOCIATE))
-            .setWebsite(stringValue("http://site.org"))
-            .addInstitutions("Ontario Institute for Cancer Research")
-            .addRegions("North America")
-            .setName(stringValue(RandomString.make(15)))
-            .setCommitmentDonors(int32Value(234))
-            .addCountries("Canada")
-            .setSubmittedDonors(int32Value(244))
-            .setGenomicDonors(int32Value(333))
-            .setDescription(stringValue("nothing"))
-            .addCancerTypes("Blood cancer")
-            .addPrimarySites("Blood");
+      .setShortName(name)
+      .setMembershipType(membershipTypeValue(ASSOCIATE))
+      .setWebsite(stringValue("http://site.org"))
+      .addInstitutions("Ontario Institute for Cancer Research")
+      .addRegions("North America")
+      .setName(stringValue(RandomString.make(15)))
+      .setCommitmentDonors(int32Value(234))
+      .addCountries("Canada")
+      .setSubmittedDonors(int32Value(244))
+      .setGenomicDonors(int32Value(333))
+      .setDescription(stringValue("nothing"))
+      .addCancerTypes("Blood cancer")
+      .addPrimarySites("Blood");
 
     val admins = List.of(User.newBuilder().setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN)).
       setEmail(StringValue.of("x@test.com")).
@@ -159,39 +161,39 @@ public class ProgramServiceGrpcIT {
     val response = stub.createProgram(createProgramRequest);
 
     val inviteUserRequest = InviteUserRequest.newBuilder()
-            .setFirstName(stringValue("First"))
-            .setLastName(stringValue("Last"))
-            .setEmail(stringValue("user@example.com"))
-            .setRole(userRoleValue(UserRole.ADMIN))
-            .setProgramShortName(name)
-            .build();
+      .setFirstName(stringValue("First"))
+      .setLastName(stringValue("Last"))
+      .setEmail(stringValue("user@example.com"))
+      .setRole(userRoleValue(UserRole.ADMIN))
+      .setProgramShortName(name)
+      .build();
     val inviteUserResponse = stub.inviteUser(inviteUserRequest);
-    assertThat(inviteUserResponse.getInviteId().getValue()).isNotEmpty();
+    assertFalse(isEmpty(inviteUserResponse.getInviteId().getValue()));
   }
 
   @Test
-  public void invite_new_user_user_gets_added(){
+  public void invite_new_user_user_gets_added() {
     val shortname = randomProgramName();
     entityGenerator.setUpProgramEntity(shortname);
-    assertThat(egoClient.getUser(NEW_USER_EMAIL).isPresent()).isFalse();
+    assertFalse(egoClient.getUser(NEW_USER_EMAIL).isPresent());
 
     val request = InviteUserRequest.newBuilder()
-            .setEmail(CommonConverter.INSTANCE.boxString(NEW_USER_EMAIL))
-            .setFirstName(CommonConverter.INSTANCE.boxString("Hermione"))
-            .setLastName(CommonConverter.INSTANCE.boxString("Granger"))
-            .setProgramShortName(CommonConverter.INSTANCE.boxString(shortname))
-            .build();
+      .setEmail(CommonConverter.INSTANCE.boxString(NEW_USER_EMAIL))
+      .setFirstName(CommonConverter.INSTANCE.boxString("Hermione"))
+      .setLastName(CommonConverter.INSTANCE.boxString("Granger"))
+      .setProgramShortName(CommonConverter.INSTANCE.boxString(shortname))
+      .build();
     val response = stub.inviteUser(request);
 
-    assertThat(response.getInviteId()).isNotNull();
-    assertThat(egoClient.getUser(NEW_USER_EMAIL).isPresent()).isTrue();
+    assertNotNull(response.getInviteId());
+    assertTrue(egoClient.getUser(NEW_USER_EMAIL).isPresent());
     val user = egoClient.getUser(NEW_USER_EMAIL).get();
 
-    assertThat(egoClient.getUser(NEW_USER_EMAIL).get().getFirstName()).isEqualTo("Hermione");
-    assertThat(egoClient.getUser(NEW_USER_EMAIL).get().getLastName()).isEqualTo("Granger");
+    assertEquals("Hermione", egoClient.getUser(NEW_USER_EMAIL).get().getFirstName());
+    assertEquals("Granger", egoClient.getUser(NEW_USER_EMAIL).get().getLastName());
 
     egoClient.deleteUserById(user.getId());
-    assertThat(egoClient.getUser(NEW_USER_EMAIL).isPresent()).isFalse();
+    assertFalse(egoClient.getUser(NEW_USER_EMAIL).isPresent());
   }
 
   String randomProgramName() {
@@ -199,81 +201,81 @@ public class ProgramServiceGrpcIT {
   }
 
   @Test
-  public void list_cancers(){
+  public void list_cancers() {
     val response = stub.listCancers(Empty.getDefaultInstance());
-    assertThat(response.getCancersList().size()).isEqualTo(CANCER_COUNT);
+    assertEquals(CANCER_COUNT, response.getCancersList().size());
   }
 
   @Test
-  public void list_primary_sites(){
+  public void list_primary_sites() {
     val response = stub.listPrimarySites(Empty.getDefaultInstance());
-    assertThat(response.getPrimarySitesList().size()).isEqualTo(PRIMARY_SITE_COUNT);
+    assertEquals(PRIMARY_SITE_COUNT, response.getPrimarySitesList().size());
   }
 
   @Test
-  public void list_institutions(){
+  public void list_institutions() {
     val response = stub.listInstitutions(Empty.getDefaultInstance());
     // Original institution list contains 435 institutions, new institutions may be added
-    assertThat(response.getInstitutionsList().size()).isGreaterThanOrEqualTo(LEAST_INSTITUTION_COUNT);
+    assertTrue(response.getInstitutionsList().size() >= LEAST_INSTITUTION_COUNT);
   }
 
   @Test
-  public void list_regions(){
+  public void list_regions() {
     val response = stub.listRegions(Empty.getDefaultInstance());
-    assertThat(response.getRegionsList().size()).isEqualTo(REGION_COUNT);
+    assertEquals(REGION_COUNT, response.getRegionsList().size());
   }
 
   @Test
-  public void list_countries(){
+  public void list_countries() {
     val response = stub.listCountries(Empty.getDefaultInstance());
-    assertThat(response.getCountriesList().size()).isEqualTo(COUNTRY_COUNT);
+    assertEquals(COUNTRY_COUNT, response.getCountriesList().size());
   }
 
   @Test
-  public void add_institutions_empty_name_fail(){
+  public void add_institutions_empty_name_fail() {
     val request = AddInstitutionsRequest.newBuilder()
-            .addNames(CommonConverter.INSTANCE.boxString(""))
-            .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
-            .build();
+      .addNames(CommonConverter.INSTANCE.boxString(""))
+      .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
+      .build();
     assertThrows(StatusRuntimeException.class, () -> stub.addInstitutions(request));
   }
 
   @Test
-  public void add_institution_duplicate_fail(){
+  public void add_institution_duplicate_fail() {
     val request = AddInstitutionsRequest.newBuilder()
-            .addNames(CommonConverter.INSTANCE.boxString(EXISTING_INSTITUTION_1))
-            .addNames(CommonConverter.INSTANCE.boxString(EXISTING_INSTITUTION_2))
-            .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
-            .build();
+      .addNames(CommonConverter.INSTANCE.boxString(EXISTING_INSTITUTION_1))
+      .addNames(CommonConverter.INSTANCE.boxString(EXISTING_INSTITUTION_2))
+      .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
+      .build();
     assertThrows(StatusRuntimeException.class, () -> stub.addInstitutions(request));
   }
 
   @Test
-  public void add_unique_new_institution_success(){
+  public void add_unique_new_institution_success() {
     val request = AddInstitutionsRequest.newBuilder()
-            .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
-            .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_2))
-            .build();
+      .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
+      .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_2))
+      .build();
 
-    assertThat(institutionRepository.getInstitutionByName(INSTITUTION_1).isPresent()).isFalse();
-    assertThat(institutionRepository.getInstitutionByName(INSTITUTION_2).isPresent()).isFalse();
+    assertFalse(institutionRepository.getInstitutionByName(INSTITUTION_1).isPresent());
+    assertFalse(institutionRepository.getInstitutionByName(INSTITUTION_2).isPresent());
 
     val response = stub.addInstitutions(request);
     val names = response.getInstitutionsList()
-            .stream()
-            .map(Institution::getName)
-            .map(name -> CommonConverter.INSTANCE.unboxStringValue(name))
-            .collect(Collectors.toList());
+      .stream()
+      .map(Institution::getName)
+      .map(name -> CommonConverter.INSTANCE.unboxStringValue(name))
+      .collect(Collectors.toList());
 
-    assertThat(institutionRepository.getInstitutionByName(INSTITUTION_1).isPresent()).isTrue();
-    assertThat(institutionRepository.getInstitutionByName(INSTITUTION_2).isPresent()).isTrue();
-    assertThat(response.getInstitutionsList().size()).isEqualTo(2);
-    assertThat(names.contains(INSTITUTION_1)).isTrue();
-    assertThat(names.contains(INSTITUTION_2)).isTrue();
+    assertTrue(institutionRepository.getInstitutionByName(INSTITUTION_1).isPresent());
+    assertTrue(institutionRepository.getInstitutionByName(INSTITUTION_2).isPresent());
+    assertEquals(2, response.getInstitutionsList().size());
+    assertTrue(names.contains(INSTITUTION_1));
+    assertTrue(names.contains(INSTITUTION_2));
   }
 
   @Test
-  public void listPrograms(){
+  public void listPrograms() {
     val programEntity_1 = entityGenerator.setUpProgramEntity(randomProgramName());
     val programEntity_2 = entityGenerator.setUpProgramEntity(randomProgramName());
     val programEntity_3 = entityGenerator.setUpProgramEntity(randomProgramName());
@@ -282,10 +284,10 @@ public class ProgramServiceGrpcIT {
 
     assertTrue(response.getProgramsCount() == 3);
     val nameList = response.getProgramsList().stream()
-            .map(ProgramDetails::getProgram)
-            .map(Program::getShortName)
-            .map(CommonConverter.INSTANCE :: unboxStringValue)
-            .collect(toUnmodifiableList());
+      .map(ProgramDetails::getProgram)
+      .map(Program::getShortName)
+      .map(CommonConverter.INSTANCE::unboxStringValue)
+      .collect(toUnmodifiableList());
     assertTrue(nameList.contains(programEntity_1.getShortName()));
     assertTrue(nameList.contains(programEntity_2.getShortName()));
     assertTrue(nameList.contains(programEntity_3.getShortName()));
