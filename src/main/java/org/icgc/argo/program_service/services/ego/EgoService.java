@@ -37,9 +37,7 @@ import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
+import org.icgc.argo.program_service.services.ego.model.entity.*;
 import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,6 +47,7 @@ import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import java.security.interfaces.RSAPublicKey;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -123,21 +122,41 @@ public class EgoService {
     }
   }
 
-  //TODO: add transactional. If there are more programdb logic in the future and something fails, it will be able to roll back those changes.
-  public void setUpProgram(@NonNull String shortName) {
-    val programPolicy = egoClient.createEgoPolicy("PROGRAM-" + shortName);
-    val dataPolicy = egoClient.createEgoPolicy("PROGRAMDATA-" + shortName);
+  public List<EgoGroupPermissionRequest> getPermissionsForProgram(@NonNull String shortName) {
+    List<EgoGroupPermissionRequest> requests = new ArrayList<>();
+
+    val programPolicy = "PROGRAM-" + shortName;
+    val dataPolicy = "PROGRAMDATA-" + shortName;
 
     Stream.of(UserRole.values())
       .filter(role -> !role.equals(UserRole.UNRECOGNIZED))
       .forEach(
         role -> {
-          val group = ensureGroupExists(shortName, role);
-          egoClient.assignPermission(group, programPolicy, getProgramMask(role));
-          egoClient.assignPermission(group, dataPolicy, getDataMask(role));
-          saveGroupIdForProgramAndRole(shortName, role, group.getId());
+          requests.add(new EgoGroupPermissionRequest(groupName(shortName, role), programPolicy, getProgramMask(role)));
+          requests.add(new EgoGroupPermissionRequest(groupName(shortName, role), dataPolicy, getProgramMask(role)));
         }
       );
+    return requests;
+  }
+
+  List<String> programGroupNames(String shortName) {
+    return Stream.of(UserRole.values()).
+      filter(role -> !role.equals(UserRole.UNRECOGNIZED)).
+      map(role -> groupName(shortName, role)).collect(Collectors.toList());
+  }
+
+  public void setUpProgram(@NonNull String shortName) {
+    val requests = getPermissionsForProgram(shortName);
+    egoClient.assignGroupPermissions(requests);
+  }
+
+  public EgoMassDeleteRequest getProgramCleanupRequest(@NonNull String programShortName) {
+    return new EgoMassDeleteRequest(List.of("PROGRAM-" + programShortName,  "PROGRAMDATA-" +programShortName),
+      programGroupNames(programShortName));
+  }
+
+  private String groupName(String programShortName, UserRole role) {
+    return createProgramGroupName(programShortName, role).toString();
   }
 
   public static String getProgramMask(UserRole role) {
@@ -170,10 +189,6 @@ public class EgoService {
     default:
       throw new IllegalArgumentException("Invalid role " + role.toString());
     }
-  }
-
-  private EgoGroup ensureGroupExists(String shortName, UserRole role) {
-    return egoClient.ensureGroupExists(createProgramGroupName(shortName, role).toString());
   }
 
   public void updateUserRole(@NonNull String userEmail, @NonNull String shortName, @NonNull UserRole role) {
@@ -235,14 +250,6 @@ public class EgoService {
     return currentRole.toString().equalsIgnoreCase(role.toString());
   }
 
-  private void saveGroupIdForProgramAndRole(String short_name, UserRole role, UUID groupId) {
-    val programEgoGroup = new ProgramEgoGroupEntity()
-      .setProgramShortName(short_name)
-      .setRole(role)
-      .setEgoGroupId(groupId);
-    programEgoGroupRepository.save(programEgoGroup);
-  }
-
   public void initAdmin(String adminEmail, String shortName) {
     if (!joinProgram(adminEmail, shortName, ADMIN)) {
       EgoUser egoUser;
@@ -276,19 +283,7 @@ public class EgoService {
   }
 
   public void cleanUpProgram(@NonNull String programShortName) {
-    programEgoGroupRepository.findAllByProgramShortName(programShortName).forEach(programEgoGroup -> {
-      val egoGroupId = programEgoGroup.getEgoGroupId();
-      try {
-        egoClient.deleteGroup(egoGroupId);
-      } catch (HttpClientErrorException | HttpServerErrorException e) {
-        log.error("Cannot remove group {} in ego: {}", egoGroupId, e.getResponseBodyAsString());
-      }
-      programEgoGroupRepository.delete(programEgoGroup);
-    });
-
-    egoClient.removePolicyByName("PROGRAM-" + programShortName);
-    egoClient.removePolicyByName("PROGRAMDATA-" + programShortName);
-
+    egoClient.massDelete(getProgramCleanupRequest(programShortName));
     invitationRepository.deleteAllByProgramShortName(programShortName);
   }
 
