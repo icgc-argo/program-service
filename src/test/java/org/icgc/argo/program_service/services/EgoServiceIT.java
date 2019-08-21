@@ -28,7 +28,6 @@ import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
@@ -42,6 +41,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,9 +63,6 @@ class EgoServiceIT {
 
   @Autowired
   EgoRESTClient client;
-
-  @Autowired
-  ProgramEgoGroupRepository repository;
 
   @Autowired
   ProgramConverter converter;
@@ -94,7 +91,7 @@ class EgoServiceIT {
 
   @BeforeAll
   void setUp() {
-    egoService = new EgoService(repository, converter, client, inviteRepository);
+    egoService = new EgoService(converter, client, inviteRepository);
     setUpUser(TEST_EMAIL);
     setUpUser(ADMIN_USER_EMAIL);
     setUpUser(COLLABORATOR_USER_EMAIL);
@@ -137,9 +134,9 @@ class EgoServiceIT {
   private boolean isNotFoundException(Exception e) {
     if (e instanceof StatusRuntimeException) {
       val ex = (StatusRuntimeException) e;
-      
+
       val status = ex.getStatus();
-      if ( status.getCode() == Status.NOT_FOUND.getCode()) {
+      if (status.getCode() == Status.NOT_FOUND.getCode()) {
         return true;
       }
     }
@@ -165,12 +162,12 @@ class EgoServiceIT {
     val groupBefore = egoService.getEgoClient().getGroupsByUserId(user.get().getId()).
       collect(Collectors.toUnmodifiableList());
     assertEquals(groupBefore.size(), 1);
-    groupBefore.forEach(group -> assertEquals(group.getName(), "PROGRAM-"+PROGRAM_NAME +"-COLLABORATOR"));
+    groupBefore.forEach(group -> assertEquals(group.getName(), "PROGRAM-" + PROGRAM_NAME + "-COLLABORATOR"));
 
     // expected group is ADMIN group
     val shortname = PROGRAM_NAME;
     egoService.updateUserRole(user.get().getEmail(), shortname, UserRole.ADMIN);
-    val adminGroupName = "PROGRAM-"+ PROGRAM_NAME +"-ADMIN";
+    val adminGroupName = "PROGRAM-" + PROGRAM_NAME + "-ADMIN";
     val adminGroupId = egoService.getEgoClient().getGroupByName(adminGroupName).get().getId();
 
     // verify if user role is updated to ADMIN
@@ -185,7 +182,7 @@ class EgoServiceIT {
     //verify if the user is removed from a admin group
     val groupsLeft = egoService.getEgoClient().getGroupsByUserId(user.get().getId())
       .collect(Collectors.toUnmodifiableList());
-    assertEquals(groupsLeft.size(),0);
+    assertEquals(groupsLeft.size(), 0);
   }
 
   @Test
@@ -211,7 +208,7 @@ class EgoServiceIT {
     val user = client.getUser(COLLABORATOR_USER_EMAIL);
     assertTrue(user.isPresent());
 
-    val groupId = client.getGroupByName("PROGRAM-"+PROGRAM_NAME+"-ADMIN").get().getId();
+    val groupId = client.getGroupByName("PROGRAM-" + PROGRAM_NAME + "-ADMIN").get().getId();
     assertTrue(client.isMember(groupId, COLLABORATOR_USER_EMAIL));
 
     egoService.leaveProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName());
@@ -225,13 +222,14 @@ class EgoServiceIT {
     expectedUsers.add(COLLABORATOR_USER_EMAIL);
     expectedUsers.add(TEST_EMAIL);
 
-    val adminGroupId = client.getGroupByName("PROGRAM-"+PROGRAM_NAME+"-ADMIN").get().getId();
-    val collaboratorGroupId = client.getGroupByName("PROGRAM-"+PROGRAM_NAME+"-COLLABORATOR").get().getId();
+    val adminGroupId = client.getGroupByName("PROGRAM-" + PROGRAM_NAME + "-ADMIN").get().getId();
+    val collaboratorGroupId = client.getGroupByName("PROGRAM-" + PROGRAM_NAME + "-COLLABORATOR").get().getId();
 
     val adminJoin = egoService.joinProgram(ADMIN_USER_EMAIL, programEntity.getShortName(), UserRole.ADMIN);
     assertTrue("Can add ADMIN user to Program.", adminJoin);
 
-    val collaboratorJoin = egoService.joinProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName(), UserRole.COLLABORATOR);
+    val collaboratorJoin = egoService
+      .joinProgram(COLLABORATOR_USER_EMAIL, programEntity.getShortName(), UserRole.COLLABORATOR);
     assertTrue("Can add COLLABORATOR user to Program.", collaboratorJoin);
 
     val users = egoService.getUsersInProgram(programEntity.getShortName());
@@ -261,8 +259,9 @@ class EgoServiceIT {
       System.err.println("Remove program threw" + throwable.getMessage());
     }
     // Groups are removed
-    for (val groupName : List.of("PROGRAM-"+PROGRAM_NAME+"-BANNED", "PROGRAM-"+PROGRAM_NAME+"-CURATOR",
-      "PROGRAM-"+PROGRAM_NAME+"-COLLABORATOR", "PROGRAM-"+PROGRAM_NAME+"-SUBMITTER", "PROGRAM-"+PROGRAM_NAME+"-ADMIN")) {
+    for (val groupName : List.of("PROGRAM-" + PROGRAM_NAME + "-BANNED", "PROGRAM-" + PROGRAM_NAME + "-CURATOR",
+      "PROGRAM-" + PROGRAM_NAME + "-COLLABORATOR", "PROGRAM-" + PROGRAM_NAME + "-SUBMITTER",
+      "PROGRAM-" + PROGRAM_NAME + "-ADMIN")) {
       assertTrue(ego.getGroupByName(groupName).isEmpty());
     }
     // Policies are removed

@@ -22,7 +22,6 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCountry;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.icgc.argo.program_service.services.EgoAuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
@@ -76,7 +75,6 @@ public class ProgramServiceAuthorizationTest {
     setupKeys();
     val authorizationService = new EgoAuthorizationService(dccAdminPermission());
 
-    val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
     val invitationService = mock(InvitationService.class);
 
     when(invitationService.getInvitationById(invitationUUID)).thenReturn(Optional.of(invite1()));
@@ -92,8 +90,7 @@ public class ProgramServiceAuthorizationTest {
 
     val invitationRepository = mock(JoinProgramInviteRepository.class);
 
-    val egoService = new EgoService(programEgoGroupRepository, programConverter, restClient,
-      invitationRepository, publicKey);
+    val egoService = new EgoService( programConverter, restClient, invitationRepository, publicKey);
     val mockEgoService = mock(EgoService.class);
 
     val programService = mock(ProgramService.class);
@@ -318,13 +315,11 @@ public class ProgramServiceAuthorizationTest {
     val jwt = signer.getToken("n@ai", "PROGRAM-TEST-CA.WRITE");
     System.err.printf("Token='%s'\n", jwt);
 
-    val programEgoGroupRepository = mock(ProgramEgoGroupRepository.class);
     val programConverter = ProgramConverter.INSTANCE;
     val restClient = mock(EgoRESTClient.class);
     val invitationRepository = mock(JoinProgramInviteRepository.class);
 
-    val egoService = new EgoService(programEgoGroupRepository, programConverter, restClient,
-      invitationRepository, publicKey);
+    val egoService = new EgoService(programConverter, restClient, invitationRepository, publicKey);
 
     val egoToken = egoService.verifyToken(jwt);
     assert egoToken.isPresent();
@@ -401,8 +396,7 @@ public class ProgramServiceAuthorizationTest {
   }
 
   CountryEntity countryEntity(String name) {
-    val c = new CountryEntity().setName(name).setId(UUID.randomUUID());
-    return c;
+    return new CountryEntity().setName(name).setId(UUID.randomUUID());
   }
 
   ProgramEntity entity2() {
