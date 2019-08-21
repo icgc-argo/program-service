@@ -19,6 +19,15 @@ public class ExceptionListener<ReqT, RespT> extends ServerCall.Listener<ReqT> {
   private final ServerCall<ReqT, RespT> call;
   private final ServerCall.Listener<ReqT> listener;
 
+  /** According to io.grpc.netty.shaded.io.netty.handler.codec.http2.Http2Exception$HeaderListSizeException,
+   * the maximum size for the header is 8192. This appears to be the limit for the size of the entire header.
+   *
+   * We expect that the name of the exception class should be a few hundred bytes, at most. If we leave up to
+   * 1,000 bytes for the name plus any other meta-data that gets thrown into the headers, we have 7192 bytes
+   * available for the stack trace, so we need to truncate it if it's longer than that.
+   */
+  private final int MAX_STACKTRACE_SIZE = 7192;
+
   @Override
   public void onMessage(ReqT message) {
     try {
@@ -113,13 +122,21 @@ public class ExceptionListener<ReqT, RespT> extends ServerCall.Listener<ReqT> {
     val metadata= new Metadata();
     val name = t.getClass().getName();
 
-    metadata.put(key("stacktrace"), Arrays.asList(t.getStackTrace()).toString());
     metadata.put(key("name"), name);
+    metadata.put(key("stacktrace"), formatStackTrace(t, MAX_STACKTRACE_SIZE));
 
     return Status.INTERNAL.augmentDescription(t.getMessage()).asRuntimeException(metadata);
   }
 
   private Metadata.Key<String> key(String s) {
     return Metadata.Key.of(s, Metadata.ASCII_STRING_MARSHALLER);
+  }
+
+  private String formatStackTrace(Throwable throwable,  int maxLength) {
+    val s = Arrays.asList(throwable.getStackTrace()).toString();
+    if (s.length() >= maxLength) {
+      return s.substring(0,maxLength);
+    }
+    return s;
   }
 }
