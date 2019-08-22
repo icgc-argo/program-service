@@ -68,6 +68,8 @@ public class MailService {
       ctx.put("lastName", invitation.getLastName());
       ctx.put("invitationId", invitation.getId());
       ctx.put("programShortName", invitation.getProgram().getShortName());
+      ctx.put("role", invitation.getRole());
+      ctx.put("email", invitation.getUserEmail());
       // TODO: add join program link
       ctx.put("joinProgramLink", invitationUrlPrefix + invitation.getId());
       template.merge(ctx, sw);
