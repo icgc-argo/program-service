@@ -79,17 +79,6 @@ public class EgoService {
     this.invitationRepository = invitationRepository;
   }
 
-  public EgoService(@NonNull ProgramEgoGroupRepository programEgoGroupRepository,
-    @NonNull ProgramConverter programConverter,
-    @NonNull EgoClient restClient,
-    @NonNull JoinProgramInviteRepository invitationRepository,
-    RSAPublicKey key) {
-    this.programEgoGroupRepository = programEgoGroupRepository;
-    this.programConverter = programConverter;
-    this.egoClient = restClient;
-    this.invitationRepository = invitationRepository;
-  }
-
   //TODO: add transactional. If there are more programdb logic in the future and something fails, it will be able to roll back those changes.
   public void setUpProgram(@NonNull String shortName) {
     val programPolicy = egoClient.createEgoPolicy("PROGRAM-" + shortName);
