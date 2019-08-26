@@ -3,6 +3,7 @@ package org.icgc.argo.program_service.utils;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.proto.MembershipType;
+import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,7 @@ public class EntityGenerator {
 
   @Autowired
   private CountryRepository countryRepository;
+
 
   public ProgramEntity setUpProgramEntity(String shortname) {
     return programRepository

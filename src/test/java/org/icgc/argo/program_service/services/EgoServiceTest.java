@@ -20,10 +20,17 @@ package org.icgc.argo.program_service.services;
 
 import lombok.val;
 import org.icgc.argo.program_service.Utils;
+
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
+
+import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.proto.UserRole;
+import org.icgc.argo.program_service.security.EgoSecurity;
+
 import org.icgc.argo.program_service.services.ego.EgoClient;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
@@ -44,19 +51,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 class EgoServiceTest {
-  
   void verifyKey() {
     val rsaPublicKey = (RSAPublicKey) Utils.getPublicKey(publickKey, "RSA");
-
-    val programConverter = mock(ProgramConverter.class);
-    val egoClient = mock(EgoRESTClient.class);
-    val invitationRepository = mock(JoinProgramInviteRepository.class);
-    val egoService = new EgoService(programConverter, egoClient, invitationRepository);
-    ReflectionTestUtils.setField(egoService, "egoPublicKey", rsaPublicKey);
-    assertTrue(egoService.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
-    assertFalse(egoService.verifyToken(expiredToken).isPresent(), "Expired token should return empty ego token");
-    assertFalse(egoService.verifyToken(wrongIssToken).isPresent(), "Wrong issuer token should return empty ego token");
-    assertTrue(egoService.verifyToken(hasExtraFieldToken).isPresent(),
+    val egoSecurity = new EgoSecurity(rsaPublicKey);
+    ReflectionTestUtils.setField(egoSecurity, "egoPublicKey", rsaPublicKey);
+    assertTrue(egoSecurity.verifyToken(validToken).isPresent(), "Valid token should return an ego token");
+    assertFalse(egoSecurity.verifyToken(expiredToken).isPresent(), "Expired token should return empty ego token");
+    assertFalse(egoSecurity.verifyToken(wrongIssToken).isPresent(), "Wrong issuer token should return empty ego token");
+    assertTrue(egoSecurity.verifyToken(hasExtraFieldToken).isPresent(),
       "Return ego token when a token contains an unrecognized field");
   }
 

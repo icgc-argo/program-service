@@ -64,7 +64,6 @@ public class EgoService {
   @Getter
   private final EgoClient egoClient;
   private final ProgramConverter programConverter;
-  private RSAPublicKey egoPublicKey;
   private final JoinProgramInviteRepository invitationRepository;
 
   @Autowired
@@ -75,48 +74,6 @@ public class EgoService {
     this.programConverter = programConverter;
     this.egoClient = restClient;
     this.invitationRepository = invitationRepository;
-    setEgoPublicKey();
-  }
-
-  public EgoService(
-    @NonNull ProgramConverter programConverter,
-    @NonNull EgoClient restClient,
-    @NonNull JoinProgramInviteRepository invitationRepository,
-    RSAPublicKey key) {
-    this.programConverter = programConverter;
-    this.egoClient = restClient;
-    this.invitationRepository = invitationRepository;
-    this.egoPublicKey = key;
-  }
-
-  @Autowired
-  private void setEgoPublicKey() {
-    this.egoPublicKey = egoClient.getPublicKey();
-  }
-
-  public Optional<EgoToken> verifyToken(String jwtToken) {
-    try {
-      Algorithm algorithm = Algorithm.RSA256(this.egoPublicKey, null);
-      JWTVerifier verifier = JWT.require(algorithm)
-        .withIssuer("ego")
-        .build(); //Reusable verifier instance
-      val jwt = verifier.verify(jwtToken);
-      return parseToken(jwt);
-    } catch (JWTVerificationException e) {
-      throw Status.PERMISSION_DENIED.asRuntimeException();
-    } catch (NullPointerException e) {
-      throw Status.UNAUTHENTICATED.asRuntimeException();
-    }
-  }
-
-  private Optional<EgoToken> parseToken(DecodedJWT jwt) {
-    try {
-      EgoToken egoToken = new EgoToken(jwt, jwt.getClaim("context").as(Context.class));
-      return Optional.of(egoToken);
-    } catch (JWTDecodeException exception) {
-      //Invalid token
-      return Optional.empty();
-    }
   }
 
   public static final List<UserRole> roles() {
@@ -303,7 +260,7 @@ public class EgoService {
     if(usersInGroup.anyMatch(egoUser -> egoUser.getEmail().equalsIgnoreCase(email))){
       log.error("User {} has already joined ego group {} for program {}.", email, egoGroupId,
         programEgoGroup.getName(), programShortName);
-      throw new EgoException(format("User %s has already joined ego group %s(%s).", email, egoGroupId,
+      throw new EgoException(format("User %s has already joined ego group %s (%s).", email, egoGroupId,
         programEgoGroup.getName()));
     }
 

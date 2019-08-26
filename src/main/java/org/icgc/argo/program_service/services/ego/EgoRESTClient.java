@@ -110,7 +110,7 @@ public class EgoRESTClient implements EgoClient {
     try {
       ResponseEntity<EgoCollection<T>> responseEntity = retry(() -> restTemplate.exchange(url, HttpMethod.GET, null, typeReference));
       val collection = responseEntity.getBody();
-      if (collection != null) {
+      if (collection != null && collection.getResultSet() != null) {
         return collection.getResultSet().stream();
       }
       return Stream.empty();

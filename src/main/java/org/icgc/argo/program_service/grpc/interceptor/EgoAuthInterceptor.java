@@ -19,8 +19,9 @@
 package org.icgc.argo.program_service.grpc.interceptor;
 
 import io.grpc.*;
+import lombok.NonNull;
 import lombok.val;
-import org.icgc.argo.program_service.services.ego.EgoService;
+import org.icgc.argo.program_service.security.EgoSecurity;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -32,16 +33,15 @@ import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 @Profile("auth")
 public class EgoAuthInterceptor implements AuthInterceptor {
 
-  private final EgoService egoService;
+  private final EgoSecurity egoSecurity;
 
-  public static final Context.Key<EgoToken> EGO_TOKEN
-    = Context.key("egoToken");
+  public static final Context.Key<EgoToken> EGO_TOKEN = Context.key("egoToken");
 
   public static final Metadata.Key<String> JWT_METADATA_KEY = Metadata.Key.of("jwt", ASCII_STRING_MARSHALLER);
 
   @Autowired
-  public EgoAuthInterceptor(EgoService egoService) {
-    this.egoService = egoService;
+  public EgoAuthInterceptor(@NonNull EgoSecurity egoSecurity) {
+    this.egoSecurity = egoSecurity;
   }
 
   @Override
@@ -50,9 +50,10 @@ public class EgoAuthInterceptor implements AuthInterceptor {
     Metadata metadata,
     ServerCallHandler<ReqT, RespT> next) {
     String token = metadata.get(JWT_METADATA_KEY);
-    val egoToken = egoService.verifyToken(token);
+    val egoToken = egoSecurity.verifyToken(token);
     Context context = Context.current().withValue(EGO_TOKEN, egoToken.orElse(null));
     return Contexts.interceptCall(context, call, metadata, next);
   }
+
 }
 
