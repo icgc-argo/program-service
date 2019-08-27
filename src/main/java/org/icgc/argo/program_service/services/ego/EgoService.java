@@ -24,13 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
-import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoGroupPermissionRequest;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoMassDeleteRequest;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,45 +58,65 @@ public class EgoService {
 
   @Getter
   private final EgoClient egoClient;
-  private final ProgramEgoGroupRepository programEgoGroupRepository;
   private final ProgramConverter programConverter;
   private final JoinProgramInviteRepository invitationRepository;
 
   @Autowired
   public EgoService(
-    @NonNull ProgramEgoGroupRepository programEgoGroupRepository,
     @NonNull ProgramConverter programConverter,
     @NonNull EgoClient restClient,
     @NonNull JoinProgramInviteRepository invitationRepository) {
-    this.programEgoGroupRepository = programEgoGroupRepository;
     this.programConverter = programConverter;
     this.egoClient = restClient;
     this.invitationRepository = invitationRepository;
   }
 
-  //TODO: add transactional. If there are more programdb logic in the future and something fails, it will be able to roll back those changes.
-  public void setUpProgram(@NonNull String shortName) {
-    val programPolicy = egoClient.createEgoPolicy("PROGRAM-" + shortName);
-    val dataPolicy = egoClient.createEgoPolicy("PROGRAMDATA-" + shortName);
-
-    Stream.of(UserRole.values())
+  public static List<UserRole> roles() {
+    return Stream.of(UserRole.values())
       .filter(role -> !role.equals(UserRole.UNRECOGNIZED))
-      .forEach(
-        role -> {
-          val group = ensureGroupExists(shortName, role);
-          egoClient.assignPermission(group, programPolicy, getProgramMask(role));
-          egoClient.assignPermission(group, dataPolicy, getDataMask(role));
-          saveGroupIdForProgramAndRole(shortName, role, group.getId());
-        }
-      );
+      .collect(Collectors.toList());
+  }
+
+  public List<EgoGroupPermissionRequest> getPermissionsForProgram(@NonNull String shortName) {
+    List<EgoGroupPermissionRequest> requests = new ArrayList<>();
+
+    val programPolicy = "PROGRAM-" + shortName;
+    val dataPolicy = "PROGRAMDATA-" + shortName;
+
+    for (val role : roles()) {
+      requests.add(new EgoGroupPermissionRequest(groupName(shortName, role), programPolicy, getProgramMask(role)));
+      requests.add(new EgoGroupPermissionRequest(groupName(shortName, role), dataPolicy, getDataMask(role)));
+    }
+
+    return requests;
+  }
+
+  List<String> programGroupNames(String shortName) {
+    return Stream.of(UserRole.values()).
+      filter(role -> !role.equals(UserRole.UNRECOGNIZED)).
+      map(role -> groupName(shortName, role)).collect(Collectors.toList());
+  }
+
+  public void setUpProgram(@NonNull String shortName) {
+    val requests = getPermissionsForProgram(shortName);
+    egoClient.assignGroupPermissions(requests);
+  }
+
+  public EgoMassDeleteRequest getProgramCleanupRequest(@NonNull String programShortName) {
+    return new EgoMassDeleteRequest(List.of("PROGRAM-" + programShortName, "PROGRAMDATA-" + programShortName),
+      programGroupNames(programShortName));
+  }
+
+  private String groupName(String programShortName, UserRole role) {
+    return createProgramGroupName(programShortName, role).toString();
   }
 
   public static String getProgramMask(UserRole role) {
     switch (role) {
     case ADMIN:
-      return "WRITE"; // return ADMIN
+      return "WRITE";
     case CURATOR:
-      return "WRITE"; // check this with spec
+      return "WRITE";
     case SUBMITTER:
       return "READ";
     case COLLABORATOR:
@@ -110,8 +130,8 @@ public class EgoService {
 
   public static String getDataMask(UserRole role) {
     switch (role) {
-    case ADMIN: // return "ADMIN";
-    case CURATOR: // return "ADMIN";
+    case ADMIN:     // return "WRITE";
+    case CURATOR:   // return "WRITE";
     case SUBMITTER:
       return "WRITE";
     case COLLABORATOR:
@@ -121,10 +141,6 @@ public class EgoService {
     default:
       throw new IllegalArgumentException("Invalid role " + role.toString());
     }
-  }
-
-  private EgoGroup ensureGroupExists(String shortName, UserRole role) {
-    return egoClient.ensureGroupExists(createProgramGroupName(shortName, role).toString());
   }
 
   public void updateUserRole(@NonNull String userEmail, @NonNull String shortName, @NonNull UserRole role) {
@@ -142,7 +158,7 @@ public class EgoService {
       .forEach(g -> processUserWithGroup(role, g, user.getId()));
 
     val programEgoGroup = getProgramEgoGroup(shortName, role);
-    val egoGroupId = programEgoGroup.getEgoGroupId();
+    val egoGroupId = programEgoGroup.getId();
     egoClient.addUserToGroup(egoGroupId, user.getId());
   }
 
@@ -151,7 +167,8 @@ public class EgoService {
       egoClient.removeUserFromGroup(group.getId(), userId);
     } else {
       log.error("Cannot update user role to {}, new role is the same as current role.", role);
-      throw new IllegalArgumentException(format("Cannot update user role to '%s', new role is the same as current role.", role));
+      throw new IllegalArgumentException(
+        format("Cannot update user role to '%s', new role is the same as current role.", role));
     }
   }
 
@@ -159,12 +176,12 @@ public class EgoService {
     return g.getName().toLowerCase().contains(shortname.toLowerCase());
   }
 
-  public ProgramEgoGroupEntity getProgramEgoGroup(String programShortName, UserRole role) {
-    return programEgoGroupRepository.findByProgramShortNameAndRole(programShortName, role)
-      .orElseThrow(() -> {
-        throw new NotFoundException(format("Cannot find ProgramEgoGroupEntity for program %s and user role %s. ",
-          programShortName, role.toString()));
-      });
+  public EgoGroup getProgramEgoGroup(String programShortName, UserRole role) {
+    val name = groupName(programShortName, role);
+    val g = egoClient.getGroupByName(name);
+    return g.orElseThrow(() -> {
+      throw new NotFoundException(format("Ego group '%s' not found.", name));
+    });
   }
 
   public boolean isSameRole(@NonNull UserRole role, @NonNull String groupName) throws RuntimeException {
@@ -186,14 +203,6 @@ public class EgoService {
     return currentRole.toString().equalsIgnoreCase(role.toString());
   }
 
-  private void saveGroupIdForProgramAndRole(String short_name, UserRole role, UUID groupId) {
-    val programEgoGroup = new ProgramEgoGroupEntity()
-      .setProgramShortName(short_name)
-      .setRole(role)
-      .setEgoGroupId(groupId);
-    programEgoGroupRepository.save(programEgoGroup);
-  }
-
   public void initAdmin(String adminEmail, String shortName) {
     if (!joinProgram(adminEmail, shortName, ADMIN)) {
       EgoUser egoUser;
@@ -210,36 +219,25 @@ public class EgoService {
 
   public List<User> getUsersInProgram(String programShortName) {
     val userResults = new ArrayList<User>();
-    programEgoGroupRepository.findAllByProgramShortName(programShortName).forEach(programEgoGroup -> {
-      val groupId = programEgoGroup.getEgoGroupId();
-      val role = programEgoGroup.getRole();
+    for (val role : roles()) {
+      val group = getProgramEgoGroup(programShortName, role);
+      val groupId = group.getId();
       try {
         egoClient.getUsersByGroupId(groupId)
-                .map(egoUser -> egoUser.setRole(role))
-                .map(programConverter::egoUserToUser)
-                .forEach(userResults::add);
+          .map(egoUser -> egoUser.setRole(role))
+          .map(programConverter::egoUserToUser)
+          .forEach(userResults::add);
       } catch (HttpClientErrorException | HttpServerErrorException e) {
         log.error("Fail to retrieve users from ego group '{}': {}", groupId, e.getResponseBodyAsString());
         throw new EgoException(format("Fail to retrieve users from ego group '%s' ", groupId), e);
       }
-    });
+    }
+
     return userResults;
   }
 
   public void cleanUpProgram(@NonNull String programShortName) {
-    programEgoGroupRepository.findAllByProgramShortName(programShortName).forEach(programEgoGroup -> {
-      val egoGroupId = programEgoGroup.getEgoGroupId();
-      try {
-        egoClient.deleteGroup(egoGroupId);
-      } catch (HttpClientErrorException | HttpServerErrorException e) {
-        log.error("Cannot remove group {} in ego: {}", egoGroupId, e.getResponseBodyAsString());
-      }
-      programEgoGroupRepository.delete(programEgoGroup);
-    });
-
-    egoClient.removePolicyByName("PROGRAM-" + programShortName);
-    egoClient.removePolicyByName("PROGRAMDATA-" + programShortName);
-
+    egoClient.massDelete(getProgramCleanupRequest(programShortName));
     invitationRepository.deleteAllByProgramShortName(programShortName);
   }
 
@@ -247,19 +245,18 @@ public class EgoService {
     val user = egoClient.getUser(email).orElse(null);
     if (user == null) {
       log.error("Cannot find user with email {}", email);
-      throw new NotFoundException(format("Cannot join user %s into program %s, user does not exist in ego.", email, programShortName));
+      throw new NotFoundException(format("Cannot join user %s into program %s, user does not exist in ego.",
+        email, programShortName));
     }
-    val programEgoGroup = programEgoGroupRepository.findByProgramShortNameAndRole(programShortName, role);
-    if (programEgoGroup.isEmpty()) {
-      log.error("Cannot find program ego group, have you created the groups in ego?");
-      throw new NotFoundException("Cannot find program ego group, have you created the groups in ego?");
-    }
-    val egoGroupId = programEgoGroup.map(ProgramEgoGroupEntity::getEgoGroupId).get();
+    val programEgoGroup = getProgramEgoGroup(programShortName, role);
+    val egoGroupId = programEgoGroup.getId();
 
     val usersInGroup = egoClient.getUsersByGroupId(egoGroupId);
-    if(usersInGroup.anyMatch(egoUser -> egoUser.getEmail().equalsIgnoreCase(email))){
-      log.error("User {} has already joined ego group {} for program {}.", email, egoGroupId, programEgoGroup.get().getProgramShortName());
-      throw new EgoException(format("User %s has already joined ego group %s.", email, egoGroupId));
+    if (usersInGroup.anyMatch(egoUser -> egoUser.getEmail().equalsIgnoreCase(email))) {
+      log.error("User {} has already joined ego group {} for program {}.", email, egoGroupId,
+        programEgoGroup.getName(), programShortName);
+      throw new EgoException(format("User %s has already joined ego group %s (%s).", email, egoGroupId,
+        programEgoGroup.getName()));
     }
 
     try {
@@ -281,17 +278,17 @@ public class EgoService {
     }
 
     // If user has somehow been set up with multiple groups for this program, get all of them and remove them
-    List<EgoGroup> groups=Collections.EMPTY_LIST;
+    List<EgoGroup> groups = Collections.EMPTY_LIST;
     String errors = "";
 
     try {
       groups = egoClient.getGroupsByUserId(user.getId()).collect(Collectors.toList());
-    } catch(HttpClientErrorException | HttpServerErrorException e) {
+    } catch (HttpClientErrorException | HttpServerErrorException e) {
       log.error("Cannot get ego groups for user '{}': {}", user.getId(), e.getResponseBodyAsString());
-      errors = format("Cannot get ego groups for user '%s'",user.getId());
+      errors = format("Cannot get ego groups for user '%s'", user.getId());
     } catch (EgoException ex) {
       log.error("Cannot get ego groups for user '{}': {}", user.getId(), ex.getMessage());
-      errors = format("Cannot get ego groups for user '%s'",user.getId());
+      errors = format("Cannot get ego groups for user '%s'", user.getId());
     }
 
     if (errors.length() != 0) {
@@ -299,15 +296,15 @@ public class EgoService {
     }
 
     val programGroups = groups.stream()
-        .filter(egoGroup -> egoGroup.getName().toLowerCase().contains(shortName.toLowerCase()))
-        .collect(Collectors.toList());
+      .filter(egoGroup -> egoGroup.getName().toLowerCase().contains(shortName.toLowerCase()))
+      .collect(Collectors.toList());
 
-
-    for(val group: programGroups) {
+    for (val group : programGroups) {
       try {
         egoClient.removeUserFromGroup(group.getId(), user.getId());
-      } catch (HttpClientErrorException | HttpServerErrorException  e) {
-        log.error("Cannot remove user {} from group {}: {}", user.getId(), group.getName(), e.getResponseBodyAsString());
+      } catch (HttpClientErrorException | HttpServerErrorException e) {
+        log
+          .error("Cannot remove user {} from group {}: {}", user.getId(), group.getName(), e.getResponseBodyAsString());
         errors += format("Cannot remove user '%s' from group '%s' ",
           user.getId(), group.getName());
       }
@@ -318,13 +315,14 @@ public class EgoService {
     throw new EgoException(errors);
   }
 
-  public EgoUser getOrCreateUser(@Email String email, @NonNull String firstName, @NonNull String lastName){
+  public EgoUser getOrCreateUser(@Email String email, @NonNull String firstName, @NonNull String lastName) {
     return egoClient.getUser(email)
-            .orElseGet(() ->{
-              return egoClient.createEgoUser(email, firstName, lastName);});
+      .orElseGet(() -> {
+        return egoClient.createEgoUser(email, firstName, lastName);
+      });
   }
 
-  public EgoUser convertInvitationToEgoUser(@NonNull JoinProgramInviteEntity invite){
+  public EgoUser convertInvitationToEgoUser(@NonNull JoinProgramInviteEntity invite) {
     return programConverter.joinProgramInviteToEgoUser(invite);
   }
 

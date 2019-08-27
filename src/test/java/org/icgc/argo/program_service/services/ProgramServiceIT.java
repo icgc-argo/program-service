@@ -23,10 +23,10 @@ import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoPermission;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -38,6 +38,7 @@ import org.springframework.test.context.TestPropertySource;
 import java.util.Arrays;
 
 import static java.lang.String.format;
+import static org.icgc.argo.program_service.services.ego.EgoService.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
@@ -45,8 +46,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles({ "test", "default" })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:postgresql://localhost:5432/program_db",
-        "spring.datasource.driverClassName=org.postgresql.Driver",
+  "spring.datasource.url=jdbc:postgresql://localhost:5432/program_db",
+  "spring.datasource.driverClassName=org.postgresql.Driver",
 })
 class ProgramServiceIT {
 
@@ -54,9 +55,6 @@ class ProgramServiceIT {
 
   @Autowired
   EgoRESTClient client;
-
-  @Autowired
-  ProgramEgoGroupRepository repository;
 
   @Autowired
   ProgramConverter converter;
@@ -70,16 +68,16 @@ class ProgramServiceIT {
   @Autowired
   ProgramRepository programRepository;
 
-  private static final String name="TEST-X-CA";
+  private static final String name = "TEST-X-CA";
 
   @BeforeAll
   void setUp() {
     System.err.printf("Setting up...\n");
-    egoService = new EgoService(repository, converter, client, inviteRepository);
+    egoService = new EgoService(converter, client, inviteRepository);
 
     try {
       egoService.cleanUpProgram(name);
-    } catch(Throwable t) {
+    } catch (Throwable t) {
       System.err.printf("Caught throwable with message: %s", t.getMessage());
     }
   }
@@ -92,8 +90,7 @@ class ProgramServiceIT {
     assertTrue(client.getPolicyByName("PROGRAM-" + name).isPresent());
     assertTrue(client.getPolicyByName("PROGRAMDATA-" + name).isPresent());
 
-    for(UserRole role: UserRole.values()) {
-      if (role == UserRole.UNRECOGNIZED) { continue; }
+    for (UserRole role : roles()) {
       verifyRole(role, name);
     }
 
@@ -108,33 +105,41 @@ class ProgramServiceIT {
 
     val permissions = client.getGroupPermissions(group.get().getId());
     assertEquals(2, permissions.length);
+
     assertTrue(Arrays.asList(permissions).stream().
-        anyMatch(permission -> permission.getAccessLevel().equals(EgoService.getProgramMask(role))));
+      anyMatch(permission -> permissionsMatch(permission, "PROGRAM-" + shortName, getProgramMask(role))));
+
     assertTrue(Arrays.asList(permissions).stream().
-      anyMatch(permission -> permission.getAccessLevel().equals(EgoService.getDataMask(role))));
+      anyMatch(permission -> permissionsMatch(permission, "PROGRAMDATA-" + shortName, getDataMask(role))));
   }
 
+  private boolean permissionsMatch(EgoPermission permission, String policyName, String accessLevel) {
+    if (permission.getAccessLevel().equals(accessLevel) && permission.getPolicy().getName().equals(policyName)) {
+      return true;
+    }
+    return false;
+  }
 
   public void test_removeProgram(String name) {
     egoService.cleanUpProgram(name);
-    Throwable throwable=null;
+    Throwable throwable = null;
     try {
       egoService.getProgramEgoGroup(name, UserRole.ADMIN);
-    } catch(Throwable t) {
+    } catch (Throwable t) {
       throwable = t;
     }
     assertNotNull(throwable);
 
     // Groups are removed
-    assertFalse( client.getGroupByName("PROGRAM-" + name + "-BANNED").isPresent());
-    assertFalse( client.getGroupByName("PROGRAM-" + name + "-CURATOR").isPresent());
-    assertFalse( client.getGroupByName("PROGRAM-" + name + "-COLLABORATOR").isPresent());
-    assertFalse( client.getGroupByName("PROGRAM-" + name + "-SUBMITTER").isPresent());
-    assertFalse( client.getGroupByName("PROGRAM-" + name + "-ADMIN").isPresent());
+    assertFalse(client.getGroupByName("PROGRAM-" + name + "-BANNED").isPresent());
+    assertFalse(client.getGroupByName("PROGRAM-" + name + "-CURATOR").isPresent());
+    assertFalse(client.getGroupByName("PROGRAM-" + name + "-COLLABORATOR").isPresent());
+    assertFalse(client.getGroupByName("PROGRAM-" + name + "-SUBMITTER").isPresent());
+    assertFalse(client.getGroupByName("PROGRAM-" + name + "-ADMIN").isPresent());
 
     // Policies are removed
-    assertFalse( client.getPolicyByName("PROGRAM-" + name).isPresent());
-    assertFalse( client.getPolicyByName("PROGRAMDATA-" + name).isPresent());
+    assertFalse(client.getPolicyByName("PROGRAM-" + name).isPresent());
+    assertFalse(client.getPolicyByName("PROGRAMDATA-" + name).isPresent());
   }
 
 }

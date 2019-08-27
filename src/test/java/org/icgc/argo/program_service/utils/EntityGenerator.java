@@ -32,8 +32,6 @@ public class EntityGenerator {
   @Autowired
   private CountryRepository countryRepository;
 
-  @Autowired
-  private ProgramEgoGroupRepository programEgoGroupRepository;
 
   public ProgramEntity setUpProgramEntity(String shortname) {
     return programRepository
@@ -88,20 +86,6 @@ public class EntityGenerator {
       return regionRepository.getRegionByName(name)
             .orElseGet(
                     () -> { return createRegionEntity(name); });
-  }
-
-  public ProgramEgoGroupEntity setUpProgramEgoGroupEntity(String shortName, UserRole role, UUID egoGroupId){
-    return programEgoGroupRepository.findByProgramShortNameAndRole(shortName, role).orElseGet(
-            () -> { return createProgramEgoGroupEntity(shortName, role, egoGroupId); });
-  }
-
-  private ProgramEgoGroupEntity createProgramEgoGroupEntity(String shortName, UserRole role, UUID egoGroupId){
-    val entity = new ProgramEgoGroupEntity()
-            .setId(UUID.randomUUID())
-            .setProgramShortName(shortName)
-            .setEgoGroupId(egoGroupId)
-            .setRole(role);
-    return programEgoGroupRepository.save(entity);
   }
 
   private CancerEntity createCancerEntity(String name) {
