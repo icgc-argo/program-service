@@ -67,6 +67,12 @@ public class EgoRESTClient implements EgoClient {
     }
   }
 
+  @Override
+  public void assignGroupPermissions(List<EgoGroupPermissionRequest> permissionRequests) {
+    val url = "/transaction/group_permissions";
+    retry(() -> restTemplate.postForObject(url, new HttpEntity<>(permissionRequests), List.class));
+  }
+
   private <T> T retry(Supplier<T> supplier){
     return retryTemplate.execute(r -> supplier.get());
   }
@@ -79,9 +85,9 @@ public class EgoRESTClient implements EgoClient {
   }
 
   @Override
-  public void assignPermission(EgoGroup group, EgoPolicy policy, String mask) {
-    val url = format("/policies/%s/permission/group/%s", policy.getId(), group.getId());
-    retry(() -> restTemplate.postForObject(url, new HttpEntity<>(new EgoPermissionRequest(mask)), EgoPermissionRequest.class));
+  public void massDelete(EgoMassDeleteRequest request) {
+    val url = "/transaction/mass_delete";
+    retry(() -> restTemplate.postForObject(url, new HttpEntity<>(request), EgoMassDeleteRequest.class));
   }
 
   @Override
@@ -96,19 +102,6 @@ public class EgoRESTClient implements EgoClient {
     return createObject(user, EgoUser.class, "/users");
   }
 
-  @Override
-  public EgoPolicy createEgoPolicy(String policyName) {
-    return createObject(new EgoPolicy(null, policyName), EgoPolicy.class, "/policies");
-  }
-
-  @Override
-  public EgoGroup ensureGroupExists(String groupName) {
-    val g = getGroupByName(groupName);
-    if (g.isPresent()) {
-      return g.get();
-    }
-    return createObject(new EgoGroup(null, groupName, null, "APPROVED"), EgoGroup.class, "/groups");
-  }
 
   private <T> Optional<T> getObject(String url, ParameterizedTypeReference<EgoCollection<T>> typeReference) {
     return getObjects(url, typeReference).findFirst();
@@ -118,7 +111,7 @@ public class EgoRESTClient implements EgoClient {
     try {
       ResponseEntity<EgoCollection<T>> responseEntity = retry(() -> restTemplate.exchange(url, HttpMethod.GET, null, typeReference));
       val collection = responseEntity.getBody();
-      if (collection != null) {
+      if (collection != null && collection.getResultSet() != null) {
         return collection.getResultSet().stream();
       }
       return Stream.empty();

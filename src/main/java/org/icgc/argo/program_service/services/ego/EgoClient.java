@@ -1,12 +1,10 @@
 package org.icgc.argo.program_service.services.ego;
 
-import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoPermission;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoPolicy;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
+import org.icgc.argo.program_service.services.ego.model.entity.*;
 
 import javax.validation.constraints.Email;
 import java.security.interfaces.RSAPublicKey;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -14,13 +12,10 @@ import java.util.stream.Stream;
 public interface EgoClient {
   RSAPublicKey getPublicKey();
 
-  void assignPermission(EgoGroup group, EgoPolicy policy, String mask);
+  void assignGroupPermissions(List<EgoGroupPermissionRequest> permissionRequests);
+  void massDelete(EgoMassDeleteRequest request);
 
   EgoUser createEgoUser(String email, String firstname, String lastname);
-
-  EgoPolicy createEgoPolicy(String policyName);
-
-  EgoGroup ensureGroupExists(String groupName);
 
   Optional<EgoGroup> getGroupByName(String groupName);
 
