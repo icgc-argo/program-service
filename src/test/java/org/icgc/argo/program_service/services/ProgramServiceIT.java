@@ -109,9 +109,9 @@ class ProgramServiceIT {
     val permissions = client.getGroupPermissions(group.get().getId());
     assertEquals(2, permissions.length);
     assertTrue(Arrays.asList(permissions).stream().
-        anyMatch(permission -> permission.getAccessLevel().equals(egoService.getProgramMask(role))));
+        anyMatch(permission -> permission.getAccessLevel().equals(EgoService.getProgramMask(role))));
     assertTrue(Arrays.asList(permissions).stream().
-      anyMatch(permission -> permission.getAccessLevel().equals(egoService.getDataMask(role))));
+      anyMatch(permission -> permission.getAccessLevel().equals(EgoService.getDataMask(role))));
   }
 
 

@@ -18,13 +18,6 @@
 
 package org.icgc.argo.program_service.services.ego;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTDecodeException;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import io.grpc.Status;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -38,17 +31,19 @@ import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramEgoGroupRepository;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-import javax.transaction.Transactional;
+
 import javax.validation.constraints.Email;
-import java.security.interfaces.RSAPublicKey;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -278,22 +273,49 @@ public class EgoService {
 
   public Boolean leaveProgram(@Email String email, String shortName) {
     val user = egoClient.getUser(email).orElse(null);
+
+    // User may never have joined program, but is still allowed to leave it.
     if (user == null) {
-      log.error("Cannot find ego user with email {}", email);
-      throw new EgoException(format("Cannot find ego user with email '%s' ", email));
+      log.info("Cannot find ego user with email {}", email);
+      return true;
     }
 
-    val group = egoClient.getGroupsByUserId(user.getId())
-            .filter(egoGroup -> egoGroup.getName().toLowerCase().contains(shortName.toLowerCase()))
-            .findFirst()
-            .get();
+    // If user has somehow been set up with multiple groups for this program, get all of them and remove them
+    List<EgoGroup> groups=Collections.EMPTY_LIST;
+    String errors = "";
+
     try {
-      egoClient.removeUserFromGroup(group.getId(), user.getId());
-    } catch (HttpClientErrorException | HttpServerErrorException e) {
-      log.info("Cannot remove user {} from group {}: {}", user.getId(), group.getName(), e.getResponseBodyAsString());
-      return false;
+      groups = egoClient.getGroupsByUserId(user.getId()).collect(Collectors.toList());
+    } catch(HttpClientErrorException | HttpServerErrorException e) {
+      log.error("Cannot get ego groups for user '{}': {}", user.getId(), e.getResponseBodyAsString());
+      errors = format("Cannot get ego groups for user '%s'",user.getId());
+    } catch (EgoException ex) {
+      log.error("Cannot get ego groups for user '{}': {}", user.getId(), ex.getMessage());
+      errors = format("Cannot get ego groups for user '%s'",user.getId());
     }
-    return true;
+
+    if (errors.length() != 0) {
+      throw new EgoException(errors);
+    }
+
+    val programGroups = groups.stream()
+        .filter(egoGroup -> egoGroup.getName().toLowerCase().contains(shortName.toLowerCase()))
+        .collect(Collectors.toList());
+
+
+    for(val group: programGroups) {
+      try {
+        egoClient.removeUserFromGroup(group.getId(), user.getId());
+      } catch (HttpClientErrorException | HttpServerErrorException  e) {
+        log.error("Cannot remove user {} from group {}: {}", user.getId(), group.getName(), e.getResponseBodyAsString());
+        errors += format("Cannot remove user '%s' from group '%s' ",
+          user.getId(), group.getName());
+      }
+    }
+    if (errors.length() == 0) {
+      return true;
+    }
+    throw new EgoException(errors);
   }
 
   public EgoUser getOrCreateUser(@Email String email, @NonNull String firstName, @NonNull String lastName){
