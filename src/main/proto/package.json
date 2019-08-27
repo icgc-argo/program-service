@@ -1,6 +1,6 @@
 {
   "name": "@icgc-argo/program-service-proto",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "GRPC Protobuf files for ICGC-Argo Program Service",
   "main": "index.js",
   "scripts": {},

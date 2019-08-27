@@ -20,10 +20,17 @@ package org.icgc.argo.program_service.services;
 
 import lombok.val;
 import org.icgc.argo.program_service.Utils;
+
+import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.proto.UserRole;
+import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
+
 import org.icgc.argo.program_service.model.entity.ProgramEgoGroupEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.security.EgoSecurity;
+
 import org.icgc.argo.program_service.services.ego.EgoClient;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
@@ -31,6 +38,7 @@ import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -43,7 +51,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 class EgoServiceTest {
-
   void verifyKey() {
     val rsaPublicKey = (RSAPublicKey) Utils.getPublicKey(publickKey, "RSA");
     val egoSecurity = new EgoSecurity(rsaPublicKey);
@@ -84,12 +91,14 @@ class EgoServiceTest {
     when(egoService1.joinProgram(existingEmail, mockProgramEntity.getShortName(), UserRole.ADMIN)).thenReturn(true);
 
     // Define behaviour for non-existing
-    when(egoService1.joinProgram(nonExistingEmail, mockProgramEntity.getShortName(), UserRole.ADMIN)).thenReturn(false, true);
+    when(egoService1.joinProgram(nonExistingEmail, mockProgramEntity.getShortName(), UserRole.ADMIN))
+      .thenReturn(false, true);
     when(egoClient1.createEgoUser(nonExistingEmail, "", ""))
       .thenReturn(new EgoUser().setStatus("APPROVED").setType("USER").setEmail(nonExistingEmail));
 
     // Define behaviour for errored user
-    when(egoService1.joinProgram(erroredEmail, mockProgramEntity.getShortName(), UserRole.ADMIN)).thenReturn(false, false);
+    when(egoService1.joinProgram(erroredEmail, mockProgramEntity.getShortName(), UserRole.ADMIN))
+      .thenReturn(false, false);
     when(egoClient1.createEgoUser(erroredEmail, "", ""))
       .thenThrow(new IllegalStateException(format("Could not create ego user for: %s", erroredEmail)));
 
@@ -102,7 +111,7 @@ class EgoServiceTest {
     egoService1.initAdmin(existingEmail, mockProgramEntity.getShortName());
     egoService1.initAdmin(nonExistingEmail, mockProgramEntity.getShortName());
 
-    Exception caught=null;
+    Exception caught = null;
     try {
       egoService1.initAdmin(erroredEmail, mockProgramEntity.getShortName());
     } catch (IllegalStateException e) {
@@ -150,8 +159,8 @@ class EgoServiceTest {
     collabGroup.setId(collabGroupId);
     collabGroup.setName("WeTheNorth-COLLABORATOR");
 
-    val mockProgramEgoGroup = Optional.of(new ProgramEgoGroupEntity());
-    mockProgramEgoGroup.get().setEgoGroupId(collabGroupId);
+    val mockProgramEgoGroup = Optional.of(new EgoGroup());
+    mockProgramEgoGroup.get().setId(collabGroupId);
     when(egoService.getEgoClient()).thenReturn(egoClient);
     when(egoClient.getUser(email)).thenReturn(
       Optional.of(new EgoUser().setStatus("APPROVED").setType("USER").setEmail(email).setId(userId)));

@@ -21,7 +21,11 @@ import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCountry;
 import org.icgc.argo.program_service.proto.*;
+
+import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
+
 import org.icgc.argo.program_service.security.EgoSecurity;
+
 import org.icgc.argo.program_service.services.EgoAuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
@@ -41,9 +45,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.argo.program_service.Utils.generateRSAKeys;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -86,6 +90,7 @@ public class ProgramServiceAuthorizationTest {
     val commonConverter = CommonConverter.INSTANCE;
 
     val egoSecurity = new EgoSecurity(publicKey);
+
     val mockEgoService = mock(EgoService.class);
 
     val programService = mock(ProgramService.class);
@@ -231,7 +236,7 @@ public class ProgramServiceAuthorizationTest {
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
     closeChannel(c.getChannel());
-    assertThat(programs.getProgramsCount()).isEqualTo(0);
+    assertEquals(0, programs.getProgramsCount());
   }
 
   @Test
@@ -257,7 +262,7 @@ public class ProgramServiceAuthorizationTest {
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
     closeChannel(c.getChannel());
-    assertThat(programs.getProgramsCount()).isEqualTo(3);
+    assertEquals(3, programs.getProgramsCount());
   }
 
   @Test
@@ -273,7 +278,7 @@ public class ProgramServiceAuthorizationTest {
     val programs = client.listPrograms(Empty.getDefaultInstance());
     assert programs.getProgramsCount() == 1;
     closeChannel(c.getChannel());
-    assertThat(programs.getProgramsList().get(0).getProgram().getShortName().getValue()).isEqualTo("TEST-DK");
+    assertEquals("TEST-DK", programs.getProgramsList().get(0).getProgram().getShortName().getValue());
   }
 
   @Test
@@ -287,8 +292,8 @@ public class ProgramServiceAuthorizationTest {
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
     closeChannel(c.getChannel());
-    assertThat(programs.getProgramsCount()).isEqualTo(1);
-    assertThat(programs.getProgramsList().get(0).getProgram().getShortName().getValue()).isEqualTo("TEST-CA");
+    assertEquals(1, programs.getProgramsCount());
+    assertEquals("TEST-CA", programs.getProgramsList().get(0).getProgram().getShortName().getValue());
   }
 
   @Test
@@ -302,8 +307,8 @@ public class ProgramServiceAuthorizationTest {
 
     val programs = client.listPrograms(Empty.getDefaultInstance());
     closeChannel(c.getChannel());
-    assertThat(programs.getProgramsCount()).isEqualTo(1);
-    assertThat(programs.getProgramsList().get(0).getProgram().getShortName().getValue()).isEqualTo("TEST-CA");
+    assertEquals(1, programs.getProgramsCount());
+    assertEquals("TEST-CA", programs.getProgramsList().get(0).getProgram().getShortName().getValue());
   }
 
   @Test
@@ -387,8 +392,7 @@ public class ProgramServiceAuthorizationTest {
   }
 
   CountryEntity countryEntity(String name) {
-    val c = new CountryEntity().setName(name).setId(UUID.randomUUID());
-    return c;
+    return new CountryEntity().setName(name).setId(UUID.randomUUID());
   }
 
   ProgramEntity entity2() {

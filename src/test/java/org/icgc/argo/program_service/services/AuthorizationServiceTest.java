@@ -6,13 +6,14 @@ import lombok.val;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.junit.jupiter.api.Test;
 
+import static junit.framework.TestCase.*;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.assertj.core.api.Assertions.*;
 
-public class AuthorizationServiceTest {
+class AuthorizationServiceTest {
   AuthorizationService authorizationService(EgoToken token) {
-    return new EgoAuthorizationService("PROGRAMSERVICE.WRITE"){
+    return new EgoAuthorizationService("PROGRAMSERVICE.WRITE") {
       @Override
       public EgoToken getEgoToken() {
         return token;
@@ -28,15 +29,15 @@ public class AuthorizationServiceTest {
   }
 
   void assertUnauthenticated(Exception exception) {
-    assertThat(exception).isNotNull();
-    assertThat(exception).isInstanceOf(StatusRuntimeException.class);
-    assertThat(((StatusRuntimeException) exception).getStatus().equals(Status.UNAUTHENTICATED)).isTrue();
+    assertNotNull(exception);
+    assertTrue(exception instanceof StatusRuntimeException);
+    assertEquals(((StatusRuntimeException) exception).getStatus(), Status.UNAUTHENTICATED);
   }
 
   void assertPermissionDenied(Exception exception) {
-    assertThat(exception).isNotNull();
-    assertThat(exception).isInstanceOf(StatusRuntimeException.class);
-    assertThat(((StatusRuntimeException) exception).getStatus().equals(Status.PERMISSION_DENIED)).isTrue();
+    assertNotNull(exception);
+    assertTrue(exception instanceof StatusRuntimeException);
+    assertEquals(((StatusRuntimeException) exception).getStatus(), Status.PERMISSION_DENIED);
   }
 
   @Test
@@ -61,8 +62,8 @@ public class AuthorizationServiceTest {
     val exception5 = testRequireDCCAdmin(mockToken("USER", "PROGRAM-ABC.WRITE"));
     assertPermissionDenied(exception5);
 
-    val exception6 = testRequireDCCAdmin(mockToken( "USER", "PROGRAMSERVICE.WRITE"));
-    assertThat(exception6).isNull();
+    val exception6 = testRequireDCCAdmin(mockToken("USER", "PROGRAMSERVICE.WRITE"));
+    assertNull(exception6);
   }
 
   private Exception testRequireDCCAdmin(EgoToken token) {
@@ -76,10 +77,9 @@ public class AuthorizationServiceTest {
     return exception;
   }
 
-
   @Test
   void requireProgramAdmin() {
-    val program="TEST-CA";
+    val program = "TEST-CA";
     val readPermission = "PROGRAM-TEST-CA.READ";
     val writePermission = "PROGRAM-TEST-CA.WRITE";
     val dccAdminPermission = "PROGRAMSERVICE.WRITE";
@@ -103,29 +103,29 @@ public class AuthorizationServiceTest {
     assertPermissionDenied(exception5);
 
     // Right program, wrong permission
-    val exception6 = testRequireProgramAdmin(mockToken("USER",readPermission), program);
+    val exception6 = testRequireProgramAdmin(mockToken("USER", readPermission), program);
     assertPermissionDenied(exception6);
 
     // Right permission, wrong program
-    val exception7 = testRequireProgramAdmin(mockToken("USER","PROGRAM-TEST-GB.WRITE"), program);
+    val exception7 = testRequireProgramAdmin(mockToken("USER", "PROGRAM-TEST-GB.WRITE"), program);
     assertPermissionDenied(exception7);
 
     // Right permission, right program
-    val exception8 = testRequireProgramAdmin(mockToken("USER",readPermission, writePermission), program);
-    assertThat(exception8).isNull();
+    val exception8 = testRequireProgramAdmin(mockToken("USER", readPermission, writePermission), program);
+    assertNull(exception8);
 
     // Right permission, null program
-    val exception9 = testRequireProgramAdmin(mockToken("USER",readPermission, writePermission),
+    val exception9 = testRequireProgramAdmin(mockToken("USER", readPermission, writePermission),
       null);
     assertPermissionDenied(exception9);
 
     // DCC Admin, null program
     val exception10 = testRequireProgramAdmin(mockToken("ADMIN", dccAdminPermission), null);
-    assertThat(exception10).isNull();
+    assertNull(exception10);
 
     // DCC Admin, right program
     val exception11 = testRequireProgramAdmin(mockToken("ADMIN", dccAdminPermission), null);
-    assertThat(exception11).isNull();
+    assertNull(exception11);
   }
 
   private Exception testRequireProgramAdmin(EgoToken token, String programShortName) {
@@ -141,7 +141,7 @@ public class AuthorizationServiceTest {
 
   @Test
   void requireProgramUser() {
-    val program="TEST-CA";
+    val program = "TEST-CA";
     val readPermission = "PROGRAM-TEST-CA.READ";
     val writePermission = "PROGRAM-TEST-CA.WRITE";
     val dccAdminPermission = "PROGRAMSERVICE.WRITE";
@@ -166,8 +166,8 @@ public class AuthorizationServiceTest {
     assertPermissionDenied(exception5);
 
     // Right program, right permission
-    val exception6 = testRequireProgramUser(mockToken("USER",readPermission), program);
-    assertThat(exception6).isNull();
+    val exception6 = testRequireProgramUser(mockToken("USER", readPermission), program);
+    assertNull(exception6);
 
     // Wrong permission, wrong program
     val exception7 = testRequireProgramUser(mockToken("USER", "PROGRAM-TEST-GB.READ",
@@ -175,21 +175,21 @@ public class AuthorizationServiceTest {
     assertPermissionDenied(exception7);
 
     // Wrong permission, right program
-    val exception8 = testRequireProgramUser(mockToken("USER",readPermission, writePermission), program);
-    assertThat(exception8).isNull();
+    val exception8 = testRequireProgramUser(mockToken("USER", readPermission, writePermission), program);
+    assertNull(exception8);
 
     // null program
-    val exception9 = testRequireProgramUser(mockToken("USER",readPermission, writePermission),
+    val exception9 = testRequireProgramUser(mockToken("USER", readPermission, writePermission),
       null);
     assertPermissionDenied(exception9);
 
     // DCC permissions, null program
     val exception10 = testRequireProgramUser(mockToken("USER", dccAdminPermission), null);
-    assertThat(exception10).isNull();
+    assertNull(exception10);
 
     // DCC Admin, right program
     val exception11 = testRequireProgramAdmin(mockToken("USER", dccAdminPermission), program);
-    assertThat(exception11).isNull();
+    assertNull(exception11);
   }
 
   private Exception testRequireProgramUser(EgoToken token, String programShortName) {
@@ -221,7 +221,7 @@ public class AuthorizationServiceTest {
     val token2 = mock(EgoToken.class);
     when(token2.getEmail()).thenReturn(email);
     val exception4 = testRequireEmail(token2, email);
-    assertThat(exception4).isNull();
+    assertNull(exception4);
 
     val exception5 = testRequireEmail(token2, null);
     assertPermissionDenied(exception5);

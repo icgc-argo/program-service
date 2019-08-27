@@ -5,14 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @AllArgsConstructor @NoArgsConstructor @Data
-public class EgoPermission {
+public class EgoGroupPermissionRequest {
   @JsonProperty
-  private String accessLevel;
+  private String groupName;
   @JsonProperty
-  private UUID id;
-  EgoPolicy policy;
-  // etc
+  private String policyName;
+  @JsonProperty
+  private String mask;
 }

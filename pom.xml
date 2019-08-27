@@ -10,9 +10,9 @@
 	</parent>
 	<groupId>ca.on.oicr.icgc.argo</groupId>
 	<artifactId>program-service</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
+	<version>0.0.6-SNAPSHOT</version>
 	<name>program-service</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Argo Program Service</description>
 
 	<properties>
 		<!--Spring Related Versions-->
