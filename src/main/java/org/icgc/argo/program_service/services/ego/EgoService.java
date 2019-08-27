@@ -18,13 +18,6 @@
 
 package org.icgc.argo.program_service.services.ego;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTDecodeException;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import io.grpc.Status;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -41,12 +34,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-
 import javax.validation.constraints.Email;
-import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -108,7 +98,7 @@ public class EgoService {
   }
 
   public EgoMassDeleteRequest getProgramCleanupRequest(@NonNull String programShortName) {
-    return new EgoMassDeleteRequest(List.of("PROGRAM-" + programShortName,  "PROGRAMDATA-" +programShortName),
+    return new EgoMassDeleteRequest(List.of("PROGRAM-" + programShortName,  "PROGRAMDATA-" + programShortName),
       programGroupNames(programShortName));
   }
 
@@ -119,9 +109,9 @@ public class EgoService {
   public static String getProgramMask(UserRole role) {
     switch (role) {
     case ADMIN:
-      return "WRITE"; // return ADMIN
+      return "WRITE";
     case CURATOR:
-      return "WRITE"; // check this with spec
+      return "WRITE";
     case SUBMITTER:
       return "READ";
     case COLLABORATOR:
@@ -135,8 +125,8 @@ public class EgoService {
 
   public static String getDataMask(UserRole role) {
     switch (role) {
-    case ADMIN: // return "ADMIN";
-    case CURATOR: // return "ADMIN";
+    case ADMIN:     // return "WRITE";
+    case CURATOR:   // return "WRITE";
     case SUBMITTER:
       return "WRITE";
     case COLLABORATOR:
@@ -186,7 +176,6 @@ public class EgoService {
     return g.orElseThrow(() -> {
       throw new NotFoundException(format("Ego group '%s' not found.", name));
     });
-
   }
 
   public boolean isSameRole(@NonNull UserRole role, @NonNull String groupName) throws RuntimeException {

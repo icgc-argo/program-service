@@ -217,7 +217,6 @@ public class EgoServiceIT {
       + "}\n", result, name);
   }
 
-
   void stub(String url, String body) {
     stubFor(get(urlEqualTo(url))
       .willReturn(aResponse()
@@ -225,6 +224,7 @@ public class EgoServiceIT {
         .withHeader("Content-Type", "application/json")
         .withBody(body)));
   }
+
   void stubFile(String url, String fileName) {
     stubFor(get(urlEqualTo(url))
       .willReturn(aResponse()

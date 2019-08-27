@@ -67,7 +67,8 @@ public class EgoRESTClient implements EgoClient {
     }
   }
 
-  @Override public void assignGroupPermissions(List<EgoGroupPermissionRequest> permissionRequests) {
+  @Override
+  public void assignGroupPermissions(List<EgoGroupPermissionRequest> permissionRequests) {
     val url = "/transaction/group_permissions";
     retry(() -> restTemplate.postForObject(url, new HttpEntity<>(permissionRequests), List.class));
   }
