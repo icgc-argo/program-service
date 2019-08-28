@@ -1,0 +1,19 @@
+{
+  "count": 2,
+  "limit": 20,
+  "offset": 0,
+  "resultSet": [
+    {
+      "description": "TEST-CA Administrator's Group",
+      "id": "09d93820-500e-4027-95ec-fdb5ce6986ce",
+      "name": "TEST-CA-ADMIN",
+      "status": "APPROVED"
+    },
+    {
+      "description": "TEST-CA Submitter Group",
+      "id": "64541e68-c6c6-469d-9dcf-9aa260ef17ea",
+      "name": "TEST-CA-SUBMITTER",
+      "status": "APPROVED"
+    }
+  ]
+}
