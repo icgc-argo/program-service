@@ -108,6 +108,7 @@ class ProgramServiceIT {
 
     assertTrue(Arrays.asList(permissions).stream().
       anyMatch(permission -> permissionsMatch(permission, "PROGRAM-" + shortName, getProgramMask(role))));
+
     assertTrue(Arrays.asList(permissions).stream().
       anyMatch(permission -> permissionsMatch(permission, "PROGRAMDATA-" + shortName, getDataMask(role))));
   }
