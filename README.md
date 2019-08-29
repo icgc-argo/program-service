@@ -138,6 +138,28 @@ If you prefer GUI interfaces, try [bloomrpc](https://github.com/uw-labs/bloomrpc
 
 All emails sent are captured by [mailhog](https://mailhog.qa.cancercollaboratory.org) for both the developer's local machine or the Jenkins that run CI/CD.
 
+### Mocking service using WireMock
+
+Why use WireMock? 
+
+When writing Ego integration test, instead of calling actual Ego endpoints(which results in polluting Ego or unnecessary test failure in case of Ego service shutdown), mock ego endpoints with WireMock. WireMock starts a mocking server at a given or random port, 
+for example, define a WireMock rule at a random port:
+```
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(options().dynamicPort());
+```
+
+The response can also be mocked:
+```
+    stubFor(get(urlEqualTo(url))
+        .willReturn(aResponse()
+          .withStatus(OK.value())
+          .withHeader("Content-Type", "application/json")
+          .withBodyFile(filename)));
+```
+Note that the "filename" is the name of a self-defined json file which mocks response body.
+All mocked json response files are located in `src/test/resources/__files`. 
+
 ## Demo Mode
 
 In this mode, the local program service code is built and run as a docker container along with all the dependent services. This allows the whole system to be demoed without having any external network dependency. Use the following commands to manage a demo:
