@@ -34,7 +34,6 @@ import org.icgc.argo.program_service.services.ego.model.entity.EgoMassDeleteRequ
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -221,7 +220,14 @@ public class EgoService {
   public List<User> getUsersInProgram(String programShortName) {
     val userResults = new ArrayList<User>();
     for (val role : roles()) {
-      val group = getProgramEgoGroup(programShortName, role);
+      EgoGroup group;
+      try {
+        group = getProgramEgoGroup(programShortName, role);
+      } catch(NotFoundException e) {
+        log.error("Continue to fetch users for the remaining groups");
+        continue;
+      }
+
       val groupId = group.getId();
       try {
         egoClient.getUsersByGroupId(groupId)
@@ -230,11 +236,7 @@ public class EgoService {
           .forEach(userResults::add);
       } catch (HttpClientErrorException | HttpServerErrorException e) {
         log.error("Fail to retrieve users from ego group '{}': {}", groupId, e.getResponseBodyAsString());
-        if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-          log.error("Continue to fetch users for the remaining groups");
-        } else {
-          throw new EgoException(format("Fail to retrieve users from ego group '%s' ", groupId), e);
-        }
+        throw new EgoException(format("Fail to retrieve users from ego group '%s' ", groupId), e);
       }
     }
 
