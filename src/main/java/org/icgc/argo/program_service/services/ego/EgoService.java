@@ -224,7 +224,7 @@ public class EgoService {
       try {
         group = getProgramEgoGroup(programShortName, role);
       } catch(NotFoundException e) {
-        log.error("Continue to fetch users for the remaining groups");
+        log.error("Cannot find {} group for program {}. Continue to fetch users for the remaining groups", role, programShortName, e);
         continue;
       }
 
