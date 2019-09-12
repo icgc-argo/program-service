@@ -142,8 +142,8 @@ All emails sent are captured by [mailhog](https://mailhog.qa.cancercollaboratory
 
 Why use WireMock? 
 
-When writing Ego integration test, instead of calling actual Ego endpoints(which results in polluting Ego or unnecessary test failure in case of Ego service shutdown), mock ego endpoints with WireMock. WireMock starts a mocking server at a given or random port, 
-for example, define a WireMock rule at a random port:
+When writing Ego integration tests, instead of calling actual Ego endpoints (which would pollute Ego's database with test data, or test failure if the Ego service is shutdown), we can mock Ego endpoints with WireMock.
+WireMock starts a mock server at a given or random port. For example, to define a WireMock rule at a random port:
 ```
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(options().dynamicPort());
