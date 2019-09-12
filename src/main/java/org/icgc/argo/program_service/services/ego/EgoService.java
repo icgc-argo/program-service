@@ -220,7 +220,14 @@ public class EgoService {
   public List<User> getUsersInProgram(String programShortName) {
     val userResults = new ArrayList<User>();
     for (val role : roles()) {
-      val group = getProgramEgoGroup(programShortName, role);
+      EgoGroup group;
+      try {
+        group = getProgramEgoGroup(programShortName, role);
+      } catch(NotFoundException e) {
+        log.error("Cannot find {} group for program {}. Continue to fetch users for the remaining groups", role, programShortName, e);
+        continue;
+      }
+
       val groupId = group.getId();
       try {
         egoClient.getUsersByGroupId(groupId)
