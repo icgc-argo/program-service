@@ -64,12 +64,12 @@ public class ProgramServiceGrpcIT {
 
   // There are 36 cancers in db.
   private final int CANCER_COUNT = 36;
-  // There are 22 primary sites in db.
-  private final int PRIMARY_SITE_COUNT = 22;
+  // There are 23 primary sites in db.
+  private final int PRIMARY_SITE_COUNT = 23;
   // There are 6 regions in db.
   private final int REGION_COUNT = 6;
-  // There are at least 436 institutions in db.
-  private final int LEAST_INSTITUTION_COUNT = 436;
+  // There are at least 435 institutions in db.
+  private final int LEAST_INSTITUTION_COUNT = 435;
   // There are 245 countries in db.
   private final int COUNTRY_COUNT = 245;
 
