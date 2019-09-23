@@ -62,7 +62,7 @@ public class ProgramServiceGrpcIT {
 
   private ProgramServiceGrpc.ProgramServiceBlockingStub stub;
 
-  // There are 35 cancers in db.
+  // There are 36 cancers in db.
   private final int CANCER_COUNT = 36;
   // There are 22 primary sites in db.
   private final int PRIMARY_SITE_COUNT = 22;
