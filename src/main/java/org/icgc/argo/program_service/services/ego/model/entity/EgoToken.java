@@ -6,11 +6,13 @@ import org.springframework.beans.BeanUtils;
 
 import javax.validation.constraints.NotNull;
 
+// FIXME: This needs to be refactored because an Ego Token is more than a user
 public class EgoToken extends Context.User {
   final DecodedJWT jwt;
 
   public EgoToken(@NotNull DecodedJWT jwt, @NotNull Context context) {
     this.jwt = jwt;
     BeanUtils.copyProperties(context.getUser(), this);
+    this.setPermissions(context.getScope());
   }
 }
