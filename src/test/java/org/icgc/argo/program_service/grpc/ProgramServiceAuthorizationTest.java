@@ -520,9 +520,9 @@ class Signer {
     val context = new Context();
     val u = getUser(isEgoAdmin);
     u.setCreatedAt(issued.toString());
-    u.setPermissions(permissions);
     u.setEmail(email);
     context.setUser(u);
+    context.setScope(permissions);
 
     return Jwts.builder()
       .setIssuedAt(issued)

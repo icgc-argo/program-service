@@ -9,6 +9,7 @@ import lombok.Setter;
 public class Context {
 
   User user;
+  String[] scope;
 
   @JsonIgnoreProperties(ignoreUnknown = true)
   @Setter @Getter
