@@ -78,6 +78,12 @@
 			<artifactId>spring-retry</artifactId>
 		</dependency>
 
+		<dependency>
+			 <groupId>org.springframework.cloud</groupId>
+            		<artifactId>spring-cloud-starter-vault-config</artifactId>
+            		<version>2.1.2.RELEASE</version>
+        	</dependency>
+
 		<!--Spring boot admin -->
 		<dependency>
 			<groupId>de.codecentric</groupId>
@@ -265,6 +271,18 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	
+	<dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>Greenwich.SR2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+</dependencyManagement>
 
 	<build>
 		<plugins>
