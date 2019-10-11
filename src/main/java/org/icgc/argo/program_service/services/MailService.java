@@ -34,6 +34,8 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.mail.MessagingException;
 import java.io.StringWriter;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Service
@@ -46,6 +48,9 @@ public class MailService {
   @Value("${app.invitationUrlPrefix}")
   private String invitationUrlPrefix;
 
+  @Value("${app.platformUrl}")
+  private String platformUrl;
+
   @Autowired
   public MailService(@NonNull JavaMailSender mailSender,
       @NonNull VelocityEngine velocityEngine) {
@@ -53,7 +58,7 @@ public class MailService {
     this.velocityEngine = velocityEngine;
   }
 
-  public boolean sendInviteEmail(JoinProgramInviteEntity invitation) {
+  boolean sendInviteEmail(JoinProgramInviteEntity invitation) {
     val msg = mailSender.createMimeMessage();
 
     try {
@@ -70,8 +75,10 @@ public class MailService {
       ctx.put("programShortName", invitation.getProgram().getShortName());
       ctx.put("role", invitation.getRole());
       ctx.put("email", invitation.getUserEmail());
-      // TODO: add join program link
       ctx.put("joinProgramLink", invitationUrlPrefix + invitation.getId());
+      ctx.put("platformLink", platformUrl);
+      ctx.put("expireTime", invitation.getExpiresAt().atZone(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("LLLL d, yyyy 'at' hh:mm a VV")));
+
       template.merge(ctx, sw);
 
       msg.setContent(sw.toString(), "text/html");
