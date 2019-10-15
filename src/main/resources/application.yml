@@ -38,6 +38,7 @@ retry:
 
 app:
   invitationUrlPrefix: "https://frontend/invite/"
+  platformUrl: "https://frontend"
   egoUrl: "https://ego.qa.argo.cancercollaboratory.org/api"
   egoClientId: "program-service"
   egoClientSecret: "qa-program-service"
