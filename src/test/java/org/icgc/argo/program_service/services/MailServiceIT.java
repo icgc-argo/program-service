@@ -34,6 +34,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,6 +47,7 @@ import static org.mockito.Mockito.when;
 @TestPropertySource(properties = {
         "spring.datasource.url=jdbc:postgresql://localhost:5432/program_db",
         "spring.datasource.driverClassName=org.postgresql.Driver",
+        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect"
 })
 @ComponentScan(lazyInit = true)
 class MailServiceIT {
@@ -74,6 +76,7 @@ class MailServiceIT {
     when(invite.getUserEmail()).thenReturn(randomEmail);
     when(mockProgramEntity.getShortName()).thenReturn("TestProgram");
     when(invite.getProgram()).thenReturn(mockProgramEntity);
+    when(invite.getExpiresAt()).thenReturn(LocalDateTime.now());
     mailService.sendInviteEmail(invite);
     val messages = restTemplate.getForObject("https://" + mailhogHost + "/api/v2/search?kind=containing&query=" + randomEmail, JsonNode.class);
     assertTrue(messages.at("/total").asInt() > 0);

@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>ca.on.oicr.icgc.argo</groupId>
 	<artifactId>program-service</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.2-SNAPSHOT</version>
 	<name>program-service</name>
 	<description>Argo Program Service</description>
 
@@ -77,6 +77,12 @@
 			<groupId>org.springframework.retry</groupId>
 			<artifactId>spring-retry</artifactId>
 		</dependency>
+
+		<dependency>
+			 <groupId>org.springframework.cloud</groupId>
+            		<artifactId>spring-cloud-starter-vault-config</artifactId>
+            		<version>2.1.2.RELEASE</version>
+        	</dependency>
 
 		<!--Spring boot admin -->
 		<dependency>
@@ -265,6 +271,18 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	
+	<dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>Greenwich.SR2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+</dependencyManagement>
 
 	<build>
 		<plugins>
