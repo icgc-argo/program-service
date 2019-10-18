@@ -41,6 +41,7 @@ public class EgoSecurity {
       val jwt = verifier.verify(jwtToken);
       return parseToken(jwt);
     } catch (JWTVerificationException | NullPointerException e) {
+      log.warn(e.getMessage());
       // ego security shouldn't have knowledge of grpc
       return Optional.empty();
     }
