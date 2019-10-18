@@ -6,7 +6,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.grpc.Status;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -41,10 +40,9 @@ public class EgoSecurity {
               .build(); //Reusable verifier instance
       val jwt = verifier.verify(jwtToken);
       return parseToken(jwt);
-    } catch (JWTVerificationException e) {
-      throw Status.PERMISSION_DENIED.asRuntimeException();
-    } catch (NullPointerException e) {
-      throw Status.UNAUTHENTICATED.asRuntimeException();
+    } catch (JWTVerificationException | NullPointerException e) {
+      // ego security shouldn't have knowledge of grpc
+      return Optional.empty();
     }
   }
 
