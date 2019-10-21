@@ -21,11 +21,7 @@ import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCountry;
 import org.icgc.argo.program_service.proto.*;
-
-import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-
 import org.icgc.argo.program_service.security.EgoSecurity;
-
 import org.icgc.argo.program_service.services.EgoAuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
@@ -34,6 +30,7 @@ import org.icgc.argo.program_service.services.ego.Context;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.security.Key;
 import java.security.interfaces.RSAPublicKey;
@@ -184,7 +181,7 @@ public class ProgramServiceAuthorizationTest {
 
     val tests = runTests("ExpiredToken", client);
     closeChannel(c.getChannel());
-    assert tests.threwStatusException(Status.PERMISSION_DENIED);
+    assert tests.threwStatusException(Status.UNAUTHENTICATED);
   }
 
   @Test
@@ -195,7 +192,7 @@ public class ProgramServiceAuthorizationTest {
 
     val tests = runTests("InvalidToken", client);
     closeChannel(c.getChannel());
-    assert tests.threwStatusException(Status.PERMISSION_DENIED);
+    assert tests.threwStatusException(Status.UNAUTHENTICATED);
   }
 
   @Test
@@ -205,7 +202,7 @@ public class ProgramServiceAuthorizationTest {
     val tests = runTests("WrongKey", addAuthHeader(c, tokenWrongKey()));
     closeChannel(c.getChannel());
 
-    assert tests.threwStatusException(Status.PERMISSION_DENIED);
+    assert tests.threwStatusException(Status.UNAUTHENTICATED);
   }
 
   @Test
@@ -246,7 +243,8 @@ public class ProgramServiceAuthorizationTest {
     val client = addAuthHeader(c, tokenDCCAdminWrongKey());
 
     val tests = runTests("DCCAdminWrongKey", client);
-    assert tests.threwStatusException(Status.PERMISSION_DENIED);
+    // Wrong key cannot be authenticated
+    assert tests.threwStatusException(Status.UNAUTHENTICATED);
     closeChannel(c.getChannel());
   }
 
