@@ -20,13 +20,12 @@ package org.icgc.argo.program_service.grpc.interceptor;
 
 import io.grpc.*;
 import lombok.NonNull;
+import lombok.val;
 import org.icgc.argo.program_service.security.EgoSecurity;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
@@ -51,7 +50,7 @@ public class EgoAuthInterceptor implements AuthInterceptor {
     Metadata metadata,
     ServerCallHandler<ReqT, RespT> next) {
     String token = metadata.get(JWT_METADATA_KEY);
-    Optional<EgoToken> egoToken = egoSecurity.verifyToken(token);
+    val egoToken = egoSecurity.verifyToken(token);
     Context context = Context.current().withValue(EGO_TOKEN, egoToken.orElse(null));
     return Contexts.interceptCall(context, call, metadata, next);
   }
