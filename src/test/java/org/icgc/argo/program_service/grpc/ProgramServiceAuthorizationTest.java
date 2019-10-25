@@ -22,10 +22,11 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.join.ProgramCountry;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.security.EgoSecurity;
-import org.icgc.argo.program_service.services.EgoAuthorizationService;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
+import org.icgc.argo.program_service.services.ProgramServiceFacade;
 import org.icgc.argo.program_service.services.ValidationService;
+import org.icgc.argo.program_service.services.auth.EgoAuthorizationService;
 import org.icgc.argo.program_service.services.ego.Context;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.Rule;
@@ -80,8 +81,9 @@ public class ProgramServiceAuthorizationTest {
     when(invitationService.getInvitationById(invitationUUID2)).thenReturn(Optional.of(invite2()));
     when(invitationService.getInvitationById(invitationUUID3)).thenReturn(Optional.empty());
 
-    when(invitationService.inviteUser(entity(), userId().getValue(), "TEST", "USER",
-      UserRole.COLLABORATOR)).thenReturn(invitationUUID);
+    when(invitationService.inviteUser(
+            entity(), userId().getValue(), "TEST", "USER", UserRole.COLLABORATOR))
+        .thenReturn(invitationUUID);
 
     val programConverter = ProgramConverter.INSTANCE;
     val commonConverter = CommonConverter.INSTANCE;
@@ -92,33 +94,49 @@ public class ProgramServiceAuthorizationTest {
 
     val programService = mock(ProgramService.class);
     when(programService.createProgram(any())).thenReturn(entity());
+    when(programService.createWithSideEffectTransactional(any(), any())).thenReturn(entity());
     when(programService.getProgram(programName().getValue())).thenReturn(entity());
     when(programService.listPrograms()).thenReturn(List.of(entity(), entity2(), entity3()));
 
     ValidationService v = mock(ValidationService.class);
     when(v.validateCreateProgramRequest(any())).thenReturn(List.of());
 
-    val service = new ProgramServiceImpl(programService, programConverter,
-      commonConverter, mockEgoService, invitationService, authorizationService, v);
+    val facade =
+        new ProgramServiceFacade(
+            programService,
+            mockEgoService,
+            invitationService,
+            programConverter,
+            commonConverter,
+            v);
+
+    val service =
+        new ProgramServiceImpl(
+            programConverter,
+            commonConverter,
+            authorizationService,
+            facade);
 
     val serverName = InProcessServerBuilder.generateName();
-    ManagedChannel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
+    ManagedChannel channel =
+        grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
     val authInterceptor = new EgoAuthInterceptor(egoSecurity);
     val exceptionInterceptor = new ExceptionInterceptor();
 
     // Create a server, add service, start, and register for automatic graceful shutdown.
     grpcCleanup.register(
-      InProcessServerBuilder.forName(serverName)
-        .directExecutor()
-        .addService(ServerInterceptors.intercept(service, exceptionInterceptor, authInterceptor))
-        .build()
-        .start());
+        InProcessServerBuilder.forName(serverName)
+            .directExecutor()
+            .addService(
+                ServerInterceptors.intercept(service, exceptionInterceptor, authInterceptor))
+            .build()
+            .start());
 
     return ProgramServiceGrpc.newBlockingStub(channel);
   }
 
-  ProgramServiceGrpc.ProgramServiceBlockingStub addAuthHeader(ProgramServiceGrpc.ProgramServiceBlockingStub client,
-    String jwt) {
+  ProgramServiceGrpc.ProgramServiceBlockingStub addAuthHeader(
+      ProgramServiceGrpc.ProgramServiceBlockingStub client, String jwt) {
     val headers = new io.grpc.Metadata();
     val key = io.grpc.Metadata.Key.of("jwt", ASCII_STRING_MARSHALLER);
     headers.put(key, jwt);
@@ -126,24 +144,28 @@ public class ProgramServiceAuthorizationTest {
     return MetadataUtils.attachHeaders(client, headers);
   }
 
-  AuthorizationTest runTests(String testName, ProgramServiceGrpc.ProgramServiceBlockingStub client) {
-    val tests = List.of(
-      EndpointTest.of("wrongEmail", () -> client.joinProgram(badJoinProgramRequest())), // 0 -- No one
-
-      EndpointTest.of("createProgam", () -> client.createProgram(createProgramRequest())), // 1 -3 DCC Admin
-      EndpointTest.of("updateProgram", () -> client.updateProgram(updateProgramRequest())),
-      EndpointTest.of("removeProgram", () -> client.removeProgram(removeProgramRequest())),
-
-      EndpointTest.of("inviteUser", () -> client.inviteUser(inviteUserRequest())),      // 4-7 Program Admin
-      EndpointTest.of("updateUser", () -> client.updateUser(updateUserRequest())),
-      EndpointTest.of("listUser", () -> client.listUsers(listUsersRequest())),
-      EndpointTest.of("removeUser", () -> client.removeUser(removeUserRequest())),
-
-      EndpointTest.of("getProgram", () -> client.getProgram(getProgramRequest())),    //8  Program User
-      EndpointTest.of("listProgram", () -> client.listPrograms(Empty.getDefaultInstance())), // 9-10 Public
-      EndpointTest.of("joinProgram", () -> client.joinProgram(joinProgramRequest()))
-    );
-
+  AuthorizationTest runTests(
+      String testName, ProgramServiceGrpc.ProgramServiceBlockingStub client) {
+    val tests =
+        List.of(
+            EndpointTest.of(
+                "wrongEmail", () -> client.joinProgram(badJoinProgramRequest())), // 0 -- No one
+            EndpointTest.of(
+                "createProgam",
+                () -> client.createProgram(createProgramRequest())), // 1 -3 DCC Admin
+            EndpointTest.of("updateProgram", () -> client.updateProgram(updateProgramRequest())),
+            EndpointTest.of("removeProgram", () -> client.removeProgram(removeProgramRequest())),
+            EndpointTest.of(
+                "inviteUser", () -> client.inviteUser(inviteUserRequest())), // 4-7 Program Admin
+            EndpointTest.of("updateUser", () -> client.updateUser(updateUserRequest())),
+            EndpointTest.of("listUser", () -> client.listUsers(listUsersRequest())),
+            EndpointTest.of("removeUser", () -> client.removeUser(removeUserRequest())),
+            EndpointTest.of(
+                "getProgram", () -> client.getProgram(getProgramRequest())), // 8  Program User
+            EndpointTest.of(
+                "listProgram",
+                () -> client.listPrograms(Empty.getDefaultInstance())), // 9-10 Public
+            EndpointTest.of("joinProgram", () -> client.joinProgram(joinProgramRequest())));
 
     val t = new AuthorizationTest(testName, tests);
     t.run();
@@ -170,7 +192,6 @@ public class ProgramServiceAuthorizationTest {
     val tests = runTests("NoAuthentication", c);
     assert tests.threwStatusException(Status.UNAUTHENTICATED);
     closeChannel(c.getChannel());
-
   }
 
   @Test
@@ -219,7 +240,6 @@ public class ProgramServiceAuthorizationTest {
     closeChannel(c.getChannel());
     assert programs.getProgramsCount() == 0;
   }
-
 
   @Test
   void egoAdmin() throws Exception {
@@ -276,7 +296,8 @@ public class ProgramServiceAuthorizationTest {
     val programs = client.listPrograms(Empty.getDefaultInstance());
     assert programs.getProgramsCount() == 1;
     closeChannel(c.getChannel());
-    assertEquals("TEST-DK", programs.getProgramsList().get(0).getProgram().getShortName().getValue());
+    assertEquals(
+        "TEST-DK", programs.getProgramsList().get(0).getProgram().getShortName().getValue());
   }
 
   @Test
@@ -291,7 +312,8 @@ public class ProgramServiceAuthorizationTest {
     val programs = client.listPrograms(Empty.getDefaultInstance());
     closeChannel(c.getChannel());
     assertEquals(1, programs.getProgramsCount());
-    assertEquals("TEST-CA", programs.getProgramsList().get(0).getProgram().getShortName().getValue());
+    assertEquals(
+        "TEST-CA", programs.getProgramsList().get(0).getProgram().getShortName().getValue());
   }
 
   @Test
@@ -306,7 +328,8 @@ public class ProgramServiceAuthorizationTest {
     val programs = client.listPrograms(Empty.getDefaultInstance());
     closeChannel(c.getChannel());
     assertEquals(1, programs.getProgramsCount());
-    assertEquals("TEST-CA", programs.getProgramsList().get(0).getProgram().getShortName().getValue());
+    assertEquals(
+        "TEST-CA", programs.getProgramsList().get(0).getProgram().getShortName().getValue());
   }
 
   @Test
@@ -377,16 +400,24 @@ public class ProgramServiceAuthorizationTest {
     val created = LocalDateTime.now();
     val p = new ProgramEntity();
     val c = countries(p, "CA");
-    return p.setShortName(programName().getValue()).setName("").setSubmittedDonors(1).
-      setCommitmentDonors(10000).setProgramCountries(c).
-      setCreatedAt(created).setDescription("Fake").setGenomicDonors(10).
-      setMembershipType(MembershipType.ASSOCIATE).setProgramCancers(Set.of()).setProgramPrimarySites(Set.of()).
-      setWebsite("http://org.com");
+    return p.setShortName(programName().getValue())
+        .setName("")
+        .setSubmittedDonors(1)
+        .setCommitmentDonors(10000)
+        .setProgramCountries(c)
+        .setCreatedAt(created)
+        .setDescription("Fake")
+        .setGenomicDonors(10)
+        .setMembershipType(MembershipType.ASSOCIATE)
+        .setProgramCancers(Set.of())
+        .setProgramPrimarySites(Set.of())
+        .setWebsite("http://org.com");
   }
 
   Set<ProgramCountry> countries(ProgramEntity programEntity, String... names) {
     val n = Arrays.asList(names);
-    return mapToSet(n, name -> ProgramCountry.createProgramCountry(programEntity, countryEntity(name)).get());
+    return mapToSet(
+        n, name -> ProgramCountry.createProgramCountry(programEntity, countryEntity(name)).get());
   }
 
   CountryEntity countryEntity(String name) {
@@ -396,33 +427,47 @@ public class ProgramServiceAuthorizationTest {
   ProgramEntity entity2() {
     val created = LocalDateTime.now();
     val p = new ProgramEntity();
-    return p.setShortName("TEST-DK").setName("").setSubmittedDonors(2).
-      setCommitmentDonors(20000).setProgramCountries(countries(p, "DK")).
-      setCreatedAt(created).setDescription("Fake 2").setGenomicDonors(20).
-      setMembershipType(MembershipType.ASSOCIATE).setProgramCancers(Set.of()).setProgramPrimarySites(Set.of()).
-      setWebsite("http://org.com");
+    return p.setShortName("TEST-DK")
+        .setName("")
+        .setSubmittedDonors(2)
+        .setCommitmentDonors(20000)
+        .setProgramCountries(countries(p, "DK"))
+        .setCreatedAt(created)
+        .setDescription("Fake 2")
+        .setGenomicDonors(20)
+        .setMembershipType(MembershipType.ASSOCIATE)
+        .setProgramCancers(Set.of())
+        .setProgramPrimarySites(Set.of())
+        .setWebsite("http://org.com");
   }
 
   ProgramEntity entity3() {
     val created = LocalDateTime.now();
     val p = new ProgramEntity();
-    return p.setShortName("OTHER-CA").setName("").setSubmittedDonors(3).
-      setCommitmentDonors(30000).setProgramCountries(countries(p, "CA")).setCreatedAt(created).setDescription("Fake 3")
-      .setGenomicDonors(30).
-        setMembershipType(MembershipType.FULL).setProgramCancers(Set.of()).setProgramPrimarySites(Set.of()).
-        setWebsite("http://org.com");
+    return p.setShortName("OTHER-CA")
+        .setName("")
+        .setSubmittedDonors(3)
+        .setCommitmentDonors(30000)
+        .setProgramCountries(countries(p, "CA"))
+        .setCreatedAt(created)
+        .setDescription("Fake 3")
+        .setGenomicDonors(30)
+        .setMembershipType(MembershipType.FULL)
+        .setProgramCancers(Set.of())
+        .setProgramPrimarySites(Set.of())
+        .setWebsite("http://org.com");
   }
 
   Program program() {
-    return Program.newBuilder().
-      setMembershipType(MembershipTypeValue.newBuilder().setValue(MembershipType.FULL).build()).
-      setCommitmentDonors(Int32Value.of(1000)).
-      setSubmittedDonors(Int32Value.of(0)).
-      setGenomicDonors(Int32Value.of(0)).
-      setName(programName()).
-      setShortName(programName()).
-      setWebsite(website()).
-      build();
+    return Program.newBuilder()
+        .setMembershipType(MembershipTypeValue.newBuilder().setValue(MembershipType.FULL).build())
+        .setCommitmentDonors(Int32Value.of(1000))
+        .setSubmittedDonors(Int32Value.of(0))
+        .setGenomicDonors(Int32Value.of(0))
+        .setName(programName())
+        .setShortName(programName())
+        .setWebsite(website())
+        .build();
   }
 
   String dccAdminPermission() {
@@ -442,8 +487,12 @@ public class ProgramServiceAuthorizationTest {
   }
 
   User user() {
-    return User.newBuilder().setFirstName(StringValue.of("TEST")).setLastName(StringValue.of("USER")).
-      setEmail(userId()).setRole(roleValue(UserRole.ADMIN)).build();
+    return User.newBuilder()
+        .setFirstName(StringValue.of("TEST"))
+        .setLastName(StringValue.of("USER"))
+        .setEmail(userId())
+        .setRole(roleValue(UserRole.ADMIN))
+        .build();
   }
 
   CreateProgramRequest createProgramRequest() {
@@ -463,13 +512,20 @@ public class ProgramServiceAuthorizationTest {
   }
 
   InviteUserRequest inviteUserRequest() {
-    return InviteUserRequest.newBuilder().setProgramShortName(programName()).setEmail(userId()).
-      setFirstName(StringValue.of("TEST")).setLastName(StringValue.of("USER")).
-      setRole(roleValue(UserRole.COLLABORATOR)).build();
+    return InviteUserRequest.newBuilder()
+        .setProgramShortName(programName())
+        .setEmail(userId())
+        .setFirstName(StringValue.of("TEST"))
+        .setLastName(StringValue.of("USER"))
+        .setRole(roleValue(UserRole.COLLABORATOR))
+        .build();
   }
 
   UpdateUserRequest updateUserRequest() {
-    return UpdateUserRequest.newBuilder().setUserEmail(userId()).setShortName(programName()).build();
+    return UpdateUserRequest.newBuilder()
+        .setUserEmail(userId())
+        .setShortName(programName())
+        .build();
   }
 
   ListUsersRequest listUsersRequest() {
@@ -493,9 +549,11 @@ public class ProgramServiceAuthorizationTest {
   }
 
   RemoveUserRequest removeUserRequest() {
-    return RemoveUserRequest.newBuilder().setProgramShortName(programName()).setUserEmail(userId()).build();
+    return RemoveUserRequest.newBuilder()
+        .setProgramShortName(programName())
+        .setUserEmail(userId())
+        .build();
   }
-
 }
 
 @AllArgsConstructor
@@ -506,7 +564,8 @@ class Signer {
     return getToken(email, false, false, permissions);
   }
 
-  public String getToken(String email, boolean isExpired, boolean isEgoAdmin, String... permissions) {
+  public String getToken(
+      String email, boolean isExpired, boolean isEgoAdmin, String... permissions) {
     val issued = Date.from(Instant.now());
     // our jwt expires in one hour -- our test should take much less than that to run
     Date expires;
@@ -523,12 +582,12 @@ class Signer {
     context.setScope(permissions);
 
     return Jwts.builder()
-      .setIssuedAt(issued)
-      .setIssuer("ego")
-      .setExpiration(expires)
-      .claim("context", context)
-      .signWith(SignatureAlgorithm.RS256, privateKey)
-      .compact();
+        .setIssuedAt(issued)
+        .setIssuer("ego")
+        .setExpiration(expires)
+        .claim("context", context)
+        .signWith(SignatureAlgorithm.RS256, privateKey)
+        .compact();
   }
 
   public Context.User getUser(boolean isAdmin) {
@@ -545,15 +604,12 @@ class Signer {
     u.setGroups(new String[0]);
 
     return u;
-
   }
 }
 
 // Helper classes
 
-/***
- * Utility class for tests of a given RemoteProcedureCall endpoint.
- */
+/** * Utility class for tests of a given RemoteProcedureCall endpoint. */
 @AllArgsConstructor
 class EndpointTest implements Runnable {
   String rpcName;
@@ -565,7 +621,8 @@ class EndpointTest implements Runnable {
   }
 
   public void run() {
-    // Stop GRPC from logging the exception that we're about to catch. We do our own handling; we don't need it
+    // Stop GRPC from logging the exception that we're about to catch. We do our own handling; we
+    // don't need it
     // screaming irrelevant error messages at level SEVERE when our tests are actually working fine!
     Logger.getLogger("io.grpc").setLevel(Level.OFF);
     try {
@@ -576,38 +633,47 @@ class EndpointTest implements Runnable {
     Logger.getLogger("io.grpc").setLevel(Level.INFO);
   }
 
-  /***
-   * Checks whether the test returned an RuntimeStatusException with the given status; prints a message to stderr if so.
+  /**
+   * * Checks whether the test returned an RuntimeStatusException with the given status; prints a
+   * message to stderr if so.
+   *
    * @param testName
    * @param status
-   * @return true if the test returned a RuntimeStatusException with the given status, false otherwise.
+   * @return true if the test returned a RuntimeStatusException with the given status, false
+   *     otherwise.
    */
   boolean threwStatusException(String testName, Status status) {
     if (exception == null) {
-      System.err.printf("In test %s, call to %s did not raise an exception (expected) %s\n", testName, rpcName, status);
+      System.err.printf(
+          "In test %s, call to %s did not raise an exception (expected) %s\n",
+          testName, rpcName, status);
       return false;
     }
     if (!(exception instanceof StatusRuntimeException)) {
-      System.err.printf("In test %s, call to %s threw %s\n", testName, rpcName, exception.getMessage());
+      System.err.printf(
+          "In test %s, call to %s threw %s\n", testName, rpcName, exception.getMessage());
       return false;
     }
     val e = (StatusRuntimeException) exception;
     if (e.getStatus() != status) {
-      System.err.printf("In test %s, call to %s had status '%s' (%s), not '%s'\n",
-        testName, rpcName, e.getStatus().getCode().toString(), e.getMessage(), status);
+      System.err.printf(
+          "In test %s, call to %s had status '%s' (%s), not '%s'\n",
+          testName, rpcName, e.getStatus().getCode().toString(), e.getMessage(), status);
       return false;
     }
     return true;
   }
 
-  /***
-   * Checks whether the test threw an exception; prints a message to stderr if so
+  /**
+   * * Checks whether the test threw an exception; prints a message to stderr if so
+   *
    * @param testName
    * @return false if an exception was thrown, otherwise true.
    */
   boolean threwNoExceptions(String testName) {
     if (exception != null) {
-      System.err.printf("In test %s, call to %s threw %s\n", testName, rpcName, exception.getMessage());
+      System.err.printf(
+          "In test %s, call to %s threw %s\n", testName, rpcName, exception.getMessage());
       return false;
     }
     return true;
@@ -615,9 +681,10 @@ class EndpointTest implements Runnable {
 }
 
 @AllArgsConstructor
-  /***
-   * A class for running a series of endpoint tests, and testing the outcomes against expected results.
-   */
+/**
+ * * A class for running a series of endpoint tests, and testing the outcomes against expected
+ * results.
+ */
 class AuthorizationTest implements Runnable {
   String testName;
   List<EndpointTest> tests;
@@ -626,16 +693,18 @@ class AuthorizationTest implements Runnable {
     tests.stream().forEach(t -> t.run());
   }
 
-  /***
-   * Check whether all the tests threw no exceptions.
+  /**
+   * * Check whether all the tests threw no exceptions.
+   *
    * @return false if one of the tests threw an exception, true otherwise.
    */
   boolean threwNoExceptions() {
     return threwNoExceptions(0, tests.size());
   }
 
-  /***
-   * Check whether all the tests from <start> threw no exceptions.
+  /**
+   * * Check whether all the tests from <start> threw no exceptions.
+   *
    * @param start The number of the test to start with.
    * @return false if one of the tests threw an exception, true otherwise.
    */
@@ -643,10 +712,11 @@ class AuthorizationTest implements Runnable {
     return threwNoExceptions(start, tests.size());
   }
 
-  /***
-   * Check whether all tests starting with start, and less than stop threw no exceptions.
+  /**
+   * * Check whether all tests starting with start, and less than stop threw no exceptions.
+   *
    * @param start The number of the test to start with.
-   * @param stop  The number of the test to stop before.
+   * @param stop The number of the test to stop before.
    * @return
    */
   boolean threwNoExceptions(Integer start, Integer stop) {
@@ -660,8 +730,9 @@ class AuthorizationTest implements Runnable {
     return ok;
   }
 
-  /***
-   * Check whether all of the tests threw a RuntimeStatusException with the expected Status
+  /**
+   * * Check whether all of the tests threw a RuntimeStatusException with the expected Status
+   *
    * @param expectedStatus The status of the RunTimeStatusException we expect.
    * @return false if one of the tests threw
    */
@@ -669,8 +740,10 @@ class AuthorizationTest implements Runnable {
     return threwStatusException(expectedStatus, 0, tests.size());
   }
 
-  /***
-   * Check whether all of the tests  starting from start threw a RuntimeStatusException with the expected Status
+  /**
+   * * Check whether all of the tests starting from start threw a RuntimeStatusException with the
+   * expected Status
+   *
    * @param expectedStatus The status of the RunTimeStatusException we expect.
    * @param start The number of the test to start from
    * @return false if one of the tests threw
@@ -679,8 +752,10 @@ class AuthorizationTest implements Runnable {
     return threwStatusException(expectedStatus, start, tests.size());
   }
 
-  /***
-   * Check whether all of the tests between start and stop threw a RuntimeStatusException with the expected status.
+  /**
+   * * Check whether all of the tests between start and stop threw a RuntimeStatusException with the
+   * expected status.
+   *
    * @param expectedStatus The status of the RunTimeStatusException we expect.
    * @return false if one of the tests threw
    */
@@ -696,4 +771,3 @@ class AuthorizationTest implements Runnable {
     return ok;
   }
 }
-

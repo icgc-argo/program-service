@@ -16,7 +16,7 @@
  *
  */
 
-package org.icgc.argo.program_service.services;
+package org.icgc.argo.program_service.services.ego;
 
 import lombok.val;
 import org.icgc.argo.program_service.Utils;

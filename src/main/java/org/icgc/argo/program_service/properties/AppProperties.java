@@ -22,17 +22,15 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.velocity.app.VelocityEngine;
-import org.icgc.argo.program_service.services.EgoAuthorizationService;
+import org.icgc.argo.program_service.services.auth.EgoAuthorizationService;
 import org.icgc.argo.program_service.utils.NoOpJavaMailSender;
 import org.icgc.argo.program_service.services.ego.EgoClient;
 import java.security.interfaces.RSAPublicKey;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;

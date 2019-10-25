@@ -1,8 +1,10 @@
-package org.icgc.argo.program_service.services;
+package org.icgc.argo.program_service.services.auth;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import lombok.val;
+import org.icgc.argo.program_service.services.auth.AuthorizationService;
+import org.icgc.argo.program_service.services.auth.EgoAuthorizationService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.junit.jupiter.api.Test;
 

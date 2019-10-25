@@ -16,7 +16,7 @@
  *
  */
 
-package org.icgc.argo.program_service.services;
+package org.icgc.argo.program_service.services.ego;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import lombok.extern.slf4j.Slf4j;
