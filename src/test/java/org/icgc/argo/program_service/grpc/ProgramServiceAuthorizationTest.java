@@ -112,7 +112,6 @@ public class ProgramServiceAuthorizationTest {
 
     val service =
         new ProgramServiceImpl(
-            programConverter,
             commonConverter,
             authorizationService,
             facade);

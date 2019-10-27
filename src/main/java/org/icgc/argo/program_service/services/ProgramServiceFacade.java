@@ -2,31 +2,32 @@ package org.icgc.argo.program_service.services;
 
 import io.grpc.Status;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.model.entity.*;
+import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.EgoService;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.icgc.argo.program_service.utils.CollectionUtils.*;
 
 @Slf4j
 @Service
+@Transactional
 public class ProgramServiceFacade {
 
   /** Dependencies */
@@ -54,8 +55,7 @@ public class ProgramServiceFacade {
     this.validationService = validationService;
   }
 
-  @Transactional
-  public ProgramEntity createProgram(CreateProgramRequest request) {
+  public CreateProgramResponse createProgram(CreateProgramRequest request) {
     val errors = validationService.validateCreateProgramRequest(request);
     if (errors.size() != 0) {
       throw Status.INVALID_ARGUMENT
@@ -84,30 +84,31 @@ public class ProgramServiceFacade {
                   });
             });
     log.debug("Created {}", programEntity.getShortName());
-    return programEntity;
+    return programConverter.programEntityToCreateProgramResponse(programEntity);
   }
 
-  @Transactional
-  public ProgramEntity getProgram(GetProgramRequest request) {
+  public GetProgramResponse getProgram(GetProgramRequest request) {
     val shortName = request.getShortName().getValue();
-    return programService.getProgram(shortName);
+    val programEntity = programService.getProgram(shortName);
+    val programDetails = programConverter.ProgramEntityToProgramDetails(programEntity);
+    return GetProgramResponse.newBuilder().setProgram(programDetails).build();
   }
 
-  @Transactional
-  public ProgramEntity updateProgram(UpdateProgramRequest request) {
+  public UpdateProgramResponse updateProgram(UpdateProgramRequest request) {
     val program = request.getProgram();
     val updatingProgram = programConverter.programToProgramEntity(program);
-    return programService.updateProgram(
-        updatingProgram,
-        program.getCancerTypesList(),
-        program.getPrimarySitesList(),
-        program.getInstitutionsList(),
-        program.getCountriesList(),
-        program.getRegionsList());
+    val updatedProgram =
+        programService.updateProgram(
+            updatingProgram,
+            program.getCancerTypesList(),
+            program.getPrimarySitesList(),
+            program.getInstitutionsList(),
+            program.getCountriesList(),
+            program.getRegionsList());
+    return programConverter.programEntityToUpdateProgramResponse(updatedProgram);
   }
 
-  @Transactional
-  public UUID inviteUser(InviteUserRequest request) {
+  public InviteUserResponse inviteUser(InviteUserRequest request) {
     val programShortName = request.getProgramShortName().getValue();
     val programResult = programService.getProgram(programShortName);
 
@@ -117,46 +118,57 @@ public class ProgramServiceFacade {
 
     egoService.getOrCreateUser(email, firstName, lastName);
 
-    return invitationService.inviteUser(programResult, email, firstName, lastName, request.getRole().getValue());
+    val inviteId =
+        invitationService.inviteUser(
+            programResult, email, firstName, lastName, request.getRole().getValue());
+    return programConverter.inviteIdToInviteUserResponse(inviteId);
   }
 
-  @Transactional
-  public EgoUser joinProgram(JoinProgramRequest request, Consumer<JoinProgramInviteEntity> condition) {
+  public JoinProgramResponse joinProgram(
+      JoinProgramRequest request, Consumer<JoinProgramInviteEntity> condition) {
     val str = request.getJoinProgramInvitationId().getValue();
     val id = commonConverter.stringToUUID(str);
 
-    val invitation = invitationService.getInvitationById(id).orElseThrow(NOT_FOUND::asRuntimeException);
+    val invitation =
+        invitationService.getInvitationById(id).orElseThrow(NOT_FOUND::asRuntimeException);
     condition.accept(invitation);
 
-    return invitationService.acceptInvite(id);
+    val user = invitationService.acceptInvite(id);
+    return programConverter.egoUserToJoinProgramResponse(user);
   }
 
-  @Transactional
-  public List<ProgramEntity> listPrograms() {
-    return programService.listPrograms();
+  public ListProgramsResponse listPrograms(Predicate<ProgramEntity> predicate) {
+    val programEntities =
+        programService.listPrograms().stream().filter(predicate).collect(toList());
+    return programConverter.programEntitiesToListProgramsResponse(programEntities);
   }
 
-  @Transactional
-  public Set<UserDetails> listUsers(String programShortName) {
+  public ListUsersResponse listUsers(String programShortName) {
     val users = egoService.getUsersInProgram(programShortName);
-    Set<UserDetails> userDetails = mapToSet(users,
-      user -> programConverter.userWithOptionalJoinProgramInviteToUserDetails(user,
-        invitationService.getLatestInvitation(programShortName, user.getEmail().getValue())));
-    userDetails.addAll(mapToList(invitationService.listPendingInvitations(programShortName),
-      programConverter::joinProgramInviteToUserDetails));
+    Set<UserDetails> userDetails =
+        mapToSet(
+            users,
+            user ->
+                programConverter.userWithOptionalJoinProgramInviteToUserDetails(
+                    user,
+                    invitationService.getLatestInvitation(
+                        programShortName, user.getEmail().getValue())));
+    userDetails.addAll(
+        mapToList(
+            invitationService.listPendingInvitations(programShortName),
+            programConverter::joinProgramInviteToUserDetails));
 
-    return userDetails;
+    return ListUsersResponse.newBuilder().addAllUserDetails(userDetails).build();
   }
 
-  @Transactional
-  public void removeUser(RemoveUserRequest request) {
+  public RemoveUserResponse removeUser(RemoveUserRequest request) {
     val programName = request.getProgramShortName().getValue();
     val email = request.getUserEmail().getValue();
     invitationService.revoke(programName, email);
     egoService.leaveProgram(email, programName);
+    return programConverter.toRemoveUserResponse("User is successfully removed!");
   }
 
-  @Transactional
   public void updateUser(UpdateUserRequest request) {
     val programShortName = request.getShortName().getValue();
     val email = request.getUserEmail().getValue();
@@ -165,41 +177,48 @@ public class ProgramServiceFacade {
     egoService.updateUserRole(email, programShortName, role);
   }
 
-  @Transactional
   public void removeProgram(RemoveProgramRequest request) {
     val shortName = request.getProgramShortName().getValue();
     egoService.cleanUpProgram(shortName);
     programService.removeProgram(request.getProgramShortName().getValue());
   }
 
-  public List<CancerEntity> listCancers() {
-    return programService.listCancers();
+  public ListCancersResponse listCancers() {
+    return programConverter.cancerEntitiesToListCancersResponse(programService.listCancers());
   }
 
-  public List<PrimarySiteEntity> listPrimarySites() {
-    return programService.listPrimarySites();
+  public ListPrimarySitesResponse listPrimarySites() {
+    return programConverter.primarySiteEntitiesToListPrimarySitesResponse(
+        programService.listPrimarySites());
   }
 
-  public List<CountryEntity> listCountries() {
-    return programService.listCountries();
+  public ListCountriesResponse listCountries() {
+    return programConverter.countryEntitiesToListCountriesResponse(programService.listCountries());
   }
 
-  public List<RegionEntity> listRegions() {
-    return programService.listRegions();
+  public ListRegionsResponse listRegions() {
+    return programConverter.regionEntitiesToListRegionsResponse(programService.listRegions());
   }
 
-  public List<InstitutionEntity> listInstitutions() {
-    return programService.listInstitutions();
+  public ListInstitutionsResponse listInstitutions() {
+    return programConverter.institutionEntitiesToListInstitutionsResponse(
+        programService.listInstitutions());
   }
 
-  @Transactional
-  public List<InstitutionEntity> addInstitutions(List<String> names) {
-    return programService.addInstitutions(names);
+  public AddInstitutionsResponse addInstitutions(List<String> names) {
+    return programConverter.institutionsToAddInstitutionsResponse(
+        programService.addInstitutions(names));
   }
 
-  @Transactional
-  public Optional<JoinProgramInviteEntity> getInvitationById(UUID id) {
-    return invitationService.getInvitationById(id);
+  public JoinProgramInvite getInvitationById(UUID id) {
+    val joinProgramInvite =
+        invitationService
+            .getInvitationById(id)
+            .orElseThrow(
+                () ->
+                    Status.NOT_FOUND
+                        .withDescription("Invitation is not found")
+                        .asRuntimeException());
+    return programConverter.joinProgramInviteEntityToJoinProgramInvite(joinProgramInvite);
   }
-
 }
