@@ -60,8 +60,6 @@ class ProgramServiceImplTest {
   InvitationService invitationService = mock(InvitationService.class);
   EgoService egoService = mock(EgoService.class);
   AuthorizationService authorizationService = mock(AuthorizationService.class);
-  ValidationProperties properties = new ValidationProperties();
-  ValidatorFactory validatorFactory = properties.factory();
   ValidationService validationService = mock(ValidationService.class);
   ProgramServiceFacade facade =
       new ProgramServiceFacade(
@@ -73,7 +71,6 @@ class ProgramServiceImplTest {
           validationService);
   ProgramServiceImpl programServiceImpl =
       new ProgramServiceImpl(
-          programConverter,
           CommonConverter.INSTANCE,
           authorizationService,
           facade);
@@ -431,8 +428,7 @@ class ProgramServiceImplTest {
             programConverter,
             CommonConverter.INSTANCE,
             validationService);
-    return new ProgramServiceImpl(
-        programConverter, CommonConverter.INSTANCE, authorizationService, newFacade);
+    return new ProgramServiceImpl(CommonConverter.INSTANCE, authorizationService, newFacade);
   }
 
   ListUsersRequest createListUsersRequest(String shortName) {

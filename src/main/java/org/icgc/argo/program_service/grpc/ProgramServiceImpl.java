@@ -26,8 +26,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
-import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ProgramServiceFacade;
@@ -39,32 +37,27 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static io.grpc.Status.NOT_FOUND;
 import static io.grpc.Status.UNKNOWN;
-import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
 
   /** Dependencies */
-  private final ProgramConverter programConverter;
   private final CommonConverter commonConverter;
   private final AuthorizationService authorizationService;
   private final ProgramServiceFacade serviceFacade;
 
   @Autowired
   public ProgramServiceImpl(
-      @NonNull ProgramConverter programConverter,
       @NonNull CommonConverter commonConverter,
       AuthorizationService authorizationService,
       ProgramServiceFacade serviceFacade) {
-    this.programConverter = programConverter;
     this.commonConverter = commonConverter;
     this.authorizationService = authorizationService;
     this.serviceFacade = serviceFacade;
@@ -74,8 +67,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void createProgram(
       CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
     authorizationService.requireDCCAdmin();
-    val programEntity = serviceFacade.createProgram(request);
-    val response = programConverter.programEntityToCreateProgramResponse(programEntity);
+    val response = serviceFacade.createProgram(request);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
@@ -84,9 +76,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void getProgram(
       GetProgramRequest request, StreamObserver<GetProgramResponse> responseObserver) {
     authorizationService.requireProgramUser(request.getShortName().getValue());
-    val programEntity = serviceFacade.getProgram(request);
-    val programDetails = programConverter.ProgramEntityToProgramDetails(programEntity);
-    val response = GetProgramResponse.newBuilder().setProgram(programDetails).build();
+    val response = serviceFacade.getProgram(request);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
@@ -96,8 +86,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> responseObserver) {
     authorizationService.requireDCCAdmin();
     try {
-      val updatedProgram = serviceFacade.updateProgram(request);
-      val response = programConverter.programEntityToUpdateProgramResponse(updatedProgram);
+      val response = serviceFacade.updateProgram(request);
       responseObserver.onNext(response);
       responseObserver.onCompleted();
     } catch (NotFoundException | NoSuchElementException e) {
@@ -112,8 +101,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     authorizationService.requireProgramAdmin(request.getProgramShortName().getValue());
 
     try {
-      val inviteId = serviceFacade.inviteUser(request);
-      val inviteUserResponse = programConverter.inviteIdToInviteUserResponse(inviteId);
+      val inviteUserResponse = serviceFacade.inviteUser(request);
       responseObserver.onNext(inviteUserResponse);
       responseObserver.onCompleted();
     } catch (Throwable throwable) {
@@ -125,10 +113,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void joinProgram(
       JoinProgramRequest request, StreamObserver<JoinProgramResponse> responseObserver) {
     try {
-      val responseUser =
+      val response =
           serviceFacade.joinProgram(
               request, (i) -> authorizationService.requireEmail(i.getUserEmail()));
-      val response = programConverter.egoUserToJoinProgramResponse(responseUser);
       responseObserver.onNext(response);
       responseObserver.onCompleted();
     } catch (NotFoundException e) {
@@ -139,12 +126,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
-    List<ProgramEntity> programEntities =
-        serviceFacade.listPrograms().stream()
-            .filter(p -> authorizationService.canRead(p.getShortName()))
-            .collect(toList());
-    val listProgramsResponse =
-        programConverter.programEntitiesToListProgramsResponse(programEntities);
+    val listProgramsResponse = serviceFacade.listPrograms(p -> authorizationService.canRead(p.getShortName()));
     responseObserver.onNext(listProgramsResponse);
     responseObserver.onCompleted();
   }
@@ -155,8 +137,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val programShortName = request.getProgramShortName().getValue();
     authorizationService.requireProgramAdmin(programShortName);
 
-    val userDetails = serviceFacade.listUsers(programShortName);
-    val response = ListUsersResponse.newBuilder().addAllUserDetails(userDetails).build();
+    val response = serviceFacade.listUsers(programShortName);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
@@ -167,8 +148,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
     val programName = request.getProgramShortName().getValue();
     authorizationService.requireProgramAdmin(programName);
 
-    serviceFacade.removeUser(request);
-    val response = programConverter.toRemoveUserResponse("User is successfully removed!");
+    val response = serviceFacade.removeUser(request);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
@@ -203,8 +183,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void listCancers(Empty request, StreamObserver<ListCancersResponse> responseObserver) {
-    val cancers = serviceFacade.listCancers();
-    val listCancersResponse = programConverter.cancerEntitiesToListCancersResponse(cancers);
+    val listCancersResponse = serviceFacade.listCancers();
     responseObserver.onNext(listCancersResponse);
     responseObserver.onCompleted();
   }
@@ -212,25 +191,21 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listPrimarySites(
       Empty request, StreamObserver<ListPrimarySitesResponse> responseObserver) {
-    val sites = serviceFacade.listPrimarySites();
-    val listPrimarySitesResponse =
-        programConverter.primarySiteEntitiesToListPrimarySitesResponse(sites);
+    val listPrimarySitesResponse = serviceFacade.listPrimarySites();
     responseObserver.onNext(listPrimarySitesResponse);
     responseObserver.onCompleted();
   }
 
   @Override
   public void listCountries(Empty request, StreamObserver<ListCountriesResponse> responseObserver) {
-    val countries = serviceFacade.listCountries();
-    val listCountriesResponse = programConverter.countryEntitiesToListCountriesResponse(countries);
+    val listCountriesResponse = serviceFacade.listCountries();
     responseObserver.onNext(listCountriesResponse);
     responseObserver.onCompleted();
   }
 
   @Override
   public void listRegions(Empty request, StreamObserver<ListRegionsResponse> responseObserver) {
-    val regions = serviceFacade.listRegions();
-    val listRegionsResponse = programConverter.regionEntitiesToListRegionsResponse(regions);
+    val listRegionsResponse = serviceFacade.listRegions();
     responseObserver.onNext(listRegionsResponse);
     responseObserver.onCompleted();
   }
@@ -238,9 +213,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   @Override
   public void listInstitutions(
       Empty request, StreamObserver<ListInstitutionsResponse> responseObserver) {
-    val institutions = serviceFacade.listInstitutions();
-    val listInstitutionsResponse =
-        programConverter.institutionEntitiesToListInstitutionsResponse(institutions);
+    val listInstitutionsResponse = serviceFacade.listInstitutions();
     responseObserver.onNext(listInstitutionsResponse);
     responseObserver.onCompleted();
   }
@@ -253,8 +226,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
             .map(commonConverter::unboxStringValue)
             .collect(toImmutableList());
     try {
-      val institutions = serviceFacade.addInstitutions(names);
-      val response = programConverter.institutionsToAddInstitutionsResponse(institutions);
+      val response = serviceFacade.addInstitutions(names);
       responseObserver.onNext(response);
       responseObserver.onCompleted();
     } catch (DataIntegrityViolationException e) {
@@ -267,15 +239,9 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   public void getJoinProgramInvite(
       GetJoinProgramInviteRequest request,
       StreamObserver<GetJoinProgramInviteResponse> responseObserver) {
-    val joinProgramInvite =
+    val invitation =
         serviceFacade
-            .getInvitationById(UUID.fromString(request.getInviteId().getValue()))
-            .orElseThrow(
-                () ->
-                    Status.NOT_FOUND
-                        .withDescription("Invitation is not found")
-                        .asRuntimeException());
-    val invitation = programConverter.joinProgramInviteEntityToJoinProgramInvite(joinProgramInvite);
+            .getInvitationById(UUID.fromString(request.getInviteId().getValue()));
     val response = GetJoinProgramInviteResponse.newBuilder().setInvitation(invitation).build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();

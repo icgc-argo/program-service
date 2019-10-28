@@ -101,9 +101,10 @@ public class ProgramServiceGrpcIT {
   }
 
   @Test
-  public void createProgram() {
+  public void createProgramAndGet() {
+    val shortName = stringValue(randomProgramName());
     val program = Program.newBuilder()
-      .setShortName(stringValue(randomProgramName()))
+      .setShortName(shortName)
       .setMembershipType(membershipTypeValue(ASSOCIATE))
       .setWebsite(stringValue("http://site.org"))
       .addInstitutions("Ontario Institute for Cancer Research")
@@ -126,6 +127,10 @@ public class ProgramServiceGrpcIT {
     val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).addAllAdmins(admins).build();
     val response = stub.createProgram(createProgramRequest);
     assertFalse(isEmpty(response.getCreatedAt()));
+
+    val getProgramRequest = GetProgramRequest.newBuilder().setShortName(shortName).build();
+    val getResponse = stub.getProgram(getProgramRequest);
+    assertEquals(shortName.getValue(), getResponse.getProgram().getProgram().getShortName().getValue());
   }
 
   boolean isEmpty(Object o) {
