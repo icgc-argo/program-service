@@ -1,4 +1,4 @@
-package org.icgc.argo.program_service.services;
+package org.icgc.argo.program_service.services.auth;
 
 import io.grpc.Status;
 import lombok.extern.slf4j.Slf4j;
