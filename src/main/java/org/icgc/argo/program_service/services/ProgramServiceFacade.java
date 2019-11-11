@@ -27,7 +27,6 @@ import static org.icgc.argo.program_service.utils.CollectionUtils.*;
 
 @Slf4j
 @Service
-@Transactional
 public class ProgramServiceFacade {
 
   /** Dependencies */
@@ -55,6 +54,7 @@ public class ProgramServiceFacade {
     this.validationService = validationService;
   }
 
+  @Transactional
   public CreateProgramResponse createProgram(CreateProgramRequest request) {
     val errors = validationService.validateCreateProgramRequest(request);
     if (errors.size() != 0) {
@@ -70,7 +70,7 @@ public class ProgramServiceFacade {
     // TODO: Refactor this, having a transactional side effect is no longer needed thanks to the
     // facade
     val programEntity =
-        programService.createWithSideEffectTransactional(
+        programService.createWithSideEffect(
             program,
             (ProgramEntity pe) -> {
               egoService.setUpProgram(pe.getShortName());
@@ -94,6 +94,7 @@ public class ProgramServiceFacade {
     return GetProgramResponse.newBuilder().setProgram(programDetails).build();
   }
 
+  @Transactional
   public UpdateProgramResponse updateProgram(UpdateProgramRequest request) {
     val program = request.getProgram();
     val updatingProgram = programConverter.programToProgramEntity(program);
@@ -108,6 +109,7 @@ public class ProgramServiceFacade {
     return programConverter.programEntityToUpdateProgramResponse(updatedProgram);
   }
 
+  @Transactional
   public InviteUserResponse inviteUser(InviteUserRequest request) {
     val programShortName = request.getProgramShortName().getValue();
     val programResult = programService.getProgram(programShortName);
@@ -124,6 +126,7 @@ public class ProgramServiceFacade {
     return programConverter.inviteIdToInviteUserResponse(inviteId);
   }
 
+  @Transactional
   public JoinProgramResponse joinProgram(
       JoinProgramRequest request, Consumer<JoinProgramInviteEntity> condition) {
     val str = request.getJoinProgramInvitationId().getValue();
@@ -161,6 +164,7 @@ public class ProgramServiceFacade {
     return ListUsersResponse.newBuilder().addAllUserDetails(userDetails).build();
   }
 
+  @Transactional
   public RemoveUserResponse removeUser(RemoveUserRequest request) {
     val programName = request.getProgramShortName().getValue();
     val email = request.getUserEmail().getValue();
@@ -169,6 +173,7 @@ public class ProgramServiceFacade {
     return programConverter.toRemoveUserResponse("User is successfully removed!");
   }
 
+  @Transactional
   public void updateUser(UpdateUserRequest request) {
     val programShortName = request.getShortName().getValue();
     val email = request.getUserEmail().getValue();
@@ -177,6 +182,7 @@ public class ProgramServiceFacade {
     egoService.updateUserRole(email, programShortName, role);
   }
 
+  @Transactional
   public void removeProgram(RemoveProgramRequest request) {
     val shortName = request.getProgramShortName().getValue();
     egoService.cleanUpProgram(shortName);

@@ -26,8 +26,6 @@ import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-import org.icgc.argo.program_service.services.ego.EgoRESTClient;
-import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
 import org.icgc.argo.program_service.utils.EntityGenerator;
 import org.junit.Before;
