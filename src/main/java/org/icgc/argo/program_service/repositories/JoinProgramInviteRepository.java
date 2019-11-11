@@ -20,20 +20,16 @@ package org.icgc.argo.program_service.repositories;
 
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface JoinProgramInviteRepository extends JpaRepository<JoinProgramInviteEntity, UUID> {
-  @Transactional
   List<JoinProgramInviteEntity> findAllByProgramShortNameAndStatus(String programShortName,
     JoinProgramInviteEntity.Status status);
 
-  @Transactional
   List<JoinProgramInviteEntity> findAllByProgramShortNameAndUserEmail(String programShortName, String userEmail);
 
-  @Transactional
   List<JoinProgramInviteEntity> findAllByProgramShortNameAndUserEmailOrderByCreatedAtDesc(String programShortName,
     String userEmail);
 

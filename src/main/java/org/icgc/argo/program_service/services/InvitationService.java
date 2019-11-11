@@ -13,7 +13,6 @@ import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -65,7 +64,6 @@ public class InvitationService {
     return invitation.getId();
   }
 
-  @Transactional
   public EgoUser acceptInvite(@NonNull UUID invitationId) throws NotFoundException {
     val invitation = invitationRepository
       .findById(invitationId)
@@ -98,7 +96,6 @@ public class InvitationService {
     return Optional.of(validInvitations.get(0));
   }
 
-  @Transactional
   public void revoke(String programShortName, String email) {
     val previousInvitations = invitationRepository.findAllByProgramShortNameAndUserEmail(programShortName, email);
     previousInvitations.stream().filter(i -> i.getStatus() == PENDING || i.getStatus() == ACCEPTED).
