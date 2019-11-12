@@ -33,17 +33,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.ConstraintViolation;
 import javax.validation.ValidatorFactory;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import static java.lang.String.format;
@@ -110,7 +106,14 @@ public class ProgramService {
   }
 
   private ProgramEntity findProgramByShortName(@NonNull String name) {
-    val search = programRepository.findByShortName(name);
+    val search = programRepository.findOne(new ProgramSpecificationBuilder()
+      .setFetchCancers(true)
+      .setFetchPrimarySites(true)
+      .setFetchInstitutions(true)
+      .setFetchCountries(true)
+      .setFetchRegions(true)
+      .buildByShortName(name));
+
     if (search.isEmpty()) {
       throw Status.NOT_FOUND
         .withDescription("Program '" + name + "' not found")
@@ -123,8 +126,7 @@ public class ProgramService {
     return findProgramByShortName(name);
   }
 
-  @Transactional
-  public ProgramEntity createWithSideEffectTransactional(@NonNull Program program, Consumer<ProgramEntity> consumer) {
+  public ProgramEntity createWithSideEffect(@NonNull Program program, Consumer<ProgramEntity> consumer) {
     val programEntity = createProgram(program);
     consumer.accept(programEntity);
     return programEntity;
@@ -191,7 +193,6 @@ public class ProgramService {
     return institutions;
   }
 
-  @Transactional
   public ProgramEntity updateProgram(
     @NonNull ProgramEntity updatingProgram,
     @NonNull List<String> cancers,

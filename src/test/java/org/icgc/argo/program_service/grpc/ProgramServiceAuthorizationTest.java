@@ -94,7 +94,7 @@ public class ProgramServiceAuthorizationTest {
 
     val programService = mock(ProgramService.class);
     when(programService.createProgram(any())).thenReturn(entity());
-    when(programService.createWithSideEffectTransactional(any(), any())).thenReturn(entity());
+    when(programService.createWithSideEffect(any(), any())).thenReturn(entity());
     when(programService.getProgram(programName().getValue())).thenReturn(entity());
     when(programService.listPrograms()).thenReturn(List.of(entity(), entity2(), entity3()));
 
