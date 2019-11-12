@@ -122,7 +122,7 @@ public class ProgramService {
     return search.get();
   }
 
-  public ProgramEntity getP\rogram(@NonNull String name) {
+  public ProgramEntity getProgram(@NonNull String name) {
     return findProgramByShortName(name);
   }
 
