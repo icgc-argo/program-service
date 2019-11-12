@@ -106,7 +106,14 @@ public class ProgramService {
   }
 
   private ProgramEntity findProgramByShortName(@NonNull String name) {
-    val search = programRepository.findByShortName(name);
+    val search = programRepository.findOne(new ProgramSpecificationBuilder()
+      .setFetchCancers(true)
+      .setFetchPrimarySites(true)
+      .setFetchInstitutions(true)
+      .setFetchCountries(true)
+      .setFetchRegions(true)
+      .buildByShortName(name));
+
     if (search.isEmpty()) {
       throw Status.NOT_FOUND
         .withDescription("Program '" + name + "' not found")
@@ -115,7 +122,7 @@ public class ProgramService {
     return search.get();
   }
 
-  public ProgramEntity getProgram(@NonNull String name) {
+  public ProgramEntity getP\rogram(@NonNull String name) {
     return findProgramByShortName(name);
   }
 

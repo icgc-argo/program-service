@@ -20,6 +20,7 @@ package org.icgc.argo.program_service.repositories.query;
 
 import lombok.NonNull;
 import lombok.val;
+import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -37,6 +38,13 @@ public abstract class AbstractSpecificationBuilder<T, ID> {
     return (fromUser, query, builder) -> {
       val root = setupFetchStrategy(fromUser);
       return equalsNameIgnoreCasePredicate(root, builder, name);
+    };
+  }
+
+  public Specification<T> buildByShortName(@NonNull String shortName) {
+    return (fromUser, query, builder) -> {
+      val root = setupFetchStrategy(fromUser);
+      return equalsNameShortNamePredicate(root, builder, shortName);
     };
   }
 
@@ -73,5 +81,10 @@ public abstract class AbstractSpecificationBuilder<T, ID> {
   private Predicate equalsNameIgnoreCasePredicate(
       Root<T> root, CriteriaBuilder builder, String name) {
     return builder.equal(builder.upper(root.get(NAME_FIELD)), builder.upper(builder.literal(name)));
+  }
+
+  private Predicate equalsNameShortNamePredicate(
+    Root<T> root, CriteriaBuilder builder, String shortName) {
+    return builder.equal(root.get(ProgramEntity.Fields.shortName), builder.literal(shortName));
   }
 }
