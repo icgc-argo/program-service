@@ -189,6 +189,19 @@ public class ProgramServiceFacade {
     programService.removeProgram(request.getProgramShortName().getValue());
   }
 
+  @Transactional
+  public JoinProgramInvite getInvitationById(UUID id) {
+    val joinProgramInvite =
+      invitationService
+        .getInvitationById(id)
+        .orElseThrow(
+          () ->
+            Status.NOT_FOUND
+              .withDescription("Invitation is not found")
+              .asRuntimeException());
+    return programConverter.joinProgramInviteEntityToJoinProgramInvite(joinProgramInvite);
+  }
+
   public ListCancersResponse listCancers() {
     return programConverter.cancerEntitiesToListCancersResponse(programService.listCancers());
   }
@@ -214,17 +227,5 @@ public class ProgramServiceFacade {
   public AddInstitutionsResponse addInstitutions(List<String> names) {
     return programConverter.institutionsToAddInstitutionsResponse(
         programService.addInstitutions(names));
-  }
-
-  public JoinProgramInvite getInvitationById(UUID id) {
-    val joinProgramInvite =
-        invitationService
-            .getInvitationById(id)
-            .orElseThrow(
-                () ->
-                    Status.NOT_FOUND
-                        .withDescription("Invitation is not found")
-                        .asRuntimeException());
-    return programConverter.joinProgramInviteEntityToJoinProgramInvite(joinProgramInvite);
   }
 }
