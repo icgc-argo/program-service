@@ -92,7 +92,7 @@ public class JoinProgramInviteEntity {
 
   public JoinProgramInviteEntity(ProgramEntity program, String userEmail, String firstName, String lastName, UserRole role) {
     this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
-    this.expiresAt = this.createdAt.plusHours(48);
+    this.expiresAt = this.createdAt.plusDays(30);
     this.acceptedAt = null;
 
     this.program = program;
