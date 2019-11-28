@@ -18,6 +18,10 @@
 
 package org.icgc.argo.program_service.model.join;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
+import java.util.Optional;
+import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
@@ -26,11 +30,6 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.jetbrains.annotations.NotNull;
-
-import javax.persistence.*;
-import java.util.Optional;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Entity
 @Data
@@ -41,10 +40,10 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 @FieldNameConstants
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProgramCancer implements IdentifiableEntity<ProgramCancerId>, Comparable<ProgramCancer> {
+public class ProgramCancer
+    implements IdentifiableEntity<ProgramCancerId>, Comparable<ProgramCancer> {
 
-  @EmbeddedId
-  private ProgramCancerId id;
+  @EmbeddedId private ProgramCancerId id;
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
@@ -60,24 +59,24 @@ public class ProgramCancer implements IdentifiableEntity<ProgramCancerId>, Compa
   @ManyToOne(fetch = FetchType.LAZY)
   private CancerEntity cancer;
 
-  public static Optional<ProgramCancer> createProgramCancer(@NonNull ProgramEntity p, @NonNull CancerEntity c) {
+  public static Optional<ProgramCancer> createProgramCancer(
+      @NonNull ProgramEntity p, @NonNull CancerEntity c) {
     if (c.getId() == null || isNullOrEmpty(c.getName())) {
       return Optional.empty();
     }
 
-    val programCancer = ProgramCancer.builder()
-      .id(ProgramCancerId.builder()
-        .programId(p.getId())
-        .cancerId(c.getId())
-        .build())
-        // Note: must assign program and cancer to pc
-        .program(p)
-        .cancer(c)
-        .build();
+    val programCancer =
+        ProgramCancer.builder()
+            .id(ProgramCancerId.builder().programId(p.getId()).cancerId(c.getId()).build())
+            // Note: must assign program and cancer to pc
+            .program(p)
+            .cancer(c)
+            .build();
     return Optional.of(programCancer);
   }
 
-  @Override public int compareTo(@NotNull ProgramCancer o) {
+  @Override
+  public int compareTo(@NotNull ProgramCancer o) {
     return this.cancer.getName().compareTo(o.cancer.getName());
   }
 }

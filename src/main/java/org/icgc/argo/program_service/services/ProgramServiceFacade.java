@@ -1,6 +1,16 @@
 package org.icgc.argo.program_service.services;
 
+import static io.grpc.Status.NOT_FOUND;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
+import static org.icgc.argo.program_service.utils.CollectionUtils.*;
+
 import io.grpc.Status;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -13,17 +23,6 @@ import org.icgc.argo.program_service.services.ego.EgoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
-import static io.grpc.Status.NOT_FOUND;
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
-import static org.icgc.argo.program_service.utils.CollectionUtils.*;
 
 @Slf4j
 @Service
@@ -192,13 +191,13 @@ public class ProgramServiceFacade {
   @Transactional
   public JoinProgramInvite getInvitationById(UUID id) {
     val joinProgramInvite =
-      invitationService
-        .getInvitationById(id)
-        .orElseThrow(
-          () ->
-            Status.NOT_FOUND
-              .withDescription("Invitation is not found")
-              .asRuntimeException());
+        invitationService
+            .getInvitationById(id)
+            .orElseThrow(
+                () ->
+                    Status.NOT_FOUND
+                        .withDescription("Invitation is not found")
+                        .asRuntimeException());
     return programConverter.joinProgramInviteEntityToJoinProgramInvite(joinProgramInvite);
   }
 

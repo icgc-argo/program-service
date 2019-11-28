@@ -17,14 +17,12 @@ package org.icgc.argo.program_service.properties;
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import javax.validation.ClockProvider;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-
+import javax.validation.ClockProvider;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class UTCClockProvider implements ClockProvider {
@@ -33,15 +31,18 @@ public class UTCClockProvider implements ClockProvider {
   public Clock getClock() {
 
     return new Clock() {
-      @Override public ZoneId getZone() {
+      @Override
+      public ZoneId getZone() {
         return ZoneId.of("UTC");
       }
 
-      @Override public Clock withZone(ZoneId zone) {
+      @Override
+      public Clock withZone(ZoneId zone) {
         return Clock.system(ZoneId.of("UTC"));
       }
 
-      @Override public Instant instant() {
+      @Override
+      public Instant instant() {
         return Instant.now();
       }
     };

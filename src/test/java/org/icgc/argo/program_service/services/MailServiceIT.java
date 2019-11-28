@@ -18,7 +18,13 @@
 
 package org.icgc.argo.program_service.services;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.databind.JsonNode;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.val;
 import org.apache.commons.lang.RandomStringUtils;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
@@ -34,31 +40,22 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
-
 @SpringBootTest
-@ActiveProfiles({ "test", "default" })
+@ActiveProfiles({"test", "default"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:postgresql://localhost:5432/program_db",
-        "spring.datasource.driverClassName=org.postgresql.Driver",
-        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect"
-})
+@TestPropertySource(
+    properties = {
+      "spring.datasource.url=jdbc:postgresql://localhost:5432/program_db",
+      "spring.datasource.driverClassName=org.postgresql.Driver",
+      "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect"
+    })
 @ComponentScan(lazyInit = true)
 class MailServiceIT {
-  @Autowired
-  MailService mailService;
+  @Autowired MailService mailService;
 
-  @Mock
-  JoinProgramInviteEntity invite;
+  @Mock JoinProgramInviteEntity invite;
 
-  @Mock
-  ProgramEntity mockProgramEntity;
+  @Mock ProgramEntity mockProgramEntity;
 
   @Value("${spring.mail.host}")
   String mailhogHost;
@@ -78,7 +75,10 @@ class MailServiceIT {
     when(invite.getProgram()).thenReturn(mockProgramEntity);
     when(invite.getExpiresAt()).thenReturn(LocalDateTime.now());
     mailService.sendInviteEmail(invite);
-    val messages = restTemplate.getForObject("https://" + mailhogHost + "/api/v2/search?kind=containing&query=" + randomEmail, JsonNode.class);
+    val messages =
+        restTemplate.getForObject(
+            "https://" + mailhogHost + "/api/v2/search?kind=containing&query=" + randomEmail,
+            JsonNode.class);
     assertTrue(messages.at("/total").asInt() > 0);
     assertEquals("noreply", messages.at("/items/0/From/Mailbox").asText());
     assertEquals("oicr.on.ca", messages.at("/items/0/From/Domain").asText());
@@ -87,5 +87,4 @@ class MailServiceIT {
     assertTrue(messages.at("/items/0/Content/Body").asText().contains("Albert"));
     assertTrue(messages.at("/items/0/Content/Body").asText().contains("Einstein"));
   }
-
 }

@@ -25,16 +25,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-/**
- * Noop Interceptor
- */
+/** Noop Interceptor */
 @Slf4j
 @Profile("!auth")
 @Component
-public class NoopAuthInterceptor implements AuthInterceptor{
+public class NoopAuthInterceptor implements AuthInterceptor {
 
   @Override
-  public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
+  public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
+      ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
     log.debug("Noop Auth");
     return next.startCall(call, headers);
   }

@@ -17,16 +17,21 @@ package org.icgc.argo.program_service.properties;
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.String.format;
+
+import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
+import java.util.Properties;
+import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.velocity.app.VelocityEngine;
 import org.icgc.argo.program_service.services.auth.EgoAuthorizationService;
-import org.icgc.argo.program_service.utils.NoOpJavaMailSender;
 import org.icgc.argo.program_service.services.ego.EgoClient;
-import java.security.interfaces.RSAPublicKey;
-
+import org.icgc.argo.program_service.utils.NoOpJavaMailSender;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -38,76 +43,44 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
-import javax.validation.constraints.NotNull;
-import java.time.Duration;
-import java.util.Properties;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.lang.String.format;
-
-/**
- * Ego external configuration, served as metadata for application.yml
- */
+/** Ego external configuration, served as metadata for application.yml */
 @Slf4j
 @Component
 @Validated
-@Setter @Getter
+@Setter
+@Getter
 @ConfigurationProperties(prefix = AppProperties.APP)
 public class AppProperties {
   public static final String APP = "app";
-  /**
-   * Url prefix of the invite link, it should be followed by invite's uuid
-   */
-  @NotNull
-  private String invitationUrlPrefix;
+  /** Url prefix of the invite link, it should be followed by invite's uuid */
+  @NotNull private String invitationUrlPrefix;
 
-  /**
-   * Ego api url
-   */
-  @NotNull
-  private String egoUrl;
+  /** Ego api url */
+  @NotNull private String egoUrl;
 
-  /**
-   * Ego client Id, it has to be manually added in ego
-   */
-  @NotNull
-  private String egoClientId;
+  /** Ego client Id, it has to be manually added in ego */
+  @NotNull private String egoClientId;
 
-  /**
-   * Ego client secret
-   */
-  @NotNull
-  private String egoClientSecret;
+  /** Ego client secret */
+  @NotNull private String egoClientSecret;
 
-  /**
-   * Port used by grpc server
-   */
-  @NotNull
-  private Integer grpcPort;
+  /** Port used by grpc server */
+  @NotNull private Integer grpcPort;
 
-  /**
-   * GRPC can be disabled when doing test
-   */
-  @NotNull
-  private Boolean grpcEnabled;
+  /** GRPC can be disabled when doing test */
+  @NotNull private Boolean grpcEnabled;
 
-  /**
-   * Emailing can be disabled when developing/testing
-   */
-  @NotNull
-  private Boolean mailEnabled;
+  /** Emailing can be disabled when developing/testing */
+  @NotNull private Boolean mailEnabled;
 
   /* can be null except for when auth is enabled */
   private String dccAdminPermission;
 
-
   @Bean
-  @ConditionalOnProperty(
-    prefix = APP,
-    name = "mail-enabled",
-    havingValue = "false")
+  @ConditionalOnProperty(prefix = APP, name = "mail-enabled", havingValue = "false")
   public JavaMailSender noOpJavaMailSender() {
-    checkArgument(!mailEnabled, "The config 'mail-enabled' was 'true' but was expected to be 'false'");
+    checkArgument(
+        !mailEnabled, "The config 'mail-enabled' was 'true' but was expected to be 'false'");
     log.warn("Loaded {}", NoOpJavaMailSender.class.getSimpleName());
     return new NoOpJavaMailSender();
   }
@@ -116,7 +89,9 @@ public class AppProperties {
   public VelocityEngine velocityEngine() {
     Properties props = new Properties();
     props.put("resource.loader", "class");
-    props.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+    props.put(
+        "class.resource.loader.class",
+        "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
     return new VelocityEngine(props);
   }
 
@@ -131,10 +106,11 @@ public class AppProperties {
 
   @Bean
   public RestTemplate RestTemplate() {
-    val t = new RestTemplateBuilder()
-      .basicAuthentication(getEgoClientId(), getEgoClientSecret())
-      .setConnectTimeout(Duration.ofSeconds(15)).
-        build();
+    val t =
+        new RestTemplateBuilder()
+            .basicAuthentication(getEgoClientId(), getEgoClientSecret())
+            .setConnectTimeout(Duration.ofSeconds(15))
+            .build();
     t.setUriTemplateHandler(new DefaultUriBuilderFactory(getEgoUrl()));
     return t;
   }
@@ -144,4 +120,3 @@ public class AppProperties {
     return egoClient.getPublicKey();
   }
 }
-

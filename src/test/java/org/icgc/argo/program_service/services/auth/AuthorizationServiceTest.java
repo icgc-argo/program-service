@@ -1,17 +1,15 @@
 package org.icgc.argo.program_service.services.auth;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
-import lombok.val;
-import org.icgc.argo.program_service.services.auth.AuthorizationService;
-import org.icgc.argo.program_service.services.auth.EgoAuthorizationService;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
-import org.junit.jupiter.api.Test;
-
 import static junit.framework.TestCase.*;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import lombok.val;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
+import org.junit.jupiter.api.Test;
 
 class AuthorizationServiceTest {
   AuthorizationService authorizationService(EgoToken token) {
@@ -113,12 +111,13 @@ class AuthorizationServiceTest {
     assertPermissionDenied(exception7);
 
     // Right permission, right program
-    val exception8 = testRequireProgramAdmin(mockToken("USER", readPermission, writePermission), program);
+    val exception8 =
+        testRequireProgramAdmin(mockToken("USER", readPermission, writePermission), program);
     assertNull(exception8);
 
     // Right permission, null program
-    val exception9 = testRequireProgramAdmin(mockToken("USER", readPermission, writePermission),
-      null);
+    val exception9 =
+        testRequireProgramAdmin(mockToken("USER", readPermission, writePermission), null);
     assertPermissionDenied(exception9);
 
     // DCC Admin, null program
@@ -172,17 +171,19 @@ class AuthorizationServiceTest {
     assertNull(exception6);
 
     // Wrong permission, wrong program
-    val exception7 = testRequireProgramUser(mockToken("USER", "PROGRAM-TEST-GB.READ",
-      "PROGRAM-TEST-GB.WRITE"), program);
+    val exception7 =
+        testRequireProgramUser(
+            mockToken("USER", "PROGRAM-TEST-GB.READ", "PROGRAM-TEST-GB.WRITE"), program);
     assertPermissionDenied(exception7);
 
     // Wrong permission, right program
-    val exception8 = testRequireProgramUser(mockToken("USER", readPermission, writePermission), program);
+    val exception8 =
+        testRequireProgramUser(mockToken("USER", readPermission, writePermission), program);
     assertNull(exception8);
 
     // null program
-    val exception9 = testRequireProgramUser(mockToken("USER", readPermission, writePermission),
-      null);
+    val exception9 =
+        testRequireProgramUser(mockToken("USER", readPermission, writePermission), null);
     assertPermissionDenied(exception9);
 
     // DCC permissions, null program

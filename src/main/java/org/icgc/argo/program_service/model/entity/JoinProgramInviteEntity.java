@@ -18,19 +18,18 @@
 
 package org.icgc.argo.program_service.model.entity;
 
-import lombok.*;
-import lombok.experimental.Accessors;
-import lombok.experimental.FieldNameConstants;
-import org.icgc.argo.program_service.proto.UserRole;
-import org.icgc.argo.program_service.model.enums.Tables;
-import javax.persistence.*;
-import javax.validation.Valid;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.FutureOrPresent;
-import javax.validation.constraints.PastOrPresent;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import javax.persistence.*;
+import javax.validation.Valid;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.PastOrPresent;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
+import org.icgc.argo.program_service.model.enums.Tables;
+import org.icgc.argo.program_service.proto.UserRole;
 
 @Entity
 @Data
@@ -41,7 +40,13 @@ import java.util.UUID;
 @Valid
 public class JoinProgramInviteEntity {
 
-  public enum Status {PENDING, ACCEPTED, EXPIRED, REVOKED, INVALID}
+  public enum Status {
+    PENDING,
+    ACCEPTED,
+    EXPIRED,
+    REVOKED,
+    INVALID
+  }
 
   @Id
   @Getter
@@ -55,42 +60,46 @@ public class JoinProgramInviteEntity {
   @Column(nullable = false)
   private LocalDateTime expiresAt;
 
-  @PastOrPresent
-  private LocalDateTime acceptedAt;
+  @PastOrPresent private LocalDateTime acceptedAt;
 
-  @ManyToOne
-  @Getter
-  private ProgramEntity program;
+  @ManyToOne @Getter private ProgramEntity program;
 
   @Column(nullable = false, updatable = false)
   @Email
-  @Getter private String userEmail;
+  @Getter
+  private String userEmail;
 
   @Column(nullable = false)
-  @Getter private String firstName;
+  @Getter
+  private String firstName;
 
   @Column(nullable = false)
-  @Getter private String lastName;
+  @Getter
+  private String lastName;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  @Getter private UserRole role;
+  @Getter
+  private UserRole role;
 
   @Column(nullable = false)
-  @Getter @Setter
+  @Getter
+  @Setter
   private Boolean emailSent;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Status status;
+
   public Status getStatus() {
     if (status == Status.PENDING && isExpired()) {
-        status = Status.EXPIRED;
-      }
+      status = Status.EXPIRED;
+    }
     return status;
   }
 
-  public JoinProgramInviteEntity(ProgramEntity program, String userEmail, String firstName, String lastName, UserRole role) {
+  public JoinProgramInviteEntity(
+      ProgramEntity program, String userEmail, String firstName, String lastName, UserRole role) {
     this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
     this.expiresAt = this.createdAt.plusDays(30);
     this.acceptedAt = null;
@@ -117,4 +126,3 @@ public class JoinProgramInviteEntity {
     return LocalDateTime.now(ZoneOffset.UTC).isAfter(this.expiresAt);
   }
 }
-

@@ -18,6 +18,10 @@
 
 package org.icgc.argo.program_service.model.join;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
+import java.util.Optional;
+import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
@@ -26,11 +30,6 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.jetbrains.annotations.NotNull;
-
-import javax.persistence.*;
-import java.util.Optional;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Entity
 @Data
@@ -41,10 +40,10 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProgramPrimarySite implements IdentifiableEntity<ProgramPrimarySiteId>, Comparable<ProgramPrimarySite>{
+public class ProgramPrimarySite
+    implements IdentifiableEntity<ProgramPrimarySiteId>, Comparable<ProgramPrimarySite> {
 
-  @EmbeddedId
-  private ProgramPrimarySiteId id;
+  @EmbeddedId private ProgramPrimarySiteId id;
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
@@ -60,22 +59,26 @@ public class ProgramPrimarySite implements IdentifiableEntity<ProgramPrimarySite
   @ManyToOne(fetch = FetchType.LAZY)
   private PrimarySiteEntity primarySite;
 
-  public static Optional<ProgramPrimarySite> createProgramPrimarySite(@NonNull ProgramEntity p, @NonNull PrimarySiteEntity ps){
-    if(ps.getId() == null || isNullOrEmpty(ps.getName())){
+  public static Optional<ProgramPrimarySite> createProgramPrimarySite(
+      @NonNull ProgramEntity p, @NonNull PrimarySiteEntity ps) {
+    if (ps.getId() == null || isNullOrEmpty(ps.getName())) {
       return Optional.empty();
     }
-    val programPrimarySite = ProgramPrimarySite.builder()
-        .id(ProgramPrimarySiteId.builder()
-            .primarySiteId(ps.getId())
-            .programId(p.getId())
-            .build())
-        .primarySite(ps)
-        .program(p)
-        .build();
+    val programPrimarySite =
+        ProgramPrimarySite.builder()
+            .id(
+                ProgramPrimarySiteId.builder()
+                    .primarySiteId(ps.getId())
+                    .programId(p.getId())
+                    .build())
+            .primarySite(ps)
+            .program(p)
+            .build();
     return Optional.of(programPrimarySite);
   }
 
-  @Override public int compareTo(@NotNull ProgramPrimarySite o) {
+  @Override
+  public int compareTo(@NotNull ProgramPrimarySite o) {
     return this.primarySite.getName().compareTo(o.primarySite.getName());
   }
 }

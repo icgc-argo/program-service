@@ -1,5 +1,9 @@
 package org.icgc.argo.program_service.model.join;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
+import java.util.Optional;
+import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.model.entity.CountryEntity;
@@ -8,11 +12,6 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.jetbrains.annotations.NotNull;
-
-import javax.persistence.*;
-import java.util.Optional;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Entity
 @Data
@@ -23,10 +22,10 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 @FieldNameConstants
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProgramCountry implements IdentifiableEntity<ProgramCountryId>, Comparable<ProgramCountry> {
+public class ProgramCountry
+    implements IdentifiableEntity<ProgramCountryId>, Comparable<ProgramCountry> {
 
-  @EmbeddedId
-  private ProgramCountryId id;
+  @EmbeddedId private ProgramCountryId id;
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
@@ -42,15 +41,14 @@ public class ProgramCountry implements IdentifiableEntity<ProgramCountryId>, Com
   @ManyToOne(fetch = FetchType.LAZY)
   private CountryEntity country;
 
-  public static Optional<ProgramCountry> createProgramCountry(@NonNull ProgramEntity p, @NonNull CountryEntity c) {
+  public static Optional<ProgramCountry> createProgramCountry(
+      @NonNull ProgramEntity p, @NonNull CountryEntity c) {
     if (c.getId() == null || isNullOrEmpty(c.getName())) {
       return Optional.empty();
     }
-    val programCountry = ProgramCountry.builder()
-            .id(ProgramCountryId.builder()
-                    .programId(p.getId())
-                    .countryId(c.getId())
-                    .build())
+    val programCountry =
+        ProgramCountry.builder()
+            .id(ProgramCountryId.builder().programId(p.getId()).countryId(c.getId()).build())
             .program(p)
             .country(c)
             .build();
@@ -61,5 +59,4 @@ public class ProgramCountry implements IdentifiableEntity<ProgramCountryId>, Com
   public int compareTo(@NotNull ProgramCountry o) {
     return this.country.getName().compareTo(o.country.getName());
   }
-
 }

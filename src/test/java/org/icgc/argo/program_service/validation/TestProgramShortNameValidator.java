@@ -18,17 +18,18 @@
 
 package org.icgc.argo.program_service.validation;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.val;
-import org.junit.jupiter.api.Test;
+import static junit.framework.TestCase.assertEquals;
+
 import javax.validation.Valid;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
-import static junit.framework.TestCase.assertEquals;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.val;
+import org.junit.jupiter.api.Test;
 
 class TestProgramShortNameValidator {
   ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
@@ -75,6 +76,5 @@ class TestProgramShortNameValidator {
 @Data
 @Valid
 class NameTest {
-  @ProgramShortName
-  String name;
+  @ProgramShortName String name;
 }

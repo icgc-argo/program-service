@@ -1,5 +1,9 @@
 package org.icgc.argo.program_service.model.join;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
+import java.util.Optional;
+import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
@@ -8,11 +12,6 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.jetbrains.annotations.NotNull;
-
-import javax.persistence.*;
-import java.util.Optional;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Entity
 @Data
@@ -23,10 +22,10 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 @FieldNameConstants
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProgramInstitution implements IdentifiableEntity<ProgramInstitutionId>, Comparable<ProgramInstitution> {
+public class ProgramInstitution
+    implements IdentifiableEntity<ProgramInstitutionId>, Comparable<ProgramInstitution> {
 
-  @EmbeddedId
-  private ProgramInstitutionId id;
+  @EmbeddedId private ProgramInstitutionId id;
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
@@ -42,13 +41,16 @@ public class ProgramInstitution implements IdentifiableEntity<ProgramInstitution
   @ManyToOne(fetch = FetchType.LAZY)
   private InstitutionEntity institution;
 
-  public static Optional<ProgramInstitution> createProgramInstitution(@NonNull ProgramEntity p, @NonNull InstitutionEntity c) {
+  public static Optional<ProgramInstitution> createProgramInstitution(
+      @NonNull ProgramEntity p, @NonNull InstitutionEntity c) {
     if (c.getId() == null || isNullOrEmpty(c.getName())) {
       return Optional.empty();
     }
 
-    val programInstitution = ProgramInstitution.builder()
-            .id(ProgramInstitutionId.builder()
+    val programInstitution =
+        ProgramInstitution.builder()
+            .id(
+                ProgramInstitutionId.builder()
                     .programId(p.getId())
                     .institutionId(c.getId())
                     .build())
@@ -58,7 +60,8 @@ public class ProgramInstitution implements IdentifiableEntity<ProgramInstitution
     return Optional.of(programInstitution);
   }
 
-  @Override public int compareTo(@NotNull ProgramInstitution o) {
+  @Override
+  public int compareTo(@NotNull ProgramInstitution o) {
     return this.institution.getName().compareTo(o.institution.getName());
   }
 }

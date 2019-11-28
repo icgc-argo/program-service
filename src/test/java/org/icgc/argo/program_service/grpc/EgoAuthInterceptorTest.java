@@ -18,17 +18,21 @@
 
 package org.icgc.argo.program_service.grpc;
 
+import static org.junit.Assert.*;
+import static org.mockito.BDDMockito.given;
+
 import io.grpc.*;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
+import java.util.Optional;
 import lombok.val;
+import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.proto.CreateProgramRequest;
 import org.icgc.argo.program_service.proto.CreateProgramResponse;
 import org.icgc.argo.program_service.proto.ProgramServiceGrpc;
 import org.icgc.argo.program_service.proto.ProgramServiceGrpc.ProgramServiceImplBase;
-import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.security.EgoSecurity;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.junit.Before;
@@ -37,20 +41,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import java.util.Optional;
-
-import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
 
 // GrpcCleanupRule only works with junit 4
 @RunWith(MockitoJUnitRunner.class)
 public class EgoAuthInterceptorTest {
 
-  @Mock
-  private EgoSecurity egoSecurity;
+  @Mock private EgoSecurity egoSecurity;
 
-  @Mock
-  private EgoToken egoToken;
+  @Mock private EgoToken egoToken;
 
   private Channel channel;
 
@@ -58,8 +56,7 @@ public class EgoAuthInterceptorTest {
 
   private EgoToken egoTokenSpy;
 
-  @Rule
-  public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
+  @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   @Before
   public void setUp() {
@@ -73,21 +70,30 @@ public class EgoAuthInterceptorTest {
   @Test
   public void egoAuthInterceptor_setEgoToken() throws Exception {
     ProgramServiceImplBase programServiceImplBase =
-            new ProgramServiceImplBase() {
-              @Override
-              public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
-                EgoAuthInterceptorTest.this.egoTokenSpy = EgoAuthInterceptor.EGO_TOKEN.get();
-                responseObserver.onNext(CreateProgramResponse.getDefaultInstance());
-                responseObserver.onCompleted();
-              }
-            };
+        new ProgramServiceImplBase() {
+          @Override
+          public void createProgram(
+              CreateProgramRequest request,
+              StreamObserver<CreateProgramResponse> responseObserver) {
+            EgoAuthInterceptorTest.this.egoTokenSpy = EgoAuthInterceptor.EGO_TOKEN.get();
+            responseObserver.onNext(CreateProgramResponse.getDefaultInstance());
+            responseObserver.onCompleted();
+          }
+        };
 
     // Create a server, add service, start, and register for automatic graceful shutdown.
-    grpcCleanup.register(InProcessServerBuilder.forName(serverName).directExecutor()
-            .addService(ServerInterceptors.intercept(programServiceImplBase, new EgoAuthInterceptor(egoSecurity))).build().start());
+    grpcCleanup.register(
+        InProcessServerBuilder.forName(serverName)
+            .directExecutor()
+            .addService(
+                ServerInterceptors.intercept(
+                    programServiceImplBase, new EgoAuthInterceptor(egoSecurity)))
+            .build()
+            .start());
 
     val jwtClientInterceptor = new JwtClientInterceptor();
-    val blockingStub = ProgramServiceGrpc.newBlockingStub(channel).withInterceptors(jwtClientInterceptor);
+    val blockingStub =
+        ProgramServiceGrpc.newBlockingStub(channel).withInterceptors(jwtClientInterceptor);
 
     jwtClientInterceptor.token = "123";
     given(egoSecurity.verifyToken("123")).willReturn(Optional.of(egoToken));
@@ -106,8 +112,9 @@ public class EgoAuthInterceptorTest {
 
     @Override
     public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
-            MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
-      return new ForwardingClientCall.SimpleForwardingClientCall<>(next.newCall(method, callOptions)) {
+        MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
+      return new ForwardingClientCall.SimpleForwardingClientCall<>(
+          next.newCall(method, callOptions)) {
         @Override
         public void start(Listener<RespT> responseListener, Metadata headers) {
           headers.put(EgoAuthInterceptor.JWT_METADATA_KEY, token);

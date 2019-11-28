@@ -1,5 +1,11 @@
 package org.icgc.argo.program_service.grpc;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static org.apache.commons.lang.RandomStringUtils.randomAlphabetic;
+import static org.icgc.argo.program_service.UtilsTest.*;
+import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.Channel;
@@ -7,6 +13,9 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
@@ -24,15 +33,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toUnmodifiableList;
-import static org.apache.commons.lang.RandomStringUtils.randomAlphabetic;
-import static org.icgc.argo.program_service.UtilsTest.*;
-import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
-import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -41,20 +41,15 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 public class ProgramServiceGrpcIT {
 
-  @Autowired
-  private ProgramServiceImpl programServiceImpl;
+  @Autowired private ProgramServiceImpl programServiceImpl;
 
-  @Autowired
-  private InstitutionRepository institutionRepository;
+  @Autowired private InstitutionRepository institutionRepository;
 
-  @Autowired
-  private EntityGenerator entityGenerator;
+  @Autowired private EntityGenerator entityGenerator;
 
-  @Autowired
-  private EgoClient egoClient;
+  @Autowired private EgoClient egoClient;
 
-  @Rule
-  public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
+  @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   private String serverName;
 
@@ -87,15 +82,15 @@ public class ProgramServiceGrpcIT {
     serverName = InProcessServerBuilder.generateName();
     // Create a client channel and register for automatic graceful shutdown.
     channel =
-      grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
+        grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
 
     // Create a server, add service, start, and register for automatic graceful shutdown.
     grpcCleanup.register(
-      InProcessServerBuilder.forName(serverName)
-        .directExecutor()
-        .addService(programServiceImpl)
-        .build()
-        .start());
+        InProcessServerBuilder.forName(serverName)
+            .directExecutor()
+            .addService(programServiceImpl)
+            .build()
+            .start());
 
     stub = ProgramServiceGrpc.newBlockingStub(channel);
   }
@@ -103,34 +98,40 @@ public class ProgramServiceGrpcIT {
   @Test
   public void createProgramAndGet() {
     val shortName = stringValue(randomProgramName());
-    val program = Program.newBuilder()
-      .setShortName(shortName)
-      .setMembershipType(membershipTypeValue(ASSOCIATE))
-      .setWebsite(stringValue("http://site.org"))
-      .addInstitutions("Ontario Institute for Cancer Research")
-      .addRegions("North America")
-      .setName(stringValue(RandomString.make(15)))
-      .setCommitmentDonors(int32Value(234))
-      .addCountries("Canada")
-      .setSubmittedDonors(int32Value(244))
-      .setGenomicDonors(int32Value(333))
-      .setDescription(stringValue("nothing"))
-      .addCancerTypes("Blood cancer")
-      .addPrimarySites("Blood");
+    val program =
+        Program.newBuilder()
+            .setShortName(shortName)
+            .setMembershipType(membershipTypeValue(ASSOCIATE))
+            .setWebsite(stringValue("http://site.org"))
+            .addInstitutions("Ontario Institute for Cancer Research")
+            .addRegions("North America")
+            .setName(stringValue(RandomString.make(15)))
+            .setCommitmentDonors(int32Value(234))
+            .addCountries("Canada")
+            .setSubmittedDonors(int32Value(244))
+            .setGenomicDonors(int32Value(333))
+            .setDescription(stringValue("nothing"))
+            .addCancerTypes("Blood cancer")
+            .addPrimarySites("Blood");
 
-    val admins = List.of(User.newBuilder().setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN)).
-      setEmail(StringValue.of("x@test.com")).
-      setFirstName(StringValue.of("Test")).
-      setLastName(StringValue.of("User")).
-      build());
+    val admins =
+        List.of(
+            User.newBuilder()
+                .setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN))
+                .setEmail(StringValue.of("x@test.com"))
+                .setFirstName(StringValue.of("Test"))
+                .setLastName(StringValue.of("User"))
+                .build());
 
-    val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).addAllAdmins(admins).build();
+    val createProgramRequest =
+        CreateProgramRequest.newBuilder().setProgram(program).addAllAdmins(admins).build();
     val response = stub.createProgram(createProgramRequest);
     assertFalse(isEmpty(response.getCreatedAt()));
 
     val getProgramRequest = GetProgramRequest.newBuilder().setShortName(shortName).build();
     val getResponse = stub.getProgram(getProgramRequest);
-    assertEquals(shortName.getValue(), getResponse.getProgram().getProgram().getShortName().getValue());
+    assertEquals(
+        shortName.getValue(), getResponse.getProgram().getProgram().getShortName().getValue());
   }
 
   boolean isEmpty(Object o) {
@@ -140,37 +141,43 @@ public class ProgramServiceGrpcIT {
   @Test
   public void joinAndLeaveProgram() {
     val name = stringValue(randomProgramName());
-    val program = Program.newBuilder()
-      .setShortName(name)
-      .setMembershipType(membershipTypeValue(ASSOCIATE))
-      .setWebsite(stringValue("http://site.org"))
-      .addInstitutions("Ontario Institute for Cancer Research")
-      .addRegions("North America")
-      .setName(stringValue(RandomString.make(15)))
-      .setCommitmentDonors(int32Value(234))
-      .addCountries("Canada")
-      .setSubmittedDonors(int32Value(244))
-      .setGenomicDonors(int32Value(333))
-      .setDescription(stringValue("nothing"))
-      .addCancerTypes("Blood cancer")
-      .addPrimarySites("Blood");
+    val program =
+        Program.newBuilder()
+            .setShortName(name)
+            .setMembershipType(membershipTypeValue(ASSOCIATE))
+            .setWebsite(stringValue("http://site.org"))
+            .addInstitutions("Ontario Institute for Cancer Research")
+            .addRegions("North America")
+            .setName(stringValue(RandomString.make(15)))
+            .setCommitmentDonors(int32Value(234))
+            .addCountries("Canada")
+            .setSubmittedDonors(int32Value(244))
+            .setGenomicDonors(int32Value(333))
+            .setDescription(stringValue("nothing"))
+            .addCancerTypes("Blood cancer")
+            .addPrimarySites("Blood");
 
-    val admins = List.of(User.newBuilder().setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN)).
-      setEmail(StringValue.of("x@test.com")).
-      setFirstName(StringValue.of("Test")).
-      setLastName(StringValue.of("User")).
-      build());
+    val admins =
+        List.of(
+            User.newBuilder()
+                .setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN))
+                .setEmail(StringValue.of("x@test.com"))
+                .setFirstName(StringValue.of("Test"))
+                .setLastName(StringValue.of("User"))
+                .build());
 
-    val createProgramRequest = CreateProgramRequest.newBuilder().setProgram(program).addAllAdmins(admins).build();
+    val createProgramRequest =
+        CreateProgramRequest.newBuilder().setProgram(program).addAllAdmins(admins).build();
     val response = stub.createProgram(createProgramRequest);
 
-    val inviteUserRequest = InviteUserRequest.newBuilder()
-      .setFirstName(stringValue("First"))
-      .setLastName(stringValue("Last"))
-      .setEmail(stringValue("user@example.com"))
-      .setRole(userRoleValue(UserRole.ADMIN))
-      .setProgramShortName(name)
-      .build();
+    val inviteUserRequest =
+        InviteUserRequest.newBuilder()
+            .setFirstName(stringValue("First"))
+            .setLastName(stringValue("Last"))
+            .setEmail(stringValue("user@example.com"))
+            .setRole(userRoleValue(UserRole.ADMIN))
+            .setProgramShortName(name)
+            .build();
     val inviteUserResponse = stub.inviteUser(inviteUserRequest);
     assertFalse(isEmpty(inviteUserResponse.getInviteId().getValue()));
   }
@@ -181,12 +188,13 @@ public class ProgramServiceGrpcIT {
     entityGenerator.setUpProgramEntity(shortname);
     assertFalse(egoClient.getUser(NEW_USER_EMAIL).isPresent());
 
-    val request = InviteUserRequest.newBuilder()
-      .setEmail(CommonConverter.INSTANCE.boxString(NEW_USER_EMAIL))
-      .setFirstName(CommonConverter.INSTANCE.boxString("Hermione"))
-      .setLastName(CommonConverter.INSTANCE.boxString("Granger"))
-      .setProgramShortName(CommonConverter.INSTANCE.boxString(shortname))
-      .build();
+    val request =
+        InviteUserRequest.newBuilder()
+            .setEmail(CommonConverter.INSTANCE.boxString(NEW_USER_EMAIL))
+            .setFirstName(CommonConverter.INSTANCE.boxString("Hermione"))
+            .setLastName(CommonConverter.INSTANCE.boxString("Granger"))
+            .setProgramShortName(CommonConverter.INSTANCE.boxString(shortname))
+            .build();
     val response = stub.inviteUser(request);
 
     assertNotNull(response.getInviteId());
@@ -237,39 +245,42 @@ public class ProgramServiceGrpcIT {
 
   @Test
   public void add_institutions_empty_name_fail() {
-    val request = AddInstitutionsRequest.newBuilder()
-      .addNames(CommonConverter.INSTANCE.boxString(""))
-      .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
-      .build();
+    val request =
+        AddInstitutionsRequest.newBuilder()
+            .addNames(CommonConverter.INSTANCE.boxString(""))
+            .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
+            .build();
     assertThrows(StatusRuntimeException.class, () -> stub.addInstitutions(request));
   }
 
   @Test
   public void add_institution_duplicate_fail() {
-    val request = AddInstitutionsRequest.newBuilder()
-      .addNames(CommonConverter.INSTANCE.boxString(EXISTING_INSTITUTION_1))
-      .addNames(CommonConverter.INSTANCE.boxString(EXISTING_INSTITUTION_2))
-      .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
-      .build();
+    val request =
+        AddInstitutionsRequest.newBuilder()
+            .addNames(CommonConverter.INSTANCE.boxString(EXISTING_INSTITUTION_1))
+            .addNames(CommonConverter.INSTANCE.boxString(EXISTING_INSTITUTION_2))
+            .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
+            .build();
     assertThrows(StatusRuntimeException.class, () -> stub.addInstitutions(request));
   }
 
   @Test
   public void add_unique_new_institution_success() {
-    val request = AddInstitutionsRequest.newBuilder()
-      .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
-      .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_2))
-      .build();
+    val request =
+        AddInstitutionsRequest.newBuilder()
+            .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_1))
+            .addNames(CommonConverter.INSTANCE.boxString(INSTITUTION_2))
+            .build();
 
     assertFalse(institutionRepository.getInstitutionByName(INSTITUTION_1).isPresent());
     assertFalse(institutionRepository.getInstitutionByName(INSTITUTION_2).isPresent());
 
     val response = stub.addInstitutions(request);
-    val names = response.getInstitutionsList()
-      .stream()
-      .map(Institution::getName)
-      .map(name -> CommonConverter.INSTANCE.unboxStringValue(name))
-      .collect(Collectors.toList());
+    val names =
+        response.getInstitutionsList().stream()
+            .map(Institution::getName)
+            .map(name -> CommonConverter.INSTANCE.unboxStringValue(name))
+            .collect(Collectors.toList());
 
     assertTrue(institutionRepository.getInstitutionByName(INSTITUTION_1).isPresent());
     assertTrue(institutionRepository.getInstitutionByName(INSTITUTION_2).isPresent());
@@ -287,14 +298,14 @@ public class ProgramServiceGrpcIT {
     val response = stub.listPrograms(Empty.getDefaultInstance());
 
     assertTrue(response.getProgramsCount() == 3);
-    val nameList = response.getProgramsList().stream()
-      .map(ProgramDetails::getProgram)
-      .map(Program::getShortName)
-      .map(CommonConverter.INSTANCE::unboxStringValue)
-      .collect(toUnmodifiableList());
+    val nameList =
+        response.getProgramsList().stream()
+            .map(ProgramDetails::getProgram)
+            .map(Program::getShortName)
+            .map(CommonConverter.INSTANCE::unboxStringValue)
+            .collect(toUnmodifiableList());
     assertTrue(nameList.contains(programEntity_1.getShortName()));
     assertTrue(nameList.contains(programEntity_2.getShortName()));
     assertTrue(nameList.contains(programEntity_3.getShortName()));
   }
-
 }

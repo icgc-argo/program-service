@@ -18,6 +18,8 @@
 
 package org.icgc.argo.program_service.model.entity;
 
+import java.util.UUID;
+import javax.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -25,9 +27,6 @@ import lombok.experimental.FieldNameConstants;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.validation.ProgramShortName;
-
-import javax.persistence.*;
-import java.util.UUID;
 
 @Data
 @Entity
@@ -56,5 +55,3 @@ public class ProgramEgoGroupEntity implements Comparable<ProgramEgoGroupEntity> 
     return this.role.compareTo(o.role);
   }
 }
-
-

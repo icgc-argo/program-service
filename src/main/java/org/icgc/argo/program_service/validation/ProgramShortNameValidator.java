@@ -18,18 +18,18 @@ package org.icgc.argo.program_service.validation;
  *
  */
 
-import lombok.val;
-
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import lombok.val;
 
 public class ProgramShortNameValidator implements ConstraintValidator<ProgramShortName, String> {
 
-  private final static Pattern pattern = Pattern.compile("^[A-Z0-9][-_A-Z0-9]{2,7}[-]([A-Z][A-Z])$");
+  private static final Pattern pattern =
+      Pattern.compile("^[A-Z0-9][-_A-Z0-9]{2,7}[-]([A-Z][A-Z])$");
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
@@ -47,5 +47,4 @@ public class ProgramShortNameValidator implements ConstraintValidator<ProgramSho
 
     return countries.contains(countrycode);
   }
-
 }

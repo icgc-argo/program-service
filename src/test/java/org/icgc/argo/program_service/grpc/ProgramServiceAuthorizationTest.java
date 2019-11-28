@@ -1,5 +1,13 @@
 package org.icgc.argo.program_service.grpc;
 
+import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
+import static org.icgc.argo.program_service.Utils.generateRSAKeys;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.google.protobuf.Empty;
 import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
@@ -10,6 +18,15 @@ import io.grpc.stub.MetadataUtils;
 import io.grpc.testing.GrpcCleanupRule;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.io.IOException;
+import java.security.Key;
+import java.security.interfaces.RSAPublicKey;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import lombok.AllArgsConstructor;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
@@ -31,24 +48,6 @@ import org.icgc.argo.program_service.services.ego.Context;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.security.Key;
-import java.security.interfaces.RSAPublicKey;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
-import static org.icgc.argo.program_service.Utils.generateRSAKeys;
-import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class ProgramServiceAuthorizationTest {
   private UUID invitationUUID = UUID.randomUUID();
@@ -110,11 +109,7 @@ public class ProgramServiceAuthorizationTest {
             commonConverter,
             v);
 
-    val service =
-        new ProgramServiceImpl(
-            commonConverter,
-            authorizationService,
-            facade);
+    val service = new ProgramServiceImpl(commonConverter, authorizationService, facade);
 
     val serverName = InProcessServerBuilder.generateName();
     ManagedChannel channel =
