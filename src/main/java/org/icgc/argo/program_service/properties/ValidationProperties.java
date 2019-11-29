@@ -17,13 +17,12 @@ package org.icgc.argo.program_service.properties;
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import javax.validation.ClockProvider;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Slf4j
 @Configuration
@@ -33,14 +32,11 @@ public class ValidationProperties {
     return new UTCClockProvider();
   }
 
-
   @Bean
   public ValidatorFactory factory() {
     return Validation.byDefaultProvider()
-      .configure()
-      .clockProvider(clockProvider())
-      .buildValidatorFactory();
+        .configure()
+        .clockProvider(clockProvider())
+        .buildValidatorFactory();
   }
-
 }
-

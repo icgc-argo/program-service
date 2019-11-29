@@ -23,12 +23,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
-@SpringBootApplication(exclude = { ValidationAutoConfiguration.class })
+@SpringBootApplication(exclude = {ValidationAutoConfiguration.class})
 @EnableAspectJAutoProxy
 public class ProgramServiceApplication {
 
   public static void main(String[] args) {
     SpringApplication.run(ProgramServiceApplication.class, args);
   }
-
 }

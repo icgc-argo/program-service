@@ -16,6 +16,9 @@
  */
 package org.icgc.argo.program_service.retry;
 
+import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
+
+import java.net.ConnectException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -26,10 +29,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
-import java.net.ConnectException;
-
-import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
-
 @Slf4j
 @RequiredArgsConstructor
 public class DefaultRetryListener extends RetryListenerSupport {
@@ -37,18 +36,21 @@ public class DefaultRetryListener extends RetryListenerSupport {
   private final boolean retryOnAllErrors;
 
   @Override
-  public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-    if (retryOnAllErrors){
-      log.info("Retrying after detecting error: {}",throwable.getMessage());
+  public <T, E extends Throwable> void onError(
+      RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+    if (retryOnAllErrors) {
+      log.info("Retrying after detecting error: {}", throwable.getMessage());
     } else {
       if (isClientException(throwable)) {
-        log.debug("HTTP client related exception detected. Do nothing. The downstream will do the further processing.");
+        log.debug(
+            "HTTP client related exception detected. Do nothing. The downstream will do the further processing.");
         return;
       }
 
       if (!(isConnectionTimeout(throwable) || isServiceUnavailable(throwable))) {
-        log.info("Detected a connection exception, but it's not the connection timeoutMs or 503 Service Unavailable. "
-            + "Do not retry.");
+        log.info(
+            "Detected a connection exception, but it's not the connection timeoutMs or 503 Service Unavailable. "
+                + "Do not retry.");
         context.setExhaustedOnly();
       }
     }
@@ -85,5 +87,4 @@ public class DefaultRetryListener extends RetryListenerSupport {
   private static boolean isClientException(Throwable throwable) {
     return throwable instanceof HttpClientErrorException;
   }
-
 }

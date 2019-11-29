@@ -6,6 +6,8 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -14,9 +16,6 @@ import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
-
-import java.security.interfaces.RSAPublicKey;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -35,9 +34,8 @@ public class EgoSecurity {
   public Optional<EgoToken> verifyToken(String jwtToken) {
     try {
       Algorithm algorithm = Algorithm.RSA256(this.egoPublicKey, null);
-      JWTVerifier verifier = JWT.require(algorithm)
-              .withIssuer(EGO)
-              .build(); //Reusable verifier instance
+      JWTVerifier verifier =
+          JWT.require(algorithm).withIssuer(EGO).build(); // Reusable verifier instance
       val jwt = verifier.verify(jwtToken);
       return parseToken(jwt);
     } catch (JWTVerificationException | NullPointerException e) {
@@ -52,9 +50,8 @@ public class EgoSecurity {
       EgoToken egoToken = new EgoToken(jwt, jwt.getClaim("context").as(Context.class));
       return Optional.of(egoToken);
     } catch (JWTDecodeException exception) {
-      //Invalid token
+      // Invalid token
       return Optional.empty();
     }
   }
-
 }

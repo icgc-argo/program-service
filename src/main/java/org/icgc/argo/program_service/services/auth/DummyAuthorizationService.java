@@ -11,6 +11,7 @@ public class DummyAuthorizationService implements AuthorizationService {
   public DummyAuthorizationService() {
     log.info("Started dummy authorization service");
   }
+
   @Override
   public boolean isDCCAdmin() {
     return true;

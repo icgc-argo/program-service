@@ -18,6 +18,19 @@
 
 package org.icgc.argo.program_service.services;
 
+import static java.lang.String.format;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import javax.validation.ConstraintViolation;
+import javax.validation.ValidatorFactory;
+import javax.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -31,35 +44,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ValidatorFactory;
-import javax.validation.constraints.Email;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-
-import static java.lang.String.format;
-import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
-
 @Service
 @Validated
 @Slf4j
 public class ValidationService {
 
-  /**
-   * Dependencies
-   */
+  /** Dependencies */
   private final ProgramService programService;
+
   private final ValidatorFactory validatorFactory;
 
   @Autowired
   public ValidationService(
-    @NonNull ProgramService programService,
-    @NonNull ValidatorFactory validatorFactory) {
+      @NonNull ProgramService programService, @NonNull ValidatorFactory validatorFactory) {
     this.programService = programService;
     this.validatorFactory = validatorFactory;
   }
@@ -94,8 +91,12 @@ public class ValidationService {
     val constraints = validatorFactory.getValidator().validate(check);
 
     if (constraints.size() != 0) {
-      return List.of(format("Invalid email address '%s' for admin '%s %s'", user.getEmail().getValue(),
-        user.getFirstName().getValue(), user.getLastName().getValue()));
+      return List.of(
+          format(
+              "Invalid email address '%s' for admin '%s %s'",
+              user.getEmail().getValue(),
+              user.getFirstName().getValue(),
+              user.getLastName().getValue()));
     }
 
     return List.of();
@@ -114,8 +115,7 @@ public class ValidationService {
 
   @AllArgsConstructor
   class EmailCheck {
-    @Email
-    String email;
+    @Email String email;
   }
 
   public List<String> validateProgram(@NonNull Program program) {
@@ -148,26 +148,32 @@ public class ValidationService {
       errors.add("Must include at least one country");
     }
 
-    errors.addAll(invalidChoices("Invalid cancerType '%s'", validCancerTypes(),
-      new TreeSet<>(program.getCancerTypesList())));
+    errors.addAll(
+        invalidChoices(
+            "Invalid cancerType '%s'",
+            validCancerTypes(), new TreeSet<>(program.getCancerTypesList())));
 
-    errors.addAll(invalidChoices("Invalid primarySite '%s'", validPrimarySites(),
-      new TreeSet<>((program.getPrimarySitesList()))));
+    errors.addAll(
+        invalidChoices(
+            "Invalid primarySite '%s'",
+            validPrimarySites(), new TreeSet<>((program.getPrimarySitesList()))));
 
-    errors.addAll(invalidChoices("Invalid region '%s'", validRegions(),
-      new TreeSet<>(program.getRegionsList())));
+    errors.addAll(
+        invalidChoices(
+            "Invalid region '%s'", validRegions(), new TreeSet<>(program.getRegionsList())));
 
-    errors.addAll(invalidChoices("Invalid country '%s'", validCountries(),
-      new TreeSet<>(program.getCountriesList())));
+    errors.addAll(
+        invalidChoices(
+            "Invalid country '%s'", validCountries(), new TreeSet<>(program.getCountriesList())));
 
     return errors;
   }
 
   private <T> List<String> invalidChoices(String fmt, Set<T> allowed, Set<T> actual) {
-    return actual.stream().
-      filter(choice -> !allowed.contains(choice)).
-      map(badChoice -> format(fmt, badChoice)).
-      collect(Collectors.toList());
+    return actual.stream()
+        .filter(choice -> !allowed.contains(choice))
+        .map(badChoice -> format(fmt, badChoice))
+        .collect(Collectors.toList());
   }
 
   public Set<String> validCancerTypes() {

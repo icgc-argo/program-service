@@ -4,15 +4,14 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import javax.validation.ConstraintViolationException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.TransactionSystemException;
-
-import javax.validation.ConstraintViolationException;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 @Slf4j
 @AllArgsConstructor
@@ -20,12 +19,16 @@ public class ExceptionListener<ReqT, RespT> extends ServerCall.Listener<ReqT> {
   private final ServerCall<ReqT, RespT> call;
   private final ServerCall.Listener<ReqT> listener;
 
-  /** According to io.grpc.netty.shaded.io.netty.handler.codec.http2.Http2Exception$HeaderListSizeException,
-   * the maximum size for the header is 8192. This appears to be the limit for the size of the entire header.
+  /**
+   * According to
+   * io.grpc.netty.shaded.io.netty.handler.codec.http2.Http2Exception$HeaderListSizeException, the
+   * maximum size for the header is 8192. This appears to be the limit for the size of the entire
+   * header.
    *
-   * We expect that the name of the exception class should be a few hundred bytes, at most. If we leave up to
-   * 1,000 bytes for the name plus any other meta-data that gets thrown into the headers, we have 7192 bytes
-   * available for the stack trace, so we need to truncate it if it's longer than that.
+   * <p>We expect that the name of the exception class should be a few hundred bytes, at most. If we
+   * leave up to 1,000 bytes for the name plus any other meta-data that gets thrown into the
+   * headers, we have 7192 bytes available for the stack trace, so we need to truncate it if it's
+   * longer than that.
    */
   private static final int MAX_STACKTRACE_SIZE = 7192;
 
@@ -88,40 +91,40 @@ public class ExceptionListener<ReqT, RespT> extends ServerCall.Listener<ReqT> {
   StatusRuntimeException getException(Throwable t) {
     if (t instanceof StatusRuntimeException) {
       return (StatusRuntimeException) t;
-    } else if (t instanceof javax.validation.ConstraintViolationException ) {
+    } else if (t instanceof javax.validation.ConstraintViolationException) {
       return validationException((ConstraintViolationException) t);
     }
     return toStatus(t);
   }
 
   StatusRuntimeException validationException(ConstraintViolationException e) {
-     val metadata= new Metadata();
-     val name = e.getClass().getName();
+    val metadata = new Metadata();
+    val name = e.getClass().getName();
 
-     metadata.put(key("stacktrace"), Arrays.asList(e.getStackTrace()).toString());
-     metadata.put(key("name"), name);
-     val msg = getConstraintMessage(e);
+    metadata.put(key("stacktrace"), Arrays.asList(e.getStackTrace()).toString());
+    metadata.put(key("name"), name);
+    val msg = getConstraintMessage(e);
     return Status.INVALID_ARGUMENT.augmentDescription(msg).asRuntimeException(metadata);
   }
 
   String getConstraintMessage(ConstraintViolationException e) {
-    return e.getConstraintViolations().stream().
-      map(v -> v.getPropertyPath() + "=>" + v.getMessage()).collect(Collectors.joining(", "));
+    return e.getConstraintViolations().stream()
+        .map(v -> v.getPropertyPath() + "=>" + v.getMessage())
+        .collect(Collectors.joining(", "));
   }
 
   Throwable getCause(Throwable throwable) {
-    if (throwable instanceof TransactionSystemException ||
-      throwable instanceof javax.persistence.RollbackException ||
-      throwable instanceof DataIntegrityViolationException ||
-      throwable instanceof org.hibernate.exception.ConstraintViolationException
-    ) {
+    if (throwable instanceof TransactionSystemException
+        || throwable instanceof javax.persistence.RollbackException
+        || throwable instanceof DataIntegrityViolationException
+        || throwable instanceof org.hibernate.exception.ConstraintViolationException) {
       return getCause(throwable.getCause());
     }
     return throwable;
   }
 
   private StatusRuntimeException toStatus(Throwable t) {
-    val metadata= new Metadata();
+    val metadata = new Metadata();
     val name = t.getClass().getName();
 
     metadata.put(key("name"), name);
@@ -134,10 +137,10 @@ public class ExceptionListener<ReqT, RespT> extends ServerCall.Listener<ReqT> {
     return Metadata.Key.of(s, Metadata.ASCII_STRING_MARSHALLER);
   }
 
-  private String formatStackTrace(Throwable throwable,  int maxLength) {
+  private String formatStackTrace(Throwable throwable, int maxLength) {
     val s = Arrays.asList(throwable.getStackTrace()).toString();
     if (s.length() >= maxLength) {
-      return s.substring(0,maxLength);
+      return s.substring(0, maxLength);
     }
     return s;
   }

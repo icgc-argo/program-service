@@ -18,16 +18,24 @@
 
 package org.icgc.argo.program_service.grpc;
 
+import static org.apache.commons.lang.math.RandomUtils.nextInt;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.Mockito.*;
+
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import java.time.LocalDateTime;
+import java.util.*;
+import javax.validation.constraints.Email;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.properties.ValidationProperties;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
@@ -41,17 +49,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
-
-import javax.validation.ValidatorFactory;
-import javax.validation.constraints.Email;
-import java.time.LocalDateTime;
-import java.util.*;
-
-import static org.apache.commons.lang.math.RandomUtils.nextInt;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceImplTest {
@@ -70,10 +67,7 @@ class ProgramServiceImplTest {
           CommonConverter.INSTANCE,
           validationService);
   ProgramServiceImpl programServiceImpl =
-      new ProgramServiceImpl(
-          CommonConverter.INSTANCE,
-          authorizationService,
-          facade);
+      new ProgramServiceImpl(CommonConverter.INSTANCE, authorizationService, facade);
 
   @Test
   void removeProgram() {
@@ -379,8 +373,7 @@ class ProgramServiceImplTest {
     when(joinProgramInvite.getFirstName()).thenReturn("First");
     when(joinProgramInvite.getLastName()).thenReturn("Last");
 
-    when(invitationService.getInvitationById(any()))
-        .thenReturn(Optional.of(joinProgramInvite));
+    when(invitationService.getInvitationById(any())).thenReturn(Optional.of(joinProgramInvite));
     programServiceImpl.getJoinProgramInvite(request, responseObserver);
 
     val respArg = ArgumentCaptor.forClass(GetJoinProgramInviteResponse.class);

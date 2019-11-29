@@ -4,10 +4,7 @@ import org.icgc.argo.program_service.model.join.ProgramPrimarySite;
 import org.icgc.argo.program_service.model.join.ProgramPrimarySiteId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import java.util.UUID;
 
-public interface ProgramPrimarySiteRepository extends JpaRepository<ProgramPrimarySite, ProgramPrimarySiteId>,
-  JpaSpecificationExecutor<ProgramPrimarySite> {
-
-  void deleteAllByProgramId(UUID programId);
-}
+public interface ProgramPrimarySiteRepository
+    extends JpaRepository<ProgramPrimarySite, ProgramPrimarySiteId>,
+        JpaSpecificationExecutor<ProgramPrimarySite> {}

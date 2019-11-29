@@ -18,6 +18,11 @@
 
 package org.icgc.argo.program_service.services;
 
+import static java.lang.String.format;
+import static org.icgc.argo.program_service.services.ego.EgoService.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
@@ -35,38 +40,28 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
-import java.util.Arrays;
-
-import static java.lang.String.format;
-import static org.icgc.argo.program_service.services.ego.EgoService.*;
-import static org.junit.jupiter.api.Assertions.*;
-
 @Slf4j
 @SpringBootTest
-@ActiveProfiles({ "test", "default" })
+@ActiveProfiles({"test", "default"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestPropertySource(properties = {
-  "spring.datasource.url=jdbc:postgresql://localhost:5432/program_db",
-  "spring.datasource.driverClassName=org.postgresql.Driver",
-})
+@TestPropertySource(
+    properties = {
+      "spring.datasource.url=jdbc:postgresql://localhost:5432/program_db",
+      "spring.datasource.driverClassName=org.postgresql.Driver",
+    })
 class ProgramServiceIT {
 
   EgoService egoService;
 
-  @Autowired
-  EgoRESTClient client;
+  @Autowired EgoRESTClient client;
 
-  @Autowired
-  ProgramConverter converter;
+  @Autowired ProgramConverter converter;
 
-  @Autowired
-  JoinProgramInviteRepository inviteRepository;
+  @Autowired JoinProgramInviteRepository inviteRepository;
 
-  @Autowired
-  ProgramService programService;
+  @Autowired ProgramService programService;
 
-  @Autowired
-  ProgramRepository programRepository;
+  @Autowired ProgramRepository programRepository;
 
   private static final String name = "TEST-X-CA";
 
@@ -106,15 +101,23 @@ class ProgramServiceIT {
     val permissions = client.getGroupPermissions(group.get().getId());
     assertEquals(2, permissions.length);
 
-    assertTrue(Arrays.asList(permissions).stream().
-      anyMatch(permission -> permissionsMatch(permission, "PROGRAM-" + shortName, getProgramMask(role))));
+    assertTrue(
+        Arrays.asList(permissions).stream()
+            .anyMatch(
+                permission ->
+                    permissionsMatch(permission, "PROGRAM-" + shortName, getProgramMask(role))));
 
-    assertTrue(Arrays.asList(permissions).stream().
-      anyMatch(permission -> permissionsMatch(permission, "PROGRAMDATA-" + shortName, getDataMask(role))));
+    assertTrue(
+        Arrays.asList(permissions).stream()
+            .anyMatch(
+                permission ->
+                    permissionsMatch(permission, "PROGRAMDATA-" + shortName, getDataMask(role))));
   }
 
-  private boolean permissionsMatch(EgoPermission permission, String policyName, String accessLevel) {
-    if (permission.getAccessLevel().equals(accessLevel) && permission.getPolicy().getName().equals(policyName)) {
+  private boolean permissionsMatch(
+      EgoPermission permission, String policyName, String accessLevel) {
+    if (permission.getAccessLevel().equals(accessLevel)
+        && permission.getPolicy().getName().equals(policyName)) {
       return true;
     }
     return false;
@@ -141,5 +144,4 @@ class ProgramServiceIT {
     assertFalse(client.getPolicyByName("PROGRAM-" + name).isPresent());
     assertFalse(client.getPolicyByName("PROGRAMDATA-" + name).isPresent());
   }
-
 }

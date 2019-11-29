@@ -18,15 +18,10 @@
 
 package org.icgc.argo.program_service.model.entity;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import lombok.experimental.Accessors;
-import lombok.experimental.FieldNameConstants;
-import org.hibernate.annotations.GenericGenerator;
-import org.icgc.argo.program_service.model.enums.SqlFields;
-import org.icgc.argo.program_service.model.enums.Tables;
-import org.icgc.argo.program_service.model.join.ProgramCancer;
+import static com.google.common.collect.Sets.newHashSet;
+
+import java.util.Set;
+import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -36,10 +31,15 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import java.util.Set;
-import java.util.UUID;
-
-import static com.google.common.collect.Sets.newHashSet;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
+import org.hibernate.annotations.GenericGenerator;
+import org.icgc.argo.program_service.model.enums.SqlFields;
+import org.icgc.argo.program_service.model.enums.Tables;
+import org.icgc.argo.program_service.model.join.ProgramCancer;
 
 @Entity
 @Table(name = Tables.CANCER)
@@ -58,14 +58,13 @@ public class CancerEntity implements NameableEntity<UUID> {
   @NotNull
   @Column(name = SqlFields.NAME)
   private String name;
-  
+
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
   @OneToMany(
-              mappedBy = ProgramCancer.Fields.cancer,
-              cascade = CascadeType.ALL,
-              fetch = FetchType.LAZY,
-              orphanRemoval = true)
+      mappedBy = ProgramCancer.Fields.cancer,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
   private Set<ProgramCancer> programCancers = newHashSet();
-
 }

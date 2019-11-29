@@ -1,5 +1,11 @@
 package org.icgc.argo.program_service.model.entity;
 
+import static com.google.common.collect.Sets.newHashSet;
+
+import java.util.Set;
+import java.util.UUID;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -9,13 +15,6 @@ import org.hibernate.annotations.GenericGenerator;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.model.join.ProgramCountry;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import java.util.Set;
-import java.util.UUID;
-
-import static com.google.common.collect.Sets.newHashSet;
 
 @Entity
 @Table(name = Tables.COUNTRY)
@@ -39,10 +38,9 @@ public class CountryEntity implements NameableEntity<UUID> {
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
   @OneToMany(
-          mappedBy = ProgramCountry.Fields.country,
-          cascade = CascadeType.ALL,
-          fetch = FetchType.LAZY,
-          orphanRemoval = true)
+      mappedBy = ProgramCountry.Fields.country,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
   private Set<ProgramCountry> programCountries = newHashSet();
-
 }

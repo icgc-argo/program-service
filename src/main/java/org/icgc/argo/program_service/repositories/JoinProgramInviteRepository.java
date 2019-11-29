@@ -18,21 +18,20 @@
 
 package org.icgc.argo.program_service.repositories;
 
+import java.util.List;
+import java.util.UUID;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-import java.util.UUID;
-
 public interface JoinProgramInviteRepository extends JpaRepository<JoinProgramInviteEntity, UUID> {
-  List<JoinProgramInviteEntity> findAllByProgramShortNameAndStatus(String programShortName,
-    JoinProgramInviteEntity.Status status);
+  List<JoinProgramInviteEntity> findAllByProgramShortNameAndStatus(
+      String programShortName, JoinProgramInviteEntity.Status status);
 
-  List<JoinProgramInviteEntity> findAllByProgramShortNameAndUserEmail(String programShortName, String userEmail);
+  List<JoinProgramInviteEntity> findAllByProgramShortNameAndUserEmail(
+      String programShortName, String userEmail);
 
-  List<JoinProgramInviteEntity> findAllByProgramShortNameAndUserEmailOrderByCreatedAtDesc(String programShortName,
-    String userEmail);
+  List<JoinProgramInviteEntity> findAllByProgramShortNameAndUserEmailOrderByCreatedAtDesc(
+      String programShortName, String userEmail);
 
   void deleteAllByProgramShortName(String programShortName);
 }
-

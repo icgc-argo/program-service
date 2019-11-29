@@ -18,6 +18,9 @@
 
 package org.icgc.argo.program_service.grpc;
 
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import io.grpc.Channel;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
@@ -35,9 +38,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 // TODO: This test doesn't work, it should be converted to integration test
 @ActiveProfiles("default")
 public class DefaultProfileTest {
@@ -46,11 +46,9 @@ public class DefaultProfileTest {
 
   private String serverName;
 
-  @Mock
-  private EgoService egoService;
+  @Mock private EgoService egoService;
 
-  @Rule
-  public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
+  @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   @Before
   public void setUp() {
@@ -58,30 +56,37 @@ public class DefaultProfileTest {
     serverName = InProcessServerBuilder.generateName();
     // Create a client channel and register for automatic graceful shutdown.
     channel =
-      grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
+        grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
   }
 
   @SneakyThrows
   @Test
   public void egoInterceptorDisabled() {
-    val target = new ProgramServiceGrpc.ProgramServiceImplBase() {
-      public void createProgram(CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
-        responseObserver.onNext(CreateProgramResponse.newBuilder().build().getDefaultInstance());
-        responseObserver.onCompleted();
-      }
-    };
+    val target =
+        new ProgramServiceGrpc.ProgramServiceImplBase() {
+          public void createProgram(
+              CreateProgramRequest request,
+              StreamObserver<CreateProgramResponse> responseObserver) {
+            responseObserver.onNext(
+                CreateProgramResponse.newBuilder().build().getDefaultInstance());
+            responseObserver.onCompleted();
+          }
+        };
 
     // Create a server, add service, start, and register for automatic graceful shutdown.
-    grpcCleanup
-      .register(InProcessServerBuilder.forName(serverName).directExecutor().addService(target).build().start());
+    grpcCleanup.register(
+        InProcessServerBuilder.forName(serverName)
+            .directExecutor()
+            .addService(target)
+            .build()
+            .start());
     val blockingStub = ProgramServiceGrpc.newBlockingStub(channel);
 
-    //EgoService is not initialized under default profile
+    // EgoService is not initialized under default profile
     assertNull(egoService);
 
-    //Ego interceptor is not stopping create request, as expected
+    // Ego interceptor is not stopping create request, as expected
     val detail = blockingStub.createProgram(CreateProgramRequest.getDefaultInstance());
     assertTrue(detail.equals(CreateProgramResponse.newBuilder().build().getDefaultInstance()));
   }
-
 }

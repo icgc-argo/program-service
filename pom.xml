@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>ca.on.oicr.icgc.argo</groupId>
 	<artifactId>program-service</artifactId>
-	<version>1.0.6-SNAPSHOT</version>
+	<version>1.0.7-SNAPSHOT</version>
 	<name>program-service</name>
 	<description>Argo Program Service</description>
 
@@ -317,6 +317,18 @@
 						<phase>initialize</phase>
 						<goals>
 							<goal>detect</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.coveo</groupId>
+				<artifactId>fmt-maven-plugin</artifactId>
+				<version>2.9</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>format</goal>
 						</goals>
 					</execution>
 				</executions>

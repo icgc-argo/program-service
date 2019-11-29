@@ -18,11 +18,9 @@
 
 package org.icgc.argo.program_service.model.enums;
 
-import lombok.NoArgsConstructor;
-
-import javax.print.DocFlavor;
-
 import static lombok.AccessLevel.PRIVATE;
+
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Tables {
@@ -40,5 +38,4 @@ public class Tables {
   public static final String PROGRAM_COUNTRY = "program_country";
   public static final String PROGRAM_INSTITUTION = "program_institution";
   public static final String PROGRAM_REGION = "program_region";
-
 }

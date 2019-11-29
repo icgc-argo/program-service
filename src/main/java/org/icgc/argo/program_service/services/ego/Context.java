@@ -5,14 +5,16 @@ import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Setter @Getter
+@Setter
+@Getter
 public class Context {
 
   User user;
   String[] scope;
 
   @JsonIgnoreProperties(ignoreUnknown = true)
-  @Setter @Getter
+  @Setter
+  @Getter
   public static class User {
     String name;
     String email;

@@ -1,8 +1,8 @@
 package org.icgc.argo.program_service.services.auth;
 
-import io.grpc.Status;
-
 import static java.lang.String.format;
+
+import io.grpc.Status;
 
 public interface AuthorizationService {
   boolean isDCCAdmin();
@@ -30,15 +30,18 @@ public interface AuthorizationService {
   }
 
   default void requireProgramAdmin(String programShortName) {
-    require(canWrite(programShortName), format("No WRITE permission for program %s", programShortName));
+    require(
+        canWrite(programShortName), format("No WRITE permission for program %s", programShortName));
   }
 
   default void requireProgramUser(String programShortName) {
-    require(canRead(programShortName), format("NO READ permission for program %s", programShortName));
+    require(
+        canRead(programShortName), format("NO READ permission for program %s", programShortName));
   }
 
   default boolean canRead(String programShortName) {
-    return isAuthorized(readPermission(programShortName)) || isAuthorized(writePermission(programShortName));
+    return isAuthorized(readPermission(programShortName))
+        || isAuthorized(writePermission(programShortName));
   }
 
   default boolean canWrite(String programShortName) {

@@ -18,6 +18,10 @@
 
 package org.icgc.argo.program_service.services;
 
+import java.io.StringWriter;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import javax.mail.MessagingException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -31,11 +35,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import javax.mail.MessagingException;
-import java.io.StringWriter;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Service
@@ -52,8 +51,7 @@ public class MailService {
   private String platformUrl;
 
   @Autowired
-  public MailService(@NonNull JavaMailSender mailSender,
-      @NonNull VelocityEngine velocityEngine) {
+  public MailService(@NonNull JavaMailSender mailSender, @NonNull VelocityEngine velocityEngine) {
     this.mailSender = mailSender;
     this.velocityEngine = velocityEngine;
   }
@@ -77,7 +75,12 @@ public class MailService {
       ctx.put("email", invitation.getUserEmail());
       ctx.put("joinProgramLink", invitationUrlPrefix + invitation.getId());
       ctx.put("platformLink", platformUrl);
-      ctx.put("expireTime", invitation.getExpiresAt().atZone(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("LLLL d, yyyy 'at' hh:mm a VV")));
+      ctx.put(
+          "expireTime",
+          invitation
+              .getExpiresAt()
+              .atZone(ZoneId.of("UTC"))
+              .format(DateTimeFormatter.ofPattern("LLLL d, yyyy 'at' hh:mm a VV")));
 
       template.merge(ctx, sw);
 

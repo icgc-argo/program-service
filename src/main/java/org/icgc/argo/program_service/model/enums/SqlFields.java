@@ -41,5 +41,4 @@ public class SqlFields {
   public static final String COUNTRYID_JOIN = "country_id";
   public static final String INSTITUTIONID_JOIN = "institution_id";
   public static final String REGIONID_JOIN = "region_id";
-
 }
