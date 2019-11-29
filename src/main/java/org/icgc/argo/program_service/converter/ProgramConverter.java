@@ -18,25 +18,27 @@
 
 package org.icgc.argo.program_service.converter;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.protobuf.StringValue;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
+import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
 
-import static java.util.stream.Collectors.toList;
-
-@Mapper(config = ConverterConfig.class, uses = { CommonConverter.class })
+@Mapper(
+    config = ConverterConfig.class,
+    uses = {CommonConverter.class})
 public interface ProgramConverter {
   ProgramConverter INSTANCE = new ProgramConverterImpl(CommonConverter.INSTANCE);
 
@@ -133,13 +135,14 @@ public interface ProgramConverter {
   Institution institutionEntityToInstitution(InstitutionEntity entity);
 
   @AfterMapping
-  default void updateProgramFromEntity(@NonNull ProgramEntity entity, @NonNull @MappingTarget Program.Builder programBuilder) {
+  default void updateProgramFromEntity(
+      @NonNull ProgramEntity entity, @NonNull @MappingTarget Program.Builder programBuilder) {
     programBuilder
-            .addAllCancerTypes(entity.listCancerTypes())
-            .addAllPrimarySites(entity.listPrimarySites())
-            .addAllInstitutions(entity.listInstitutions())
-            .addAllCountries(entity.listCountries())
-            .addAllRegions(entity.listRegions());
+        .addAllCancerTypes(entity.listCancerTypes())
+        .addAllPrimarySites(entity.listPrimarySites())
+        .addAllInstitutions(entity.listInstitutions())
+        .addAllCountries(entity.listCountries())
+        .addAllRegions(entity.listRegions());
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -163,9 +166,9 @@ public interface ProgramConverter {
   default ProgramDetails ProgramEntityToProgramDetails(ProgramEntity value) {
     val program = programEntityToProgram(value);
     return ProgramDetails.newBuilder()
-            .setProgram(program)
-            .setMetadata(programEntityToMetadata(value))
-            .build();
+        .setProgram(program)
+        .setMetadata(programEntityToMetadata(value))
+        .build();
   }
 
   @Mapping(target = "mergeFrom", ignore = true)
@@ -177,10 +180,12 @@ public interface ProgramConverter {
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "programsOrBuilderList", ignore = true)
   @Mapping(target = "programsBuilderList", ignore = true)
-  //TODO: [rtisma] this is a hack for a bug in mapstruct when mapping an iterable to a wrapper (non-iterable)
+  // TODO: [rtisma] this is a hack for a bug in mapstruct when mapping an iterable to a wrapper
+  // (non-iterable)
   //  https://github.com/mapstruct/mapstruct/issues/607#issuecomment-309547739
   @Mapping(target = "programsList", source = "programEntities")
-  ListProgramsResponse programEntitiesToListProgramsResponse(Integer dummy, Collection<ProgramEntity> programEntities);
+  ListProgramsResponse programEntitiesToListProgramsResponse(
+      Integer dummy, Collection<ProgramEntity> programEntities);
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
@@ -237,55 +242,68 @@ public interface ProgramConverter {
     return UserRoleValue.newBuilder().setValue(role).build();
   }
 
-  default ListProgramsResponse programEntitiesToListProgramsResponse(Collection<ProgramEntity> programEntities) {
+  default ListProgramsResponse programEntitiesToListProgramsResponse(
+      Collection<ProgramEntity> programEntities) {
     return programEntitiesToListProgramsResponse(0, programEntities);
   }
 
-  default ListCancersResponse cancerEntitiesToListCancersResponse(Collection<CancerEntity> cancerEntities){
+  default ListCancersResponse cancerEntitiesToListCancersResponse(
+      Collection<CancerEntity> cancerEntities) {
     return ListCancersResponse.newBuilder()
-            .addAllCancers(cancerEntities.stream().map(this::cancerEntityToCancer).collect(toList()))
-            .build();
+        .addAllCancers(cancerEntities.stream().map(this::cancerEntityToCancer).collect(toList()))
+        .build();
   }
 
-  default ListPrimarySitesResponse primarySiteEntitiesToListPrimarySitesResponse(Collection<PrimarySiteEntity> primarySiteEntities){
+  default ListPrimarySitesResponse primarySiteEntitiesToListPrimarySitesResponse(
+      Collection<PrimarySiteEntity> primarySiteEntities) {
     return ListPrimarySitesResponse.newBuilder()
-            .addAllPrimarySites(primarySiteEntities.stream().map(this::primarySiteEntityToPrimarySite).collect(toList()))
-            .build();
+        .addAllPrimarySites(
+            primarySiteEntities.stream()
+                .map(this::primarySiteEntityToPrimarySite)
+                .collect(toList()))
+        .build();
   }
 
-  default ListCountriesResponse countryEntitiesToListCountriesResponse(Collection<CountryEntity> countryEntities){
+  default ListCountriesResponse countryEntitiesToListCountriesResponse(
+      Collection<CountryEntity> countryEntities) {
     return ListCountriesResponse.newBuilder()
-            .addAllCountries(countryEntities.stream().map(this::countryEntityToCountry).collect(toList()))
-            .build();
+        .addAllCountries(
+            countryEntities.stream().map(this::countryEntityToCountry).collect(toList()))
+        .build();
   }
 
-  default ListRegionsResponse regionEntitiesToListRegionsResponse(Collection<RegionEntity> regionEntities){
+  default ListRegionsResponse regionEntitiesToListRegionsResponse(
+      Collection<RegionEntity> regionEntities) {
     return ListRegionsResponse.newBuilder()
-            .addAllRegions(regionEntities.stream().map(this::regionEntityToRegion).collect(toList()))
-            .build();
+        .addAllRegions(regionEntities.stream().map(this::regionEntityToRegion).collect(toList()))
+        .build();
   }
 
-  default ListInstitutionsResponse institutionEntitiesToListInstitutionsResponse(Collection<InstitutionEntity> institutionEntities){
+  default ListInstitutionsResponse institutionEntitiesToListInstitutionsResponse(
+      Collection<InstitutionEntity> institutionEntities) {
     return ListInstitutionsResponse.newBuilder()
-            .addAllInstitutions(institutionEntities.stream().map(this::institutionEntityToInstitution).collect(toList()))
-            .build();
+        .addAllInstitutions(
+            institutionEntities.stream()
+                .map(this::institutionEntityToInstitution)
+                .collect(toList()))
+        .build();
   }
 
-  default AddInstitutionsResponse institutionsToAddInstitutionsResponse(Collection<InstitutionEntity> institutionEntities){
+  default AddInstitutionsResponse institutionsToAddInstitutionsResponse(
+      Collection<InstitutionEntity> institutionEntities) {
     return AddInstitutionsResponse.newBuilder()
-            .addAllInstitutions(institutionEntities.stream().map(this::institutionEntityToInstitution).collect(toList()))
-            .build();
+        .addAllInstitutions(
+            institutionEntities.stream()
+                .map(this::institutionEntityToInstitution)
+                .collect(toList()))
+        .build();
   }
 
   default InviteUserResponse inviteIdToInviteUserResponse(@NonNull UUID inviteId) {
-    return InviteUserResponse.newBuilder()
-      .setInviteId(StringValue.of(inviteId.toString()))
-      .build();
+    return InviteUserResponse.newBuilder().setInviteId(StringValue.of(inviteId.toString())).build();
   }
 
-  /**
-   * Enum Boxing Converters
-   */
+  /** Enum Boxing Converters */
   default MembershipTypeValue boxMembershipType(MembershipType m) {
     return MembershipTypeValue.newBuilder().setValue(m).build();
   }
@@ -294,18 +312,19 @@ public interface ProgramConverter {
     return v.getValue();
   }
 
-  default InviteStatusValue JoinProgramInviteStatusToInviteStatus(JoinProgramInviteEntity.Status status) {
-    switch(status) {
-    case ACCEPTED:
-      return InviteStatusValue.newBuilder().setValue(InviteStatus.ACCEPTED).build();
-    case EXPIRED:
-      return InviteStatusValue.newBuilder().setValue(InviteStatus.EXPIRED).build();
-    case PENDING:
-      return InviteStatusValue.newBuilder().setValue(InviteStatus.PENDING).build();
-    case INVALID:
-      return InviteStatusValue.newBuilder().build();
-    case REVOKED:
-      return InviteStatusValue.newBuilder().build();
+  default InviteStatusValue JoinProgramInviteStatusToInviteStatus(
+      JoinProgramInviteEntity.Status status) {
+    switch (status) {
+      case ACCEPTED:
+        return InviteStatusValue.newBuilder().setValue(InviteStatus.ACCEPTED).build();
+      case EXPIRED:
+        return InviteStatusValue.newBuilder().setValue(InviteStatus.EXPIRED).build();
+      case PENDING:
+        return InviteStatusValue.newBuilder().setValue(InviteStatus.PENDING).build();
+      case INVALID:
+        return InviteStatusValue.newBuilder().build();
+      case REVOKED:
+        return InviteStatusValue.newBuilder().build();
     }
     return InviteStatusValue.newBuilder().build();
   }
@@ -347,7 +366,8 @@ public interface ProgramConverter {
     return joinProgramInviteToUserDetails(0, invitation);
   }
 
-  default UserDetails userWithOptionalJoinProgramInviteToUserDetails(User user, Optional<JoinProgramInviteEntity> invite) {
+  default UserDetails userWithOptionalJoinProgramInviteToUserDetails(
+      User user, Optional<JoinProgramInviteEntity> invite) {
     val builder = UserDetails.newBuilder().setUser(user);
 
     if (invite.isEmpty()) {
@@ -378,9 +398,11 @@ public interface ProgramConverter {
   @Mapping(target = "userDetailsOrBuilderList", ignore = true)
   @Mapping(target = "userDetailsBuilderList", ignore = true)
   @Mapping(target = "userDetailsList", source = "invitations")
-  ListUsersResponse invitationsToListUsersResponse(Integer dummy, Collection<JoinProgramInviteEntity> invitations);
+  ListUsersResponse invitationsToListUsersResponse(
+      Integer dummy, Collection<JoinProgramInviteEntity> invitations);
 
-  default ListUsersResponse invitationsToListUsersResponse(Collection<JoinProgramInviteEntity> invitations) {
+  default ListUsersResponse invitationsToListUsersResponse(
+      Collection<JoinProgramInviteEntity> invitations) {
     return invitationsToListUsersResponse(0, invitations);
   }
 
@@ -402,13 +424,17 @@ public interface ProgramConverter {
   JoinProgramInvite joinProgramInviteEntityToJoinProgramInvite(JoinProgramInviteEntity entity);
 
   @AfterMapping
-  default void setUser(@NonNull JoinProgramInviteEntity entity, @NonNull @MappingTarget JoinProgramInvite.Builder joinProgramInvite) {
-  val userRole = UserRoleValue.newBuilder().setValue(entity.getRole());
-  val user = User.newBuilder().setEmail(StringValue.of(entity.getUserEmail()))
-    .setFirstName(StringValue.of(entity.getFirstName()))
-    .setLastName(StringValue.of(entity.getLastName()))
-    .setRole(userRole).build();
-  joinProgramInvite.setUser(user);
+  default void setUser(
+      @NonNull JoinProgramInviteEntity entity,
+      @NonNull @MappingTarget JoinProgramInvite.Builder joinProgramInvite) {
+    val userRole = UserRoleValue.newBuilder().setValue(entity.getRole());
+    val user =
+        User.newBuilder()
+            .setEmail(StringValue.of(entity.getUserEmail()))
+            .setFirstName(StringValue.of(entity.getFirstName()))
+            .setLastName(StringValue.of(entity.getLastName()))
+            .setRole(userRole)
+            .build();
+    joinProgramInvite.setUser(user);
   }
-
 }

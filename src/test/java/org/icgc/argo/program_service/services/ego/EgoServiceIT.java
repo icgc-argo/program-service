@@ -18,7 +18,16 @@
 
 package org.icgc.argo.program_service.services.ego;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static java.lang.String.format;
+import static junit.framework.TestCase.*;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.OK;
+
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import java.time.Duration;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
@@ -38,21 +47,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.util.*;
-
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.DefaultUriBuilderFactory;
-
-import java.time.Duration;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static java.lang.String.format;
-import static junit.framework.TestCase.*;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static org.springframework.http.HttpStatus.OK;
 
 @Slf4j
 @SpringBootTest
@@ -63,36 +60,29 @@ public class EgoServiceIT {
 
   private EgoRESTClient client;
 
-  @Autowired
-  private RetryTemplate lenientRetryTemplate;
+  @Autowired private RetryTemplate lenientRetryTemplate;
 
-  @Autowired
-  private RetryTemplate retryTemplate;
+  @Autowired private RetryTemplate retryTemplate;
 
-  @Autowired
-  EntityGenerator entityGenerator;
+  @Autowired EntityGenerator entityGenerator;
 
-  @Autowired
-  ProgramConverter converter;
+  @Autowired ProgramConverter converter;
 
-  @Autowired
-  JoinProgramInviteRepository inviteRepository;
+  @Autowired JoinProgramInviteRepository inviteRepository;
 
   private EgoService egoService;
 
-  @Rule
-  public WireMockRule wireMockRule = new WireMockRule(options().dynamicPort());
+  @Rule public WireMockRule wireMockRule = new WireMockRule(options().dynamicPort());
 
-  @Rule
-  public ExpectedException exceptionRule = ExpectedException.none();
-
+  @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
   private static final String TEST_EMAIL = "test_user@example.com";
   private static final UUID TEST_ID = UUID.fromString("f0cfd733-3f41-46a7-b400-c1774dac4b21");
-  private static final UUID ADMIN_GROUP_ID = UUID.fromString("09d93820-500e-4027-95ec-fdb5ce6986ce");
-  private static final UUID SUBMITTER_GROUP_ID = UUID.fromString("64541e68-c6c6-469d-9dcf-9aa260ef17ea");
+  private static final UUID ADMIN_GROUP_ID =
+      UUID.fromString("09d93820-500e-4027-95ec-fdb5ce6986ce");
+  private static final UUID SUBMITTER_GROUP_ID =
+      UUID.fromString("64541e68-c6c6-469d-9dcf-9aa260ef17ea");
   private static final String SHORT_NAME = "TEST-CA";
-
 
   @Before
   public void setUp() {
@@ -100,21 +90,27 @@ public class EgoServiceIT {
     val egoClientId = "program-service";
     val egoClientSecret = "qa-program-service";
 
-    val testTemplate = new RestTemplateBuilder()
-      .basicAuthentication(egoClientId, egoClientSecret)
-      .setConnectTimeout(Duration.ofSeconds(15)).build();
+    val testTemplate =
+        new RestTemplateBuilder()
+            .basicAuthentication(egoClientId, egoClientSecret)
+            .setConnectTimeout(Duration.ofSeconds(15))
+            .build();
     testTemplate.setUriTemplateHandler(new DefaultUriBuilderFactory(egoUrl));
 
-    client = new EgoRESTClient(lenientRetryTemplate, retryTemplate, testTemplate, CommonConverter.INSTANCE);
+    client =
+        new EgoRESTClient(
+            lenientRetryTemplate, retryTemplate, testTemplate, CommonConverter.INSTANCE);
     egoService = new EgoService(converter, client, inviteRepository);
   }
 
   void stub(String url, String filename) {
-    stubFor(get(urlEqualTo(url))
-      .willReturn(aResponse()
-        .withStatus(OK.value())
-        .withHeader("Content-Type", "application/json")
-        .withBodyFile(filename)));
+    stubFor(
+        get(urlEqualTo(url))
+            .willReturn(
+                aResponse()
+                    .withStatus(OK.value())
+                    .withHeader("Content-Type", "application/json")
+                    .withBodyFile(filename)));
   }
 
   public void getUser(String filename) {
@@ -143,9 +139,9 @@ public class EgoServiceIT {
   }
 
   public void getGroupsFail(UUID userId) {
-    stubFor(get(urlEqualTo(format("/users/%s/groups", userId)))
-      .willReturn(aResponse()
-        .withStatus(INTERNAL_SERVER_ERROR.value())));
+    stubFor(
+        get(urlEqualTo(format("/users/%s/groups", userId)))
+            .willReturn(aResponse().withStatus(INTERNAL_SERVER_ERROR.value())));
   }
 
   @Test
@@ -156,11 +152,13 @@ public class EgoServiceIT {
     mockGetUsersByGroupId(egoGroupId, "userOne.json");
 
     // mock ego endpoint addUsersToGroup
-    stubFor(post(urlEqualTo(format("/groups/%s/users", egoGroupId)))
-      .willReturn(aResponse()
-        .withStatus(OK.value())
-        .withHeader("Content-Type", "application/json")
-        .withBody("User is added to group.")));
+    stubFor(
+        post(urlEqualTo(format("/groups/%s/users", egoGroupId)))
+            .willReturn(
+                aResponse()
+                    .withStatus(OK.value())
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("User is added to group.")));
 
     // Call the target method
     assertTrue(egoService.joinProgram(TEST_EMAIL, SHORT_NAME, UserRole.COLLABORATOR));
@@ -178,14 +176,14 @@ public class EgoServiceIT {
 
   @Test
   public void join_program_user_already_joined_fail() {
-    val groupName = "PROGRAM-"+SHORT_NAME+"-COLLABORATOR";
+    val groupName = "PROGRAM-" + SHORT_NAME + "-COLLABORATOR";
     val roleToGroupId = mockGetGroupIdByName(SHORT_NAME);
     val egoGroupId = roleToGroupId.get(UserRole.COLLABORATOR);
     mockGetUser_success();
     mockGetUsersByGroupId(egoGroupId, "userOne_userTwo.json");
     exceptionRule.expect(EgoException.class);
-    exceptionRule.expectMessage(format("User %s has already joined ego group %s (%s).",
-      TEST_EMAIL, egoGroupId, groupName));
+    exceptionRule.expectMessage(
+        format("User %s has already joined ego group %s (%s).", TEST_EMAIL, egoGroupId, groupName));
     egoService.joinProgram(TEST_EMAIL, SHORT_NAME, UserRole.COLLABORATOR);
   }
 
@@ -197,27 +195,28 @@ public class EgoServiceIT {
     mockGetUsersByGroupId(egoGroupId, "userOne.json");
 
     // mock ego endpoint addUsersToGroup
-    stubFor(post(format("/groups/%s/users", egoGroupId))
-      .willReturn(aResponse().withStatus(401)));
+    stubFor(post(format("/groups/%s/users", egoGroupId)).willReturn(aResponse().withStatus(401)));
 
     exceptionRule.expect(EgoException.class);
-    exceptionRule.expectMessage(format("Cannot join user %s to program %s", TEST_EMAIL, SHORT_NAME));
+    exceptionRule.expectMessage(
+        format("Cannot join user %s to program %s", TEST_EMAIL, SHORT_NAME));
     assertTrue(egoService.joinProgram(TEST_EMAIL, SHORT_NAME, UserRole.COLLABORATOR));
   }
 
-
   Map<UserRole, UUID> mockGetGroupIdByName(String programShortName) {
     val m = new TreeMap<UserRole, UUID>();
-    for (val role: UserRole.values()) {
+    for (val role : UserRole.values()) {
       val id = UUID.randomUUID();
       val groupName = "PROGRAM-" + programShortName + "-" + role.toString();
       val response = groupIdResponse(groupName, id);
-      val url = format("/groups?query=%s",groupName);
-      stubFor(get(urlEqualTo(url))
-        .willReturn(aResponse()
-          .withStatus(OK.value())
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)));
+      val url = format("/groups?query=%s", groupName);
+      stubFor(
+          get(urlEqualTo(url))
+              .willReturn(
+                  aResponse()
+                      .withStatus(OK.value())
+                      .withHeader("Content-Type", "application/json")
+                      .withBody(response)));
 
       m.put(role, id);
     }
@@ -225,19 +224,21 @@ public class EgoServiceIT {
   }
 
   private String groupIdResponse(String name, UUID result) {
-    return format("{\n"
-      + "  \"count\": 1,\n"
-      + "  \"limit\": 0,\n"
-      + "  \"offset\": 0,\n"
-      + "  \"resultSet\": [\n"
-      + "    {\n"
-      + "      \"description\": \"not important\",\n"
-      + "      \"id\": \"%s\",\n"
-      + "      \"name\": \"%s\",\n"
-      + "      \"status\": \"APPROVED\"\n"
-      + "    }\n"
-      + "  ]\n"
-      + "}\n", result, name);
+    return format(
+        "{\n"
+            + "  \"count\": 1,\n"
+            + "  \"limit\": 0,\n"
+            + "  \"offset\": 0,\n"
+            + "  \"resultSet\": [\n"
+            + "    {\n"
+            + "      \"description\": \"not important\",\n"
+            + "      \"id\": \"%s\",\n"
+            + "      \"name\": \"%s\",\n"
+            + "      \"status\": \"APPROVED\"\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}\n",
+        result, name);
   }
 
   public void list_user_success() {
@@ -250,25 +251,28 @@ public class EgoServiceIT {
     val expectedUsers = List.of("User.One@example.com", "User.Two@example.com");
     val users = egoService.getUsersInProgram(SHORT_NAME);
     assertEquals(2, users.size());
-    users.forEach(user -> {
-      assertTrue(expectedUsers.contains(user.getEmail().getValue()));
-      if (user.getEmail().getValue().equals("User.One@example.com")) {
-        assertEquals(UserRole.ADMIN, user.getRole().getValue());
-      }
-      if (user.getEmail().getValue().equals("User.Two@example.com")) {
-        assertEquals(UserRole.SUBMITTER, user.getRole().getValue());
-      }
-    });
+    users.forEach(
+        user -> {
+          assertTrue(expectedUsers.contains(user.getEmail().getValue()));
+          if (user.getEmail().getValue().equals("User.One@example.com")) {
+            assertEquals(UserRole.ADMIN, user.getRole().getValue());
+          }
+          if (user.getEmail().getValue().equals("User.Two@example.com")) {
+            assertEquals(UserRole.SUBMITTER, user.getRole().getValue());
+          }
+        });
   }
 
   @Test
   public void testGetGroups() {
     getGroupsByUserId(TEST_ID, "getGroups.json");
-    assertEquals(1, client.getGroupsByUserId(TEST_ID).count() );
+    assertEquals(1, client.getGroupsByUserId(TEST_ID).count());
 
-    val g = client.getGroupsByUserId(TEST_ID)
-      .filter(egoGroup -> egoGroup.getName().toLowerCase().contains(SHORT_NAME.toLowerCase()))
-      .findFirst();
+    val g =
+        client
+            .getGroupsByUserId(TEST_ID)
+            .filter(egoGroup -> egoGroup.getName().toLowerCase().contains(SHORT_NAME.toLowerCase()))
+            .findFirst();
     assertTrue(g.isPresent());
     val group = g.get();
 
@@ -281,31 +285,36 @@ public class EgoServiceIT {
     mockGetUser_success();
     getGroupsByUserId(TEST_ID, "getGroups.json");
 
-    stubFor(delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
-      .willReturn(aResponse().withStatus(OK.value())));
+    stubFor(
+        delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
+            .willReturn(aResponse().withStatus(OK.value())));
 
     assertTrue(egoService.leaveProgram(TEST_EMAIL, SHORT_NAME));
   }
 
   @Test
   public void removeUser_userNotFound() {
-    // If there's no user to delete, we've successful put the system in a state where that user does not exist
+    // If there's no user to delete, we've successful put the system in a state where that user does
+    // not exist
     mockGetUser_fail();
     getGroupsByUserId(TEST_ID, "getGroups.json");
 
-    stubFor(delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
-      .willReturn(aResponse().withStatus(OK.value())));
+    stubFor(
+        delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
+            .willReturn(aResponse().withStatus(OK.value())));
 
     assertTrue(egoService.leaveProgram(TEST_EMAIL, SHORT_NAME));
   }
 
   @Test
   public void removeUser_group_not_found() {
-    // If the user somehow wasn't set up with any groups, we've successfully removed them from all of them.
+    // If the user somehow wasn't set up with any groups, we've successfully removed them from all
+    // of them.
     mockGetUser_success();
     getGroupsByUserId(TEST_ID, "getGroups_empty_result.json");
-    stubFor(delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
-      .willReturn(aResponse().withStatus(OK.value())));
+    stubFor(
+        delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
+            .willReturn(aResponse().withStatus(OK.value())));
 
     assertTrue(egoService.leaveProgram(TEST_EMAIL, SHORT_NAME));
   }
@@ -315,10 +324,12 @@ public class EgoServiceIT {
     // if the user was somehow set up with multiple groups, we need to be able to get rid of them.
     mockGetUser_success();
     getGroupsByUserId(TEST_ID, "getGroups_multiple.json");
-    stubFor(delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
-      .willReturn(aResponse().withStatus(OK.value())));
-    stubFor(delete(urlEqualTo(format("/groups/%s/users/%s", SUBMITTER_GROUP_ID, TEST_ID)))
-      .willReturn(aResponse().withStatus(OK.value())));
+    stubFor(
+        delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
+            .willReturn(aResponse().withStatus(OK.value())));
+    stubFor(
+        delete(urlEqualTo(format("/groups/%s/users/%s", SUBMITTER_GROUP_ID, TEST_ID)))
+            .willReturn(aResponse().withStatus(OK.value())));
 
     assertTrue(egoService.leaveProgram(TEST_EMAIL, SHORT_NAME));
   }
@@ -329,9 +340,9 @@ public class EgoServiceIT {
     mockGetUser_success();
     getGroupsFail(TEST_ID);
 
-    //exceptionRule.expect(EgoException.class);
+    // exceptionRule.expect(EgoException.class);
     String errMsg = format("Cannot get ego groups for user '%s'", TEST_ID);
-    //exceptionRule.expectMessage(errMsg);
+    // exceptionRule.expectMessage(errMsg);
     EgoException err = null;
     try {
       egoService.leaveProgram(TEST_EMAIL, SHORT_NAME);
@@ -349,14 +360,17 @@ public class EgoServiceIT {
 
     getGroupsByUserId(TEST_ID, "getGroups_multiple.json");
 
-    stubFor(delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
-      .willReturn(aResponse().withStatus(INTERNAL_SERVER_ERROR.value())));
-    stubFor(delete(urlEqualTo(format("/groups/%s/users/%s", SUBMITTER_GROUP_ID, TEST_ID)))
-      .willReturn(aResponse().withStatus(INTERNAL_SERVER_ERROR.value())));
+    stubFor(
+        delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
+            .willReturn(aResponse().withStatus(INTERNAL_SERVER_ERROR.value())));
+    stubFor(
+        delete(urlEqualTo(format("/groups/%s/users/%s", SUBMITTER_GROUP_ID, TEST_ID)))
+            .willReturn(aResponse().withStatus(INTERNAL_SERVER_ERROR.value())));
 
     exceptionRule.expect(EgoException.class);
-    String errMsg = "Cannot remove user 'f0cfd733-3f41-46a7-b400-c1774dac4b21' from group 'TEST-CA-ADMIN' " +
-      "Cannot remove user 'f0cfd733-3f41-46a7-b400-c1774dac4b21' from group 'TEST-CA-SUBMITTER' ";
+    String errMsg =
+        "Cannot remove user 'f0cfd733-3f41-46a7-b400-c1774dac4b21' from group 'TEST-CA-ADMIN' "
+            + "Cannot remove user 'f0cfd733-3f41-46a7-b400-c1774dac4b21' from group 'TEST-CA-SUBMITTER' ";
     exceptionRule.expectMessage(errMsg);
     egoService.leaveProgram(TEST_EMAIL, SHORT_NAME);
   }

@@ -18,10 +18,16 @@
 
 package org.icgc.argo.program_service.grpc;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static io.grpc.Status.NOT_FOUND;
+import static io.grpc.Status.UNKNOWN;
+
 import com.google.protobuf.Empty;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -37,19 +43,13 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Component;
 
-import java.util.NoSuchElementException;
-import java.util.UUID;
-
-import static com.google.common.collect.ImmutableList.toImmutableList;
-import static io.grpc.Status.NOT_FOUND;
-import static io.grpc.Status.UNKNOWN;
-
 @Slf4j
 @Component
 public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBase {
 
   /** Dependencies */
   private final CommonConverter commonConverter;
+
   private final AuthorizationService authorizationService;
   private final ProgramServiceFacade serviceFacade;
 
@@ -126,7 +126,8 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void listPrograms(Empty request, StreamObserver<ListProgramsResponse> responseObserver) {
-    val listProgramsResponse = serviceFacade.listPrograms(p -> authorizationService.canRead(p.getShortName()));
+    val listProgramsResponse =
+        serviceFacade.listPrograms(p -> authorizationService.canRead(p.getShortName()));
     responseObserver.onNext(listProgramsResponse);
     responseObserver.onCompleted();
   }
@@ -240,8 +241,7 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
       GetJoinProgramInviteRequest request,
       StreamObserver<GetJoinProgramInviteResponse> responseObserver) {
     val invitation =
-        serviceFacade
-            .getInvitationById(UUID.fromString(request.getInviteId().getValue()));
+        serviceFacade.getInvitationById(UUID.fromString(request.getInviteId().getValue()));
     val response = GetJoinProgramInviteResponse.newBuilder().setInvitation(invitation).build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();

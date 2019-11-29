@@ -18,13 +18,10 @@
 
 package org.icgc.argo.program_service.validation;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.val;
-import org.icgc.argo.program_service.properties.ValidationProperties;
-import org.junit.jupiter.api.Test;
-import org.springframework.stereotype.Component;
+import static junit.framework.TestCase.assertEquals;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import javax.validation.Valid;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
@@ -32,10 +29,12 @@ import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.PastOrPresent;
 import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-
-import static junit.framework.TestCase.assertEquals;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.val;
+import org.icgc.argo.program_service.properties.ValidationProperties;
+import org.junit.jupiter.api.Test;
+import org.springframework.stereotype.Component;
 
 @Component
 public class TestProgramEntityValidation {
@@ -57,8 +56,6 @@ public class TestProgramEntityValidation {
 @Data
 @Valid
 class DateTest {
-  @PastOrPresent
-  LocalDateTime updatedAt;
-  @FutureOrPresent
-  LocalDateTime expiresAt;
+  @PastOrPresent LocalDateTime updatedAt;
+  @FutureOrPresent LocalDateTime expiresAt;
 }

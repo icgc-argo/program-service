@@ -16,6 +16,11 @@
  */
 package org.icgc.argo.program_service.properties;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.springframework.retry.backoff.ExponentialBackOffPolicy.DEFAULT_MULTIPLIER;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -30,12 +35,6 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PositiveOrZero;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.springframework.retry.backoff.ExponentialBackOffPolicy.DEFAULT_MULTIPLIER;
 
 @Getter
 @Setter
@@ -56,11 +55,13 @@ public class RetryProperties {
     return buildRetryTemplate(true);
   }
 
-  private RetryTemplate buildRetryTemplate(boolean retryOnAllErrors){
+  private RetryTemplate buildRetryTemplate(boolean retryOnAllErrors) {
     val result = new RetryTemplate();
     result.setBackOffPolicy(defineBackOffPolicy());
 
-    result.setRetryPolicy(new SimpleRetryPolicy(connection.getMaxRetries(), RetryPolicies.getRetryableExceptions(), true));
+    result.setRetryPolicy(
+        new SimpleRetryPolicy(
+            connection.getMaxRetries(), RetryPolicies.getRetryableExceptions(), true));
     result.registerListener(new DefaultRetryListener(retryOnAllErrors));
     return result;
   }
@@ -81,18 +82,10 @@ public class RetryProperties {
     private static final int DEFAULT_MAX_RETRIES = 5;
     private static final long DEFAULT_INITIAL_BACKOFF_INTERVAL = SECONDS.toMillis(15L);
 
-    @NotNull
-    @PositiveOrZero
-    private Integer maxRetries = DEFAULT_MAX_RETRIES;
+    @NotNull @PositiveOrZero private Integer maxRetries = DEFAULT_MAX_RETRIES;
 
-    @NotNull
-    @PositiveOrZero
-    private Long initialBackoff = DEFAULT_INITIAL_BACKOFF_INTERVAL;
+    @NotNull @PositiveOrZero private Long initialBackoff = DEFAULT_INITIAL_BACKOFF_INTERVAL;
 
-    @NotNull
-    @PositiveOrZero
-    private Double multiplier = DEFAULT_MULTIPLIER;
-
+    @NotNull @PositiveOrZero private Double multiplier = DEFAULT_MULTIPLIER;
   }
-
 }

@@ -1,17 +1,16 @@
 package org.icgc.argo.program_service.services.auth;
 
+import static java.lang.String.format;
+
 import io.grpc.Status;
+import java.util.Collections;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.springframework.context.annotation.Profile;
-
-import javax.validation.constraints.NotNull;
-import java.util.Collections;
-import java.util.Set;
-
-import static java.lang.String.format;
 
 @Profile("auth")
 @Slf4j
@@ -20,7 +19,9 @@ public class EgoAuthorizationService implements AuthorizationService {
 
   public EgoAuthorizationService(String dccAdminPermission) {
     this.dccAdminPermission = dccAdminPermission;
-    log.info(format("Created egoAuthorization service with dccAdmin permission='%s'", dccAdminPermission));
+    log.info(
+        format(
+            "Created egoAuthorization service with dccAdmin permission='%s'", dccAdminPermission));
   }
 
   public EgoToken getEgoToken() {
@@ -38,7 +39,7 @@ public class EgoAuthorizationService implements AuthorizationService {
 
   public boolean hasPermission(@NotNull String permission) {
     log.debug(format("Want permission: %s", permission));
-    val status=getPermissions().contains(permission);
+    val status = getPermissions().contains(permission);
     log.debug(format("hasPermission returns %s", status));
     return status;
   }
@@ -63,7 +64,7 @@ public class EgoAuthorizationService implements AuthorizationService {
   public boolean hasEmail(String email) {
     val authenticatedEmail = fromToken().getEmail();
     log.debug(format("Want email '%s'", email));
-    log.debug(format("Have email '%s'",authenticatedEmail));
+    log.debug(format("Have email '%s'", authenticatedEmail));
 
     if (authenticatedEmail == null || email == null) {
       return false;
@@ -78,5 +79,4 @@ public class EgoAuthorizationService implements AuthorizationService {
       throw Status.fromCode(Status.Code.PERMISSION_DENIED).asRuntimeException();
     }
   }
-
 }

@@ -18,6 +18,17 @@
 
 package org.icgc.argo.program_service.model.entity;
 
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.UUID;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PastOrPresent;
+import javax.validation.constraints.PositiveOrZero;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -30,18 +41,6 @@ import org.icgc.argo.program_service.model.enums.Tables;
 import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.validation.ProgramShortName;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PastOrPresent;
-import javax.validation.constraints.PositiveOrZero;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
-
-import static org.icgc.argo.program_service.utils.CollectionUtils.mapToList;
 
 @Entity
 @Table(name = Tables.PROGRAM)
@@ -111,54 +110,48 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-    mappedBy = ProgramInstitution.Fields.program,
-    cascade = CascadeType.ALL,
-    fetch = FetchType.LAZY,
-    orphanRemoval = true
-  )
+      mappedBy = ProgramInstitution.Fields.program,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
   private Set<ProgramInstitution> programInstitutions = new TreeSet<>();
 
   @NotNull
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-    mappedBy = ProgramCountry.Fields.program,
-    cascade = CascadeType.ALL,
-    fetch = FetchType.LAZY,
-    orphanRemoval = true
-  )
+      mappedBy = ProgramCountry.Fields.program,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
   private Set<ProgramCountry> programCountries = new TreeSet<>();
 
   @NotNull
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-    mappedBy = ProgramRegion.Fields.program,
-    cascade = CascadeType.ALL,
-    fetch = FetchType.LAZY,
-    orphanRemoval = true
-  )
+      mappedBy = ProgramRegion.Fields.program,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
   private Set<ProgramRegion> programRegions = new TreeSet<>();
 
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-    mappedBy = ProgramCancer.Fields.program,
-    cascade = CascadeType.ALL,
-    fetch = FetchType.LAZY,
-    orphanRemoval = true
-  )
+      mappedBy = ProgramCancer.Fields.program,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
   private Set<@NotNull ProgramCancer> programCancers = new TreeSet<>();
 
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
-    mappedBy = ProgramPrimarySite.Fields.program,
-    cascade = CascadeType.ALL,
-    fetch = FetchType.LAZY,
-    orphanRemoval = true
-  )
-
+      mappedBy = ProgramPrimarySite.Fields.program,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
   private Set<@NotNull ProgramPrimarySite> programPrimarySites = new TreeSet<>();
 
   public List<String> listCancerTypes() {
@@ -180,5 +173,4 @@ public class ProgramEntity implements NameableEntity<UUID> {
   public List<String> listRegions() {
     return mapToList(getProgramRegions(), r -> r.getRegion().getName());
   }
-
 }

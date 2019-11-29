@@ -1,14 +1,13 @@
 package org.icgc.argo.program_service.repositories.query;
 
+import java.util.UUID;
+import javax.persistence.criteria.Join;
 import lombok.NonNull;
 import org.icgc.argo.program_service.model.entity.CountryEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.enums.SqlFields;
 import org.icgc.argo.program_service.model.join.ProgramCountry;
 import org.springframework.data.jpa.domain.Specification;
-
-import javax.persistence.criteria.Join;
-import java.util.UUID;
 
 public class CountrySpecification {
 
@@ -20,5 +19,4 @@ public class CountrySpecification {
       return builder.equal(programJoin.<Integer>get(SqlFields.ID), programId);
     };
   }
-
 }

@@ -8,5 +8,7 @@ public class EgoException extends RuntimeException {
     super(message, cause);
   }
 
-  public EgoException(@NonNull String message) {super(message);}
+  public EgoException(@NonNull String message) {
+    super(message);
+  }
 }

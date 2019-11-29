@@ -24,6 +24,8 @@ import io.grpc.ServerInterceptors;
 import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.services.HealthStatusManager;
+import java.io.IOException;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.grpc.interceptor.AuthInterceptor;
@@ -35,12 +37,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.Optional;
-
 @Slf4j
 @Component
-@ConditionalOnProperty(value="app.grpcEnabled")
+@ConditionalOnProperty(value = "app.grpcEnabled")
 public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
 
   private Server server;
@@ -54,8 +53,10 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   private Integer port;
 
   @Autowired
-  public GRpcServerRunner(ProgramServiceImpl programServiceImpl, AuthInterceptor authInterceptor,
-    ExceptionInterceptor exceptionInterceptor) {
+  public GRpcServerRunner(
+      ProgramServiceImpl programServiceImpl,
+      AuthInterceptor authInterceptor,
+      ExceptionInterceptor exceptionInterceptor) {
     this.programServiceImpl = programServiceImpl;
     this.authInterceptor = authInterceptor;
     this.exceptionInterceptor = exceptionInterceptor;
@@ -63,13 +64,15 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   }
 
   @Override
-  public void run(String... args)  {
+  public void run(String... args) {
     // Interceptor bean depends on run profile.
-    val programService = ServerInterceptors.intercept(programServiceImpl, authInterceptor, exceptionInterceptor);
+    val programService =
+        ServerInterceptors.intercept(programServiceImpl, authInterceptor, exceptionInterceptor);
     healthStatusManager.setStatus("program_service.ProgramService", ServingStatus.SERVING);
 
     try {
-      server = ServerBuilder.forPort(port)
+      server =
+          ServerBuilder.forPort(port)
               .addService(programService)
               .addService(ProtoReflectionService.newInstance())
               .addService(healthStatusManager.getHealthService())
@@ -84,21 +87,22 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   }
 
   private void startDaemonAwaitThread() {
-    Thread awaitThread = new Thread(()->{
-      try {
-        this.server.awaitTermination();
-      } catch (InterruptedException e) {
-        log.error("gRPC server stopped.", e);
-      }
-    });
+    Thread awaitThread =
+        new Thread(
+            () -> {
+              try {
+                this.server.awaitTermination();
+              } catch (InterruptedException e) {
+                log.error("gRPC server stopped.", e);
+              }
+            });
     awaitThread.start();
   }
 
   @Override
-  final public void destroy() {
+  public final void destroy() {
     log.info("Shutting down gRPC server ...");
     Optional.ofNullable(server).ifPresent(Server::shutdown);
     log.info("gRPC server stopped.");
   }
 }
-

@@ -18,15 +18,14 @@
 
 package org.icgc.argo.program_service.repositories.query;
 
+import java.util.Collection;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import lombok.NonNull;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.springframework.data.jpa.domain.Specification;
-
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import java.util.Collection;
 
 public abstract class AbstractSpecificationBuilder<T, ID> {
   private static final String ID_FIELD = "id";
@@ -84,7 +83,7 @@ public abstract class AbstractSpecificationBuilder<T, ID> {
   }
 
   private Predicate equalsNameShortNamePredicate(
-    Root<T> root, CriteriaBuilder builder, String shortName) {
+      Root<T> root, CriteriaBuilder builder, String shortName) {
     return builder.equal(root.get(ProgramEntity.Fields.shortName), builder.literal(shortName));
   }
 }

@@ -23,7 +23,6 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig
 class ProgramServiceApplicationTest {
-	@Test
-	void contextLoads() {
-	}
+  @Test
+  void contextLoads() {}
 }

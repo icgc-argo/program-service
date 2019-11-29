@@ -22,40 +22,39 @@ import com.google.protobuf.BoolValue;
 import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import com.google.protobuf.Timestamp;
-import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
 
 @Mapper(config = ConverterConfig.class)
 public interface CommonConverter {
   CommonConverter INSTANCE = Mappers.getMapper(CommonConverter.class);
 
-  default String unboxStringValue(StringValue v){
+  default String unboxStringValue(StringValue v) {
     return v.getValue();
   }
 
-  default StringValue boxString(String s){
+  default StringValue boxString(String s) {
     return StringValue.of(s);
   }
 
-  default int unboxInt32Value(Int32Value v){
+  default int unboxInt32Value(Int32Value v) {
     return v.getValue();
   }
 
-  default Int32Value boxInt(int i){
+  default Int32Value boxInt(int i) {
     return Int32Value.of(i);
   }
 
-  default boolean unboxBoolValue(BoolValue v){
+  default boolean unboxBoolValue(BoolValue v) {
     return v.getValue();
   }
 
-  default BoolValue boxBoolean(boolean v){
+  default BoolValue boxBoolean(boolean v) {
     return BoolValue.of(v);
   }
 
@@ -67,7 +66,7 @@ public interface CommonConverter {
     }
   }
 
-  default UUID stringToUUID(StringValue s){
+  default UUID stringToUUID(StringValue s) {
     return stringToUUID(s.getValue());
   }
 
@@ -76,7 +75,8 @@ public interface CommonConverter {
   }
 
   default LocalDateTime timestampToLocalDateTime(Timestamp timestamp) {
-    return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos()), ZoneId.of("UTC"));
+    return LocalDateTime.ofInstant(
+        Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos()), ZoneId.of("UTC"));
   }
 
   default Timestamp localDateTimeToTimestamp(LocalDateTime dateTime) {
@@ -90,5 +90,4 @@ public interface CommonConverter {
         .setNanos(instant.getNano())
         .build();
   }
-
 }

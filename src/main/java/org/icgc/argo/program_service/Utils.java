@@ -18,10 +18,6 @@
 
 package org.icgc.argo.program_service;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,10 +25,11 @@ import java.io.InputStreamReader;
 import java.security.*;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.security.spec.RSAPrivateKeySpec;
 import java.util.Base64;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 @Slf4j
 public class Utils {
@@ -68,7 +65,7 @@ public class Utils {
     BufferedReader reader = new BufferedReader(new InputStreamReader(in));
     StringBuilder result = new StringBuilder();
     String line;
-    while((line = reader.readLine()) != null) {
+    while ((line = reader.readLine()) != null) {
       result.append(line);
     }
     return result.toString();

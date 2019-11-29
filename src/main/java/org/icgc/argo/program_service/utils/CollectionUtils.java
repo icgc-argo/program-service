@@ -18,13 +18,14 @@
 
 package org.icgc.argo.program_service.utils;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.*;
+import static java.util.stream.IntStream.range;
+import static lombok.AccessLevel.PRIVATE;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.val;
-import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -33,12 +34,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-
-import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.*;
-import static java.util.stream.IntStream.range;
-import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.val;
+import org.icgc.argo.program_service.model.entity.IdentifiableEntity;
 
 @NoArgsConstructor(access = PRIVATE)
 public class CollectionUtils {
@@ -49,10 +48,10 @@ public class CollectionUtils {
 
   public static <T> Collector<T, ImmutableSet.Builder<T>, ImmutableSet<T>> toImmutableSet() {
     return Collector.of(
-      ImmutableSet.Builder::new,
-      ImmutableSet.Builder::add,
-      (b1, b2) -> b1.addAll(b2.build()),
-      ImmutableSet.Builder::build);
+        ImmutableSet.Builder::new,
+        ImmutableSet.Builder::add,
+        (b1, b2) -> b1.addAll(b2.build()),
+        ImmutableSet.Builder::build);
   }
 
   public static <T, U> Set<U> mapToImmutableSet(Collection<T> collection, Function<T, U> mapper) {
@@ -79,7 +78,8 @@ public class CollectionUtils {
     return mapToImmutableSet(uuids, UUID::fromString);
   }
 
-  public static <ID, T extends IdentifiableEntity<ID>> Set<ID> convertToIds(Collection<T> entities) {
+  public static <ID, T extends IdentifiableEntity<ID>> Set<ID> convertToIds(
+      Collection<T> entities) {
     return mapToImmutableSet(entities, IdentifiableEntity::getId);
   }
 
@@ -87,13 +87,13 @@ public class CollectionUtils {
     val exitingSet = Sets.<T>newHashSet();
     val duplicateSet = Sets.<T>newHashSet();
     collection.forEach(
-      x -> {
-        if (exitingSet.contains(x)) {
-          duplicateSet.add(x);
-        } else {
-          exitingSet.add(x);
-        }
-      });
+        x -> {
+          if (exitingSet.contains(x)) {
+            duplicateSet.add(x);
+          } else {
+            exitingSet.add(x);
+          }
+        });
     return duplicateSet;
   }
 
@@ -116,5 +116,4 @@ public class CollectionUtils {
   public static <T> String join(Collection<T> collection, String separator) {
     return collection.stream().map(o -> o.toString()).collect(Collectors.joining(separator));
   }
-
 }

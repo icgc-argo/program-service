@@ -5,12 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@AllArgsConstructor @NoArgsConstructor @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 public class EgoGroupPermissionRequest {
-  @JsonProperty
-  private String groupName;
-  @JsonProperty
-  private String policyName;
-  @JsonProperty
-  private String mask;
+  @JsonProperty private String groupName;
+  @JsonProperty private String policyName;
+  @JsonProperty private String mask;
 }

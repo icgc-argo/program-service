@@ -11,9 +11,7 @@ import org.springframework.stereotype.Service;
 public class ExceptionInterceptor implements ServerInterceptor {
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-      ServerCall<ReqT, RespT> call,
-      Metadata headers,
-      ServerCallHandler<ReqT, RespT> next) {
+      ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
 
     val listener = next.startCall(call, headers);
     return new ExceptionListener<>(call, listener);

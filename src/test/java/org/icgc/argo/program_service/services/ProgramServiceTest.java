@@ -18,6 +18,7 @@
 
 package org.icgc.argo.program_service.services;
 
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Assert;
@@ -25,7 +26,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import java.util.List;
 
 @Slf4j
 @SpringBootTest
@@ -61,8 +61,11 @@ public class ProgramServiceTest {
       ProgramService.compareLists(errorMessage, userList, systemList);
     } catch (Exception e) {
       log.info(e.toString());
-      Assert.assertEquals(e.getMessage(), String.format("INVALID_ARGUMENT: Cannot create program, invalid primary sites provided: %s", "Foobar"));
+      Assert.assertEquals(
+          e.getMessage(),
+          String.format(
+              "INVALID_ARGUMENT: Cannot create program, invalid primary sites provided: %s",
+              "Foobar"));
     }
   }
-
 }

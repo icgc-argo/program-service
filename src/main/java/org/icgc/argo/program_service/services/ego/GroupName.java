@@ -1,11 +1,11 @@
 package org.icgc.argo.program_service.services.ego;
 
+import static java.lang.String.format;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import org.icgc.argo.program_service.proto.UserRole;
-
-import static java.lang.String.format;
 
 @Value
 @Builder
@@ -22,11 +22,7 @@ public class GroupName {
     return format(FORMAT, contextName, programShortName, role.name());
   }
 
-  public static GroupName createProgramGroupName(String name, UserRole role){
-    return GroupName.builder()
-        .contextName("PROGRAM")
-        .programShortName(name)
-        .role(role)
-        .build();
+  public static GroupName createProgramGroupName(String name, UserRole role) {
+    return GroupName.builder().contextName("PROGRAM").programShortName(name).role(role).build();
   }
 }
