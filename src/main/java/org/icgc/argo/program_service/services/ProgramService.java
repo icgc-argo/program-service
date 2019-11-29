@@ -26,6 +26,7 @@ import static org.icgc.argo.program_service.model.join.ProgramInstitution.create
 import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
 import static org.icgc.argo.program_service.model.join.ProgramRegion.createProgramRegion;
 import static org.icgc.argo.program_service.utils.CollectionUtils.*;
+import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 import static org.icgc.argo.program_service.utils.EntityService.*;
 
 import io.grpc.Status;
@@ -236,9 +237,7 @@ public class ProgramService {
   private void processCancers(
       @NonNull ProgramEntity programToUpdate, @NonNull List<String> cancerNames) {
     val cancerEntities = checkExistenceByName(CancerEntity.class, cancerRepository, cancerNames);
-
-    val currentCancers =
-        programToUpdate.getProgramCancers().stream().map(ProgramCancer::getCancer).collect(toSet());
+    val currentCancers = mapToSet(programToUpdate.getProgramCancers(), ProgramCancer::getCancer);
 
     val toDelete =
         currentCancers.stream().filter(c -> !cancerEntities.contains(c)).collect(toSet());
@@ -259,11 +258,8 @@ public class ProgramService {
       @NonNull ProgramEntity programToUpdate, @NonNull List<String> primarySitesNames) {
     val primarySiteEntities =
         checkExistenceByName(PrimarySiteEntity.class, primarySiteRepository, primarySitesNames);
-
     val currentPrimarySites =
-        programToUpdate.getProgramPrimarySites().stream()
-            .map(ProgramPrimarySite::getPrimarySite)
-            .collect(toSet());
+        mapToSet(programToUpdate.getProgramPrimarySites(), ProgramPrimarySite::getPrimarySite);
 
     val toDelete =
         currentPrimarySites.stream().filter(p -> !primarySiteEntities.contains(p)).collect(toSet());
@@ -287,11 +283,8 @@ public class ProgramService {
   private void processInstitutions(
       @NonNull ProgramEntity programToUpdate, @NonNull List<String> names) {
     val existing = institutionRepository.findAllByNameIn(names);
-
     val currentInstitutions =
-        programToUpdate.getProgramInstitutions().stream()
-            .map(ProgramInstitution::getInstitution)
-            .collect(toSet());
+        mapToSet(programToUpdate.getProgramInstitutions(), ProgramInstitution::getInstitution);
 
     val toDelete = currentInstitutions.stream().filter(i -> !existing.contains(i)).collect(toSet());
     val toAdd =
@@ -314,11 +307,8 @@ public class ProgramService {
   private void processCountries(
       @NonNull ProgramEntity programToUpdate, @NonNull List<String> names) {
     val countryEntities = checkExistenceByName(CountryEntity.class, countryRepository, names);
-
     val currentCountries =
-        programToUpdate.getProgramCountries().stream()
-            .map(ProgramCountry::getCountry)
-            .collect(toSet());
+        mapToSet(programToUpdate.getProgramCountries(), ProgramCountry::getCountry);
 
     val toDelete =
         currentCountries.stream().filter(c -> !countryEntities.contains(c)).collect(toSet());
@@ -339,9 +329,7 @@ public class ProgramService {
 
   private void processRegions(@NonNull ProgramEntity programToUpdate, @NonNull List<String> names) {
     val regionEntities = checkExistenceByName(RegionEntity.class, regionRepository, names);
-
-    val currentRegions =
-        programToUpdate.getProgramRegions().stream().map(ProgramRegion::getRegion).collect(toSet());
+    val currentRegions = mapToSet(programToUpdate.getProgramRegions(), ProgramRegion::getRegion);
 
     val toDelete =
         currentRegions.stream().filter(r -> !regionEntities.contains(r)).collect(toSet());
@@ -403,27 +391,27 @@ public class ProgramService {
     return List.copyOf(programs);
   }
 
-  public List<CancerEntity> listCancers() {
+  List<CancerEntity> listCancers() {
     return List.copyOf(cancerRepository.findAll());
   }
 
-  public List<PrimarySiteEntity> listPrimarySites() {
+  List<PrimarySiteEntity> listPrimarySites() {
     return List.copyOf(primarySiteRepository.findAll());
   }
 
-  public List<CountryEntity> listCountries() {
+  List<CountryEntity> listCountries() {
     return List.copyOf(countryRepository.findAll());
   }
 
-  public List<RegionEntity> listRegions() {
+  List<RegionEntity> listRegions() {
     return List.copyOf(regionRepository.findAll());
   }
 
-  public List<InstitutionEntity> listInstitutions() {
+  List<InstitutionEntity> listInstitutions() {
     return List.copyOf(institutionRepository.findAll());
   }
 
-  public List<InstitutionEntity> addInstitutions(@NonNull List<String> names) {
+  List<InstitutionEntity> addInstitutions(@NonNull List<String> names) {
     checkEmpty(names);
     checkDuplicate(InstitutionEntity.class, institutionRepository, names);
     val entities =
@@ -433,31 +421,31 @@ public class ProgramService {
     return institutionRepository.saveAll(entities);
   }
 
-  private Predicate<ProgramCancer> programCancerPredicate(
+  private static Predicate<ProgramCancer> programCancerPredicate(
       ProgramEntity program, Set<CancerEntity> cancers) {
     val id = program.getId();
     return c -> c.getProgram().getId().equals(id) && cancers.contains(c.getCancer());
   }
 
-  private Predicate<ProgramPrimarySite> programPrimarySitePredicate(
+  private static Predicate<ProgramPrimarySite> programPrimarySitePredicate(
       ProgramEntity program, Set<PrimarySiteEntity> sites) {
     val id = program.getId();
     return ps -> ps.getProgram().getId().equals(id) && sites.contains(ps.getPrimarySite());
   }
 
-  private Predicate<ProgramInstitution> programInstitutionPredicate(
+  private static Predicate<ProgramInstitution> programInstitutionPredicate(
       ProgramEntity program, Set<InstitutionEntity> institutions) {
     val id = program.getId();
     return i -> i.getProgram().getId().equals(id) && institutions.contains(i.getInstitution());
   }
 
-  private Predicate<ProgramCountry> programCountryPredicate(
+  private static Predicate<ProgramCountry> programCountryPredicate(
       ProgramEntity program, Set<CountryEntity> countries) {
     val id = program.getId();
     return c -> c.getProgram().getId().equals(id) && countries.contains(c.getCountry());
   }
 
-  private Predicate<ProgramRegion> programRegionPredicate(
+  private static Predicate<ProgramRegion> programRegionPredicate(
       ProgramEntity program, Set<RegionEntity> regions) {
     val id = program.getId();
     return r -> r.getProgram().getId().equals(id) && regions.contains(r.getRegion());
