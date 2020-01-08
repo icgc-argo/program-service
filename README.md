@@ -24,7 +24,7 @@
 
 ## Objective
 
-The central point to create and manage programs and maintain their metadata.
+The central point to create and manage programs and maintain their metadata. COOL FEATURE HERE
 
 ## Development
 
@@ -140,16 +140,18 @@ All emails sent are captured by [mailhog](https://mailhog.qa.cancercollaboratory
 
 ### Mocking service using WireMock
 
-Why use WireMock? 
+Why use WireMock?
 
 When writing Ego integration tests, instead of calling actual Ego endpoints (which would pollute Ego's database with test data, or test failure if the Ego service is shutdown), we can mock Ego endpoints with WireMock.
 WireMock starts a mock server at a given or random port. For example, to define a WireMock rule at a random port:
+
 ```
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(options().dynamicPort());
 ```
 
 The response can also be mocked:
+
 ```
     stubFor(get(urlEqualTo(url))
         .willReturn(aResponse()
@@ -157,8 +159,9 @@ The response can also be mocked:
           .withHeader("Content-Type", "application/json")
           .withBodyFile(filename)));
 ```
+
 Note that the "filename" is the name of a self-defined json file which mocks response body.
-All mocked json response files are located in `src/test/resources/__files`. 
+All mocked json response files are located in `src/test/resources/__files`.
 
 ## Demo Mode
 
