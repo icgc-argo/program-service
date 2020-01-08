@@ -26,7 +26,7 @@
 		<postgres.version>42.2.5</postgres.version>
 		<flyway.version>5.2.4</flyway.version>
 		<javax.validation.version>2.0.1.Final</javax.validation.version>
-		<hibernate.validator.version>6.0.4.Final</hibernate.validator.version>
+		<hibernate.validator.version>6.1.0.Final</hibernate.validator.version>
 		<jackson.version>2.9.8</jackson.version>
 		<jwt.version>3.8.0</jwt.version>
 		<aspectj.version>1.9.2</aspectj.version>
