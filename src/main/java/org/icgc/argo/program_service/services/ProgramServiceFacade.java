@@ -3,6 +3,7 @@ package org.icgc.argo.program_service.services;
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity.Status.*;
 import static org.icgc.argo.program_service.utils.CollectionUtils.*;
 
 import io.grpc.Status;
@@ -178,7 +179,18 @@ public class ProgramServiceFacade {
     val email = request.getUserEmail().getValue();
     val role = request.getRole().getValue();
 
-    egoService.updateUserRole(email, programShortName, role);
+    val existingUserInvite =
+        invitationService.getLatestInvitation(programShortName, email).orElse(null);
+    if (existingUserInvite == null || existingUserInvite.getStatus() == ACCEPTED) {
+      egoService.updateUserRole(email, programShortName, role);
+    } else {      
+      val firstName = existingUserInvite.getFirstName();
+      val lastName = existingUserInvite.getLastName();
+      val programResult = programService.getProgram(programShortName);
+
+      // re-invite with updated role
+      invitationService.inviteUser(programResult, email, firstName, lastName, role);
+    }
   }
 
   @Transactional
