@@ -85,7 +85,7 @@ public class ProgramServiceAuthorizationTest {
         .thenReturn(invitationUUID);
 
     when(invitationService.getLatestInvitation(programName().getValue(), userId().getValue()))
-        .thenReturn(Optional.empty().of(invite1()));
+        .thenReturn(Optional.of(invite1()));
 
     val programConverter = ProgramConverter.INSTANCE;
     val commonConverter = CommonConverter.INSTANCE;
