@@ -180,16 +180,21 @@ public class ProgramServiceFacade {
     val role = request.getRole().getValue();
 
     val existingUserInvite =
-        invitationService.getLatestInvitation(programShortName, email).orElse(null);
+        invitationService
+            .getLatestInvitation(programShortName, email)
+            .orElseThrow(
+                () ->
+                    NOT_FOUND
+                        .withDescription("Can't update user who was never invited!")
+                        .asRuntimeException());
 
-    if (existingUserInvite == null || existingUserInvite.getStatus() == ACCEPTED) {
+    if (existingUserInvite.getStatus() == ACCEPTED) {
       egoService.updateUserRole(email, programShortName, role);
     } else {
       val firstName = existingUserInvite.getFirstName();
       val lastName = existingUserInvite.getLastName();
       val programResult = programService.getProgram(programShortName);
 
-      // re-invite with updated role
       invitationService.inviteUser(programResult, email, firstName, lastName, role);
     }
   }
