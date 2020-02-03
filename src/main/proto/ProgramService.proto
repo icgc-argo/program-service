@@ -137,6 +137,11 @@ message UserDetails {
   google.protobuf.Timestamp accepted_at = 3;
 }
 
+message LegacyDetails {
+  google.protobuf.BoolValue legacy = 1;
+  google.protobuf.StringValue legacy_short_name = 2;
+}
+
 message CreateProgramRequest {
   Program program = 1;
   repeated User admins = 3;
@@ -157,6 +162,7 @@ message UpdateProgramResponse {
 message ProgramDetails {
   Program program = 1;
   Metadata metadata = 2;
+  LegacyDetails legacy = 3;
 }
 
 message Metadata {
