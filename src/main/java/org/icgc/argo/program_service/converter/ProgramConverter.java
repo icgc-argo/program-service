@@ -50,7 +50,7 @@ public interface ProgramConverter {
   @Mapping(target = "programInstitutions", ignore = true)
   @Mapping(target = "programCountries", ignore = true)
   @Mapping(target = "programRegions", ignore = true)
-  @Mapping(target = "legacy", constant="false")
+  @Mapping(target = "active", constant = "true")
   @Mapping(target = "legacyShortName", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
 
@@ -214,7 +214,6 @@ public interface ProgramConverter {
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
-  @Mapping(target = "mergeLegacy", ignore = true)
   @Mapping(target = "mergeLegacyShortName", ignore = true)
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)

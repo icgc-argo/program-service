@@ -106,8 +106,8 @@ public class ProgramEntity implements NameableEntity<UUID> {
   @Column(name = SqlFields.DESCRIPTION)
   private String description;
 
-  @Column(name = SqlFields.IS_LEGACY)
-  private Boolean legacy;
+  @Column(name = SqlFields.IS_ACTIVE)
+  private Boolean active;
 
   @Column(name = SqlFields.LEGACY_SHORTNAME)
   private String legacyShortName;

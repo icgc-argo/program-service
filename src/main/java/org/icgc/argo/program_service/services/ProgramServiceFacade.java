@@ -142,7 +142,11 @@ public class ProgramServiceFacade {
 
   public ListProgramsResponse listPrograms(Predicate<ProgramEntity> predicate) {
     val programEntities =
-        programService.listPrograms().stream().filter(predicate).collect(toList());
+        programService.listPrograms().stream()
+            // Only show active programs
+            .filter(p -> p.getActive().booleanValue())
+            .filter(predicate)
+            .collect(toList());
     return programConverter.programEntitiesToListProgramsResponse(programEntities);
   }
 

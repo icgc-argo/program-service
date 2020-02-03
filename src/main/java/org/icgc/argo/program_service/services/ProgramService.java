@@ -120,6 +120,10 @@ public class ProgramService {
       throw Status.NOT_FOUND
           .withDescription("Program '" + name + "' not found")
           .asRuntimeException();
+    } else if (!search.get().getActive().booleanValue()) {
+      throw Status.FAILED_PRECONDITION
+          .withDescription("Program '" + name + "' is inactive.")
+          .asRuntimeException();
     }
     return search.get();
   }
