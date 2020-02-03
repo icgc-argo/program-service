@@ -105,7 +105,7 @@ public class ProgramService {
     this.validatorFactory = validatorFactory;
   }
 
-  private ProgramEntity findProgramByShortName(@NonNull String name) {
+  private ProgramEntity findProgramByShortName(@NonNull String name, boolean allowInactive) {
     val search =
         programRepository.findOne(
             new ProgramSpecificationBuilder()
@@ -120,7 +120,8 @@ public class ProgramService {
       throw Status.NOT_FOUND
           .withDescription("Program '" + name + "' not found")
           .asRuntimeException();
-    } else if (!search.get().getActive().booleanValue()) {
+    } else if (!(allowInactive || search.get().getActive().booleanValue())) {
+      // Not allowing inactive programs, and the program is inactive
       throw Status.FAILED_PRECONDITION
           .withDescription("Program '" + name + "' is inactive.")
           .asRuntimeException();
@@ -129,7 +130,11 @@ public class ProgramService {
   }
 
   public ProgramEntity getProgram(@NonNull String name) {
-    return findProgramByShortName(name);
+    return getProgram(name, false);
+  }
+
+  public ProgramEntity getProgram(@NonNull String name, boolean allowInactive) {
+    return findProgramByShortName(name, allowInactive);
   }
 
   public ProgramEntity createWithSideEffect(
@@ -223,7 +228,7 @@ public class ProgramService {
           .asRuntimeException();
     }
 
-    val programToUpdate = findProgramByShortName(updatingProgram.getShortName());
+    val programToUpdate = findProgramByShortName(updatingProgram.getShortName(), false);
 
     // update associations
     processCancers(programToUpdate, cancers);
@@ -236,6 +241,21 @@ public class ProgramService {
     programConverter.updateProgram(updatingProgram, programToUpdate);
     programRepository.save(programToUpdate);
     return programToUpdate;
+  }
+
+  public ProgramEntity activateProgram(
+      @NonNull ProgramEntity program, @NonNull String updatedShortName) throws NotFoundException {
+
+    if (program.getActive().booleanValue()) {
+      throw Status.FAILED_PRECONDITION
+          .withDescription("The program '" + program.getShortName() + "' is already active.")
+          .asRuntimeException();
+    }
+    // update program info
+    program.setShortName(updatedShortName);
+    program.setActive(true);
+    programRepository.save(program);
+    return program;
   }
 
   private void processCancers(

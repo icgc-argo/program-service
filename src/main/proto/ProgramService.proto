@@ -33,6 +33,7 @@ service ProgramService {
   rpc UpdateProgram(UpdateProgramRequest) returns (UpdateProgramResponse);
   rpc ListPrograms(google.protobuf.Empty) returns (ListProgramsResponse);
   rpc GetProgram(GetProgramRequest) returns (GetProgramResponse);
+  rpc ActivateProgram(ActivateProgramRequest) returns (GetProgramResponse);
 
   rpc InviteUser(InviteUserRequest) returns (InviteUserResponse);
   rpc GetJoinProgramInvite(GetJoinProgramInviteRequest) returns (GetJoinProgramInviteResponse);
@@ -175,6 +176,11 @@ message GetProgramRequest {
 
 message GetProgramResponse {
   ProgramDetails program = 1;
+}
+
+message ActivateProgramRequest {
+  google.protobuf.StringValue original_short_name = 1;
+  google.protobuf.StringValue updated_short_name = 2;
 }
 
 message ListProgramsResponse {

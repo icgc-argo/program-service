@@ -110,6 +110,23 @@ public class ProgramServiceFacade {
   }
 
   @Transactional
+  public GetProgramResponse activateProgram(ActivateProgramRequest request) {
+    val originalName = request.getOriginalShortName().getValue();
+    val programEntity = programService.getProgram(originalName, true);
+
+    // For updated name use provided value, or default to originalName
+    val updatedName =
+        request.getUpdatedShortName().isInitialized()
+            ? request.getUpdatedShortName().getValue()
+            : originalName;
+
+    // Activate it then send response
+    val updatedProgram = programService.activateProgram(programEntity, updatedName);
+    val programDetails = programConverter.ProgramEntityToProgramDetails(updatedProgram);
+    return GetProgramResponse.newBuilder().setProgram(programDetails).build();
+  }
+
+  @Transactional
   public InviteUserResponse inviteUser(InviteUserRequest request) {
     val programShortName = request.getProgramShortName().getValue();
     val programResult = programService.getProgram(programShortName);

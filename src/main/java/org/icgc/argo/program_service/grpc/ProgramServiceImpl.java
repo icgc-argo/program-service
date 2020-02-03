@@ -96,6 +96,20 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
   }
 
   @Override
+  public void activateProgram(
+      ActivateProgramRequest request, StreamObserver<GetProgramResponse> responseObserver) {
+    authorizationService.requireDCCAdmin();
+    try {
+      val response = serviceFacade.activateProgram(request);
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (NotFoundException | NoSuchElementException e) {
+      log.error("Exception throw in updateProgram: {}", e.getMessage());
+      throw status(NOT_FOUND, e.getMessage());
+    }
+  }
+
+  @Override
   public void inviteUser(
       InviteUserRequest request, StreamObserver<InviteUserResponse> responseObserver) {
     authorizationService.requireProgramAdmin(request.getProgramShortName().getValue());
