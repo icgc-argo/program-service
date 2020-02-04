@@ -167,6 +167,9 @@ public class ProgramServiceFacade {
   }
 
   public ListUsersResponse listUsers(String programShortName) {
+    // Fetching the program first will throw an error if it is not active or doesnt exist
+    //   stopping the ego requests for a program that was never initialized
+    programService.getProgram(programShortName);
     val users = egoService.getUsersInProgram(programShortName);
     Set<UserDetails> userDetails =
         mapToSet(
