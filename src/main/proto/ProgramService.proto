@@ -181,6 +181,7 @@ message GetProgramResponse {
 message ActivateProgramRequest {
   google.protobuf.StringValue original_short_name = 1;
   google.protobuf.StringValue updated_short_name = 2;
+  repeated User admins = 3;
 }
 
 message ListProgramsResponse {

@@ -73,15 +73,7 @@ public class ProgramServiceFacade {
         programService.createWithSideEffect(
             program,
             (ProgramEntity pe) -> {
-              egoService.setUpProgram(pe.getShortName());
-              admins.forEach(
-                  admin -> {
-                    val email = commonConverter.unboxStringValue(admin.getEmail());
-                    val firstName = commonConverter.unboxStringValue(admin.getFirstName());
-                    val lastName = commonConverter.unboxStringValue(admin.getLastName());
-                    egoService.getOrCreateUser(email, firstName, lastName);
-                    invitationService.inviteUser(pe, email, firstName, lastName, UserRole.ADMIN);
-                  });
+              InitializeProgramInEgo(pe, admins);
             });
     log.debug("Created {}", programEntity.getShortName());
     return programConverter.programEntityToCreateProgramResponse(programEntity);
@@ -120,9 +112,16 @@ public class ProgramServiceFacade {
             ? request.getUpdatedShortName().getValue()
             : originalName;
 
-    // Activate it then send response
+    val admins = request.getAdminsList();
+
+    // Activate it, update ego, then send response
     val updatedProgram = programService.activateProgram(programEntity, updatedName);
+
+    InitializeProgramInEgo(updatedProgram, admins);
+
     val programDetails = programConverter.ProgramEntityToProgramDetails(updatedProgram);
+
+    log.debug("Activated {} as {}", programEntity.getShortName(), updatedProgram.getShortName());
     return GetProgramResponse.newBuilder().setProgram(programDetails).build();
   }
 
@@ -265,5 +264,17 @@ public class ProgramServiceFacade {
   public AddInstitutionsResponse addInstitutions(List<String> names) {
     return programConverter.institutionsToAddInstitutionsResponse(
         programService.addInstitutions(names));
+  }
+
+  private void InitializeProgramInEgo(ProgramEntity pe, List<User> admins) {
+    egoService.setUpProgram(pe.getShortName());
+    admins.forEach(
+        admin -> {
+          val email = commonConverter.unboxStringValue(admin.getEmail());
+          val firstName = commonConverter.unboxStringValue(admin.getFirstName());
+          val lastName = commonConverter.unboxStringValue(admin.getLastName());
+          egoService.getOrCreateUser(email, firstName, lastName);
+          invitationService.inviteUser(pe, email, firstName, lastName, UserRole.ADMIN);
+        });
   }
 }
