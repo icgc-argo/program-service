@@ -1,11 +1,5 @@
 package org.icgc.argo.program_service.grpc;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
-import static org.apache.commons.lang.RandomStringUtils.randomAlphabetic;
-import static org.icgc.argo.program_service.UtilsTest.*;
-import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.Channel;
@@ -13,9 +7,6 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
@@ -33,6 +24,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static org.apache.commons.lang.RandomStringUtils.randomAlphabetic;
+import static org.icgc.argo.program_service.UtilsTest.*;
+import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 @ActiveProfiles("test")
