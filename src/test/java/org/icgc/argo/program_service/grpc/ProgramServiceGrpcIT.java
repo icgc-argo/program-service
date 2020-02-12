@@ -61,7 +61,7 @@ public class ProgramServiceGrpcIT {
   private final int CANCER_COUNT = 36;
   // There are 23 primary sites in db.
   private final int PRIMARY_SITE_COUNT = 23;
-  // There are 6 regions in db.
+  // There is 1 region in db.
   private final int REGION_COUNT = 1;
   // There are at least 435 institutions in db.
   private final int LEAST_INSTITUTION_COUNT = 435;
@@ -163,7 +163,7 @@ public class ProgramServiceGrpcIT {
     assertTrue(response.getProgram().hasProgram());
     assertEquals(response.getProgram().getProgram().getShortName(), newShortName);
 
-    // get old short name finds nothing (error)
+    // get with new short name and find the program
     val getProgramRequestNewName =
         GetProgramRequest.newBuilder().setShortName(newShortName).build();
     val getResponseNewName = stub.getProgram(getProgramRequestNewName);
