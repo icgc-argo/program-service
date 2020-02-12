@@ -73,7 +73,7 @@ public class ProgramServiceFacade {
         programService.createWithSideEffect(
             program,
             (ProgramEntity pe) -> {
-              InitializeProgramInEgo(pe, admins);
+              initializeProgramInEgo(pe, admins);
             });
     log.debug("Created {}", programEntity.getShortName());
     return programConverter.programEntityToCreateProgramResponse(programEntity);
@@ -82,7 +82,7 @@ public class ProgramServiceFacade {
   public GetProgramResponse getProgram(GetProgramRequest request) {
     val shortName = request.getShortName().getValue();
     val programEntity = programService.getProgram(shortName);
-    val programDetails = programConverter.ProgramEntityToProgramDetails(programEntity);
+    val programDetails = programConverter.programEntityToProgramDetails(programEntity);
     return GetProgramResponse.newBuilder().setProgram(programDetails).build();
   }
 
@@ -117,9 +117,9 @@ public class ProgramServiceFacade {
     // Activate it, update ego, then send response
     val updatedProgram = programService.activateProgram(programEntity, updatedName);
 
-    InitializeProgramInEgo(updatedProgram, admins);
+    initializeProgramInEgo(updatedProgram, admins);
 
-    val programDetails = programConverter.ProgramEntityToProgramDetails(updatedProgram);
+    val programDetails = programConverter.programEntityToProgramDetails(updatedProgram);
 
     log.debug("Activated {} as {}", programEntity.getShortName(), updatedProgram.getShortName());
     return GetProgramResponse.newBuilder().setProgram(programDetails).build();
@@ -269,7 +269,7 @@ public class ProgramServiceFacade {
         programService.addInstitutions(names));
   }
 
-  private void InitializeProgramInEgo(ProgramEntity pe, List<User> admins) {
+  private void initializeProgramInEgo(ProgramEntity pe, List<User> admins) {
     egoService.setUpProgram(pe.getShortName());
     admins.forEach(
         admin -> {

@@ -165,7 +165,7 @@ public interface ProgramConverter {
   @Mapping(target = "mergeUpdatedAt", ignore = true)
   UpdateProgramResponse programEntityToUpdateProgramResponse(ProgramEntity p);
 
-  default ProgramDetails ProgramEntityToProgramDetails(ProgramEntity value) {
+  default ProgramDetails programEntityToProgramDetails(ProgramEntity value) {
     val program = programEntityToProgram(value);
     val metadata = programEntityToMetadata(value);
     val legacyDetails = programEntityToLegacyData(value);
