@@ -46,7 +46,8 @@ public class EntityGenerator {
             .setName("NAME-" + shortname)
             .setSubmittedDonors(1000)
             .setUpdatedAt(LocalDateTime.now())
-            .setWebsite("http://test.org");
+            .setWebsite("http://test.org")
+            .setActive(true);
     return programRepository.save(entity);
   }
 
