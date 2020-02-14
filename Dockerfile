@@ -22,13 +22,13 @@ ENV APP_HOME /home/$APP_USER
 COPY --from=builder /srv/target/program-service-*-SNAPSHOT.jar /program-service.jar
 
 RUN addgroup -S -g $APP_GID $APP_USER  \
-   && adduser -S -u $APP_UID -g $APP_GID $APP_USER \
+   && adduser -S -u $APP_UID -G $APP_USER $APP_USER \
    && mkdir -p $APP_HOME \
    && chown -R $APP_UID:$APP_GID $APP_HOME \
    && chown $APP_UID:$APP_GID /program-service.jar \
    && mv /program-service.jar $APP_HOME
 
-USER $APP_USER
+USER $APP_UID
 
 WORKDIR $APP_HOME
 
