@@ -25,6 +25,7 @@ import org.icgc.argo.program_service.repositories.InstitutionRepository;
 import org.icgc.argo.program_service.services.ego.EgoClient;
 import org.icgc.argo.program_service.utils.EntityGenerator;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +34,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.FixedHostPortGenericContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -40,6 +44,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringRunner.class)
 @Transactional
 public class ProgramServiceGrpcIT {
+  @ClassRule
+  public static GenericContainer mailhogContainer =
+      new FixedHostPortGenericContainer("mailhog/mailhog:v1.0.0")
+          .withFixedExposedPort(10200, 8025) // http port used in waitForHttp
+          .withFixedExposedPort(10300, 1025) // mail port used by application
+          .waitingFor(
+              Wait.forHttp("/")); // Define wait condition during startup, checks lowest host port
 
   @Autowired private ProgramServiceImpl programServiceImpl;
 

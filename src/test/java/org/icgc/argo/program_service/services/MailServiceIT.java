@@ -33,23 +33,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
+import org.testcontainers.containers.FixedHostPortGenericContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
-@ActiveProfiles({"test", "default"})
+@ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestPropertySource(
-    properties = {
-      "spring.datasource.url=jdbc:postgresql://localhost:5432/program_db",
-      "spring.datasource.driverClassName=org.postgresql.Driver",
-      "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect"
-    })
 @ComponentScan(lazyInit = true)
+@Testcontainers
 class MailServiceIT {
   @Autowired MailService mailService;
 
@@ -57,8 +55,19 @@ class MailServiceIT {
 
   @Mock ProgramEntity mockProgramEntity;
 
-  @Value("${spring.mail.host}")
-  String mailhogHost;
+  // host ports used in test container
+  static int MAILHOG_HTTP_PORT = 10200;
+  static int MAILHOG_MAIL_PORT = 10300;
+
+  @Container
+  static GenericContainer mailhogContainer =
+      new FixedHostPortGenericContainer("mailhog/mailhog:v1.0.0")
+          .withFixedExposedPort(MAILHOG_HTTP_PORT, 8025) // http port used in test
+          .withFixedExposedPort(MAILHOG_MAIL_PORT, 1025) // mail port used by application
+          .waitingFor(
+              Wait.forHttp("/")); // Define wait condition during startup, checks lowest host port
+
+  String mailHogRootUrl = "http://" + mailhogContainer.getIpAddress() + ":" + MAILHOG_HTTP_PORT;
 
   RestTemplate restTemplate = new RestTemplate();
 
@@ -77,8 +86,7 @@ class MailServiceIT {
     mailService.sendInviteEmail(invite);
     val messages =
         restTemplate.getForObject(
-            "https://" + mailhogHost + "/api/v2/search?kind=containing&query=" + randomEmail,
-            JsonNode.class);
+            mailHogRootUrl + "/api/v2/search?kind=containing&query=" + randomEmail, JsonNode.class);
     assertTrue(messages.at("/total").asInt() > 0);
     assertEquals("noreply", messages.at("/items/0/From/Mailbox").asText());
     assertEquals("oicr.on.ca", messages.at("/items/0/From/Domain").asText());
