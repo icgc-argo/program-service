@@ -408,7 +408,8 @@ public class ProgramServiceAuthorizationTest {
         .setMembershipType(MembershipType.ASSOCIATE)
         .setProgramCancers(Set.of())
         .setProgramPrimarySites(Set.of())
-        .setWebsite("http://org.com");
+        .setWebsite("http://org.com")
+        .setActive(true);
   }
 
   Set<ProgramCountry> countries(ProgramEntity programEntity, String... names) {
@@ -435,7 +436,8 @@ public class ProgramServiceAuthorizationTest {
         .setMembershipType(MembershipType.ASSOCIATE)
         .setProgramCancers(Set.of())
         .setProgramPrimarySites(Set.of())
-        .setWebsite("http://org.com");
+        .setWebsite("http://org.com")
+        .setActive(true);
   }
 
   ProgramEntity entity3() {
@@ -452,7 +454,8 @@ public class ProgramServiceAuthorizationTest {
         .setMembershipType(MembershipType.FULL)
         .setProgramCancers(Set.of())
         .setProgramPrimarySites(Set.of())
-        .setWebsite("http://org.com");
+        .setWebsite("http://org.com")
+        .setActive(true);
   }
 
   Program program() {

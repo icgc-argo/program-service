@@ -25,6 +25,7 @@ import org.icgc.argo.program_service.repositories.InstitutionRepository;
 import org.icgc.argo.program_service.services.ego.EgoClient;
 import org.icgc.argo.program_service.utils.EntityGenerator;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +34,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.FixedHostPortGenericContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -40,6 +44,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringRunner.class)
 @Transactional
 public class ProgramServiceGrpcIT {
+  @ClassRule
+  public static GenericContainer mailhogContainer =
+      new FixedHostPortGenericContainer("mailhog/mailhog:v1.0.0")
+          .withFixedExposedPort(10200, 8025) // http port used in waitForHttp
+          .withFixedExposedPort(10300, 1025) // mail port used by application
+          .waitingFor(
+              Wait.forHttp("/")); // Define wait condition during startup, checks lowest host port
 
   @Autowired private ProgramServiceImpl programServiceImpl;
 
@@ -61,8 +72,8 @@ public class ProgramServiceGrpcIT {
   private final int CANCER_COUNT = 36;
   // There are 23 primary sites in db.
   private final int PRIMARY_SITE_COUNT = 23;
-  // There are 6 regions in db.
-  private final int REGION_COUNT = 6;
+  // There is 1 region in db.
+  private final int REGION_COUNT = 1;
   // There are at least 435 institutions in db.
   private final int LEAST_INSTITUTION_COUNT = 435;
   // There are 245 countries in db.
@@ -72,7 +83,7 @@ public class ProgramServiceGrpcIT {
   private final String INSTITUTION_2 = "Example Lab";
   private final String EXISTING_INSTITUTION_1 = "Aarhus University";
   private final String EXISTING_INSTITUTION_2 = "Biobyte solutions GmbH";
-  private final String NEW_USER_EMAIL = "hermionegranger@gmail.com";
+  private final String NEW_USER_EMAIL = randomAlphabetic(15) + "@gmail.com";
 
   @Before
   public void before() throws IOException {
@@ -104,7 +115,7 @@ public class ProgramServiceGrpcIT {
             .setMembershipType(membershipTypeValue(ASSOCIATE))
             .setWebsite(stringValue("http://site.org"))
             .addInstitutions("Ontario Institute for Cancer Research")
-            .addRegions("North America")
+            .addRegions("Canada")
             .setName(stringValue(RandomString.make(15)))
             .setCommitmentDonors(int32Value(234))
             .addCountries("Canada")
@@ -139,6 +150,38 @@ public class ProgramServiceGrpcIT {
   }
 
   @Test
+  public void activateProgramAndGet() {
+    val oldShortName = stringValue("PACA-AU");
+    val newShortName = stringValue(randomProgramName());
+
+    val admins =
+        List.of(
+            User.newBuilder()
+                .setRole(UserRoleValue.newBuilder().setValue(UserRole.ADMIN))
+                .setEmail(StringValue.of("x@test.com"))
+                .setFirstName(StringValue.of("Test"))
+                .setLastName(StringValue.of("User"))
+                .build());
+
+    val activateProgramRequest =
+        ActivateProgramRequest.newBuilder()
+            .setOriginalShortName(oldShortName)
+            .setUpdatedShortName(newShortName)
+            .addAllAdmins(admins)
+            .build();
+    // .setProgram(program).addAllAdmins(admins).build();
+    val response = stub.activateProgram(activateProgramRequest);
+    assertTrue(response.getProgram().hasProgram());
+    assertEquals(response.getProgram().getProgram().getShortName(), newShortName);
+
+    // get with new short name and find the program
+    val getProgramRequestNewName =
+        GetProgramRequest.newBuilder().setShortName(newShortName).build();
+    val getResponseNewName = stub.getProgram(getProgramRequestNewName);
+    assertTrue(getResponseNewName.getProgram().hasProgram());
+  }
+
+  @Test
   public void joinAndLeaveProgram() {
     val name = stringValue(randomProgramName());
     val program =
@@ -147,7 +190,7 @@ public class ProgramServiceGrpcIT {
             .setMembershipType(membershipTypeValue(ASSOCIATE))
             .setWebsite(stringValue("http://site.org"))
             .addInstitutions("Ontario Institute for Cancer Research")
-            .addRegions("North America")
+            .addRegions("Canada")
             .setName(stringValue(RandomString.make(15)))
             .setCommitmentDonors(int32Value(234))
             .addCountries("Canada")

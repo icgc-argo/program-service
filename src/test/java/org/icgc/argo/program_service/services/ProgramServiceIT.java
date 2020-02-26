@@ -38,17 +38,11 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 
 @Slf4j
 @SpringBootTest
 @ActiveProfiles({"test", "default"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestPropertySource(
-    properties = {
-      "spring.datasource.url=jdbc:postgresql://localhost:5432/program_db",
-      "spring.datasource.driverClassName=org.postgresql.Driver",
-    })
 class ProgramServiceIT {
 
   EgoService egoService;

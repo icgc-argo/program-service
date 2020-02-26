@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>ca.on.oicr.icgc.argo</groupId>
 	<artifactId>program-service</artifactId>
-	<version>1.0.8-SNAPSHOT</version>
+	<version>1.1.0</version>
 	<name>program-service</name>
 	<description>Argo Program Service</description>
 
@@ -26,13 +26,13 @@
 		<postgres.version>42.2.5</postgres.version>
 		<flyway.version>5.2.4</flyway.version>
 		<javax.validation.version>2.0.1.Final</javax.validation.version>
-		<hibernate.validator.version>6.0.4.Final</hibernate.validator.version>
+		<hibernate.validator.version>6.1.1.Final</hibernate.validator.version>
 		<jackson.version>2.9.8</jackson.version>
 		<jwt.version>3.8.0</jwt.version>
 		<aspectj.version>1.9.2</aspectj.version>
 		<grpc.version>1.20.0</grpc.version>
 		<javax.mail.version>1.6.2</javax.mail.version>
-		<testcontainers.version>1.7.2</testcontainers.version>
+		<testcontainers.version>1.12.5</testcontainers.version>
 		<junit.jupiter.version>5.4.1</junit.jupiter.version>
 		<junit.vintage.version>5.4.1</junit.vintage.version>
 		<junit.common.version>1.4.1</junit.common.version>
@@ -124,6 +124,11 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>postgresql</artifactId>
+			<version>${testcontainers.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
 			<version>${testcontainers.version}</version>
 		</dependency>
 

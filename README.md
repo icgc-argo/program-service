@@ -1,10 +1,12 @@
 ## Program Service
 
+
 ## Table of Contents
 
 - [Objective](#objective)
 - [Development](#development)
-  - [Protocol buffers submodule](#protocol-buffers-submodule)
+  - [Protocol Buffers](#protocol-buffers)
+    - [NPM Program-Service-Proto Package](#npm-program-service-proto-package)
   - [Generate Protocol buffers Java files](#generate-protocol-buffers-java-files)
 - [Running the Service](#running-the-service)
   - [Local](#local)
@@ -19,6 +21,10 @@
   - [Integration Testing](#integration-testing)
   - [Test the running instances at DEV/QA](#test-the-running-instances-at-devqa)
   - [Test email](#test-email)
+  - [Mocking service using WireMock](#mocking-service-using-wiremock)
+- [Migrations and Rollbacks](#migrations-and-rollbacks)
+  - [Run Migrations](#run-migrations)
+  - [Rollback Migrations](#rollback-migrations)
 - [Demo Mode](#demo-mode)
 - [Notes](#notes)
 
@@ -160,6 +166,27 @@ The response can also be mocked:
 Note that the "filename" is the name of a self-defined json file which mocks response body.
 All mocked json response files are located in `src/test/resources/__files`. 
 
+## Migrations and Rollbacks
+
+Migrations are being managed with flyway. The migration scripts are found in `src/main/resources/flyway/sql`.
+
+A script (`fly.sh`) has been provided for convenience to run flyway through maven, using the config file (`src/main/resources/flyway/conf/flyway.conf`).
+
+### Run Migrations
+
+To run all migrations, use the commands:
+
+```sh
+./fly.sh info
+./fly.sh migrate
+```
+
+### Rollback Migrations
+
+The free version of flyway does not allow 'undo' operations, so rollbacks need to be applied manually.
+
+Rollback scripts are included in the same directory as migrations, however they are named with a prefix `U` instead of `V` (flyway's convention). The free Community Edition of flyway does not support the undo operation, so these scripts need to be applied manually.   
+ 
 ## Demo Mode
 
 In this mode, the local program service code is built and run as a docker container along with all the dependent services. This allows the whole system to be demoed without having any external network dependency. Use the following commands to manage a demo:

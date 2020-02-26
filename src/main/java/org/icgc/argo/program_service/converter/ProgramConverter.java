@@ -50,6 +50,8 @@ public interface ProgramConverter {
   @Mapping(target = "programInstitutions", ignore = true)
   @Mapping(target = "programCountries", ignore = true)
   @Mapping(target = "programRegions", ignore = true)
+  @Mapping(target = "active", constant = "true")
+  @Mapping(target = "legacyShortName", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
 
   @Mapping(target = "id", ignore = true)
@@ -163,11 +165,14 @@ public interface ProgramConverter {
   @Mapping(target = "mergeUpdatedAt", ignore = true)
   UpdateProgramResponse programEntityToUpdateProgramResponse(ProgramEntity p);
 
-  default ProgramDetails ProgramEntityToProgramDetails(ProgramEntity value) {
+  default ProgramDetails programEntityToProgramDetails(ProgramEntity value) {
     val program = programEntityToProgram(value);
+    val metadata = programEntityToMetadata(value);
+    val legacyDetails = programEntityToLegacyData(value);
     return ProgramDetails.newBuilder()
         .setProgram(program)
-        .setMetadata(programEntityToMetadata(value))
+        .setMetadata(metadata)
+        .mergeLegacy(legacyDetails)
         .build();
   }
 
@@ -205,6 +210,15 @@ public interface ProgramConverter {
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   Metadata programEntityToMetadata(ProgramEntity programEntity);
+
+  @Mapping(target = "mergeFrom", ignore = true)
+  @Mapping(target = "clearField", ignore = true)
+  @Mapping(target = "clearOneof", ignore = true)
+  @Mapping(target = "mergeLegacyShortName", ignore = true)
+  @Mapping(target = "allFields", ignore = true)
+  @Mapping(target = "unknownFields", ignore = true)
+  @Mapping(target = "mergeUnknownFields", ignore = true)
+  LegacyDetails programEntityToLegacyData(ProgramEntity programEntity);
 
   @Mapping(target = "mergeFrom", ignore = true)
   @Mapping(target = "clearField", ignore = true)

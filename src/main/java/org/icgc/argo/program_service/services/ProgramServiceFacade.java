@@ -73,15 +73,7 @@ public class ProgramServiceFacade {
         programService.createWithSideEffect(
             program,
             (ProgramEntity pe) -> {
-              egoService.setUpProgram(pe.getShortName());
-              admins.forEach(
-                  admin -> {
-                    val email = commonConverter.unboxStringValue(admin.getEmail());
-                    val firstName = commonConverter.unboxStringValue(admin.getFirstName());
-                    val lastName = commonConverter.unboxStringValue(admin.getLastName());
-                    egoService.getOrCreateUser(email, firstName, lastName);
-                    invitationService.inviteUser(pe, email, firstName, lastName, UserRole.ADMIN);
-                  });
+              initializeProgramInEgo(pe, admins);
             });
     log.debug("Created {}", programEntity.getShortName());
     return programConverter.programEntityToCreateProgramResponse(programEntity);
@@ -90,7 +82,7 @@ public class ProgramServiceFacade {
   public GetProgramResponse getProgram(GetProgramRequest request) {
     val shortName = request.getShortName().getValue();
     val programEntity = programService.getProgram(shortName);
-    val programDetails = programConverter.ProgramEntityToProgramDetails(programEntity);
+    val programDetails = programConverter.programEntityToProgramDetails(programEntity);
     return GetProgramResponse.newBuilder().setProgram(programDetails).build();
   }
 
@@ -107,6 +99,30 @@ public class ProgramServiceFacade {
             program.getCountriesList(),
             program.getRegionsList());
     return programConverter.programEntityToUpdateProgramResponse(updatedProgram);
+  }
+
+  @Transactional
+  public GetProgramResponse activateProgram(ActivateProgramRequest request) {
+    val originalName = request.getOriginalShortName().getValue();
+    val programEntity = programService.getProgram(originalName, true);
+
+    // For updated name use provided value, or default to originalName
+    val updatedName =
+        request.getUpdatedShortName().isInitialized()
+            ? request.getUpdatedShortName().getValue()
+            : originalName;
+
+    val admins = request.getAdminsList();
+
+    // Activate it, update ego, then send response
+    val updatedProgram = programService.activateProgram(programEntity, updatedName);
+
+    initializeProgramInEgo(updatedProgram, admins);
+
+    val programDetails = programConverter.programEntityToProgramDetails(updatedProgram);
+
+    log.debug("Activated {} as {}", programEntity.getShortName(), updatedProgram.getShortName());
+    return GetProgramResponse.newBuilder().setProgram(programDetails).build();
   }
 
   @Transactional
@@ -142,11 +158,18 @@ public class ProgramServiceFacade {
 
   public ListProgramsResponse listPrograms(Predicate<ProgramEntity> predicate) {
     val programEntities =
-        programService.listPrograms().stream().filter(predicate).collect(toList());
+        programService.listPrograms().stream()
+            // Only show active programs
+            .filter(p -> p.getActive().booleanValue())
+            .filter(predicate)
+            .collect(toList());
     return programConverter.programEntitiesToListProgramsResponse(programEntities);
   }
 
   public ListUsersResponse listUsers(String programShortName) {
+    // Fetching the program first will throw an error if it is not active or doesnt exist
+    //   stopping the ego requests for a program that was never initialized
+    programService.getProgram(programShortName);
     val users = egoService.getUsersInProgram(programShortName);
     Set<UserDetails> userDetails =
         mapToSet(
@@ -244,5 +267,17 @@ public class ProgramServiceFacade {
   public AddInstitutionsResponse addInstitutions(List<String> names) {
     return programConverter.institutionsToAddInstitutionsResponse(
         programService.addInstitutions(names));
+  }
+
+  private void initializeProgramInEgo(ProgramEntity pe, List<User> admins) {
+    egoService.setUpProgram(pe.getShortName());
+    admins.forEach(
+        admin -> {
+          val email = commonConverter.unboxStringValue(admin.getEmail());
+          val firstName = commonConverter.unboxStringValue(admin.getFirstName());
+          val lastName = commonConverter.unboxStringValue(admin.getLastName());
+          egoService.getOrCreateUser(email, firstName, lastName);
+          invitationService.inviteUser(pe, email, firstName, lastName, UserRole.ADMIN);
+        });
   }
 }
