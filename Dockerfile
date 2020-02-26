@@ -19,7 +19,7 @@ ENV APP_UID 9999
 ENV APP_GID 9999
 ENV APP_HOME /home/$APP_USER
 
-COPY --from=builder /srv/target/program-service-*-SNAPSHOT.jar /program-service.jar
+COPY --from=builder /srv/target/program-service-*.jar /program-service.jar
 
 RUN addgroup -S -g $APP_GID $APP_USER  \
    && adduser -S -u $APP_UID -G $APP_USER $APP_USER \
