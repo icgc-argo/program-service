@@ -52,9 +52,6 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 @ConfigurationProperties(prefix = AppProperties.APP)
 public class AppProperties {
   public static final String APP = "app";
-  /** Url prefix of the invite link, it should be followed by invite's uuid */
-  @NotNull private String invitationUrlPrefix;
-
   /** Ego api url */
   @NotNull private String egoUrl;
 

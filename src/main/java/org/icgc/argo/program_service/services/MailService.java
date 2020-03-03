@@ -44,11 +44,29 @@ public class MailService {
   private final JavaMailSender mailSender;
   private final VelocityEngine velocityEngine;
 
-  @Value("${app.invitationUrlPrefix}")
+  @Value("${app.email.invitation.invitationUrlPrefix}")
   private String invitationUrlPrefix;
 
-  @Value("${app.platformUrl}")
+  @Value("${app.email.invitation.platformUrl}")
   private String platformUrl;
+
+  @Value("${app.email.from}")
+  private String from;
+
+  @Value("${app.email.invitation.subject}")
+  private String subject;
+
+  @Value("${app.email.invitation.dacoLink}")
+  private String dacoLink;
+
+  @Value("${app.email.invitation.docLink}")
+  private String docLink;
+
+  @Value("${app.email.invitation.contactLink}")
+  private String contactLink;
+
+  @Value("${app.email.invitation.privacyPolicyLink}")
+  private String privacyPolicyLink;
 
   @Autowired
   public MailService(@NonNull JavaMailSender mailSender, @NonNull VelocityEngine velocityEngine) {
@@ -62,11 +80,18 @@ public class MailService {
     try {
       val helper = new MimeMessageHelper(msg, false, "utf-8");
       helper.setTo(invitation.getUserEmail());
-      helper.setFrom("noreply@oicr.on.ca");
-
+      helper.setFrom(from);
+      helper.setSubject(subject);
       val template = velocityEngine.getTemplate("emails/invite.vm");
       val sw = new StringWriter();
       val ctx = new VelocityContext();
+
+      ctx.put("dacoLink", dacoLink);
+      ctx.put("docLink", docLink);
+      ctx.put("contactLink", contactLink);
+      ctx.put("privacyPolicyLink", privacyPolicyLink);
+      ctx.put("platformLink", platformUrl);
+
       ctx.put("firstName", invitation.getFirstName());
       ctx.put("lastName", invitation.getLastName());
       ctx.put("invitationId", invitation.getId());
@@ -74,7 +99,7 @@ public class MailService {
       ctx.put("role", invitation.getRole());
       ctx.put("email", invitation.getUserEmail());
       ctx.put("joinProgramLink", invitationUrlPrefix + invitation.getId());
-      ctx.put("platformLink", platformUrl);
+
       ctx.put(
           "expireTime",
           invitation
