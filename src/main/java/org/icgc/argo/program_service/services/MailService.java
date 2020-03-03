@@ -28,6 +28,7 @@ import lombok.val;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
+import org.icgc.argo.program_service.properties.AppProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailAuthenticationException;
@@ -43,38 +44,44 @@ public class MailService {
 
   private final JavaMailSender mailSender;
   private final VelocityEngine velocityEngine;
-
-  @Value("${app.invitationUrlPrefix}")
-  private String invitationUrlPrefix;
-
-  @Value("${app.platformUrl}")
-  private String platformUrl;
+  private final AppProperties appProperties;
 
   @Autowired
-  public MailService(@NonNull JavaMailSender mailSender, @NonNull VelocityEngine velocityEngine) {
+  public MailService(@NonNull JavaMailSender mailSender,
+                     @NonNull VelocityEngine velocityEngine,
+                     @NonNull AppProperties applicationProperties) {
     this.mailSender = mailSender;
     this.velocityEngine = velocityEngine;
+    this.appProperties = applicationProperties;
   }
 
   boolean sendInviteEmail(JoinProgramInviteEntity invitation) {
     val msg = mailSender.createMimeMessage();
 
     try {
+      val emailProps = this.appProperties.getEmail();
       val helper = new MimeMessageHelper(msg, false, "utf-8");
       helper.setTo(invitation.getUserEmail());
-      helper.setFrom("noreply@oicr.on.ca");
-
+      helper.setFrom(emailProps.getFrom());
+      helper.setSubject(emailProps.getInvitation().getSubject());
       val template = velocityEngine.getTemplate("emails/invite.vm");
       val sw = new StringWriter();
       val ctx = new VelocityContext();
+
+      ctx.put("dacoLink", emailProps.getInvitation().getDacoLink());
+      ctx.put("docLink", emailProps.getInvitation().getDocLink());
+      ctx.put("contactLink", emailProps.getInvitation().getContactLink());
+      ctx.put("privacyPolicyLink", emailProps.getInvitation().getPrivacyPolicyLink());
+      ctx.put("platformLink", emailProps.getInvitation().getPlatformUrl());
+
       ctx.put("firstName", invitation.getFirstName());
       ctx.put("lastName", invitation.getLastName());
       ctx.put("invitationId", invitation.getId());
       ctx.put("programShortName", invitation.getProgram().getShortName());
       ctx.put("role", invitation.getRole());
       ctx.put("email", invitation.getUserEmail());
-      ctx.put("joinProgramLink", invitationUrlPrefix + invitation.getId());
-      ctx.put("platformLink", platformUrl);
+      ctx.put("joinProgramLink", emailProps.getInvitation().getInvitationUrlPrefix() + invitation.getId());
+
       ctx.put(
           "expireTime",
           invitation
