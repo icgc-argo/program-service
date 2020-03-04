@@ -23,7 +23,9 @@ import static java.lang.String.format;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.Properties;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -52,9 +54,6 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 @ConfigurationProperties(prefix = AppProperties.APP)
 public class AppProperties {
   public static final String APP = "app";
-  /** Url prefix of the invite link, it should be followed by invite's uuid */
-  @NotNull private String invitationUrlPrefix;
-
   /** Ego api url */
   @NotNull private String egoUrl;
 
@@ -72,6 +71,8 @@ public class AppProperties {
 
   /** Emailing can be disabled when developing/testing */
   @NotNull private Boolean mailEnabled;
+
+  @NotNull private EmailProperties email = new EmailProperties();
 
   /* can be null except for when auth is enabled */
   private String dccAdminPermission;
@@ -119,4 +120,29 @@ public class AppProperties {
   public RSAPublicKey egoPublicKey(EgoClient egoClient) {
     return egoClient.getPublicKey();
   }
+
+  @Validated
+  @Setter
+  @Getter
+  public static class EmailProperties {
+    @NotNull
+    private String from;
+
+    @NotNull
+    private final InvitationProperties invitation = new InvitationProperties();
+
+    @Validated
+    @Setter
+    @Getter
+    public static class InvitationProperties {
+      @NotNull private String invitationUrlPrefix;
+      @NotNull private String platformUrl;
+      @NotNull private String subject;
+      @NotNull private String dacoLink;
+      @NotNull private String docLink;
+      @NotNull private String contactLink;
+      @NotNull private String privacyPolicyLink;
+    }
+  }
+
 }

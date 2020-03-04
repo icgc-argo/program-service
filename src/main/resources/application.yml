@@ -37,15 +37,22 @@ retry:
     multiplier: 2.0
 
 app:
-  invitationUrlPrefix: "https://frontend/invite/"
-  platformUrl: "https://frontend"
   egoUrl: "https://ego.qa.argo.cancercollaboratory.org/api"
   egoClientId: "program-service"
   egoClientSecret: "qa-program-service"
   grpcEnabled: true
   grpcPort: 50051
   mail-enabled: true
-
+  email:
+    from: noreply@icgc-argo.org
+    invitation:
+      invitationUrlPrefix: "https://platform.icgc-argo.org/invite/"
+      platformUrl: "https://platform.icgc-argo.org/"
+      subject: You have been invited to join an ICGC ARGO program
+      dacoLink: "https://icgc.org/daco"
+      docLink: "https://docs.icgc-argo.org/"
+      contactLink: "https://platform.icgc-argo.org/contact"
+      privacyPolicyLink: "https://platform.icgc-argo.org/privacy"
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
 spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 
