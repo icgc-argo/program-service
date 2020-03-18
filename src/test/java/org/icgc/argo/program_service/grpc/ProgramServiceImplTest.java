@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
 
+import com.google.protobuf.BoolValue;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -246,7 +247,7 @@ class ProgramServiceImplTest {
     val service = setupListUsersTest("TEST-CA", pendingInvitations, egoUsers, egoInvitations);
 
     val request = createListUsersRequest(programName);
-    val expectedUserDetails = createUserDetails(user, null, null);
+    val expectedUserDetails = createUserDetails(user, null, null, false);
 
     val responseObserver = mock(StreamObserver.class);
 
@@ -282,7 +283,7 @@ class ProgramServiceImplTest {
     val service = setupListUsersTest("TEST-CA", pendingInvitations, egoUsers, egoInvitations);
 
     val request = createListUsersRequest(programName);
-    val expectedUserDetails = createUserDetails(user, null, null);
+    val expectedUserDetails = createUserDetails(user, null, null, false);
 
     @SuppressWarnings("unchecked")
     val responseObserver = (StreamObserver<ListUsersResponse>) mock(StreamObserver.class);
@@ -428,8 +429,10 @@ class ProgramServiceImplTest {
     return ListUsersRequest.newBuilder().setProgramShortName(StringValue.of(shortName)).build();
   }
 
-  UserDetails createUserDetails(User user, LocalDateTime accepted, InviteStatus status) {
-    val builder = UserDetails.newBuilder().setUser(user);
+  UserDetails createUserDetails(
+      User user, LocalDateTime accepted, InviteStatus status, boolean dacoApproved) {
+    val builder =
+        UserDetails.newBuilder().setUser(user).setDacoApproved(BoolValue.of(dacoApproved));
     if (status == null) {
       return builder.build();
     }

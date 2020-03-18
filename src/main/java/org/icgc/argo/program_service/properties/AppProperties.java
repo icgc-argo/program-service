@@ -23,9 +23,7 @@ import static java.lang.String.format;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.Properties;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -125,11 +123,9 @@ public class AppProperties {
   @Setter
   @Getter
   public static class EmailProperties {
-    @NotNull
-    private String from;
+    @NotNull private String from;
 
-    @NotNull
-    private final InvitationProperties invitation = new InvitationProperties();
+    @NotNull private final InvitationProperties invitation = new InvitationProperties();
 
     @Validated
     @Setter
@@ -144,5 +140,4 @@ public class AppProperties {
       @NotNull private String privacyPolicyLink;
     }
   }
-
 }

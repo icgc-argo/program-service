@@ -365,4 +365,14 @@ public class EgoService {
   public EgoUser convertInvitationToEgoUser(@NonNull JoinProgramInviteEntity invite) {
     return programConverter.joinProgramInviteToEgoUser(invite);
   }
+
+  public boolean isUserDacoApproved(@Email String email) {
+    val user = egoClient.getUser(email).orElse(null);
+    if (user == null) {
+      return false;
+    }
+    val userGroups = egoClient.getGroupsByUserId(user.getId());
+    return userGroups.anyMatch(
+        group -> group.getName().equals("DACO") && group.getStatus().equals("APPROVED"));
+  }
 }

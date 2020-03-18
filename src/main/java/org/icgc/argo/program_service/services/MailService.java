@@ -30,7 +30,6 @@ import org.apache.velocity.app.VelocityEngine;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.properties.AppProperties;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -47,9 +46,10 @@ public class MailService {
   private final AppProperties appProperties;
 
   @Autowired
-  public MailService(@NonNull JavaMailSender mailSender,
-                     @NonNull VelocityEngine velocityEngine,
-                     @NonNull AppProperties applicationProperties) {
+  public MailService(
+      @NonNull JavaMailSender mailSender,
+      @NonNull VelocityEngine velocityEngine,
+      @NonNull AppProperties applicationProperties) {
     this.mailSender = mailSender;
     this.velocityEngine = velocityEngine;
     this.appProperties = applicationProperties;
@@ -80,7 +80,9 @@ public class MailService {
       ctx.put("programShortName", invitation.getProgram().getShortName());
       ctx.put("role", invitation.getRole());
       ctx.put("email", invitation.getUserEmail());
-      ctx.put("joinProgramLink", emailProps.getInvitation().getInvitationUrlPrefix() + invitation.getId());
+      ctx.put(
+          "joinProgramLink",
+          emailProps.getInvitation().getInvitationUrlPrefix() + invitation.getId());
 
       ctx.put(
           "expireTime",

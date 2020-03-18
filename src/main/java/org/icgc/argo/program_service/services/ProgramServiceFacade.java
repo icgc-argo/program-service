@@ -168,21 +168,16 @@ public class ProgramServiceFacade {
 
   public ListUsersResponse listUsers(String programShortName) {
     // Fetching the program first will throw an error if it is not active or doesnt exist
-    //   stopping the ego requests for a program that was never initialized
+    // stopping the ego requests for a program that was never initialized
     programService.getProgram(programShortName);
     val users = egoService.getUsersInProgram(programShortName);
     Set<UserDetails> userDetails =
-        mapToSet(
-            users,
-            user ->
-                programConverter.userWithOptionalJoinProgramInviteToUserDetails(
-                    user,
-                    invitationService.getLatestInvitation(
-                        programShortName, user.getEmail().getValue())));
+        mapToSet(users, user -> convertUserToUserDetail(user, programShortName));
+
     userDetails.addAll(
         mapToList(
             invitationService.listPendingInvitations(programShortName),
-            programConverter::joinProgramInviteToUserDetails));
+            this::convertPendingInviteToUserDetail));
 
     return ListUsersResponse.newBuilder().addAllUserDetails(userDetails).build();
   }
@@ -279,5 +274,17 @@ public class ProgramServiceFacade {
           egoService.getOrCreateUser(email, firstName, lastName);
           invitationService.inviteUser(pe, email, firstName, lastName, UserRole.ADMIN);
         });
+  }
+
+  private UserDetails convertUserToUserDetail(User user, String programShortName) {
+    return programConverter.userWithOptionalJoinProgramInviteToUserDetails(
+        user,
+        invitationService.getLatestInvitation(programShortName, user.getEmail().getValue()),
+        egoService.isUserDacoApproved(user.getEmail().getValue()));
+  }
+
+  private UserDetails convertPendingInviteToUserDetail(JoinProgramInviteEntity invite) {
+    return programConverter.joinProgramInviteToUserDetails(
+        invite, egoService.isUserDacoApproved(invite.getUserEmail()));
   }
 }
