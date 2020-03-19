@@ -22,10 +22,9 @@ import static java.lang.String.format;
 
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
+import java.util.List;
 import java.util.Properties;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -73,6 +72,8 @@ public class AppProperties {
   @NotNull private Boolean mailEnabled;
 
   @NotNull private EmailProperties email = new EmailProperties();
+
+  @NotNull private DacoPermissionProperties dacoApprovedPermission = new DacoPermissionProperties();
 
   /* can be null except for when auth is enabled */
   private String dccAdminPermission;
@@ -125,11 +126,9 @@ public class AppProperties {
   @Setter
   @Getter
   public static class EmailProperties {
-    @NotNull
-    private String from;
+    @NotNull private String from;
 
-    @NotNull
-    private final InvitationProperties invitation = new InvitationProperties();
+    @NotNull private final InvitationProperties invitation = new InvitationProperties();
 
     @Validated
     @Setter
@@ -145,4 +144,11 @@ public class AppProperties {
     }
   }
 
+  @Validated
+  @Setter
+  @Getter
+  public static class DacoPermissionProperties {
+    @NotNull private String policyName;
+    @NotNull private List<String> accessLevels;
+  }
 }

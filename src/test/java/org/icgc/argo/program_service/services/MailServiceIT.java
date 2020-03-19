@@ -90,7 +90,9 @@ class MailServiceIT {
     assertTrue(messages.at("/total").asInt() > 0);
     assertEquals("noreply", messages.at("/items/0/From/Mailbox").asText());
     assertEquals("icgc-argo.org", messages.at("/items/0/From/Domain").asText());
-    assertEquals("You have been invited to join an ICGC ARGO program",  messages.at("/items/0/Content/Headers/Subject/0").asText());
+    assertEquals(
+        "You have been invited to join an ICGC ARGO program",
+        messages.at("/items/0/Content/Headers/Subject/0").asText());
     assertEquals(randomUserName, messages.at("/items/0/To/0/Mailbox").asText());
     assertEquals("program-service.com", messages.at("/items/0/To/0/Domain").asText());
     assertTrue(messages.at("/items/0/Content/Body").asText().contains("Albert"));

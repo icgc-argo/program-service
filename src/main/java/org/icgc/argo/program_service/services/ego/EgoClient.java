@@ -44,4 +44,6 @@ public interface EgoClient {
   boolean isMember(UUID groupId, String email);
 
   EgoPermission[] getGroupPermissions(UUID groupId);
+
+  EgoPermission[] getUserResolvedPermissions(UUID userId);
 }
