@@ -33,6 +33,7 @@ import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
+import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
@@ -70,6 +71,8 @@ public class EgoServiceIT {
 
   @Autowired JoinProgramInviteRepository inviteRepository;
 
+  @Autowired AppProperties appProperties;
+
   private EgoService egoService;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(options().dynamicPort());
@@ -100,7 +103,7 @@ public class EgoServiceIT {
     client =
         new EgoRESTClient(
             lenientRetryTemplate, retryTemplate, testTemplate, CommonConverter.INSTANCE);
-    egoService = new EgoService(converter, client, inviteRepository);
+    egoService = new EgoService(converter, client, inviteRepository, appProperties);
   }
 
   void stub(String url, String filename) {

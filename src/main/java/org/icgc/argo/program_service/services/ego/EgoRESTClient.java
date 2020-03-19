@@ -246,4 +246,10 @@ public class EgoRESTClient implements EgoClient {
             new ParameterizedTypeReference<EgoCollection<EgoPermission>>() {})
         .toArray(EgoPermission[]::new);
   }
+
+  public EgoPermission[] getUserResolvedPermissions(UUID userId) {
+    return restTemplate
+        .getForEntity(format("/users/%s/groups/permissions", userId), EgoPermission[].class)
+        .getBody();
+  }
 }

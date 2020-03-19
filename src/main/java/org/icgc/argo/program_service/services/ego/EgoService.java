@@ -25,6 +25,7 @@ import static org.icgc.argo.program_service.proto.UserRole.ADMIN;
 import static org.icgc.argo.program_service.services.ego.GroupName.createProgramGroupName;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +39,7 @@ import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
+import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
@@ -58,15 +60,18 @@ public class EgoService {
   @Getter private final EgoClient egoClient;
   private final ProgramConverter programConverter;
   private final JoinProgramInviteRepository invitationRepository;
+  private final AppProperties appProperties;
 
   @Autowired
   public EgoService(
       @NonNull ProgramConverter programConverter,
       @NonNull EgoClient restClient,
-      @NonNull JoinProgramInviteRepository invitationRepository) {
+      @NonNull JoinProgramInviteRepository invitationRepository,
+      @NonNull AppProperties appProperties) {
     this.programConverter = programConverter;
     this.egoClient = restClient;
     this.invitationRepository = invitationRepository;
+    this.appProperties = appProperties;
   }
 
   public static List<UserRole> roles() {
@@ -367,12 +372,24 @@ public class EgoService {
   }
 
   public boolean isUserDacoApproved(@Email String email) {
+    val dacoPolicyName = appProperties.getDacoApprovedPermission().getPolicyName();
+    val dacoAccessLevels = appProperties.getDacoApprovedPermission().getAccessLevels();
+
     val user = egoClient.getUser(email).orElse(null);
     if (user == null) {
       return false;
     }
-    val userGroups = egoClient.getGroupsByUserId(user.getId());
-    return userGroups.anyMatch(
-        group -> group.getName().equals("DACO") && group.getStatus().equals("APPROVED"));
+
+    // To check whether a user is DACO approved we need to check their resolved group permissions
+    // They are DACO approved if there exists a permission which has
+    // policy.name == app.dacoApprovedPermission.policyName
+    // and they have accessLevel which exists in app.dacoApprovedPermission.accessLevels
+    // DACOApproved Permission policyName and accessLevels are set in app properties
+    val resolvedUserPermissions = egoClient.getUserResolvedPermissions(user.getId());
+    return Arrays.stream(resolvedUserPermissions)
+        .anyMatch(
+            egoPermission ->
+                egoPermission.getPolicy().getName().equals(dacoPolicyName)
+                    && dacoAccessLevels.contains(egoPermission.getAccessLevel()));
   }
 }

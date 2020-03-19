@@ -26,6 +26,7 @@ import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.repositories.ProgramRepository;
@@ -53,6 +54,8 @@ class ProgramServiceIT {
 
   @Autowired JoinProgramInviteRepository inviteRepository;
 
+  @Autowired AppProperties appProperties;
+
   @Autowired ProgramService programService;
 
   @Autowired ProgramRepository programRepository;
@@ -62,7 +65,7 @@ class ProgramServiceIT {
   @BeforeAll
   void setUp() {
     System.err.printf("Setting up...\n");
-    egoService = new EgoService(converter, client, inviteRepository);
+    egoService = new EgoService(converter, client, inviteRepository, appProperties);
 
     try {
       egoService.cleanUpProgram(name);
