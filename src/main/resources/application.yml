@@ -53,6 +53,12 @@ app:
       docLink: "https://docs.icgc-argo.org/"
       contactLink: "https://platform.icgc-argo.org/contact"
       privacyPolicyLink: "https://platform.icgc-argo.org/privacy"
+  dacoApprovedPermission:
+    policyName: "DACO"
+    accessLevels:
+      - "READ"
+      - "WRITE"
+
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
 spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 

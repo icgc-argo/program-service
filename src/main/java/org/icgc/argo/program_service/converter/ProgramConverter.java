@@ -20,6 +20,7 @@ package org.icgc.argo.program_service.converter;
 
 import static java.util.stream.Collectors.toList;
 
+import com.google.protobuf.BoolValue;
 import com.google.protobuf.StringValue;
 import java.util.Collection;
 import java.util.Optional;
@@ -370,19 +371,28 @@ public interface ProgramConverter {
   @Mapping(target = "mergeUser", ignore = true)
   @Mapping(target = "mergeStatus", ignore = true)
   @Mapping(target = "mergeAcceptedAt", ignore = true)
+  @Mapping(target = "mergeDacoApproved", ignore = true)
   @Mapping(target = "unknownFields", ignore = true)
   @Mapping(target = "mergeUnknownFields", ignore = true)
   @Mapping(target = "allFields", ignore = true)
   @Mapping(target = "user", source = "invitation")
-  UserDetails joinProgramInviteToUserDetails(Integer dummy, JoinProgramInviteEntity invitation);
+  @Mapping(target = "dacoApproved", source = "dacoApproved")
+  UserDetails joinProgramInviteToUserDetails(
+      Integer dummy, JoinProgramInviteEntity invitation, boolean dacoApproved);
 
   default UserDetails joinProgramInviteToUserDetails(JoinProgramInviteEntity invitation) {
-    return joinProgramInviteToUserDetails(0, invitation);
+    return joinProgramInviteToUserDetails(0, invitation, false);
+  }
+
+  default UserDetails joinProgramInviteToUserDetails(
+      JoinProgramInviteEntity invitation, boolean dacoApproved) {
+    return joinProgramInviteToUserDetails(0, invitation, dacoApproved);
   }
 
   default UserDetails userWithOptionalJoinProgramInviteToUserDetails(
-      User user, Optional<JoinProgramInviteEntity> invite) {
-    val builder = UserDetails.newBuilder().setUser(user);
+      User user, Optional<JoinProgramInviteEntity> invite, boolean dacoApproved) {
+    val builder = UserDetails.newBuilder();
+    builder.setUser(user).setDacoApproved(BoolValue.of((dacoApproved)));
 
     if (invite.isEmpty()) {
       return builder.build();

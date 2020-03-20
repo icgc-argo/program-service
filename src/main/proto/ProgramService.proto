@@ -136,6 +136,7 @@ message UserDetails {
   User user = 1;
   InviteStatusValue status = 2;
   google.protobuf.Timestamp accepted_at = 3;
+  google.protobuf.BoolValue daco_approved = 4;
 }
 
 message LegacyDetails {
