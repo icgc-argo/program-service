@@ -305,27 +305,32 @@ public class ProgramService {
   }
 
   private void processInstitutions(
-      @NonNull ProgramEntity programToUpdate, @NonNull List<String> names) {
-    val existing = institutionRepository.findAllByNameIn(names);
-    val currentInstitutions =
+      @NonNull ProgramEntity programToUpdate, @NonNull List<String> institutionNames) {
+    // convert institution names to institution entities and add missing institutions to repo
+    val updatedInstitutionEntities = filterAndAddInstitutions(institutionNames);
+    val currentInstitutionEntities =
         mapToSet(programToUpdate.getProgramInstitutions(), ProgramInstitution::getInstitution);
 
-    val toDelete = currentInstitutions.stream().filter(i -> !existing.contains(i)).collect(toSet());
-    val toAdd =
-        existing.stream()
-            .filter(i -> !currentInstitutions.contains(i))
+    val institutionsToRemove =
+        currentInstitutionEntities.stream()
+            .filter(i -> !updatedInstitutionEntities.contains(i))
+            .collect(toSet());
+    val programInstitutionsToAdd =
+        updatedInstitutionEntities.stream()
+            .filter(i -> !currentInstitutionEntities.contains(i))
             .map(i -> createProgramInstitution(programToUpdate, i))
             .map(Optional::get)
             .collect(toSet());
 
     programToUpdate
         .getProgramInstitutions()
-        .removeIf(programInstitutionPredicate(programToUpdate, toDelete));
-    currentInstitutions.forEach(
+        .removeIf(programInstitutionPredicate(programToUpdate, institutionsToRemove));
+    currentInstitutionEntities.forEach(
         p ->
             p.getProgramInstitutions()
-                .removeIf(programInstitutionPredicate(programToUpdate, toDelete)));
-    programInstitutionRepository.saveAll(toAdd);
+                .removeIf(programInstitutionPredicate(programToUpdate, institutionsToRemove)));
+
+    programInstitutionRepository.saveAll(programInstitutionsToAdd);
   }
 
   private void processCountries(
