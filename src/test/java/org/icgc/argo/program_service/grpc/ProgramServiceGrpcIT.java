@@ -20,8 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.converter.CommonConverter;
+import org.icgc.argo.program_service.model.join.ProgramInstitutionId;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.repositories.InstitutionRepository;
+import org.icgc.argo.program_service.repositories.ProgramInstitutionRepository;
 import org.icgc.argo.program_service.services.ego.EgoClient;
 import org.icgc.argo.program_service.utils.EntityGenerator;
 import org.junit.Before;
@@ -55,6 +57,8 @@ public class ProgramServiceGrpcIT {
   @Autowired private ProgramServiceImpl programServiceImpl;
 
   @Autowired private InstitutionRepository institutionRepository;
+
+  @Autowired private ProgramInstitutionRepository programInstitutionRepository;
 
   @Autowired private EntityGenerator entityGenerator;
 
@@ -350,5 +354,50 @@ public class ProgramServiceGrpcIT {
     assertTrue(nameList.contains(programEntity_1.getShortName()));
     assertTrue(nameList.contains(programEntity_2.getShortName()));
     assertTrue(nameList.contains(programEntity_3.getShortName()));
+  }
+
+  @Test
+  public void updateProgramAddNewInstitution() {
+    // setup program
+    val name = stringValue(randomProgramName());
+    val initalProgram =
+        Program.newBuilder()
+            .setShortName(name)
+            .setMembershipType(membershipTypeValue(ASSOCIATE))
+            .setWebsite(stringValue("http://site.org"))
+            .addInstitutions("Ontario Institute for Cancer Research")
+            .addRegions("Canada")
+            .setName(stringValue(RandomString.make(15)))
+            .setCommitmentDonors(int32Value(234))
+            .addCountries("Canada")
+            .setSubmittedDonors(int32Value(244))
+            .setGenomicDonors(int32Value(333))
+            .setDescription(stringValue("nothing"))
+            .addCancerTypes("Blood cancer")
+            .addPrimarySites("Blood");
+    val programEntity = entityGenerator.createProgramEntity(initalProgram.build());
+
+    // check new institution not in institutions db
+    val newInstitution = "Test-Institution";
+    assertFalse(institutionRepository.getInstitutionByName(newInstitution).isPresent());
+
+    // Update program - add new institution
+    val updatedProgram = initalProgram.addInstitutions(newInstitution).build();
+    val updateProgramRequest = UpdateProgramRequest.newBuilder().setProgram(updatedProgram).build();
+    val response = stub.updateProgram(updateProgramRequest);
+
+    // check new institution has been added to institution repo
+    val newInstitutionEntity = institutionRepository.getInstitutionByName(newInstitution).get();
+    assertEquals(newInstitution, newInstitutionEntity.getName());
+
+    // check programInstitution relation between new institution and existing program
+    val programInstitutionId =
+        ProgramInstitutionId.builder()
+            .institutionId(newInstitutionEntity.getId())
+            .programId(programEntity.getId())
+            .build();
+    val newProgramInstitution = programInstitutionRepository.findById(programInstitutionId).get();
+    assertEquals(newInstitution, newProgramInstitution.getInstitution().getName());
+    assertEquals(name.getValue(), newProgramInstitution.getProgram().getShortName());
   }
 }
