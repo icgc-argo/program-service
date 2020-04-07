@@ -3,8 +3,10 @@ package org.icgc.argo.program_service.utils;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.val;
+import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.proto.MembershipType;
+import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -23,6 +25,8 @@ public class EntityGenerator {
   @Autowired private RegionRepository regionRepository;
 
   @Autowired private CountryRepository countryRepository;
+
+  @Autowired private ProgramConverter programConverter;
 
   public ProgramEntity setUpProgramEntity(String shortname) {
     return programRepository
@@ -49,6 +53,17 @@ public class EntityGenerator {
             .setWebsite("http://test.org")
             .setActive(true);
     return programRepository.save(entity);
+  }
+
+  public ProgramEntity createProgramEntity(Program program) {
+    val programEntity = programConverter.programToProgramEntity(program);
+    if (programEntity.getCreatedAt() == null) {
+      programEntity.setCreatedAt(LocalDateTime.now());
+    }
+    if (programEntity.getUpdatedAt() == null) {
+      programEntity.setUpdatedAt(LocalDateTime.now());
+    }
+    return programRepository.save(programEntity);
   }
 
   public CancerEntity setUpCancer(String name) {
