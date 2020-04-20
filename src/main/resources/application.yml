@@ -52,7 +52,7 @@ app:
       dacoLink: "https://icgc.org/daco"
       docLink: "https://docs.icgc-argo.org/"
       contactLink: "https://platform.icgc-argo.org/contact"
-      privacyPolicyLink: "https://platform.icgc-argo.org/privacy"
+      privacyPolicyLink: "https://www.icgc-argo.org/page/2/privacy"
   dacoApprovedPermission:
     policyName: "DACO"
     accessLevels:

@@ -114,12 +114,9 @@
                                         <p style="Margin:0;Margin-bottom:25px;color:#0a0a0a;font-family:Work Sans,sans-serif;font-size:14px;font-weight:400;line-height:1.3;margin:0;margin-bottom:25px;padding:0;text-align:left">
                                             This invitation will expire on: <b>$expireTime</b></p>
                                         <p style="Margin:0;Margin-bottom:25px;color:#0a0a0a;font-family:Work Sans,sans-serif;font-size:14px;font-weight:400;line-height:1.3;margin:0;margin-bottom:25px;padding:0;text-align:left">
-                                            Joining a program means you will have permission to access program data,
-                                            provided that you also have <a href="$dacoLink"
-                                                                           style="Margin:0;color:#523785;font-family:Work Sans,sans-serif;font-weight:400;line-height:1.3;margin:0;padding:0;text-align:left;text-decoration:underline">DACO
-                                            approval</a>. For more information about joining a program or about your
-                                            program role, <a href="$docLink"
-                                                             style="Margin:0;color:#523785;font-family:Work Sans,sans-serif;font-weight:400;line-height:1.3;margin:0;padding:0;text-align:left;text-decoration:underline">check
+                                            Joining a program means you will have permission to access, submit, or download program data,
+                                            depending on your program role and DACO access. For more information about your
+                                            program role, <a href="$docLink" style="Margin:0;color:#523785;font-family:Work Sans,sans-serif;font-weight:400;line-height:1.3;margin:0;padding:0;text-align:left;text-decoration:underline">check
                                             out our documentation</a>.
                                         <table class="button"
                                                style="Margin:0 0 16px 0;border-collapse:collapse;border-spacing:0;margin:0 0 16px 0;padding:0;text-align:left;vertical-align:top;width:auto">
@@ -129,8 +126,7 @@
                                                         <tr style="padding:0;text-align:left;vertical-align:top">
                                                             <td style="-moz-hyphens:auto;-webkit-hyphens:auto;Margin:0;background:#7f55cc;border:2px solid #7f55cc;border-collapse:collapse!important;color:#fefefe;font-family:Work Sans,sans-serif;font-size:14px;font-weight:400;hyphens:auto;line-height:1.3;margin:0;padding:0;text-align:left;vertical-align:top;word-wrap:break-word">
                                                                 <a href="$joinProgramLink"
-                                                                   style="Margin:0;border:0 solid #7f55cc;border-radius:3px;color:#fefefe;display:inline-block;font-family:Work Sans,sans-serif;font-size:13px;font-weight:700;line-height:1.3;margin:0;padding:16px 24px;text-align:left;text-decoration:none">JOIN
-                                                                    THE PROGRAM</a></td>
+                                                                   style="Margin:0;border:0 solid #7f55cc;border-radius:3px;color:#fefefe;display:inline-block;font-family:Work Sans,sans-serif;font-size:13px;font-weight:700;line-height:1.3;margin:0;padding:16px 24px;text-align:left;text-decoration:none">JOIN THE PROGRAM</a></td>
                                                         </tr>
                                                     </table>
                                                 </td>
