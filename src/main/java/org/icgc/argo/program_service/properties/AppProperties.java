@@ -138,6 +138,7 @@ public class AppProperties {
       @NotNull private String platformUrl;
       @NotNull private String subject;
       @NotNull private String dacoLink;
+      @NotNull private String programAccessDocsLink;
       @NotNull private String docLink;
       @NotNull private String contactLink;
       @NotNull private String privacyPolicyLink;

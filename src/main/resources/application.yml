@@ -51,6 +51,7 @@ app:
       subject: You have been invited to join an ICGC ARGO program
       dacoLink: "https://icgc.org/daco"
       docLink: "https://docs.icgc-argo.org/"
+      programAccessDocsLink: "https://docs.icgc-argo.org/docs/managing-program-access/"
       contactLink: "https://platform.icgc-argo.org/contact"
       privacyPolicyLink: "https://www.icgc-argo.org/page/2/privacy"
   dacoApprovedPermission:
