@@ -73,7 +73,7 @@ public class MailService {
       ctx.put("contactLink", emailProps.getInvitation().getContactLink());
       ctx.put("privacyPolicyLink", emailProps.getInvitation().getPrivacyPolicyLink());
       ctx.put("platformLink", emailProps.getInvitation().getPlatformUrl());
-
+      ctx.put("programAccessDocsLink", emailProps.getInvitation().getProgramAccessDocsLink());
       ctx.put("firstName", invitation.getFirstName());
       ctx.put("lastName", invitation.getLastName());
       ctx.put("invitationId", invitation.getId());
