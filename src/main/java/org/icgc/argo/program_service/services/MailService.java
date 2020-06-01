@@ -78,6 +78,7 @@ public class MailService {
       ctx.put("lastName", invitation.getLastName());
       ctx.put("invitationId", invitation.getId());
       ctx.put("programShortName", invitation.getProgram().getShortName());
+      ctx.put("programName", invitation.getProgram().getName());
       ctx.put("role", invitation.getRole());
       ctx.put("email", invitation.getUserEmail());
       ctx.put(

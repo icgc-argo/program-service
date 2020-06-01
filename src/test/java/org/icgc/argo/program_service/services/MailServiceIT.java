@@ -80,7 +80,8 @@ class MailServiceIT {
     when(invite.getFirstName()).thenReturn("Albert");
     when(invite.getLastName()).thenReturn("Einstein");
     when(invite.getUserEmail()).thenReturn(randomEmail);
-    when(mockProgramEntity.getShortName()).thenReturn("TestProgram");
+    when(mockProgramEntity.getShortName()).thenReturn("TEST-PR");
+    when(mockProgramEntity.getName()).thenReturn("A Test Program Name");
     when(invite.getProgram()).thenReturn(mockProgramEntity);
     when(invite.getExpiresAt()).thenReturn(LocalDateTime.now());
     mailService.sendInviteEmail(invite);
