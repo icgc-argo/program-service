@@ -24,18 +24,24 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static java.lang.String.format;
 import static junit.framework.TestCase.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.properties.AppProperties;
+import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
@@ -88,6 +94,7 @@ public class EgoServiceIT {
   private static final UUID SUBMITTER_GROUP_ID =
       UUID.fromString("64541e68-c6c6-469d-9dcf-9aa260ef17ea");
   private static final String SHORT_NAME = "TEST-CA";
+  private static final String BASE_PATH = "src/test/resources/__files/";
 
   @Before
   public void setUp() {
@@ -120,6 +127,76 @@ public class EgoServiceIT {
 
   public void getUser(String filename) {
     stub(format("/users?query=%s", TEST_EMAIL), filename);
+  }
+
+  @Test
+  @SneakyThrows
+  public void test_setUpMembershipPermissions_full() {
+    val adminGroup = "PROGRAM-" + SHORT_NAME + "-ADMIN";
+    val url_1 = format("/groups?query=%s", adminGroup);
+    stub(url_1, "resp_get_admin_group.json");
+    assertTrue(client.getGroupByName(adminGroup).isPresent());
+
+    val submitterGroup = "PROGRAM-" + SHORT_NAME + "-SUBMITTER";
+    val url_2 = format("/groups?query=%s", submitterGroup);
+    stub(url_2, "resp_get_submitter_group.json");
+    assertTrue(client.getGroupByName(submitterGroup).isPresent());
+
+    val url_3 = "/transaction/group_permissions";
+
+    stubFor(
+        post(urlEqualTo(format(url_3)))
+            .willReturn(
+                aResponse()
+                    .withStatus(OK.value())
+                    .withHeader("Content-Type", "application/json")
+                    .withBodyFile("req_add_full_member_permission.json")));
+
+    egoService.setUpMembershipPermissions(SHORT_NAME, MembershipType.FULL);
+
+    val requestFile = Path.of(BASE_PATH + "req_add_full_member_permission.json");
+    val jsonString = Files.readString(requestFile);
+
+    verify(
+        1,
+        postRequestedFor(urlEqualTo(url_3))
+            .withHeader("Content-Type", containing("application/json"))
+            .withRequestBody(equalToJson(jsonString)));
+  }
+
+  @Test
+  @SneakyThrows
+  public void test_setUpMembershipPermissions_associate() {
+    val adminGroup = "PROGRAM-" + SHORT_NAME + "-ADMIN";
+    val url_1 = format("/groups?query=%s", adminGroup);
+    stub(url_1, "resp_get_admin_group.json");
+    assertTrue(client.getGroupByName(adminGroup).isPresent());
+
+    val submitterGroup = "PROGRAM-" + SHORT_NAME + "-SUBMITTER";
+    val url_2 = format("/groups?query=%s", submitterGroup);
+    stub(url_2, "resp_get_submitter_group.json");
+    assertTrue(client.getGroupByName(submitterGroup).isPresent());
+
+    val url_3 = "/transaction/group_permissions";
+
+    stubFor(
+        post(urlEqualTo(format(url_3)))
+            .willReturn(
+                aResponse()
+                    .withStatus(OK.value())
+                    .withHeader("Content-Type", "application/json")
+                    .withBodyFile("req_add_associate_member_permission.json")));
+
+    egoService.setUpMembershipPermissions(SHORT_NAME, MembershipType.ASSOCIATE);
+
+    val requestFile = Path.of(BASE_PATH + "req_add_associate_member_permission.json");
+    val jsonString = Files.readString(requestFile);
+
+    verify(
+        1,
+        postRequestedFor(urlEqualTo(url_3))
+            .withHeader("Content-Type", containing("application/json"))
+            .withRequestBody(equalToJson(jsonString)));
   }
 
   @Test
@@ -270,7 +347,7 @@ public class EgoServiceIT {
 
   @Test
   public void testGetGroups() {
-    getGroupsByUserId(TEST_ID, "getGroups.json");
+    getGroupsByUserId(TEST_ID, "resp_get_admin_group.json");
     assertEquals(1, client.getGroupsByUserId(TEST_ID).count());
 
     val g =
@@ -281,14 +358,14 @@ public class EgoServiceIT {
     assertTrue(g.isPresent());
     val group = g.get();
 
-    assertEquals("TEST-CA-ADMIN", group.getName());
+    assertEquals("PROGRAM-TEST-CA-ADMIN", group.getName());
     assertEquals(ADMIN_GROUP_ID, group.getId());
   }
 
   @Test
   public void removeUser_success() {
     mockGetUser_success();
-    getGroupsByUserId(TEST_ID, "getGroups.json");
+    getGroupsByUserId(TEST_ID, "resp_get_admin_group.json");
 
     stubFor(
         delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
@@ -302,7 +379,7 @@ public class EgoServiceIT {
     // If there's no user to delete, we've successful put the system in a state where that user does
     // not exist
     mockGetUser_fail();
-    getGroupsByUserId(TEST_ID, "getGroups.json");
+    getGroupsByUserId(TEST_ID, "resp_get_admin_group.json");
 
     stubFor(
         delete(urlEqualTo(format("/groups/%s/users/%s", ADMIN_GROUP_ID, TEST_ID)))
@@ -374,8 +451,8 @@ public class EgoServiceIT {
 
     exceptionRule.expect(EgoException.class);
     String errMsg =
-        "Cannot remove user 'f0cfd733-3f41-46a7-b400-c1774dac4b21' from group 'TEST-CA-ADMIN' "
-            + "Cannot remove user 'f0cfd733-3f41-46a7-b400-c1774dac4b21' from group 'TEST-CA-SUBMITTER' ";
+        "Cannot remove user 'f0cfd733-3f41-46a7-b400-c1774dac4b21' from group 'PROGRAM-TEST-CA-ADMIN' "
+            + "Cannot remove user 'f0cfd733-3f41-46a7-b400-c1774dac4b21' from group 'PROGRAM-TEST-CA-SUBMITTER' ";
     exceptionRule.expectMessage(errMsg);
     egoService.leaveProgram(TEST_EMAIL, SHORT_NAME);
   }

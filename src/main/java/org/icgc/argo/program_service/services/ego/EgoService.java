@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.icgc.argo.program_service.proto.UserRole.ADMIN;
+import static org.icgc.argo.program_service.proto.UserRole.SUBMITTER;
 import static org.icgc.argo.program_service.services.ego.GroupName.createProgramGroupName;
 
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.properties.AppProperties;
+import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
@@ -63,6 +65,9 @@ public class EgoService {
   private final ProgramConverter programConverter;
   private final JoinProgramInviteRepository invitationRepository;
   private final AppProperties appProperties;
+
+  private static final String FULL_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-FULL";
+  private static final String ASSOCIATE_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-ASSOCIATE";
 
   @Autowired
   public EgoService(
@@ -99,6 +104,28 @@ public class EgoService {
     return requests;
   }
 
+  public List<EgoGroupPermissionRequest> addMembershipPermissions(
+      @NonNull String shortName, @NonNull MembershipType membershipType) {
+    List<EgoGroupPermissionRequest> requests = new ArrayList<>();
+
+    // admin group and data submitter group must already exist in ego:
+    val adminGroup = getProgramEgoGroup(shortName, ADMIN).getName();
+    val submitterGroup = getProgramEgoGroup(shortName, SUBMITTER).getName();
+
+    if (membershipType.equals(MembershipType.FULL)) {
+      requests.add(new EgoGroupPermissionRequest(adminGroup, FULL_MEMBERSHIP_POLICY, "READ"));
+      requests.add(new EgoGroupPermissionRequest(submitterGroup, FULL_MEMBERSHIP_POLICY, "READ"));
+    } else if (membershipType.equals(MembershipType.ASSOCIATE)) {
+      requests.add(new EgoGroupPermissionRequest(adminGroup, ASSOCIATE_MEMBERSHIP_POLICY, "READ"));
+      requests.add(
+          new EgoGroupPermissionRequest(submitterGroup, ASSOCIATE_MEMBERSHIP_POLICY, "READ"));
+    } else
+      throw new IllegalArgumentException(
+          "Cannot create new group permission: Unrecognized Membership type.");
+
+    return requests;
+  }
+
   List<String> programGroupNames(String shortName) {
     return Stream.of(UserRole.values())
         .filter(role -> !role.equals(UserRole.UNRECOGNIZED))
@@ -108,6 +135,13 @@ public class EgoService {
 
   public void setUpProgram(@NonNull String shortName) {
     val requests = getPermissionsForProgram(shortName);
+    egoClient.assignGroupPermissions(requests);
+  }
+
+  // Creates file metadata access control permissions
+  public void setUpMembershipPermissions(
+      @NonNull String shortName, @NonNull MembershipType membershipType) {
+    val requests = addMembershipPermissions(shortName, membershipType);
     egoClient.assignGroupPermissions(requests);
   }
 
