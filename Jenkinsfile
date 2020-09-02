@@ -124,7 +124,7 @@ spec:
 
     post {
         always {
-            junit "**/TEST-*.xml"
+            junit "**/surefire-reports/TEST-*.xml"
        }
     }
  
