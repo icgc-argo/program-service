@@ -22,7 +22,7 @@ spec:
       - name: DOCKER_HOST
         value: tcp://localhost:2375
   - name: java
-    image: openjdk:11-jdk-slim
+    image: openjdk:11-jdk
     command:
     - cat
     tty: true
