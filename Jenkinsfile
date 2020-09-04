@@ -15,25 +15,18 @@ spec:
     command:
     - cat
     tty: true
+  - name: jdk
+    tty: true
+    image: openjdk:11-jdk
+    env:
+    - name: DOCKER_HOST
+      value: tcp://localhost:2375
   - name: docker
     image: docker:18-git
-    env:
-    - name: DOCKER_HOST
-      value: tcp://localhost:2375
     tty: true
-  - name: java
-    image: openjdk:11-jdk
-    command:
-    - cat
-    env:
-    - name: DOCKER_HOST
-      value: tcp://localhost:2375
-    tty: true
-  - name: postgres
-    image: postgres:11.2-alpine
-    env:
-    - name: POSTGRES_DB
-      value: program_db
+    volumeMounts:
+    - mountPath: /var/run/docker.sock
+      name: docker-sock
   - name: dind-daemon
     image: docker:18.06-dind
     securityContext:
@@ -44,6 +37,10 @@ spec:
   volumes:
   - name: docker-graph-storage
     emptyDir: {}
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
+      type: File
 """
         }
     }
@@ -60,7 +57,7 @@ spec:
         }
         stage('Test') {
             steps {
-                container('java') {
+                container('jdk') {
                     sh "./fly.sh migrate"
                     sh "./mvnw clean verify"
                 }
