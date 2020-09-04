@@ -34,7 +34,6 @@ spec:
     env:
     - name: POSTGRES_DB
       value: program_db
-
   - name: dind-daemon
     image: docker:18.06-dind
     securityContext:
