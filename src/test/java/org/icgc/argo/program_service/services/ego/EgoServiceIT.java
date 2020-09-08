@@ -45,7 +45,6 @@ import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
-import org.icgc.argo.program_service.utils.EntityGenerator;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -72,8 +71,6 @@ public class EgoServiceIT {
   @Autowired private RetryTemplate lenientRetryTemplate;
 
   @Autowired private RetryTemplate retryTemplate;
-
-  @Autowired EntityGenerator entityGenerator;
 
   @Autowired ProgramConverter converter;
 

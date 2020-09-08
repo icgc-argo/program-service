@@ -22,14 +22,21 @@ package org.icgc.argo.program_service.utils;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import com.google.protobuf.StringValue;
+import lombok.NonNull;
 import lombok.val;
+import net.bytebuddy.utility.RandomString;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.proto.MembershipType;
+import org.icgc.argo.program_service.proto.MembershipTypeValue;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import static org.icgc.argo.program_service.UtilsTest.*;
 
 @Component
 public class EntityGenerator {
@@ -84,6 +91,24 @@ public class EntityGenerator {
       programEntity.setUpdatedAt(LocalDateTime.now());
     }
     return programRepository.save(programEntity);
+  }
+
+  public Program createProgram(@NonNull StringValue shortName, @NonNull MembershipType membershipType) {
+    return Program.newBuilder()
+        .setShortName(shortName)
+        .setMembershipType(MembershipTypeValue.newBuilder().setValue(membershipType).build())
+        .setWebsite(stringValue("http://site.org"))
+        .addInstitutions("Ontario Institute for Cancer Research")
+        .addRegions("Canada")
+        .setName(stringValue(RandomString.make(15)))
+        .setCommitmentDonors(int32Value(234))
+        .addCountries("Canada")
+        .setSubmittedDonors(int32Value(244))
+        .setGenomicDonors(int32Value(333))
+        .setDescription(stringValue("nothing"))
+        .addCancerTypes("Blood cancer")
+        .addPrimarySites("Blood")
+        .build();
   }
 
   public CancerEntity setUpCancer(String name) {

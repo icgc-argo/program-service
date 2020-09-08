@@ -53,6 +53,8 @@ public interface EgoClient {
 
   void deletePolicy(UUID policyId);
 
+  void deleteGroupPermission(UUID policyId, UUID groupId);
+
   Optional<EgoPolicy> getPolicyByName(String name);
 
   void removePolicyByName(String name);
