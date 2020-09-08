@@ -4,9 +4,9 @@
   "offset": 0,
   "resultSet": [
     {
-      "description": "TEST-CA-ADMIN",
+      "description": "PROGRAM-TEST-CA-SUBMITTER",
       "id": "09d93820-500e-4027-95ec-fdb5ce6986ce",
-      "name": "TEST-CA-ADMIN",
+      "name": "PROGRAM-TEST-CA-SUBMITTER",
       "status": "APPROVED"
     }
   ]
