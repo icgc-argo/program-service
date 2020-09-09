@@ -58,8 +58,8 @@ public class ProgramServiceFacade {
   private final CommonConverter commonConverter;
   private final ValidationService validationService;
 
-  private final static String FULL_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-FULL";
-  private final static String ASSOCIATE_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-ASSOCIATE";
+  private static final String FULL_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-FULL";
+  private static final String ASSOCIATE_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-ASSOCIATE";
 
   @Autowired
   public ProgramServiceFacade(
@@ -118,7 +118,8 @@ public class ProgramServiceFacade {
     updateMembershipPermission(programToUpdate, updatingProgram);
 
     val updatedProgram =
-        programService.updateProgram(programToUpdate,
+        programService.updateProgram(
+            programToUpdate,
             updatingProgram,
             program.getCancerTypesList(),
             program.getPrimarySitesList(),
@@ -304,7 +305,8 @@ public class ProgramServiceFacade {
         });
   }
 
-  private void updateMembershipPermission(@NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram) {
+  private void updateMembershipPermission(
+      @NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram) {
     // check if membership type is updated:
     if (!programToUpdate.getMembershipType().equals(updatingProgram.getMembershipType())
         && !updatingProgram.getMembershipType().equals(MembershipType.UNRECOGNIZED)) {
@@ -316,7 +318,7 @@ public class ProgramServiceFacade {
       val fullPolicyId = egoService.getPolicyByName(FULL_MEMBERSHIP_POLICY).getId();
       val associatePolicyId = egoService.getPolicyByName(ASSOCIATE_MEMBERSHIP_POLICY).getId();
 
-      if(updatingProgram.getMembershipType().equals(MembershipType.FULL)) {
+      if (updatingProgram.getMembershipType().equals(MembershipType.FULL)) {
         // delete associate membership permission from admin group and submitter group
         egoService.deleteGroupPermission(associatePolicyId, adminGroupId);
         egoService.deleteGroupPermission(associatePolicyId, submitterGroupId);

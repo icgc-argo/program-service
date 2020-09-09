@@ -80,8 +80,8 @@ public class ProgramServiceAuthorizationTest {
   private Signer signer;
   private RSAPublicKey publicKey;
 
-  private final static String FULL_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-FULL";
-  private final static String ASSOCIATE_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-ASSOCIATE";
+  private static final String FULL_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-FULL";
+  private static final String ASSOCIATE_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-ASSOCIATE";
 
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
@@ -121,14 +121,17 @@ public class ProgramServiceAuthorizationTest {
 
     val adminGroupId = UUID.randomUUID();
     val submitterGroupId = UUID.randomUUID();
-    when(mockEgoService.getProgramEgoGroup(programName().getValue(), UserRole.ADMIN)).thenReturn(EgoGroup.builder().id(adminGroupId).build());
-    when(mockEgoService.getProgramEgoGroup(programName().getValue(), UserRole.SUBMITTER)).thenReturn(EgoGroup.builder().id(submitterGroupId).build());
+    when(mockEgoService.getProgramEgoGroup(programName().getValue(), UserRole.ADMIN))
+        .thenReturn(EgoGroup.builder().id(adminGroupId).build());
+    when(mockEgoService.getProgramEgoGroup(programName().getValue(), UserRole.SUBMITTER))
+        .thenReturn(EgoGroup.builder().id(submitterGroupId).build());
 
     val fullPolicyId = UUID.randomUUID();
     val associatePolicyId = UUID.randomUUID();
-    when(mockEgoService.getPolicyByName(FULL_MEMBERSHIP_POLICY)).thenReturn(EgoPolicy.builder().id(fullPolicyId).build());
-    when(mockEgoService.getPolicyByName(ASSOCIATE_MEMBERSHIP_POLICY)).thenReturn(EgoPolicy.builder().id(associatePolicyId).build());
-
+    when(mockEgoService.getPolicyByName(FULL_MEMBERSHIP_POLICY))
+        .thenReturn(EgoPolicy.builder().id(fullPolicyId).build());
+    when(mockEgoService.getPolicyByName(ASSOCIATE_MEMBERSHIP_POLICY))
+        .thenReturn(EgoPolicy.builder().id(associatePolicyId).build());
 
     val programService = mock(ProgramService.class);
     when(programService.createProgram(any())).thenReturn(entity());

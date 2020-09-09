@@ -432,9 +432,11 @@ public class EgoService {
   }
 
   public EgoPolicy getPolicyByName(@NonNull String name) {
-    return egoClient.getPolicyByName(name)
-        .orElseThrow(() -> {
-          throw new NotFoundException(format("Ego policy %s is not found.", name));
-        });
+    return egoClient
+        .getPolicyByName(name)
+        .orElseThrow(
+            () -> {
+              throw new NotFoundException(format("Ego policy %s is not found.", name));
+            });
   }
 }

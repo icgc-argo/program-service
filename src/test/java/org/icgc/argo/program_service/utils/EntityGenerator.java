@@ -20,10 +20,11 @@
 
 package org.icgc.argo.program_service.utils;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import static org.icgc.argo.program_service.UtilsTest.*;
 
 import com.google.protobuf.StringValue;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import net.bytebuddy.utility.RandomString;
@@ -35,8 +36,6 @@ import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import static org.icgc.argo.program_service.UtilsTest.*;
 
 @Component
 public class EntityGenerator {
@@ -93,7 +92,8 @@ public class EntityGenerator {
     return programRepository.save(programEntity);
   }
 
-  public Program createProgram(@NonNull StringValue shortName, @NonNull MembershipType membershipType) {
+  public Program createProgram(
+      @NonNull StringValue shortName, @NonNull MembershipType membershipType) {
     return Program.newBuilder()
         .setShortName(shortName)
         .setMembershipType(MembershipTypeValue.newBuilder().setValue(membershipType).build())

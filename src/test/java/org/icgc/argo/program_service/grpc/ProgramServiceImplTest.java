@@ -36,7 +36,6 @@ import io.grpc.stub.StreamObserver;
 import java.time.LocalDateTime;
 import java.util.*;
 import javax.validation.constraints.Email;
-
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
@@ -90,8 +89,8 @@ class ProgramServiceImplTest {
 
   @Autowired EntityGenerator generator;
 
-  private final static String FULL_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-FULL";
-  private final static String ASSOCIATE_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-ASSOCIATE";
+  private static final String FULL_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-FULL";
+  private static final String ASSOCIATE_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-ASSOCIATE";
 
   @Test
   void test_update_full_program_to_associate() {
@@ -118,15 +117,10 @@ class ProgramServiceImplTest {
     val fullPolicyId = UUID.randomUUID();
     val associatePolicyId = UUID.randomUUID();
 
-    val fullPolicy = EgoPolicy.builder()
-        .id(fullPolicyId)
-        .name(FULL_MEMBERSHIP_POLICY)
-        .build();
+    val fullPolicy = EgoPolicy.builder().id(fullPolicyId).name(FULL_MEMBERSHIP_POLICY).build();
 
-    val associatePolicy = EgoPolicy.builder()
-        .id(associatePolicyId)
-        .name(ASSOCIATE_MEMBERSHIP_POLICY)
-        .build();
+    val associatePolicy =
+        EgoPolicy.builder().id(associatePolicyId).name(ASSOCIATE_MEMBERSHIP_POLICY).build();
 
     doReturn(fullPolicy).when(egoService).getPolicyByName(FULL_MEMBERSHIP_POLICY);
     doReturn(associatePolicy).when(egoService).getPolicyByName(ASSOCIATE_MEMBERSHIP_POLICY);
@@ -166,15 +160,10 @@ class ProgramServiceImplTest {
     val fullPolicyId = UUID.randomUUID();
     val associatePolicyId = UUID.randomUUID();
 
-    val fullPolicy = EgoPolicy.builder()
-        .id(fullPolicyId)
-        .name(FULL_MEMBERSHIP_POLICY)
-        .build();
+    val fullPolicy = EgoPolicy.builder().id(fullPolicyId).name(FULL_MEMBERSHIP_POLICY).build();
 
-    val associatePolicy = EgoPolicy.builder()
-        .id(associatePolicyId)
-        .name(ASSOCIATE_MEMBERSHIP_POLICY)
-        .build();
+    val associatePolicy =
+        EgoPolicy.builder().id(associatePolicyId).name(ASSOCIATE_MEMBERSHIP_POLICY).build();
 
     doReturn(fullPolicy).when(egoService).getPolicyByName(FULL_MEMBERSHIP_POLICY);
     doReturn(associatePolicy).when(egoService).getPolicyByName(ASSOCIATE_MEMBERSHIP_POLICY);
@@ -188,7 +177,6 @@ class ProgramServiceImplTest {
     // verify if assign group permission requests have been made:
     verify(egoService, times(1)).setUpMembershipPermissions(shortName, FULL);
   }
-
 
   @Test
   void removeProgram() {

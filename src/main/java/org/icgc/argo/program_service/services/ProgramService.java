@@ -107,7 +107,7 @@ public class ProgramService {
     this.validatorFactory = validatorFactory;
   }
 
-  ProgramEntity findProgramByShortName(@NonNull String name, boolean allowInactive) {
+  private ProgramEntity findProgramByShortName(@NonNull String name, boolean allowInactive) {
     val search =
         programRepository.findOne(
             new ProgramSpecificationBuilder()
