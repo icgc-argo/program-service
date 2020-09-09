@@ -21,6 +21,8 @@
 package org.icgc.argo.program_service.grpc;
 
 import static org.apache.commons.lang.math.RandomUtils.nextInt;
+import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
+import static org.icgc.argo.program_service.proto.MembershipType.FULL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -34,6 +36,7 @@ import io.grpc.stub.StreamObserver;
 import java.time.LocalDateTime;
 import java.util.*;
 import javax.validation.constraints.Email;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
@@ -46,14 +49,26 @@ import org.icgc.argo.program_service.services.ProgramServiceFacade;
 import org.icgc.argo.program_service.services.ValidationService;
 import org.icgc.argo.program_service.services.auth.AuthorizationService;
 import org.icgc.argo.program_service.services.ego.EgoService;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoPolicy;
+import org.icgc.argo.program_service.utils.EntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
 
 @ExtendWith(MockitoExtension.class)
+@Slf4j
+@SpringBootTest
+@RunWith(SpringRunner.class)
+@Transactional
 class ProgramServiceImplTest {
   ProgramConverter programConverter = ProgramConverter.INSTANCE;
   ProgramService programService = mock(ProgramService.class);
@@ -71,6 +86,97 @@ class ProgramServiceImplTest {
           validationService);
   ProgramServiceImpl programServiceImpl =
       new ProgramServiceImpl(CommonConverter.INSTANCE, authorizationService, facade);
+
+  @Autowired EntityGenerator generator;
+
+  private static final String FULL_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-FULL";
+  private static final String ASSOCIATE_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-ASSOCIATE";
+
+  @Test
+  void test_update_full_program_to_associate() {
+    val request = mock(UpdateProgramRequest.class);
+    val shortName = "TEST-CA";
+    val name = StringValue.of(shortName);
+    val updatingProgram = generator.createProgram(name, ASSOCIATE);
+    when(request.getProgram()).thenReturn(updatingProgram);
+
+    val programToUpdate = generator.createProgramEntity(updatingProgram);
+    programToUpdate.setMembershipType(FULL);
+
+    when(programService.getProgram(shortName, false)).thenReturn(programToUpdate);
+    val responseObserver = mock(StreamObserver.class);
+
+    val adminGroupId = UUID.randomUUID();
+    val submitterGroupId = UUID.randomUUID();
+    val adminGroup = EgoGroup.builder().id(adminGroupId).build();
+    val submitterGroup = EgoGroup.builder().id(submitterGroupId).build();
+
+    doReturn(adminGroup).when(egoService).getProgramEgoGroup(shortName, UserRole.ADMIN);
+    doReturn(submitterGroup).when(egoService).getProgramEgoGroup(shortName, UserRole.SUBMITTER);
+
+    val fullPolicyId = UUID.randomUUID();
+    val associatePolicyId = UUID.randomUUID();
+
+    val fullPolicy = EgoPolicy.builder().id(fullPolicyId).name(FULL_MEMBERSHIP_POLICY).build();
+
+    val associatePolicy =
+        EgoPolicy.builder().id(associatePolicyId).name(ASSOCIATE_MEMBERSHIP_POLICY).build();
+
+    doReturn(fullPolicy).when(egoService).getPolicyByName(FULL_MEMBERSHIP_POLICY);
+    doReturn(associatePolicy).when(egoService).getPolicyByName(ASSOCIATE_MEMBERSHIP_POLICY);
+
+    programServiceImpl.updateProgram(request, responseObserver);
+
+    // verify if delete policy requests have been made:
+    verify(egoService, times(1)).deleteGroupPermission(fullPolicyId, adminGroupId);
+    verify(egoService, times(1)).deleteGroupPermission(fullPolicyId, submitterGroupId);
+
+    // verify if assign group permission requests have been made:
+    verify(egoService, times(1)).setUpMembershipPermissions(shortName, ASSOCIATE);
+  }
+
+  @Test
+  void test_update_associate_program_to_full() {
+    val request = mock(UpdateProgramRequest.class);
+    val shortName = "TEST-CA";
+    val name = StringValue.of(shortName);
+    val updatingProgram = generator.createProgram(name, FULL);
+    when(request.getProgram()).thenReturn(updatingProgram);
+
+    val programToUpdate = generator.createProgramEntity(updatingProgram);
+    programToUpdate.setMembershipType(ASSOCIATE);
+
+    when(programService.getProgram(shortName, false)).thenReturn(programToUpdate);
+    val responseObserver = mock(StreamObserver.class);
+
+    val adminGroupId = UUID.randomUUID();
+    val submitterGroupId = UUID.randomUUID();
+    val adminGroup = EgoGroup.builder().id(adminGroupId).build();
+    val submitterGroup = EgoGroup.builder().id(submitterGroupId).build();
+
+    doReturn(adminGroup).when(egoService).getProgramEgoGroup(shortName, UserRole.ADMIN);
+    doReturn(submitterGroup).when(egoService).getProgramEgoGroup(shortName, UserRole.SUBMITTER);
+
+    val fullPolicyId = UUID.randomUUID();
+    val associatePolicyId = UUID.randomUUID();
+
+    val fullPolicy = EgoPolicy.builder().id(fullPolicyId).name(FULL_MEMBERSHIP_POLICY).build();
+
+    val associatePolicy =
+        EgoPolicy.builder().id(associatePolicyId).name(ASSOCIATE_MEMBERSHIP_POLICY).build();
+
+    doReturn(fullPolicy).when(egoService).getPolicyByName(FULL_MEMBERSHIP_POLICY);
+    doReturn(associatePolicy).when(egoService).getPolicyByName(ASSOCIATE_MEMBERSHIP_POLICY);
+
+    programServiceImpl.updateProgram(request, responseObserver);
+
+    // verify if delete policy requests have been made:
+    verify(egoService, times(1)).deleteGroupPermission(associatePolicyId, adminGroupId);
+    verify(egoService, times(1)).deleteGroupPermission(associatePolicyId, submitterGroupId);
+
+    // verify if assign group permission requests have been made:
+    verify(egoService, times(1)).setUpMembershipPermissions(shortName, FULL);
+  }
 
   @Test
   void removeProgram() {

@@ -212,6 +212,7 @@ public class ProgramService {
   }
 
   public ProgramEntity updateProgram(
+      @NonNull ProgramEntity programToUpdate,
       @NonNull ProgramEntity updatingProgram,
       @NonNull List<String> cancers,
       @NonNull List<String> primarySites,
@@ -229,8 +230,6 @@ public class ProgramService {
               "Cannot update program. Cancer, primary site, institution, country, and region cannot be empty.")
           .asRuntimeException();
     }
-
-    val programToUpdate = findProgramByShortName(updatingProgram.getShortName(), false);
 
     // update associations
     processCancers(programToUpdate, cancers);
