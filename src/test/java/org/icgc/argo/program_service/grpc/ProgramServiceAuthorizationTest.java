@@ -66,6 +66,8 @@ import org.icgc.argo.program_service.services.ValidationService;
 import org.icgc.argo.program_service.services.auth.EgoAuthorizationService;
 import org.icgc.argo.program_service.services.ego.Context;
 import org.icgc.argo.program_service.services.ego.EgoService;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
+import org.icgc.argo.program_service.services.ego.model.entity.EgoPolicy;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
@@ -77,6 +79,9 @@ public class ProgramServiceAuthorizationTest {
   private StringValue invitationId2 = StringValue.of(invitationUUID2.toString());
   private Signer signer;
   private RSAPublicKey publicKey;
+
+  private static final String FULL_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-FULL";
+  private static final String ASSOCIATE_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-ASSOCIATE";
 
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
@@ -114,10 +119,25 @@ public class ProgramServiceAuthorizationTest {
 
     val mockEgoService = mock(EgoService.class);
 
+    val adminGroupId = UUID.randomUUID();
+    val submitterGroupId = UUID.randomUUID();
+    when(mockEgoService.getProgramEgoGroup(programName().getValue(), UserRole.ADMIN))
+        .thenReturn(EgoGroup.builder().id(adminGroupId).build());
+    when(mockEgoService.getProgramEgoGroup(programName().getValue(), UserRole.SUBMITTER))
+        .thenReturn(EgoGroup.builder().id(submitterGroupId).build());
+
+    val fullPolicyId = UUID.randomUUID();
+    val associatePolicyId = UUID.randomUUID();
+    when(mockEgoService.getPolicyByName(FULL_MEMBERSHIP_POLICY))
+        .thenReturn(EgoPolicy.builder().id(fullPolicyId).build());
+    when(mockEgoService.getPolicyByName(ASSOCIATE_MEMBERSHIP_POLICY))
+        .thenReturn(EgoPolicy.builder().id(associatePolicyId).build());
+
     val programService = mock(ProgramService.class);
     when(programService.createProgram(any())).thenReturn(entity());
     when(programService.createWithSideEffect(any(), any())).thenReturn(entity());
     when(programService.getProgram(programName().getValue())).thenReturn(entity());
+    when(programService.getProgram(programName().getValue(), false)).thenReturn(entity());
     when(programService.listPrograms()).thenReturn(List.of(entity(), entity2(), entity3()));
 
     ValidationService v = mock(ValidationService.class);
@@ -169,7 +189,7 @@ public class ProgramServiceAuthorizationTest {
                 "wrongEmail", () -> client.joinProgram(badJoinProgramRequest())), // 0 -- No one
             EndpointTest.of(
                 "createProgam",
-                () -> client.createProgram(createProgramRequest())), // 1 -3 DCC Admin
+                () -> client.createProgram(createProgramRequest())), // 1 - 3 DCC Admin
             EndpointTest.of("updateProgram", () -> client.updateProgram(updateProgramRequest())),
             EndpointTest.of("removeProgram", () -> client.removeProgram(removeProgramRequest())),
             EndpointTest.of(

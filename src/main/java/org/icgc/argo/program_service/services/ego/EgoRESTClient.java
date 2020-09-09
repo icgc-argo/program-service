@@ -220,6 +220,12 @@ public class EgoRESTClient implements EgoClient {
   }
 
   @Override
+  public void deleteGroupPermission(UUID policyId, UUID groupId) {
+    retryRunnable(
+        () -> restTemplate.delete(format("/policies/%s/permission/group/%s", policyId, groupId)));
+  }
+
+  @Override
   public Optional<EgoPolicy> getPolicyByName(String name) {
     return getObject(
         format("/policies?name=%s", name),

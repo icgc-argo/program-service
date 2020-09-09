@@ -47,10 +47,7 @@ import org.icgc.argo.program_service.proto.MembershipType;
 import org.icgc.argo.program_service.proto.User;
 import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoGroupPermissionRequest;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoMassDeleteRequest;
-import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
+import org.icgc.argo.program_service.services.ego.model.entity.*;
 import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -304,6 +301,11 @@ public class EgoService {
     invitationRepository.deleteAllByProgramShortName(programShortName);
   }
 
+  public void deleteGroupPermission(@NonNull UUID policyId, @NonNull UUID groupId) {
+    log.info(format("Deleting ego policy %s from group %s.", policyId, groupId));
+    egoClient.deleteGroupPermission(policyId, groupId);
+  }
+
   public Boolean joinProgram(
       @Email String email, @NonNull String programShortName, @NonNull UserRole role) {
     val user = egoClient.getUser(email).orElse(null);
@@ -427,5 +429,14 @@ public class EgoService {
             egoPermission ->
                 egoPermission.getPolicy().getName().equals(dacoPolicyName)
                     && dacoAccessLevels.contains(egoPermission.getAccessLevel()));
+  }
+
+  public EgoPolicy getPolicyByName(@NonNull String name) {
+    return egoClient
+        .getPolicyByName(name)
+        .orElseThrow(
+            () -> {
+              throw new NotFoundException(format("Ego policy %s is not found.", name));
+            });
   }
 }

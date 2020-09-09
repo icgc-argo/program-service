@@ -58,6 +58,9 @@ public class ProgramServiceFacade {
   private final CommonConverter commonConverter;
   private final ValidationService validationService;
 
+  private static final String FULL_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-FULL";
+  private static final String ASSOCIATE_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-ASSOCIATE";
+
   @Autowired
   public ProgramServiceFacade(
       @NonNull ProgramService programService,
@@ -110,8 +113,13 @@ public class ProgramServiceFacade {
   public UpdateProgramResponse updateProgram(UpdateProgramRequest request) {
     val program = request.getProgram();
     val updatingProgram = programConverter.programToProgramEntity(program);
+    val programToUpdate = programService.getProgram(updatingProgram.getShortName(), false);
+
+    updateMembershipPermission(programToUpdate, updatingProgram);
+
     val updatedProgram =
         programService.updateProgram(
+            programToUpdate,
             updatingProgram,
             program.getCancerTypesList(),
             program.getPrimarySitesList(),
@@ -295,6 +303,38 @@ public class ProgramServiceFacade {
           egoService.getOrCreateUser(email, firstName, lastName);
           invitationService.inviteUser(pe, email, firstName, lastName, UserRole.ADMIN);
         });
+  }
+
+  private void updateMembershipPermission(
+      @NonNull ProgramEntity programToUpdate, @NonNull ProgramEntity updatingProgram) {
+    // check if membership type is updated:
+    if (!programToUpdate.getMembershipType().equals(updatingProgram.getMembershipType())
+        && !updatingProgram.getMembershipType().equals(MembershipType.UNRECOGNIZED)) {
+
+      val shortName = updatingProgram.getShortName();
+      val adminGroupId = egoService.getProgramEgoGroup(shortName, UserRole.ADMIN).getId();
+      val submitterGroupId = egoService.getProgramEgoGroup(shortName, UserRole.SUBMITTER).getId();
+
+      val fullPolicyId = egoService.getPolicyByName(FULL_MEMBERSHIP_POLICY).getId();
+      val associatePolicyId = egoService.getPolicyByName(ASSOCIATE_MEMBERSHIP_POLICY).getId();
+
+      if (updatingProgram.getMembershipType().equals(MembershipType.FULL)) {
+        // delete associate membership permission from admin group and submitter group
+        egoService.deleteGroupPermission(associatePolicyId, adminGroupId);
+        egoService.deleteGroupPermission(associatePolicyId, submitterGroupId);
+
+        // assign full membership permission to admin group and submitter group
+        egoService.setUpMembershipPermissions(shortName, MembershipType.FULL);
+
+      } else if (updatingProgram.getMembershipType().equals(MembershipType.ASSOCIATE)) {
+        // delete existing full membership permission from admin group and submitter group
+        egoService.deleteGroupPermission(fullPolicyId, adminGroupId);
+        egoService.deleteGroupPermission(fullPolicyId, submitterGroupId);
+
+        // assign associate membership permission to admin group and submitter group
+        egoService.setUpMembershipPermissions(shortName, MembershipType.ASSOCIATE);
+      }
+    }
   }
 
   private UserDetails convertUserToUserDetail(User user, String programShortName) {
