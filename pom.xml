@@ -30,7 +30,7 @@
 	</parent>
 	<groupId>ca.on.oicr.icgc.argo</groupId>
 	<artifactId>program-service</artifactId>
-	<version>1.9.0-SNAPSHOT</version>
+	<version>1.10.0</version>
 	<name>program-service</name>
 	<description>Argo Program Service</description>
 
