@@ -1,0 +1,10 @@
+[ {
+  "groupName" : "PROGRAM-TEST-CA-ADMIN",
+  "policyName" : "PROGRAMMEMBERSHIP-FULL",
+  "mask" : "READ"
+}, {
+  "groupName" : "PROGRAM-TEST-CA-SUBMITTER",
+  "policyName" : "PROGRAMMEMBERSHIP-FULL",
+  "mask" : "READ"
+} ]
+

@@ -286,6 +286,7 @@ public class ProgramServiceFacade {
 
   private void initializeProgramInEgo(ProgramEntity pe, List<User> admins) {
     egoService.setUpProgram(pe.getShortName());
+    egoService.setUpMembershipPermissions(pe.getShortName(), pe.getMembershipType());
     admins.forEach(
         admin -> {
           val email = commonConverter.unboxStringValue(admin.getEmail());

@@ -4,7 +4,7 @@ def commit = "UNKNOWN"
 pipeline {
     agent {
         kubernetes {
-            label 'program-service-executor'
+            label 'programservice-executor'
             yaml """
 apiVersion: v1
 kind: Pod
