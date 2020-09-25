@@ -31,7 +31,7 @@ import lombok.val;
 public class ProgramShortNameValidator implements ConstraintValidator<ProgramShortName, String> {
 
   private static final Pattern pattern =
-      Pattern.compile("^[A-Z0-9][-_A-Z0-9]{2,7}[-]([A-Z][A-Z])$");
+      Pattern.compile("^[A-Z0-9][-_A-Z0-9]{2,7}[-](([A-Z][A-Z])|(\\bINTL\\b))$");
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
@@ -47,6 +47,6 @@ public class ProgramShortNameValidator implements ConstraintValidator<ProgramSho
 
     val countrycode = matcher.group(1);
 
-    return countries.contains(countrycode);
+    return countries.contains(countrycode) || countrycode.equals("INTL");
   }
 }
