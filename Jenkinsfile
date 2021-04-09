@@ -104,7 +104,7 @@ spec:
                     }
                     withCredentials([usernamePassword(credentialsId:'argoContainers', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         sh "docker login ${dockerRegistry} -u $USERNAME -p $PASSWORD"
-                    
+                    }
                     sh "docker build --network=host -f Dockerfile . -t ${dockerRegistry}/${githubRepo}:latest -t ${dockerRegistry}/${githubRepo}:${version}"
                     sh "docker push ${dockerRegistry}/${githubRepo}:${version}"
                     sh "docker push ${dockerRegistry}/${githubRepo}:latest"
