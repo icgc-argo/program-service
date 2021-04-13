@@ -1,3 +1,5 @@
+def dockerRegistry = "ghcr.io"
+def githubRepo = "icgc-argo/program-service"
 def version = "UNKNOWN"
 def commit = "UNKNOWN"
 
@@ -72,12 +74,12 @@ spec:
             when { branch 'develop' }
             steps {
                container('docker') {
-                    withCredentials([usernamePassword(credentialsId:'argoDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'docker login -u $USERNAME -p $PASSWORD'
+                    withCredentials([usernamePassword(credentialsId:'argoContainers', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh "docker login ${dockerRegistry} -u $USERNAME -p $PASSWORD"
                     }
-                    sh "docker build --network=host -f Dockerfile . -t icgcargo/program-service:edge -t icgcargo/program-service:${commit}"
-                    sh "docker push icgcargo/program-service:edge"
-                    sh "docker push icgcargo/program-service:${commit}"
+                    sh "docker build --network=host -f Dockerfile . -t ${dockerRegistry}/${githubRepo}:edge -t ${dockerRegistry}/${githubRepo}:${commit}"
+                    sh "docker push ${dockerRegistry}/${githubRepo}:edge"
+                    sh "docker push ${dockerRegistry}/${githubRepo}:${commit}"
                }
             }
         }
@@ -98,14 +100,14 @@ spec:
                container('docker') {
                    withCredentials([usernamePassword(credentialsId: 'argoGithub', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                         sh "git tag ${version}"
-                        sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/icgc-argo/program-service --tags"
+                        sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${githubRepo} --tags"
                     }
-                    withCredentials([usernamePassword(credentialsId:'argoDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'docker login -u $USERNAME -p $PASSWORD'
+                    withCredentials([usernamePassword(credentialsId:'argoContainers', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh "docker login ${dockerRegistry} -u $USERNAME -p $PASSWORD"
                     }
-                    sh "docker build --network=host -f Dockerfile . -t icgcargo/program-service:latest -t icgcargo/program-service:${version}"
-                    sh "docker push icgcargo/program-service:${version}"
-                    sh "docker push icgcargo/program-service:latest"
+                    sh "docker build --network=host -f Dockerfile . -t ${dockerRegistry}/${githubRepo}:latest -t ${dockerRegistry}/${githubRepo}:${version}"
+                    sh "docker push ${dockerRegistry}/${githubRepo}:${version}"
+                    sh "docker push ${dockerRegistry}/${githubRepo}:latest"
                 }
             }
         }
