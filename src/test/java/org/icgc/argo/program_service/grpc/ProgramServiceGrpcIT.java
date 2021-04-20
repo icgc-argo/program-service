@@ -249,31 +249,6 @@ public class ProgramServiceGrpcIT {
     assertFalse(isEmpty(inviteUserResponse.getInviteId().getValue()));
   }
 
-  @Test
-  public void invite_new_user_user_gets_added() {
-    val shortname = randomProgramName();
-    entityGenerator.setUpProgramEntity(shortname);
-    assertFalse(egoClient.getUser(NEW_USER_EMAIL).isPresent());
-
-    val request =
-        InviteUserRequest.newBuilder()
-            .setEmail(CommonConverter.INSTANCE.boxString(NEW_USER_EMAIL))
-            .setFirstName(CommonConverter.INSTANCE.boxString("Hermione"))
-            .setLastName(CommonConverter.INSTANCE.boxString("Granger"))
-            .setProgramShortName(CommonConverter.INSTANCE.boxString(shortname))
-            .build();
-    val response = stub.inviteUser(request);
-
-    assertNotNull(response.getInviteId());
-    assertTrue(egoClient.getUser(NEW_USER_EMAIL).isPresent());
-    val user = egoClient.getUser(NEW_USER_EMAIL).get();
-
-    assertEquals("Hermione", egoClient.getUser(NEW_USER_EMAIL).get().getFirstName());
-    assertEquals("Granger", egoClient.getUser(NEW_USER_EMAIL).get().getLastName());
-
-    egoClient.deleteUserById(user.getId());
-    assertFalse(egoClient.getUser(NEW_USER_EMAIL).isPresent());
-  }
 
   String randomProgramName() {
     return randomAlphabetic(7).toUpperCase() + "-CA";
