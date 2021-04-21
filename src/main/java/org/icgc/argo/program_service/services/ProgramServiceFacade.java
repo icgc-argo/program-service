@@ -162,8 +162,6 @@ public class ProgramServiceFacade {
     val firstName = commonConverter.unboxStringValue(request.getFirstName());
     val lastName = commonConverter.unboxStringValue(request.getLastName());
 
-    //    egoService.getOrCreateUser(email, firstName, lastName);
-
     val inviteId =
         invitationService.inviteUser(
             programResult, email, firstName, lastName, request.getRole().getValue());
