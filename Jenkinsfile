@@ -32,6 +32,8 @@ spec:
         value: /home/jenkins/agent
   - name: postgres
     image: postgres:11.2-alpine
+    securityContext:
+      runAsUser: 70
     env:
       - name: POSTGRES_DB
         value: program_db
@@ -40,8 +42,8 @@ spec:
   - name: dind-daemon
     image: docker:18.06-dind
     securityContext:
-        privileged: true
-        runAsUser: 0
+      privileged: true
+      runAsUser: 0
     volumeMounts:
       - name: docker-graph-storage
         mountPath: /var/lib/docker
