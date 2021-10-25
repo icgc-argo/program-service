@@ -298,7 +298,6 @@ public class ProgramServiceFacade {
           val email = commonConverter.unboxStringValue(admin.getEmail());
           val firstName = commonConverter.unboxStringValue(admin.getFirstName());
           val lastName = commonConverter.unboxStringValue(admin.getLastName());
-          egoService.getOrCreateUser(email, firstName, lastName);
           invitationService.inviteUser(pe, email, firstName, lastName, UserRole.ADMIN);
         });
   }
