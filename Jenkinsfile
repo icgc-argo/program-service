@@ -12,17 +12,14 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: helm
-    image: alpine/helm:2.12.3
-    command:
-    - cat
-    tty: true
   - name: docker
     image: docker:18-git
     tty: true
     env:
       - name: DOCKER_HOST
         value: tcp://localhost:2375
+      - name: HOME
+        value: /home/jenkins/agent
   - name: java
     image: openjdk:11-jdk-slim
     command:
@@ -31,11 +28,15 @@ spec:
     env:
       - name: DOCKER_HOST
         value: tcp://localhost:2375
+      - name: HOME
+        value: /home/jenkins/agent
   - name: postgres
     image: postgres:11.2-alpine
     env:
-    - name: POSTGRES_DB
-      value: program_db
+      - name: POSTGRES_DB
+        value: program_db
+      - name: HOME
+        value: /home/jenkins/agent
   - name: dind-daemon
     image: docker:18.06-dind
     securityContext:
