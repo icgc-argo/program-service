@@ -23,6 +23,7 @@ package org.icgc.argo.program_service.services;
 import java.io.StringWriter;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import javax.mail.MessagingException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -83,6 +84,7 @@ public class MailService {
       ctx.put("programName", invitation.getProgram().getName());
       ctx.put("role", invitation.getRole());
       ctx.put("email", invitation.getUserEmail());
+      ctx.put("currentYear", Calendar.getInstance().get(Calendar.YEAR));
       ctx.put(
           "joinProgramLink",
           emailProps.getInvitation().getInvitationUrlPrefix() + invitation.getId());
