@@ -181,7 +181,7 @@
                 Policy</a></div>
     <p class="footer__copyright float-center" align="center"
        style="Margin:0;Margin-bottom:25px;color:#0a0a0a;font-family:Work Sans,sans-serif;font-size:14px;font-weight:400;height:40.5px;line-height:40.5px;margin:0;margin-bottom:0;padding:0;text-align:center">
-        © 2020 ICGC ARGO. All rights reserved.</p>
+        © $currentYear ICGC ARGO. All rights reserved.</p>
 </center>
 <!-- prevent Gmail on iOS font size manipulation -->
 <div style="display:none;white-space:nowrap;font:15px courier;line-height:0">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
