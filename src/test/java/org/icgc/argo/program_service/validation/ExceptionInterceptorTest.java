@@ -30,6 +30,7 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.HashSet;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -95,26 +96,23 @@ public class ExceptionInterceptorTest {
 
   @Test
   public void testUnwrapsException1() throws Exception {
-    verifyUnwrapsException(TransactionSystemException.class);
+    Throwable inner = new Error("Everything is wrong!");
+    verifyUnwrapsException(new TransactionSystemException("", inner));
   }
 
   @Test
   public void testUnwrapsException2() throws Exception {
-    verifyUnwrapsException(javax.persistence.RollbackException.class);
+    Throwable inner = new Error("Everything is wrong!");
+    verifyUnwrapsException(new javax.persistence.RollbackException("", inner));
   }
 
   @Test
   public void testUnwrapsException3() throws Exception {
-    verifyUnwrapsException(DataIntegrityViolationException.class);
-  }
-
-  @Test
-  public void getTestUnwrapsException4() throws Exception {
-    verifyUnwrapsException(org.hibernate.exception.ConstraintViolationException.class);
-  }
-
-  public void verifyUnwrapsException(Class<? extends Throwable> c) throws Exception {
     Throwable inner = new Error("Everything is wrong!");
+    verifyUnwrapsException(new DataIntegrityViolationException("", inner));
+  }
+
+  public void verifyUnwrapsException(Throwable ex) throws Exception {
     val service =
         new ProgramServiceGrpc.ProgramServiceImplBase() {
 
@@ -123,8 +121,6 @@ public class ExceptionInterceptorTest {
           public void createProgram(
               CreateProgramRequest request,
               StreamObserver<CreateProgramResponse> responseObserver) {
-            val ex = mock(c, "mockClassName");
-            when(ex.getCause()).thenReturn(inner);
             throw ex;
           }
         };

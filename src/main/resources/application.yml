@@ -7,13 +7,6 @@ spring:
   flyway:
     enabled: false
     locations: "classpath:flyway/sql"
-  # url for spring boot admin client service
-  boot:
-    admin:
-      client:
-        instance:
-          service-base-url: http://localhost
-        url: http://localhost:8082
   datasource:
     url: jdbc:postgresql://localhost:5432/program_db
     username: postgres
@@ -21,6 +14,8 @@ spring:
   mail:
     host: mailhog.qa.argo.cancercollaboratory.org
     port: 40001
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 retry:
   # Connection retries in case of connection failure
@@ -85,7 +80,9 @@ management.endpoints.web.exposure.include: "*"
 # Profile - "test"
 ###############################################################################
 spring:
-  profiles: test
+  config:
+    activate:
+      on-profile: test
 
 spring.mail:
   host: localhost
@@ -105,7 +102,9 @@ app:
 # Profile - "auth"
 ###############################################################################
 spring:
-  profiles: auth
+  config:
+    activate:
+      on-profile: auth
 app:
   dccAdminPermission: PROGRAMSERVICE.WRITE
 
@@ -113,10 +112,11 @@ app:
 ###############################################################################
 # Profile - "debug"
 ###############################################################################
-spring.profiles: debug
 spring:
-  profiles:
-    include: [default]
+  config:
+    activate:
+      on-profile: debug
+
   flyway:
     enabled: true
   boot:
