@@ -35,4 +35,4 @@ WORKDIR $APP_HOME
 CMD ["java", "-ea", "-jar", "program-service.jar"]
 
 EXPOSE 50051/tcp
-EXPOSE 8080
+EXPOSE 8083
