@@ -1,5 +1,6 @@
 package org.icgc.argo.program_service.controller;
 
+import java.util.List;
 import org.icgc.argo.program_service.model.dto.ProgramDTO;
 import org.icgc.argo.program_service.model.dto.builder.ProgramDTOBuilder;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -28,5 +29,11 @@ public class PublicProgramController {
     ProgramDTO programDTO = programDTOBuilder.convertEntityToDTO(programEntity);
 
     return ResponseEntity.ok(programDTO);
+  }
+
+  @GetMapping(value = "/registeredPrograms")
+  public ResponseEntity<Object> getRegisteredProgramData() {
+    List<String> programNames = programService.getAllProgramNames();
+    return ResponseEntity.ok(programNames);
   }
 }
