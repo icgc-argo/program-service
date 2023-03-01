@@ -31,7 +31,7 @@ public class PublicProgramController {
     return ResponseEntity.ok(programDTO);
   }
 
-  @GetMapping(value = "/registeredPrograms")
+  @GetMapping(value = "/programs")
   public ResponseEntity<Object> getRegisteredProgramData() {
     List<String> programNames = programService.getAllProgramNames();
     return ResponseEntity.ok(programNames);
