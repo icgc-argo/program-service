@@ -61,6 +61,7 @@
 		<velocity.version>1.7</velocity.version>
 		<el.version>3.0.1-b09</el.version>
 		<wiremock.version>2.24.1</wiremock.version>
+		<springfox.version>3.0.0</springfox.version>
 		<!--Plugin Versions-->
 		<plugin.compiler.version>3.8.1</plugin.compiler.version>
 		<plugin.protobuf.version>0.6.1</plugin.protobuf.version>
@@ -102,7 +103,6 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-vault-config</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-bootstrap</artifactId>
@@ -110,6 +110,10 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -291,6 +295,11 @@
 			<artifactId>wiremock</artifactId>
 			<version>${wiremock.version}</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-boot-starter</artifactId>
+			<version>${springfox.version}</version>
 		</dependency>
 	</dependencies>
 
