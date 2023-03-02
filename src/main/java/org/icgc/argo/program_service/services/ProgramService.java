@@ -421,6 +421,11 @@ public class ProgramService {
     return List.copyOf(programs);
   }
 
+  public List<String> getAllProgramNames() {
+    val programNames = programRepository.getActivePrograms();
+    return programNames;
+  }
+
   List<CancerEntity> listCancers() {
     return List.copyOf(cancerRepository.findAll());
   }
