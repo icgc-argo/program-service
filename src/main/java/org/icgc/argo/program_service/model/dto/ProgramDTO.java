@@ -24,7 +24,7 @@ public class ProgramDTO {
 
   private Set<CountryDTO> programCountries;
 
-  private Set<RegionDTO> programRegions;
+  private Set<RegionDTO> processingRegions;
 
   private Set<CancerDTO> programCancers;
 
