@@ -93,7 +93,7 @@ services:
     ports:
       - "9444:5432"
   admin:
-    image: "icgcargo/spring-boot-admin:e8779d3"
+    image: "ghcr.io/icgc-argo/spring-boot-admin:49b90ca"
     ports:
       - "9081:8080"
     expose:
