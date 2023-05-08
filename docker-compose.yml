@@ -1,5 +1,5 @@
 ##################################################################################
-#  
+#
 #  Copyright (c) 2019. Ontario Institute for Cancer Research
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 ##################################################################################
-version: '3.2'
+version: "3.2"
 services:
   api:
     restart: always
@@ -75,12 +75,12 @@ services:
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_LOCATIONS: "classpath:flyway/sql,classpath:db/migration"
       SPRING_PROFILES: demo, auth
-      #GOOGLE_CLIENT_CLIENTID: 
+      #GOOGLE_CLIENT_CLIENTID:
     expose:
       - "8080"
     ports:
       - "9082:8080"
-    command: java -jar /srv/ego/install/ego.jar
+    command: java -jar /usr/bin/ego.jar
     depends_on:
       - ego-postgres
   ego-postgres:
@@ -103,4 +103,3 @@ services:
     depends_on:
       - api
       - ego-api
-
