@@ -16,7 +16,7 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 ##################################################################################
-version: "3.2"
+version: "3.3"
 services:
   api:
     restart: always
