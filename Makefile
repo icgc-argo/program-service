@@ -143,7 +143,7 @@ package: _check_mvn_software_exists
 #######################################
 dev-start: _check_docker_software_exists
 	@echo $(YELLOW)$(INFO_HEADER) "Starting DEV mode with ego and admin services"$(END)
-	@$(DOCKER_COMPOSE_COMMAND) up --no-deps -d ego-api ego-postgres admin
+	@$(DOCKER_COMPOSE_COMMAND) up --no-deps -d ego-api ego-postgres admin postgres
 	@echo $(DONE_MESSAGE)
 
 dev-stop: _check_docker_software_exists

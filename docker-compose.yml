@@ -19,7 +19,6 @@
 version: '3.2'
 services:
   api:
-    restart: always
     build:
       context: ./
       dockerfile: Dockerfile
@@ -65,7 +64,6 @@ services:
     ports:
       - "9432:5432"
   ego-api:
-    restart: always
     image: "overture/ego:latest"
     environment:
       SERVER_PORT: 8080

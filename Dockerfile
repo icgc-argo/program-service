@@ -1,7 +1,7 @@
 ###################################
 #   Maven Builder
 ###################################
-FROM adoptopenjdk/openjdk11:jdk-11.0.6_10-alpine-slim as builder
+FROM adoptopenjdk/openjdk11:jdk-11.0.6_10-slim as builder
 
 WORKDIR /srv
 
@@ -12,7 +12,7 @@ RUN ./mvnw package -Dmaven.test.skip=true
 ###################################
 #   Server
 ###################################
-FROM adoptopenjdk/openjdk11:jre-11.0.6_10-alpine
+FROM adoptopenjdk/openjdk11:jre-11.0.6_10
 
 ENV APP_USER app
 ENV APP_UID 9999
@@ -21,8 +21,8 @@ ENV APP_HOME /home/$APP_USER
 
 COPY --from=builder /srv/target/program-service-*.jar /program-service.jar
 
-RUN addgroup -S -g $APP_GID $APP_USER  \
-	&& adduser -S -u $APP_UID -G $APP_USER $APP_USER \
+RUN addgroup --system --gid $APP_GID $APP_USER  \
+	&& adduser --system --uid $APP_UID --ingroup $APP_USER $APP_USER \
 	&& mkdir -p $APP_HOME \
 	&& chown -R $APP_UID:$APP_GID $APP_HOME \
 	&& chown $APP_UID:$APP_GID /program-service.jar \
