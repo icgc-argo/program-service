@@ -12,7 +12,13 @@ import java.lang.reflect.InvocationTargetException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.icgc.argo.program_service.model.dto.CreateProgramResponseDTO;
+import org.icgc.argo.program_service.model.dto.GetProgramResponseDTO;
+import org.icgc.argo.program_service.model.dto.ProgramsResponseDTO;
+import org.icgc.argo.program_service.model.dto.UpdateProgramResponseDTO;
 import org.icgc.argo.program_service.proto.CreateProgramResponse;
+import org.icgc.argo.program_service.proto.GetProgramResponse;
+import org.icgc.argo.program_service.proto.ListProgramsResponse;
+import org.icgc.argo.program_service.proto.UpdateProgramResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -58,6 +64,8 @@ public class Grpc2JsonConverter {
               .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
               .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
               .build();
+
+      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
       createProgramResponseDTO =
           objectMapper.readValue(responseJson, CreateProgramResponseDTO.class);
 
@@ -69,5 +77,80 @@ public class Grpc2JsonConverter {
       e.printStackTrace();
     }
     return createProgramResponseDTO;
+  }
+
+  public UpdateProgramResponseDTO prepareUpdateProgramResponse(UpdateProgramResponse response) {
+
+    UpdateProgramResponseDTO updateProgramResponseDTO = new UpdateProgramResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .build();
+
+      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
+      updateProgramResponseDTO =
+          objectMapper.readValue(responseJson, UpdateProgramResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return updateProgramResponseDTO;
+  }
+
+  public GetProgramResponseDTO prepareGetProgramResponse(GetProgramResponse response) {
+
+    GetProgramResponseDTO getProgramResponseDTO = new GetProgramResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
+      getProgramResponseDTO = objectMapper.readValue(responseJson, GetProgramResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return getProgramResponseDTO;
+  }
+
+  public ProgramsResponseDTO prepareListProgramsResponse(ListProgramsResponse response) {
+
+    ProgramsResponseDTO programsResponseDTO = new ProgramsResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
+      programsResponseDTO = objectMapper.readValue(responseJson, ProgramsResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return programsResponseDTO;
   }
 }
