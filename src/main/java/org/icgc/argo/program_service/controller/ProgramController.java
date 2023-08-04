@@ -1,6 +1,7 @@
 package org.icgc.argo.program_service.controller;
 
 import com.google.protobuf.StringValue;
+import io.swagger.v3.oas.annotations.Parameter;
 import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -22,16 +23,18 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/program")
+@RequestMapping("/programs")
 public class ProgramController {
-
   @Autowired private ProgramServiceFacade serviceFacade;
   @Autowired private Grpc2JsonConverter grpc2JsonConverter;
   @Autowired private AuthorizationService authorizationService;
 
-  @PostMapping(value = "/createProgram")
+  @PostMapping
   public ResponseEntity<CreateProgramResponseDTO> createProgram(
-      @RequestBody CreateProgramRequestDTO createProgramRequestDTO) throws IOException {
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody CreateProgramRequestDTO createProgramRequestDTO)
+      throws IOException {
     authorizationService.requireDCCAdmin();
     CreateProgramRequest request =
         grpc2JsonConverter.fromJson(
@@ -42,24 +45,26 @@ public class ProgramController {
         grpc2JsonConverter.prepareCreateProgramResponse(response), HttpStatus.CREATED);
   }
 
-  @DeleteMapping(value = "/removeProgram")
-  public void removeProgram(@RequestBody RemoveProgramRequestDTO removeProgramRequestDTO) {
+  @DeleteMapping(value = "/{programShortName}")
+  public void removeProgram(
+      @PathVariable(value = "shortName", required = true) String shortName,
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization) {
     authorizationService.requireDCCAdmin();
-    RemoveProgramRequest request;
     try {
-      request =
-          grpc2JsonConverter.fromJson(
-              grpc2JsonConverter.getJsonFromObject(removeProgramRequestDTO),
-              RemoveProgramRequest.class);
+      RemoveProgramRequest request =
+          RemoveProgramRequest.newBuilder().setProgramShortName(StringValue.of(shortName)).build();
       serviceFacade.removeProgram(request);
-    } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException | IOException e) {
+    } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
       log.error("Exception throw in removeProgram: {}", e.getMessage());
       throw new NotFoundException(ExceptionUtils.getStackTrace(e));
     }
   }
 
-  @PutMapping(value = "/updateProgram")
+  @PutMapping
   public ResponseEntity<UpdateProgramResponseDTO> updateProgram(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestBody UpdateProgramRequestDTO updateProgramRequestDTO) {
     authorizationService.requireDCCAdmin();
     UpdateProgramRequest request;
@@ -78,9 +83,12 @@ public class ProgramController {
         grpc2JsonConverter.prepareUpdateProgramResponse(response), HttpStatus.OK);
   }
 
-  @GetMapping(value = "/getProgram/{shortName}")
+  @GetMapping(value = "/{shortName}")
   public ResponseEntity<GetProgramResponseDTO> getProgram(
-      @PathVariable(value = "shortName", required = true) String shortName) throws IOException {
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "shortName", required = true) String shortName)
+      throws IOException {
     authorizationService.requireProgramUser(shortName);
     GetProgramRequest request =
         GetProgramRequest.newBuilder().setShortName(StringValue.of(shortName)).build();
@@ -89,8 +97,10 @@ public class ProgramController {
         grpc2JsonConverter.prepareGetProgramResponse(response), HttpStatus.OK);
   }
 
-  @PostMapping(value = "/activateProgram")
+  @PostMapping(value = "/activate")
   public ResponseEntity<GetProgramResponseDTO> activateProgram(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestBody ActivateProgramRequestDTO activateProgramRequestDTO) {
     authorizationService.requireDCCAdmin();
     GetProgramResponse response;
@@ -109,8 +119,11 @@ public class ProgramController {
         grpc2JsonConverter.prepareGetProgramResponse(response), HttpStatus.OK);
   }
 
-  @GetMapping(value = "/listProgram")
-  public ResponseEntity<List<ProgramsResponseDTO>> listPrograms() {
+  @GetMapping
+  public ResponseEntity<List<ProgramsResponseDTO>> listPrograms(
+      @PathVariable(value = "shortName", required = true) String shortName,
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization) {
     val listProgramsResponse =
         serviceFacade.listPrograms(p -> authorizationService.canRead(p.getShortName()));
     return new ResponseEntity(

@@ -31,6 +31,7 @@ import java.util.Optional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.services.ego.Context;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,8 +61,7 @@ public class EgoSecurity {
       return parseToken(jwt);
     } catch (JWTVerificationException | NullPointerException e) {
       log.warn(e.getMessage());
-      // ego security shouldn't have knowledge of grpc
-      return Optional.empty();
+      throw new NotFoundException("No Token or Invalid Token");
     }
   }
 
