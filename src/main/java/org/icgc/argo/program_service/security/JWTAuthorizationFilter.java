@@ -37,17 +37,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
 @Component
-@Profile("default")
+@Profile("auth")
 public class JWTAuthorizationFilter extends OncePerRequestFilter {
 
-  private final EgoSecurity egoSecurity;
+  private final EgoRestSecurity egoSecurity;
   private final EgoClient client;
   private String TOKEN_PREFIX = "Bearer";
 
   public static final Context.Key<EgoToken> EGO_TOKEN = Context.key("egoToken");
 
   @Autowired
-  public JWTAuthorizationFilter(@NonNull EgoSecurity egoSecurity, @NotNull EgoClient client) {
+  public JWTAuthorizationFilter(@NonNull EgoRestSecurity egoSecurity, @NotNull EgoClient client) {
     this.egoSecurity = egoSecurity;
     this.client = client;
   }
@@ -58,8 +58,8 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException, RuntimeException {
     val tokenPayload = request.getHeader(HttpHeaders.AUTHORIZATION);
-    EgoSecurity egoSecurity = new EgoSecurity(client.getPublicKey());
-    val egoToken = egoSecurity.verifyToken(removeTokenPrefix(tokenPayload));
+    EgoRestSecurity egoSecurity = new EgoRestSecurity(client.getPublicKey());
+    val egoToken = egoSecurity.verifyRestTokenHeader(removeTokenPrefix(tokenPayload));
     filterChain.doFilter(request, response);
   }
 
