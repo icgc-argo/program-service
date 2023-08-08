@@ -249,6 +249,7 @@ public class ProgramServiceGrpcIT {
     assertFalse(isEmpty(inviteUserResponse.getInviteId().getValue()));
   }
 
+
   String randomProgramName() {
     return randomAlphabetic(7).toUpperCase() + "-CA";
   }
