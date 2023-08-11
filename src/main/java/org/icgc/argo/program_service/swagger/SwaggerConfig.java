@@ -30,7 +30,7 @@ public class SwaggerConfig {
   public Docket api() {
     return new Docket(DocumentationType.OAS_30)
         .select()
-        .paths(PathSelectors.ant("/public/**"))
+        .paths(PathSelectors.any())
         .apis(RequestHandlerSelectors.basePackage("org.icgc.argo.program_service"))
         .build();
   }

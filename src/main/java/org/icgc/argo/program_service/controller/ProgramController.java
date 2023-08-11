@@ -120,9 +120,7 @@ public class ProgramController {
   }
 
   @GetMapping
-  public ResponseEntity<List<ProgramsResponseDTO>> listPrograms(
-      @PathVariable(value = "shortName", required = true) String shortName,
-      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+  public ResponseEntity<List<ProgramsResponseDTO>> listPrograms(@Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
     val listProgramsResponse =
         serviceFacade.listPrograms(p -> authorizationService.canRead(p.getShortName()));
