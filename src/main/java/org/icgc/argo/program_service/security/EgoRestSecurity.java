@@ -41,7 +41,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-@Profile("default")
+@Profile("auth")
 public class EgoRestSecurity {
 
   private static final String EGO = "ego";

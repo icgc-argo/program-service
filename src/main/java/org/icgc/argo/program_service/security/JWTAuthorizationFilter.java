@@ -40,7 +40,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 @Slf4j
 @Component
-@Profile("default")
+@Profile("auth")
 public class JWTAuthorizationFilter extends OncePerRequestFilter {
 
   private final EgoRestSecurity egoSecurity;
