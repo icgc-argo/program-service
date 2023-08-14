@@ -20,12 +20,12 @@ package org.icgc.argo.program_service.model.exceptions;
 import lombok.NonNull;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
-@ResponseStatus(FORBIDDEN)
-public class ForbiddenException extends RuntimeException {
+@ResponseStatus(UNAUTHORIZED)
+public class UnauthorizedException extends RuntimeException {
 
-  public ForbiddenException(@NonNull String message) {
+  public UnauthorizedException(@NonNull String message) {
     super(message);
   }
 }

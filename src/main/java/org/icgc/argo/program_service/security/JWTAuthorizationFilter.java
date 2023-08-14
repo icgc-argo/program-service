@@ -27,13 +27,16 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.icgc.argo.program_service.services.ego.EgoClient;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 @Slf4j
 @Component
@@ -43,6 +46,10 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
   private final EgoRestSecurity egoSecurity;
   private final EgoClient client;
   private String TOKEN_PREFIX = "Bearer";
+
+  @Autowired
+  @Qualifier("handlerExceptionResolver")
+  private HandlerExceptionResolver resolver;
 
   public static final Context.Key<EgoToken> EGO_TOKEN = Context.key("egoToken");
 
@@ -57,10 +64,18 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException, RuntimeException {
-    val tokenPayload = request.getHeader(HttpHeaders.AUTHORIZATION);
-    EgoRestSecurity egoSecurity = new EgoRestSecurity(client.getPublicKey());
-    val egoToken = egoSecurity.verifyRestTokenHeader(removeTokenPrefix(tokenPayload));
-    filterChain.doFilter(request, response);
+
+    try {
+      val tokenPayload = request.getHeader(HttpHeaders.AUTHORIZATION);
+      EgoRestSecurity egoSecurity = new EgoRestSecurity(client.getPublicKey());
+      if (tokenPayload != null) {
+        val egoToken = egoSecurity.verifyRestTokenHeader(removeTokenPrefix(tokenPayload));
+      }
+      filterChain.doFilter(request, response);
+    } catch (Exception e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      resolver.resolveException(request, response, null, e);
+    }
   }
 
   private String removeTokenPrefix(String token) {
