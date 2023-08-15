@@ -120,11 +120,96 @@ public class ProgramController {
   }
 
   @GetMapping
-  public ResponseEntity<List<ProgramsResponseDTO>> listPrograms(@Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+  public ResponseEntity<List<ProgramsResponseDTO>> listPrograms(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
     val listProgramsResponse =
         serviceFacade.listPrograms(p -> authorizationService.canRead(p.getShortName()));
     return new ResponseEntity(
         grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
+  }
+
+  @PostMapping
+  public ResponseEntity<InviteUserResponseDTO> inviteUser(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody InviteUserRequestDTO inviteUserRequestDTO)
+      throws IOException {
+
+    authorizationService.requireProgramAdmin(inviteUserRequestDTO.getProgramShortName());
+    InviteUserRequest request =
+        grpc2JsonConverter.fromJson(
+            grpc2JsonConverter.getJsonFromObject(inviteUserRequestDTO), InviteUserRequest.class);
+    return new ResponseEntity<>(
+        grpc2JsonConverter.prepareInviteUserResponse(serviceFacade.inviteUser(request)),
+        HttpStatus.OK);
+  }
+
+  @PostMapping
+  public ResponseEntity<JoinProgramResponseDTO> joinProgram(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody JoinProgramRequestDTO joinProgramRequestDTO)
+      throws IOException {
+    try {
+      JoinProgramRequest request =
+          grpc2JsonConverter.fromJson(
+              grpc2JsonConverter.getJsonFromObject(joinProgramRequestDTO),
+              JoinProgramRequest.class);
+      val response =
+          serviceFacade.joinProgram(
+              request, (i) -> authorizationService.requireEmail(i.getUserEmail()));
+
+      return new ResponseEntity<>(
+          grpc2JsonConverter.prepareJoinProgramResponse(response), HttpStatus.OK);
+    } catch (NotFoundException e) {
+      log.error("Exception throw in joinProgram: {}", e.getMessage());
+      return new ResponseEntity<>(new JoinProgramResponseDTO(), HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @GetMapping
+  public ResponseEntity<List<UserDetailsDTO>> listUsers(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "shortName", required = true) String shortName) {
+    authorizationService.requireProgramAdmin(shortName);
+    return new ResponseEntity<>(
+        grpc2JsonConverter
+            .prepareListUsersResponse(serviceFacade.listUsers(shortName))
+            .getUserDetails(),
+        HttpStatus.OK);
+  }
+
+  @DeleteMapping
+  public ResponseEntity<RemoveUserResponseDTO> removeUser(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody RemoveUserRequestDTO removeUserRequestDTO)
+      throws IOException {
+    authorizationService.requireProgramAdmin(removeUserRequestDTO.getProgramShortName());
+    RemoveUserRequest request =
+        grpc2JsonConverter.fromJson(
+            grpc2JsonConverter.getJsonFromObject(removeUserRequestDTO), RemoveUserRequest.class);
+    return new ResponseEntity<>(
+        grpc2JsonConverter.prepareRemoveUserResponse(serviceFacade.removeUser(request)),
+        HttpStatus.OK);
+  }
+
+  @PutMapping
+  public void updateUser(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody UpdateUserRequestDTO updateUserRequestDTO) {
+    authorizationService.requireProgramAdmin(updateUserRequestDTO.getShortName());
+    UpdateUserRequest request;
+    try {
+      request =
+          grpc2JsonConverter.fromJson(
+              grpc2JsonConverter.getJsonFromObject(updateUserRequestDTO), UpdateUserRequest.class);
+      serviceFacade.updateUser(request);
+    } catch (NotFoundException | IOException e) {
+      log.error("Exception throw in joinProgram: {}", e.getMessage());
+    }
   }
 }

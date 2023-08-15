@@ -31,7 +31,6 @@ import java.util.Optional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.exceptions.UnauthorizedException;
 import org.icgc.argo.program_service.services.ego.Context;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
