@@ -129,7 +129,7 @@ public class ProgramController {
         grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
   }
 
-  @PostMapping
+  @PostMapping(value = "/users")
   public ResponseEntity<InviteUserResponseDTO> inviteUser(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
@@ -145,7 +145,7 @@ public class ProgramController {
         HttpStatus.OK);
   }
 
-  @PostMapping
+  @PostMapping(value = "/join")
   public ResponseEntity<JoinProgramResponseDTO> joinProgram(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
@@ -168,7 +168,7 @@ public class ProgramController {
     }
   }
 
-  @GetMapping
+  @GetMapping(value = "/users")
   public ResponseEntity<List<UserDetailsDTO>> listUsers(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
@@ -181,7 +181,7 @@ public class ProgramController {
         HttpStatus.OK);
   }
 
-  @DeleteMapping
+  @DeleteMapping(value = "/users")
   public ResponseEntity<RemoveUserResponseDTO> removeUser(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
@@ -196,7 +196,7 @@ public class ProgramController {
         HttpStatus.OK);
   }
 
-  @PutMapping
+  @PutMapping(value = "/users")
   public void updateUser(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
