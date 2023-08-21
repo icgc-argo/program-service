@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -45,7 +46,7 @@ public class ProgramController {
         grpc2JsonConverter.prepareCreateProgramResponse(response), HttpStatus.CREATED);
   }
 
-  @DeleteMapping(value = "/{programShortName}")
+  @DeleteMapping(value = "/{shortName}")
   public void removeProgram(
       @PathVariable(value = "shortName", required = true) String shortName,
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
@@ -164,21 +165,23 @@ public class ProgramController {
           grpc2JsonConverter.prepareJoinProgramResponse(response), HttpStatus.OK);
     } catch (NotFoundException e) {
       log.error("Exception throw in joinProgram: {}", e.getMessage());
-      return new ResponseEntity<>(new JoinProgramResponseDTO(), HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
     }
   }
 
-  @GetMapping(value = "/users")
+  @GetMapping(value = "/users/{shortName}")
   public ResponseEntity<List<UserDetailsDTO>> listUsers(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "shortName", required = true) String shortName) {
     authorizationService.requireProgramAdmin(shortName);
-    return new ResponseEntity<>(
-        grpc2JsonConverter
-            .prepareListUsersResponse(serviceFacade.listUsers(shortName))
-            .getUserDetails(),
-        HttpStatus.OK);
+    val users = serviceFacade.listUsers(shortName);
+    if (users != null && !users.getUserDetailsList().isEmpty()) {
+      return new ResponseEntity<>(
+          grpc2JsonConverter.prepareListUsersResponse(users).getUserDetails(), HttpStatus.OK);
+    } else {
+      return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+    }
   }
 
   @DeleteMapping(value = "/users")
@@ -191,9 +194,13 @@ public class ProgramController {
     RemoveUserRequest request =
         grpc2JsonConverter.fromJson(
             grpc2JsonConverter.getJsonFromObject(removeUserRequestDTO), RemoveUserRequest.class);
-    return new ResponseEntity<>(
-        grpc2JsonConverter.prepareRemoveUserResponse(serviceFacade.removeUser(request)),
-        HttpStatus.OK);
+    val users = serviceFacade.removeUser(request);
+    if (users != null) {
+      return new ResponseEntity<>(
+          grpc2JsonConverter.prepareRemoveUserResponse(users), HttpStatus.OK);
+    } else {
+      return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+    }
   }
 
   @PutMapping(value = "/users")
@@ -210,6 +217,23 @@ public class ProgramController {
       serviceFacade.updateUser(request);
     } catch (NotFoundException | IOException e) {
       log.error("Exception throw in joinProgram: {}", e.getMessage());
+      throw new NotFoundException("User not found");
     }
+  }
+
+  @GetMapping(value = "/joinProgramInvite")
+  public ResponseEntity<GetJoinProgramInviteResponseDTO> getJoinProgramInvite(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody GetJoinProgramInviteRequestDTO getJoinProgramInviteRequestDTO) {
+    val invitation =
+        serviceFacade.getInvitationById(
+            UUID.fromString(getJoinProgramInviteRequestDTO.getInviteId()));
+    GetJoinProgramInviteResponseDTO getJoinProgramInviteResponseDTO =
+        new GetJoinProgramInviteResponseDTO();
+    getJoinProgramInviteResponseDTO.setInvitation(
+        grpc2JsonConverter.prepareGetJoinProgramInviteResponse(invitation));
+    return new ResponseEntity<GetJoinProgramInviteResponseDTO>(
+        getJoinProgramInviteResponseDTO, HttpStatus.OK);
   }
 }

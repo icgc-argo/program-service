@@ -247,4 +247,29 @@ public class Grpc2JsonConverter {
     }
     return removeUserResponseDTO;
   }
+
+  public JoinProgramInviteDTO prepareGetJoinProgramInviteResponse(JoinProgramInvite response) {
+
+    JoinProgramInviteDTO joinProgramInviteDTO = new JoinProgramInviteDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
+      joinProgramInviteDTO = objectMapper.readValue(responseJson, JoinProgramInviteDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return joinProgramInviteDTO;
+  }
 }
