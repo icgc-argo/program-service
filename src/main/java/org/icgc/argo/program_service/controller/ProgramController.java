@@ -14,6 +14,7 @@ import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ProgramServiceFacade;
 import org.icgc.argo.program_service.services.auth.AuthorizationService;
+import org.icgc.argo.program_service.services.auth.EgoRestAuthorizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -27,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProgramController {
   @Autowired private ProgramServiceFacade serviceFacade;
   @Autowired private Grpc2JsonConverter grpc2JsonConverter;
-  @Autowired private AuthorizationService authorizationService;
+  @Autowired private EgoRestAuthorizationService authorizationService;
 
   @PostMapping
   public ResponseEntity<CreateProgramResponseDTO> createProgram(
@@ -35,7 +36,7 @@ public class ProgramController {
           final String authorization,
       @RequestBody CreateProgramRequestDTO createProgramRequestDTO)
       throws IOException {
-    authorizationService.requireDCCAdmin();
+    authorizationService.requireDCCAdmin(authorization);
     CreateProgramRequest request =
         grpc2JsonConverter.fromJson(
             grpc2JsonConverter.getJsonFromObject(createProgramRequestDTO),
@@ -50,7 +51,7 @@ public class ProgramController {
       @PathVariable(value = "shortName", required = true) String shortName,
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
-    authorizationService.requireDCCAdmin();
+    authorizationService.requireDCCAdmin(authorization);
     try {
       RemoveProgramRequest request =
           RemoveProgramRequest.newBuilder().setProgramShortName(StringValue.of(shortName)).build();
@@ -66,7 +67,7 @@ public class ProgramController {
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestBody UpdateProgramRequestDTO updateProgramRequestDTO) {
-    authorizationService.requireDCCAdmin();
+    authorizationService.requireDCCAdmin(authorization);
     UpdateProgramRequest request;
     UpdateProgramResponse response;
     try {
@@ -89,7 +90,7 @@ public class ProgramController {
           final String authorization,
       @PathVariable(value = "shortName", required = true) String shortName)
       throws IOException {
-    authorizationService.requireProgramUser(shortName);
+    authorizationService.requireProgramUser(shortName, authorization);
     GetProgramRequest request =
         GetProgramRequest.newBuilder().setShortName(StringValue.of(shortName)).build();
     GetProgramResponse response = serviceFacade.getProgram(request);
@@ -102,7 +103,7 @@ public class ProgramController {
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestBody ActivateProgramRequestDTO activateProgramRequestDTO) {
-    authorizationService.requireDCCAdmin();
+    authorizationService.requireDCCAdmin(authorization);
     GetProgramResponse response;
     ActivateProgramRequest request;
     try {
@@ -120,10 +121,11 @@ public class ProgramController {
   }
 
   @GetMapping
-  public ResponseEntity<List<ProgramsResponseDTO>> listPrograms(@Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+  public ResponseEntity<List<ProgramsResponseDTO>> listPrograms(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
     val listProgramsResponse =
-        serviceFacade.listPrograms(p -> authorizationService.canRead(p.getShortName()));
+        serviceFacade.listPrograms(p -> authorizationService.canRead(p.getShortName(), authorization));
     return new ResponseEntity(
         grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
   }
