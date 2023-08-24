@@ -20,11 +20,14 @@
 
 package org.icgc.argo.program_service.services.auth;
 
-import io.grpc.Status;
+import static java.lang.String.format;
+
+import java.util.Collections;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.model.exceptions.ForbiddenException;
 import org.icgc.argo.program_service.model.exceptions.UnauthorizedException;
 import org.icgc.argo.program_service.security.EgoRestSecurity;
@@ -32,50 +35,48 @@ import org.icgc.argo.program_service.services.ego.EgoClient;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-
-import javax.validation.constraints.NotNull;
-import java.util.Collections;
-import java.util.Set;
-
-import static java.lang.String.format;
+import org.springframework.stereotype.Service;
 
 @Profile("auth")
-@Component
+@Service
 @Slf4j
-public class EgoRestAuthorizationService {
+public class EgoRestAuthorizationService implements RestAuthorizationService {
 
   private final EgoRestSecurity egoSecurity;
+
   @Value("${app.dccAdminPermission}")
   private String dccAdminPermission;
+
   private final EgoClient client;
 
   @Autowired
-  public EgoRestAuthorizationService(@NonNull EgoRestSecurity egoSecurity, @NotNull EgoClient client) {
+  public EgoRestAuthorizationService(
+      @NonNull EgoRestSecurity egoSecurity, @NotNull EgoClient client) {
     this.egoSecurity = egoSecurity;
     this.client = client;
   }
 
-  private EgoToken fromToken(String jwtToken) {
-    EgoRestSecurity egoSecurity = new EgoRestSecurity(client.getPublicKey());
-    val token = egoSecurity.verifyRestTokenHeader(jwtToken.replace("Bearer", "").trim());
-    if (token == null) {
-      log.warn("Rest call was not authenticated");
-      throw new UnauthorizedException("No Token or Invalid Token");
-    }
-    return token.get();
+  @Override
+  public void requireDCCAdmin(String jwtToken) {
+    require(isDCCAdmin(jwtToken), "Not signed in as a DCC Administrator");
   }
 
-  private boolean hasPermission(@NotNull String permission, String jwtToken) {
-    log.debug(format("Want permission: %s", permission));
-    val status = getPermissions(jwtToken).contains(permission);
-    log.debug(format("hasPermission returns %s", status));
-    return status;
+  @Override
+  public void requireProgramUser(String programShortName, String jwtToken) {
+    require(
+        canRead(programShortName, jwtToken),
+        format("NO READ permission for program %s", programShortName));
   }
 
-  public boolean isDCCAdmin(String jwtToken) {
+  @Override
+  public boolean canRead(String programShortName, String jwtToken) {
+    return isAuthorized(readPermission(programShortName), jwtToken)
+        || isAuthorized(writePermission(programShortName), jwtToken);
+  }
+
+  private boolean isDCCAdmin(String jwtToken) {
     val permissions = getPermissions(jwtToken);
 
     return permissions.contains(dccAdminPermission);
@@ -110,22 +111,25 @@ public class EgoRestAuthorizationService {
     }
   }
 
-  public void requireDCCAdmin(String jwtToken) {
-    require(isDCCAdmin(jwtToken), "Not signed in as a DCC Administrator");
-  }
-
-  public void requireProgramUser(String programShortName, String jwtToken) {
-    require(
-            canRead(programShortName, jwtToken), format("NO READ permission for program %s", programShortName));
-  }
-
-  public boolean canRead(String programShortName, String jwtToken) {
-    return isAuthorized(readPermission(programShortName), jwtToken)
-            || isAuthorized(writePermission(programShortName), jwtToken);
-  }
-
   private boolean isAuthorized(String permission, String jwtToken) {
     return isDCCAdmin(jwtToken) || hasPermission(permission, jwtToken);
+  }
+
+  private EgoToken fromToken(String jwtToken) {
+    EgoRestSecurity egoSecurity = new EgoRestSecurity(client.getPublicKey());
+    val token = egoSecurity.verifyRestTokenHeader(jwtToken.replace("Bearer", "").trim());
+    if (token == null) {
+      log.warn("Rest call was not authenticated");
+      throw new UnauthorizedException("No Token or Invalid Token");
+    }
+    return token.get();
+  }
+
+  private boolean hasPermission(@NotNull String permission, String jwtToken) {
+    log.debug(format("Want permission: %s", permission));
+    val status = getPermissions(jwtToken).contains(permission);
+    log.debug(format("hasPermission returns %s", status));
+    return status;
   }
 
   private String readPermission(String programShortName) {

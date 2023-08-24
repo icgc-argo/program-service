@@ -46,7 +46,6 @@ import org.icgc.argo.program_service.proto.UserRole;
 import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.services.ego.model.exceptions.EgoException;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -65,7 +64,6 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 @RunWith(SpringRunner.class)
 @Transactional
 @ActiveProfiles("test")
-@Ignore
 public class EgoServiceIT {
 
   private EgoRESTClient client;

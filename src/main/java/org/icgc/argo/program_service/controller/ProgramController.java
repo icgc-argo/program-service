@@ -1,6 +1,7 @@
 package org.icgc.argo.program_service.controller;
 
 import com.google.protobuf.StringValue;
+import io.grpc.StatusRuntimeException;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.io.IOException;
 import java.util.List;
@@ -13,8 +14,7 @@ import org.icgc.argo.program_service.model.dto.*;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ProgramServiceFacade;
-import org.icgc.argo.program_service.services.auth.AuthorizationService;
-import org.icgc.argo.program_service.services.auth.EgoRestAuthorizationService;
+import org.icgc.argo.program_service.services.auth.RestAuthorizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProgramController {
   @Autowired private ProgramServiceFacade serviceFacade;
   @Autowired private Grpc2JsonConverter grpc2JsonConverter;
-  @Autowired private EgoRestAuthorizationService authorizationService;
+  @Autowired private RestAuthorizationService authorizationService;
 
   @PostMapping
   public ResponseEntity<CreateProgramResponseDTO> createProgram(
@@ -46,7 +46,7 @@ public class ProgramController {
         grpc2JsonConverter.prepareCreateProgramResponse(response), HttpStatus.CREATED);
   }
 
-  @DeleteMapping(value = "/{programShortName}")
+  @DeleteMapping(value = "/{shortName}")
   public void removeProgram(
       @PathVariable(value = "shortName", required = true) String shortName,
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
@@ -57,7 +57,7 @@ public class ProgramController {
           RemoveProgramRequest.newBuilder().setProgramShortName(StringValue.of(shortName)).build();
       serviceFacade.removeProgram(request);
     } catch (EmptyResultDataAccessException | InvalidDataAccessApiUsageException e) {
-      log.error("Exception throw in removeProgram: {}", e.getMessage());
+      log.error("Exception thrown in removeProgram: {}", e.getMessage());
       throw new NotFoundException(ExceptionUtils.getStackTrace(e));
     }
   }
@@ -77,8 +77,8 @@ public class ProgramController {
               UpdateProgramRequest.class);
       response = serviceFacade.updateProgram(request);
     } catch (NotFoundException | NoSuchElementException | IOException e) {
-      log.error("Exception throw in updateProgram: {}", e.getMessage());
-      throw new NotFoundException(ExceptionUtils.getStackTrace(e));
+      log.error("Exception thrown in updateProgram: {}", e.getMessage());
+      return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
     return new ResponseEntity(
         grpc2JsonConverter.prepareUpdateProgramResponse(response), HttpStatus.OK);
@@ -90,12 +90,19 @@ public class ProgramController {
           final String authorization,
       @PathVariable(value = "shortName", required = true) String shortName)
       throws IOException {
-    authorizationService.requireProgramUser(shortName, authorization);
-    GetProgramRequest request =
-        GetProgramRequest.newBuilder().setShortName(StringValue.of(shortName)).build();
-    GetProgramResponse response = serviceFacade.getProgram(request);
-    return new ResponseEntity(
-        grpc2JsonConverter.prepareGetProgramResponse(response), HttpStatus.OK);
+    GetProgramResponseDTO getProgramResponseDTO = null;
+    try {
+      authorizationService.requireProgramUser(shortName, authorization);
+      GetProgramRequest request =
+          GetProgramRequest.newBuilder().setShortName(StringValue.of(shortName)).build();
+      GetProgramResponse response = serviceFacade.getProgram(request);
+      getProgramResponseDTO = grpc2JsonConverter.prepareGetProgramResponse(response);
+    } catch (StatusRuntimeException exception) {
+      if (exception.getStatus().getCode().name().equalsIgnoreCase(HttpStatus.NOT_FOUND.name()))
+      log.error("Exception thrown in getProgram: {}", exception.getMessage());
+      return new ResponseEntity(exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+    return new ResponseEntity(getProgramResponseDTO, HttpStatus.OK);
   }
 
   @PostMapping(value = "/activate")
@@ -125,7 +132,8 @@ public class ProgramController {
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
     val listProgramsResponse =
-        serviceFacade.listPrograms(p -> authorizationService.canRead(p.getShortName(), authorization));
+        serviceFacade.listPrograms(
+            p -> authorizationService.canRead(p.getShortName(), authorization));
     return new ResponseEntity(
         grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
   }

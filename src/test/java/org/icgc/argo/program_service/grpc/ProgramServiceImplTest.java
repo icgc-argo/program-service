@@ -18,7 +18,7 @@
  *
  */
 
-/*package org.icgc.argo.program_service.grpc;
+package org.icgc.argo.program_service.grpc;
 
 import static org.apache.commons.lang.math.RandomUtils.nextInt;
 import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
@@ -598,4 +598,4 @@ class ProgramServiceImplTest {
   <T> T RandomChoiceFrom(T[] elements) {
     return elements[nextInt(elements.length - 1)];
   }
-}*/
+}
