@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProgramDetailsDTO {
 
-  private ProgramDTO program;
+  private ProgramsDTO program;
   private MetadataDTO metadata;
   private LegacyDetailsDTO legacy;
 }

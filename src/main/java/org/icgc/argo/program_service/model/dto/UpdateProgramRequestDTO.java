@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UpdateProgramRequestDTO {
 
-  private ProgramDTO program;
+  private ProgramsDTO program;
 }
