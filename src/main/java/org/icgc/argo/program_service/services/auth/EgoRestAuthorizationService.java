@@ -36,7 +36,6 @@ import org.icgc.argo.program_service.services.ego.model.entity.EgoToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 @Profile("auth")
@@ -74,6 +73,22 @@ public class EgoRestAuthorizationService implements RestAuthorizationService {
   public boolean canRead(String programShortName, String jwtToken) {
     return isAuthorized(readPermission(programShortName), jwtToken)
         || isAuthorized(writePermission(programShortName), jwtToken);
+  }
+
+  @Override
+  public void requireProgramAdmin(String programShortName, String jwtToken) {
+    require(
+        canWrite(programShortName, jwtToken),
+        format("No WRITE permission for program %s", programShortName));
+  }
+
+  @Override
+  public void requireEmail(String email, String jwtToken) {
+    require(hasEmail(email, jwtToken), format("is not signed in as user '%s'", email));
+  }
+
+  private boolean canWrite(String programShortName, String jwtToken) {
+    return isAuthorized(writePermission(programShortName), jwtToken);
   }
 
   private boolean isDCCAdmin(String jwtToken) {

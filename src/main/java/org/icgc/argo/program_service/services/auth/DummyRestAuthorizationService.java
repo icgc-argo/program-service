@@ -42,4 +42,10 @@ public class DummyRestAuthorizationService implements RestAuthorizationService {
   public boolean canRead(String programShortName, String jwtToken) {
     return true;
   }
+
+  @Override
+  public void requireProgramAdmin(String programShortName, String jwtToken) {}
+
+  @Override
+  public void requireEmail(String email, String jwtToken) {}
 }

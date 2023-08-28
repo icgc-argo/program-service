@@ -100,7 +100,7 @@ public class ProgramController {
       getProgramResponseDTO = grpc2JsonConverter.prepareGetProgramResponse(response);
     } catch (StatusRuntimeException exception) {
       if (exception.getStatus().getCode().name().equalsIgnoreCase(HttpStatus.NOT_FOUND.name()))
-      log.error("Exception thrown in getProgram: {}", exception.getMessage());
+        log.error("Exception thrown in getProgram: {}", exception.getMessage());
       return new ResponseEntity(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
     return new ResponseEntity(getProgramResponseDTO, HttpStatus.OK);
@@ -146,7 +146,8 @@ public class ProgramController {
       @RequestBody InviteUserRequestDTO inviteUserRequestDTO)
       throws IOException {
 
-    authorizationService.requireProgramAdmin(inviteUserRequestDTO.getProgramShortName());
+    authorizationService.requireProgramAdmin(
+        inviteUserRequestDTO.getProgramShortName(), authorization);
     InviteUserRequest request =
         grpc2JsonConverter.fromJson(
             grpc2JsonConverter.getJsonFromObject(inviteUserRequestDTO), InviteUserRequest.class);
@@ -168,7 +169,7 @@ public class ProgramController {
               JoinProgramRequest.class);
       val response =
           serviceFacade.joinProgram(
-              request, (i) -> authorizationService.requireEmail(i.getUserEmail()));
+              request, (i) -> authorizationService.requireEmail(i.getUserEmail(), authorization));
 
       return new ResponseEntity<>(
           grpc2JsonConverter.prepareJoinProgramResponse(response), HttpStatus.OK);
@@ -183,7 +184,7 @@ public class ProgramController {
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "shortName", required = true) String shortName) {
-    authorizationService.requireProgramAdmin(shortName);
+    authorizationService.requireProgramAdmin(shortName, authorization);
     val users = serviceFacade.listUsers(shortName);
     if (users != null && !users.getUserDetailsList().isEmpty()) {
       return new ResponseEntity<>(
@@ -199,7 +200,8 @@ public class ProgramController {
           final String authorization,
       @RequestBody RemoveUserRequestDTO removeUserRequestDTO)
       throws IOException {
-    authorizationService.requireProgramAdmin(removeUserRequestDTO.getProgramShortName());
+    authorizationService.requireProgramAdmin(
+        removeUserRequestDTO.getProgramShortName(), authorization);
     RemoveUserRequest request =
         grpc2JsonConverter.fromJson(
             grpc2JsonConverter.getJsonFromObject(removeUserRequestDTO), RemoveUserRequest.class);
@@ -217,7 +219,7 @@ public class ProgramController {
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestBody UpdateUserRequestDTO updateUserRequestDTO) {
-    authorizationService.requireProgramAdmin(updateUserRequestDTO.getShortName());
+    authorizationService.requireProgramAdmin(updateUserRequestDTO.getShortName(), authorization);
     UpdateUserRequest request;
     try {
       request =
