@@ -69,6 +69,10 @@ public class ProgramEntity implements NameableEntity<UUID> {
   private String name;
 
   @NotNull
+  @Column(name = SqlFields.DATA_CENTER_ID)
+  private String dataCenterId;
+
+  @NotNull
   @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.MEMBERSHIPTYPE)
   private MembershipType membershipType;

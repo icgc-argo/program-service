@@ -40,4 +40,5 @@ public class Tables {
   public static final String PROGRAM_COUNTRY = "program_country";
   public static final String PROGRAM_INSTITUTION = "program_institution";
   public static final String PROGRAM_REGION = "program_region";
+  public static final String DATA_CENTER = "data_center";
 }

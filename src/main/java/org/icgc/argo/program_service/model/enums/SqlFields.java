@@ -45,4 +45,15 @@ public class SqlFields {
   public static final String REGIONID_JOIN = "region_id";
   public static final String LEGACY_SHORTNAME = "legacy_short_name";
   public static final String IS_ACTIVE = "active";
+  public static final String ORGANIZATION = "organization";
+  public static final String EMAIL = "email";
+  public static final String UI_URL = "ui_url";
+  public static final String GATEWAY_URL = "gateway_url";
+  public static final String ANALYSIS_SONG_CODE = "analysis_song_code";
+  public static final String ANALYSIS_SONG_URL = "analysis_song_url";
+  public static final String ANALYSIS_SCORE_URL = "analysis_score_url";
+  public static final String SUBMISSION_SONG_CODE = "submission_song_code";
+  public static final String SUBMISSION_SONG_URL = "submission_song_url";
+  public static final String SUBMISSION_SCORE_URL = "submission_score_url";
+  public static final String DATA_CENTER_ID = "data_center_id";
 }
