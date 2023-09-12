@@ -11,14 +11,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.icgc.argo.program_service.model.dto.CreateProgramResponseDTO;
-import org.icgc.argo.program_service.model.dto.GetProgramResponseDTO;
-import org.icgc.argo.program_service.model.dto.ProgramsResponseDTO;
-import org.icgc.argo.program_service.model.dto.UpdateProgramResponseDTO;
-import org.icgc.argo.program_service.proto.CreateProgramResponse;
-import org.icgc.argo.program_service.proto.GetProgramResponse;
-import org.icgc.argo.program_service.proto.ListProgramsResponse;
-import org.icgc.argo.program_service.proto.UpdateProgramResponse;
+import org.icgc.argo.program_service.model.dto.*;
+import org.icgc.argo.program_service.proto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -152,5 +146,130 @@ public class Grpc2JsonConverter {
       e.printStackTrace();
     }
     return programsResponseDTO;
+  }
+
+  public InviteUserResponseDTO prepareInviteUserResponse(InviteUserResponse response) {
+
+    InviteUserResponseDTO inviteUserResponseDTO = new InviteUserResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
+      inviteUserResponseDTO = objectMapper.readValue(responseJson, InviteUserResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return inviteUserResponseDTO;
+  }
+
+  public JoinProgramResponseDTO prepareJoinProgramResponse(JoinProgramResponse response) {
+
+    JoinProgramResponseDTO joinProgramResponseDTO = new JoinProgramResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
+      joinProgramResponseDTO = objectMapper.readValue(responseJson, JoinProgramResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return joinProgramResponseDTO;
+  }
+
+  public ListUsersResponseDTO prepareListUsersResponse(ListUsersResponse response) {
+
+    ListUsersResponseDTO listUsersResponseDTO = new ListUsersResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
+      listUsersResponseDTO = objectMapper.readValue(responseJson, ListUsersResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return listUsersResponseDTO;
+  }
+
+  public RemoveUserResponseDTO prepareRemoveUserResponse(RemoveUserResponse response) {
+
+    RemoveUserResponseDTO removeUserResponseDTO = new RemoveUserResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
+      removeUserResponseDTO = objectMapper.readValue(responseJson, RemoveUserResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return removeUserResponseDTO;
+  }
+
+  public JoinProgramInviteDTO prepareGetJoinProgramInviteResponse(JoinProgramInvite response) {
+
+    JoinProgramInviteDTO joinProgramInviteDTO = new JoinProgramInviteDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
+      joinProgramInviteDTO = objectMapper.readValue(responseJson, JoinProgramInviteDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return joinProgramInviteDTO;
   }
 }

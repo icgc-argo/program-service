@@ -29,4 +29,8 @@ public interface RestAuthorizationService {
   void requireProgramUser(String programShortName, String jwtToken);
 
   boolean canRead(String programShortName, String jwtToken);
+
+  void requireProgramAdmin(String programShortName, String jwtToken);
+
+  void requireEmail(String email, String jwtToken);
 }

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -99,7 +100,7 @@ public class ProgramController {
       getProgramResponseDTO = grpc2JsonConverter.prepareGetProgramResponse(response);
     } catch (StatusRuntimeException exception) {
       if (exception.getStatus().getCode().name().equalsIgnoreCase(HttpStatus.NOT_FOUND.name()))
-      log.error("Exception thrown in getProgram: {}", exception.getMessage());
+        log.error("Exception thrown in getProgram: {}", exception.getMessage());
       return new ResponseEntity(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
     return new ResponseEntity(getProgramResponseDTO, HttpStatus.OK);
@@ -136,5 +137,114 @@ public class ProgramController {
             p -> authorizationService.canRead(p.getShortName(), authorization));
     return new ResponseEntity(
         grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
+  }
+
+  @PostMapping(value = "/users")
+  public ResponseEntity<InviteUserResponseDTO> inviteUser(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody InviteUserRequestDTO inviteUserRequestDTO)
+      throws IOException {
+
+    authorizationService.requireProgramAdmin(
+        inviteUserRequestDTO.getProgramShortName(), authorization);
+    InviteUserRequest request =
+        grpc2JsonConverter.fromJson(
+            grpc2JsonConverter.getJsonFromObject(inviteUserRequestDTO), InviteUserRequest.class);
+    return new ResponseEntity<>(
+        grpc2JsonConverter.prepareInviteUserResponse(serviceFacade.inviteUser(request)),
+        HttpStatus.OK);
+  }
+
+  @PostMapping(value = "/join")
+  public ResponseEntity<JoinProgramResponseDTO> joinProgram(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody JoinProgramRequestDTO joinProgramRequestDTO)
+      throws IOException {
+    try {
+      JoinProgramRequest request =
+          grpc2JsonConverter.fromJson(
+              grpc2JsonConverter.getJsonFromObject(joinProgramRequestDTO),
+              JoinProgramRequest.class);
+      val response =
+          serviceFacade.joinProgram(
+              request, (i) -> authorizationService.requireEmail(i.getUserEmail(), authorization));
+
+      return new ResponseEntity<>(
+          grpc2JsonConverter.prepareJoinProgramResponse(response), HttpStatus.OK);
+    } catch (NotFoundException e) {
+      log.error("Exception throw in joinProgram: {}", e.getMessage());
+      return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @GetMapping(value = "/users/{shortName}")
+  public ResponseEntity<List<UserDetailsDTO>> listUsers(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "shortName", required = true) String shortName) {
+    authorizationService.requireProgramAdmin(shortName, authorization);
+    val users = serviceFacade.listUsers(shortName);
+    if (users != null && !users.getUserDetailsList().isEmpty()) {
+      return new ResponseEntity<>(
+          grpc2JsonConverter.prepareListUsersResponse(users).getUserDetails(), HttpStatus.OK);
+    } else {
+      return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @DeleteMapping(value = "/users")
+  public ResponseEntity<RemoveUserResponseDTO> removeUser(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody RemoveUserRequestDTO removeUserRequestDTO)
+      throws IOException {
+    authorizationService.requireProgramAdmin(
+        removeUserRequestDTO.getProgramShortName(), authorization);
+    RemoveUserRequest request =
+        grpc2JsonConverter.fromJson(
+            grpc2JsonConverter.getJsonFromObject(removeUserRequestDTO), RemoveUserRequest.class);
+    val users = serviceFacade.removeUser(request);
+    if (users != null) {
+      return new ResponseEntity<>(
+          grpc2JsonConverter.prepareRemoveUserResponse(users), HttpStatus.OK);
+    } else {
+      return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @PutMapping(value = "/users")
+  public void updateUser(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody UpdateUserRequestDTO updateUserRequestDTO) {
+    authorizationService.requireProgramAdmin(updateUserRequestDTO.getShortName(), authorization);
+    UpdateUserRequest request;
+    try {
+      request =
+          grpc2JsonConverter.fromJson(
+              grpc2JsonConverter.getJsonFromObject(updateUserRequestDTO), UpdateUserRequest.class);
+      serviceFacade.updateUser(request);
+    } catch (NotFoundException | IOException e) {
+      log.error("Exception throw in joinProgram: {}", e.getMessage());
+      throw new NotFoundException("User not found");
+    }
+  }
+
+  @GetMapping(value = "/joinProgramInvite")
+  public ResponseEntity<GetJoinProgramInviteResponseDTO> getJoinProgramInvite(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody GetJoinProgramInviteRequestDTO getJoinProgramInviteRequestDTO) {
+    val invitation =
+        serviceFacade.getInvitationById(
+            UUID.fromString(getJoinProgramInviteRequestDTO.getInviteId()));
+    GetJoinProgramInviteResponseDTO getJoinProgramInviteResponseDTO =
+        new GetJoinProgramInviteResponseDTO();
+    getJoinProgramInviteResponseDTO.setInvitation(
+        grpc2JsonConverter.prepareGetJoinProgramInviteResponse(invitation));
+    return new ResponseEntity<GetJoinProgramInviteResponseDTO>(
+        getJoinProgramInviteResponseDTO, HttpStatus.OK);
   }
 }
