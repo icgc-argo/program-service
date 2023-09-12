@@ -20,4 +20,4 @@ INSERT INTO data_center (id, name, short_name, organization, email, ui_url, gate
 
 ALTER TABLE program
 ADD COLUMN data_center_id UUID NOT NULL,
-FOREIGN KEY(data_center_id) REFERENCES data_center(id);
+ADD CONSTRAINT FOREIGN KEY(data_center_id) REFERENCES data_center(id);
