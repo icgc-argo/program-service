@@ -249,7 +249,7 @@ public class ProgramController {
         getJoinProgramInviteResponseDTO, HttpStatus.OK);
   }
 
-  @GetMapping(value = "/listCancers")
+  @GetMapping(value = "/cancers")
   public ResponseEntity<List<CancerDTO>> listCancers(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
@@ -259,7 +259,7 @@ public class ProgramController {
         HttpStatus.OK);
   }
 
-  @GetMapping(value = "/listPrimarySites")
+  @GetMapping(value = "/primarySites")
   public ResponseEntity<List<PrimarySiteDTO>> listPrimarySites(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
@@ -271,7 +271,7 @@ public class ProgramController {
         HttpStatus.OK);
   }
 
-  @GetMapping(value = "/listCountries")
+  @GetMapping(value = "/countries")
   public ResponseEntity<List<CountryDTO>> listCountries(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
@@ -281,7 +281,7 @@ public class ProgramController {
         HttpStatus.OK);
   }
 
-  @GetMapping(value = "/listRegions")
+  @GetMapping(value = "/regions")
   public ResponseEntity<List<RegionDTO>> listRegions(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
@@ -291,7 +291,7 @@ public class ProgramController {
         HttpStatus.OK);
   }
 
-  @GetMapping(value = "/listInstitutions")
+  @GetMapping(value = "/institutions")
   public ResponseEntity<List<InstitutionDTO>> listInstitutions(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
@@ -303,7 +303,7 @@ public class ProgramController {
         HttpStatus.OK);
   }
 
-  @PostMapping(value = "/addInstitutions")
+  @PostMapping(value = "/institutions")
   public ResponseEntity<AddInstitutionsResponseDTO> addInstitutions(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
