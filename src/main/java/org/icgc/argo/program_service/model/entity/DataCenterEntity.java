@@ -96,17 +96,17 @@ public class DataCenterEntity implements NameableEntity<UUID> {
   private String analysisScoreUrl;
 
   @NotNull
-  @Column(name = SqlFields.ANALYSIS_SCORE_URL)
+  @Column(name = SqlFields.SUBMISSION_SONG_CODE)
   private String submissionSongCode;
 
   @NotNull
   @URL
-  @Column(name = SqlFields.ANALYSIS_SCORE_URL)
+  @Column(name = SqlFields.SUBMISSION_SONG_URL)
   private String submissionSongUrl;
 
   @NotNull
   @URL
-  @Column(name = SqlFields.ANALYSIS_SCORE_URL)
+  @Column(name = SqlFields.SUBMISSION_SCORE_URL)
   private String submissionScoreUrl;
 
   @NotNull
