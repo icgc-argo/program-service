@@ -17,6 +17,7 @@ import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ProgramServiceFacade;
 import org.icgc.argo.program_service.services.auth.RestAuthorizationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
@@ -246,5 +247,76 @@ public class ProgramController {
         grpc2JsonConverter.prepareGetJoinProgramInviteResponse(invitation));
     return new ResponseEntity<GetJoinProgramInviteResponseDTO>(
         getJoinProgramInviteResponseDTO, HttpStatus.OK);
+  }
+
+  @GetMapping(value = "/cancers")
+  public ResponseEntity<List<CancerDTO>> listCancers(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization) {
+    val listCancersResponse = serviceFacade.listCancers();
+    return new ResponseEntity(
+        grpc2JsonConverter.prepareListCancersResponse(listCancersResponse).getCancers(),
+        HttpStatus.OK);
+  }
+
+  @GetMapping(value = "/primarySites")
+  public ResponseEntity<List<PrimarySiteDTO>> listPrimarySites(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization) {
+    val listPrimarySitesResponse = serviceFacade.listPrimarySites();
+    return new ResponseEntity(
+        grpc2JsonConverter
+            .prepareListPrimarySitesResponse(listPrimarySitesResponse)
+            .getPrimarySites(),
+        HttpStatus.OK);
+  }
+
+  @GetMapping(value = "/countries")
+  public ResponseEntity<List<CountryDTO>> listCountries(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization) {
+    val listCountriesResponse = serviceFacade.listCountries();
+    return new ResponseEntity(
+        grpc2JsonConverter.prepareListCountriesResponse(listCountriesResponse).getCountries(),
+        HttpStatus.OK);
+  }
+
+  @GetMapping(value = "/regions")
+  public ResponseEntity<List<RegionDTO>> listRegions(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization) {
+    val listRegionsResponse = serviceFacade.listRegions();
+    return new ResponseEntity(
+        grpc2JsonConverter.prepareListRegionsResponse(listRegionsResponse).getRegions(),
+        HttpStatus.OK);
+  }
+
+  @GetMapping(value = "/institutions")
+  public ResponseEntity<List<InstitutionDTO>> listInstitutions(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization) {
+    val listInstitutionsResponse = serviceFacade.listInstitutions();
+    return new ResponseEntity(
+        grpc2JsonConverter
+            .prepareListInstitutionsResponse(listInstitutionsResponse)
+            .getInstitutions(),
+        HttpStatus.OK);
+  }
+
+  @PostMapping(value = "/institutions")
+  public ResponseEntity<AddInstitutionsResponseDTO> addInstitutions(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody AddInstitutionsRequestDTO addInstitutionsRequestDTO) {
+
+    AddInstitutionsResponseDTO addInstitutionsResponseDTO = null;
+    try {
+      val response = serviceFacade.addInstitutions(addInstitutionsRequestDTO.getNames());
+      addInstitutionsResponseDTO = grpc2JsonConverter.prepareAddInstitutionsResponse(response);
+    } catch (DataIntegrityViolationException e) {
+      log.error("Exception throw in addInstitutions: {}", e.getMessage());
+      return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+    return new ResponseEntity(addInstitutionsResponseDTO, HttpStatus.OK);
   }
 }

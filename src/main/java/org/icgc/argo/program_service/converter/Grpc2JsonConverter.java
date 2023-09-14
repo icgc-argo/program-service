@@ -59,7 +59,6 @@ public class Grpc2JsonConverter {
               .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
               .build();
 
-      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
       createProgramResponseDTO =
           objectMapper.readValue(responseJson, CreateProgramResponseDTO.class);
 
@@ -84,7 +83,6 @@ public class Grpc2JsonConverter {
               .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
               .build();
 
-      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
       updateProgramResponseDTO =
           objectMapper.readValue(responseJson, UpdateProgramResponseDTO.class);
 
@@ -110,7 +108,6 @@ public class Grpc2JsonConverter {
               .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
               .build();
 
-      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
       getProgramResponseDTO = objectMapper.readValue(responseJson, GetProgramResponseDTO.class);
 
     } catch (JsonMappingException e) {
@@ -135,7 +132,6 @@ public class Grpc2JsonConverter {
               .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
               .build();
 
-      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
       programsResponseDTO = objectMapper.readValue(responseJson, ProgramsResponseDTO.class);
 
     } catch (JsonMappingException e) {
@@ -160,7 +156,6 @@ public class Grpc2JsonConverter {
               .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
               .build();
 
-      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
       inviteUserResponseDTO = objectMapper.readValue(responseJson, InviteUserResponseDTO.class);
 
     } catch (JsonMappingException e) {
@@ -185,7 +180,6 @@ public class Grpc2JsonConverter {
               .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
               .build();
 
-      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
       joinProgramResponseDTO = objectMapper.readValue(responseJson, JoinProgramResponseDTO.class);
 
     } catch (JsonMappingException e) {
@@ -210,7 +204,6 @@ public class Grpc2JsonConverter {
               .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
               .build();
 
-      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
       listUsersResponseDTO = objectMapper.readValue(responseJson, ListUsersResponseDTO.class);
 
     } catch (JsonMappingException e) {
@@ -235,7 +228,6 @@ public class Grpc2JsonConverter {
               .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
               .build();
 
-      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
       removeUserResponseDTO = objectMapper.readValue(responseJson, RemoveUserResponseDTO.class);
 
     } catch (JsonMappingException e) {
@@ -260,7 +252,6 @@ public class Grpc2JsonConverter {
               .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
               .build();
 
-      // JsonNode responseNode = objectMapper.readTree(responseJson).get("createdAt");
       joinProgramInviteDTO = objectMapper.readValue(responseJson, JoinProgramInviteDTO.class);
 
     } catch (JsonMappingException e) {
@@ -271,5 +262,156 @@ public class Grpc2JsonConverter {
       e.printStackTrace();
     }
     return joinProgramInviteDTO;
+  }
+
+  public ListCancersResponseDTO prepareListCancersResponse(ListCancersResponse response) {
+
+    ListCancersResponseDTO listCancersResponseDTO = new ListCancersResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      listCancersResponseDTO = objectMapper.readValue(responseJson, ListCancersResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return listCancersResponseDTO;
+  }
+
+  public ListPrimarySitesResponseDTO prepareListPrimarySitesResponse(
+      ListPrimarySitesResponse response) {
+
+    ListPrimarySitesResponseDTO listPrimarySitesResponseDTO = new ListPrimarySitesResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      listPrimarySitesResponseDTO =
+          objectMapper.readValue(responseJson, ListPrimarySitesResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return listPrimarySitesResponseDTO;
+  }
+
+  public ListCountriesResponseDTO prepareListCountriesResponse(ListCountriesResponse response) {
+
+    ListCountriesResponseDTO listCountriesResponseDTO = new ListCountriesResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      listCountriesResponseDTO =
+          objectMapper.readValue(responseJson, ListCountriesResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return listCountriesResponseDTO;
+  }
+
+  public ListRegionsResponseDTO prepareListRegionsResponse(ListRegionsResponse response) {
+
+    ListRegionsResponseDTO listRegionsResponseDTO = new ListRegionsResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      listRegionsResponseDTO = objectMapper.readValue(responseJson, ListRegionsResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return listRegionsResponseDTO;
+  }
+
+  public ListInstitutionsResponseDTO prepareListInstitutionsResponse(
+      ListInstitutionsResponse response) {
+
+    ListInstitutionsResponseDTO listInstitutionsResponseDTO = new ListInstitutionsResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      listInstitutionsResponseDTO =
+          objectMapper.readValue(responseJson, ListInstitutionsResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return listInstitutionsResponseDTO;
+  }
+
+  public AddInstitutionsResponseDTO prepareAddInstitutionsResponse(
+      AddInstitutionsResponse response) {
+
+    AddInstitutionsResponseDTO addInstitutionsResponseDTO = new AddInstitutionsResponseDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(response);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      addInstitutionsResponseDTO =
+          objectMapper.readValue(responseJson, AddInstitutionsResponseDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return addInstitutionsResponseDTO;
   }
 }
