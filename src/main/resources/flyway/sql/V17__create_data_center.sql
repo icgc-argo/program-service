@@ -19,5 +19,5 @@ INSERT INTO data_center (id, name, short_name, organization, email, ui_url, gate
 (uuid_generate_v4(), 'DataCenter1', 'DC1', '', 'abc@xyz.com', 'https://dcc.icgc.org/datacenter/BRCA-US', 'https://dcc.icgc.org/datacenter/BRCA-US', 'ABC', 'https://dcc.icgc.org/datacenter/BRCA-US', 'https://dcc.icgc.org/datacenter/BRCA-US', 'XYZ', 'https://dcc.icgc.org/datacenter/BRCA-US', 'https://dcc.icgc.org/datacenter/BRCA-US');
 
 ALTER TABLE program
-ADD COLUMN data_center_id VARCHAR(255) NULL,
+ADD COLUMN data_center_id UUID NULL,
 ADD CONSTRAINT program_data_center_fkey FOREIGN KEY(data_center_id) REFERENCES data_center(id);

@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import java.util.List;
+import java.util.UUID;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.CancerEntity;
 import org.icgc.argo.program_service.model.entity.CountryEntity;
@@ -118,7 +119,7 @@ class ValidationServiceTest {
   private Program goodProgram() {
     return Program.newBuilder()
         .setCommitmentDonors(Int32Value.of(1000))
-        .setDataCenterId(StringValue.of("ea22873e-3abc-48e2-be23-c2c729f65ccd"))
+        .setDataCenterId(UUID.randomUUID())
         .setGenomicDonors(Int32Value.of(0))
         .setMembershipType(
             MembershipTypeValue.newBuilder().setValueValue(MembershipType.ASSOCIATE_VALUE).build())

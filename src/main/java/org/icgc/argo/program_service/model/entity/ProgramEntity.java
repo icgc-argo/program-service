@@ -69,7 +69,7 @@ public class ProgramEntity implements NameableEntity<UUID> {
   private String name;
 
   @Column(name = SqlFields.DATA_CENTER_ID)
-  private String dataCenterId;
+  private UUID dataCenterId;
 
   @NotNull
   @Enumerated(EnumType.STRING)
