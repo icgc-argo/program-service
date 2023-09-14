@@ -109,7 +109,6 @@ public class DataCenterEntity implements NameableEntity<UUID> {
   @Column(name = SqlFields.SUBMISSION_SCORE_URL)
   private String submissionScoreUrl;
 
-  @NotNull
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(

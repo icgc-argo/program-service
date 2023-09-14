@@ -185,7 +185,6 @@ class ValidationServiceTest {
     createProgramExpectingErrorMessage(
         request,
         "commitmentDonors must not be null, "
-            + "dataCenterId must not be null, "
             + "genomicDonors must not be null, membershipType must not be null, name must not be null, "
             + "shortName must not be null, submittedDonors must not be null, website must not be null, "
             + "Must include at least one cancerType, Must include at least one primarySite, "
