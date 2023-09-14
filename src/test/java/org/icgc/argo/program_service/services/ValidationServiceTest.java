@@ -118,6 +118,7 @@ class ValidationServiceTest {
   private Program goodProgram() {
     return Program.newBuilder()
         .setCommitmentDonors(Int32Value.of(1000))
+        .setDataCenterId(StringValue.of("ea22873e-3abc-48e2-be23-c2c729f65ccd"))
         .setGenomicDonors(Int32Value.of(0))
         .setMembershipType(
             MembershipTypeValue.newBuilder().setValueValue(MembershipType.ASSOCIATE_VALUE).build())
@@ -184,6 +185,7 @@ class ValidationServiceTest {
     createProgramExpectingErrorMessage(
         request,
         "commitmentDonors must not be null, "
+            + "dataCenterId must not be null, "
             + "genomicDonors must not be null, membershipType must not be null, name must not be null, "
             + "shortName must not be null, submittedDonors must not be null, website must not be null, "
             + "Must include at least one cancerType, Must include at least one primarySite, "
