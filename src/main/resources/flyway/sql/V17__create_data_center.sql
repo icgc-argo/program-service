@@ -21,3 +21,5 @@ INSERT INTO data_center (id, name, short_name, organization, email, ui_url, gate
 ALTER TABLE program
 ADD COLUMN data_center_id UUID NULL,
 ADD CONSTRAINT program_data_center_fkey FOREIGN KEY(data_center_id) REFERENCES data_center(id);
+
+UPDATE program set data_center_id = (Select id from data_center);
