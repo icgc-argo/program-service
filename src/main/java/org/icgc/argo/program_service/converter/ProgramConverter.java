@@ -52,7 +52,6 @@ public interface ProgramConverter {
   @Mapping(target = "programPrimarySites", ignore = true)
   @Mapping(target = "programInstitutions", ignore = true)
   @Mapping(target = "programCountries", ignore = true)
-  @Mapping(target = "programRegions", ignore = true)
   @Mapping(target = "active", constant = "true")
   @Mapping(target = "legacyShortName", ignore = true)
   @Mapping(target = "dataCenterId", ignore = true)
@@ -66,7 +65,6 @@ public interface ProgramConverter {
   @Mapping(target = "programPrimarySites", ignore = true)
   @Mapping(target = "programInstitutions", ignore = true)
   @Mapping(target = "programCountries", ignore = true)
-  @Mapping(target = "programRegions", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
   @Mapping(target = "clearField", ignore = true)
@@ -87,7 +85,6 @@ public interface ProgramConverter {
   @Mapping(target = "primarySitesList", ignore = true)
   @Mapping(target = "institutionsList", ignore = true)
   @Mapping(target = "countriesList", ignore = true)
-  @Mapping(target = "regionsList", ignore = true)
   @Mapping(target = "mergeDataCenterId", ignore = true)
   Program programEntityToProgram(ProgramEntity entity);
 
@@ -148,8 +145,7 @@ public interface ProgramConverter {
         .addAllCancerTypes(entity.listCancerTypes())
         .addAllPrimarySites(entity.listPrimarySites())
         .addAllInstitutions(entity.listInstitutions())
-        .addAllCountries(entity.listCountries())
-        .addAllRegions(entity.listRegions());
+        .addAllCountries(entity.listCountries());
   }
 
   @Mapping(target = "mergeFrom", ignore = true)

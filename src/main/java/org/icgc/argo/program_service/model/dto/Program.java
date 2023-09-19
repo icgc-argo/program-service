@@ -24,5 +24,4 @@ public class Program {
   private List<String> primary_sites;
   private List<String> institutions;
   private List<String> countries;
-  private List<String> regions;
 }
