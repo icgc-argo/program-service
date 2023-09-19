@@ -17,10 +17,10 @@
 
 package org.icgc.argo.program_service.model.exceptions;
 
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-
 import lombok.NonNull;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 @ResponseStatus(FORBIDDEN)
 public class ForbiddenException extends RuntimeException {

@@ -66,6 +66,7 @@ message Program {
   repeated string primary_sites = 11;
   repeated string institutions = 12;
   repeated string countries = 13;
+  repeated string regions = 14;
 }
 
 message Cancer {

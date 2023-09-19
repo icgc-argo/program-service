@@ -26,6 +26,7 @@ import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgr
 import static org.icgc.argo.program_service.model.join.ProgramCountry.createProgramCountry;
 import static org.icgc.argo.program_service.model.join.ProgramInstitution.createProgramInstitution;
 import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
+import static org.icgc.argo.program_service.model.join.ProgramRegion.createProgramRegion;
 import static org.icgc.argo.program_service.utils.CollectionUtils.*;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 import static org.icgc.argo.program_service.utils.EntityService.*;
@@ -114,6 +115,7 @@ public class ProgramService {
                 .setFetchPrimarySites(true)
                 .setFetchInstitutions(true)
                 .setFetchCountries(true)
+                .setFetchRegions(true)
                 .buildByShortName(name));
 
     if (search.isEmpty()) {
@@ -155,6 +157,7 @@ public class ProgramService {
     val p = programRepository.save(programEntity);
     val cancers = cancerRepository.findAllByNameIn(program.getCancerTypesList());
     val primarySites = primarySiteRepository.findAllByNameIn(program.getPrimarySitesList());
+    val regions = regionRepository.findAllByNameIn(program.getRegionsList());
     val countries = countryRepository.findAllByNameIn(program.getCountriesList());
 
     // Add new institutions if we must
@@ -169,12 +172,14 @@ public class ProgramService {
         mapToList(primarySites, x -> createProgramPrimarySite(p, x).get());
     List<ProgramInstitution> programInstitutions =
         mapToList(institutions, x -> createProgramInstitution(p, x).get());
+    List<ProgramRegion> programRegions = mapToList(regions, x -> createProgramRegion(p, x).get());
     List<ProgramCountry> programCountries =
         mapToList(countries, x -> createProgramCountry(p, x).get());
 
     programCancerRepository.saveAll(programCancers);
     programPrimarySiteRepository.saveAll(programPrimarySites);
     programInstitutionRepository.saveAll(programInstitutions);
+    programRegionRepository.saveAll(programRegions);
     programCountryRepository.saveAll(programCountries);
 
     return programEntity;
@@ -212,12 +217,14 @@ public class ProgramService {
       @NonNull List<String> cancers,
       @NonNull List<String> primarySites,
       @NonNull List<String> institutions,
-      @NonNull List<String> countries)
+      @NonNull List<String> countries,
+      @NonNull List<String> regions)
       throws NotFoundException {
     if (cancers.isEmpty()
         || primarySites.isEmpty()
         || institutions.isEmpty()
-        || countries.isEmpty()) {
+        || countries.isEmpty()
+        || regions.isEmpty()) {
       throw Status.INVALID_ARGUMENT
           .augmentDescription(
               "Cannot update program. Cancer, primary site, institution, country, and region cannot be empty.")
@@ -229,6 +236,7 @@ public class ProgramService {
     processPrimarySites(programToUpdate, primarySites);
     processInstitutions(programToUpdate, institutions);
     processCountries(programToUpdate, countries);
+    processRegions(programToUpdate, regions);
 
     // update program info
     programConverter.updateProgram(updatingProgram, programToUpdate);
@@ -349,6 +357,25 @@ public class ProgramService {
     programCountryRepository.saveAll(toAdd);
   }
 
+  private void processRegions(@NonNull ProgramEntity programToUpdate, @NonNull List<String> names) {
+    val regionEntities = checkExistenceByName(RegionEntity.class, regionRepository, names);
+    val currentRegions = mapToSet(programToUpdate.getProgramRegions(), ProgramRegion::getRegion);
+
+    val toDelete =
+        currentRegions.stream().filter(r -> !regionEntities.contains(r)).collect(toSet());
+    val toAdd =
+        regionEntities.stream()
+            .filter(r -> !currentRegions.contains(r))
+            .map(r -> createProgramRegion(programToUpdate, r))
+            .map(Optional::get)
+            .collect(toSet());
+
+    programToUpdate.getProgramRegions().removeIf(programRegionPredicate(programToUpdate, toDelete));
+    currentRegions.forEach(
+        r -> r.getProgramRegions().removeIf(programRegionPredicate(programToUpdate, toDelete)));
+    programRegionRepository.saveAll(toAdd);
+  }
+
   /**
    * Compares the user provided list against the list stored in the system. Throws an exception if
    * it determines that the users provided a collection that cannot be found by the system.
@@ -389,6 +416,7 @@ public class ProgramService {
                 .setFetchPrimarySites(true)
                 .setFetchInstitutions(true)
                 .setFetchCountries(true)
+                .setFetchRegions(true)
                 .listAll(true));
     return List.copyOf(programs);
   }

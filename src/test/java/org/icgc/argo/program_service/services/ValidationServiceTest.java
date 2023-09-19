@@ -130,6 +130,7 @@ class ValidationServiceTest {
         .addAllCancerTypes(List.of("Blood cancer", "Renal cancer"))
         .addAllPrimarySites(List.of("Blood", "Liver"))
         .addAllCountries(List.of("Canada", "Denmark"))
+        .addAllRegions(List.of("North America", "Europe"))
         .addAllInstitutions(List.of("OICR", "New Institute of Novel Innovations"))
         .build();
   }
@@ -187,7 +188,8 @@ class ValidationServiceTest {
         "commitmentDonors must not be null, "
             + "genomicDonors must not be null, membershipType must not be null, name must not be null, "
             + "shortName must not be null, submittedDonors must not be null, website must not be null, "
-            + "Must include at least one cancerType, Must include at least one primarySite, Must include at least one country");
+            + "Must include at least one cancerType, Must include at least one primarySite, "
+            + "Must include at least one region, Must include at least one country");
   }
 
   @Test
@@ -263,5 +265,18 @@ class ValidationServiceTest {
             .addAllAdmins(admins("valid@test.com"))
             .build();
     createProgramExpectingErrorMessage(request, "Invalid country 'New Freedonia'");
+  }
+
+  @Test
+  void createProgramBadRegions() {
+    val program =
+        goodProgram().toBuilder().addAllRegions(List.of("North America", "Europa")).build();
+
+    val request =
+        CreateProgramRequest.newBuilder()
+            .setProgram(program)
+            .addAllAdmins(admins("valid@test.com"))
+            .build();
+    createProgramExpectingErrorMessage(request, "Invalid region 'Europa'");
   }
 }

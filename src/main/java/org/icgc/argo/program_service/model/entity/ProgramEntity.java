@@ -137,6 +137,16 @@ public class ProgramEntity implements NameableEntity<UUID> {
       orphanRemoval = true)
   private Set<ProgramCountry> programCountries = new TreeSet<>();
 
+  @NotNull
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
+  @OneToMany(
+      mappedBy = ProgramRegion.Fields.program,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
+  private Set<ProgramRegion> programRegions = new TreeSet<>();
+
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @OneToMany(
@@ -169,5 +179,9 @@ public class ProgramEntity implements NameableEntity<UUID> {
 
   public List<String> listCountries() {
     return mapToList(getProgramCountries(), c -> c.getCountry().getName());
+  }
+
+  public List<String> listRegions() {
+    return mapToList(getProgramRegions(), r -> r.getRegion().getName());
   }
 }
