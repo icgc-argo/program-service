@@ -124,8 +124,7 @@ public class ProgramServiceFacade {
             program.getCancerTypesList(),
             program.getPrimarySitesList(),
             program.getInstitutionsList(),
-            program.getCountriesList(),
-            program.getRegionsList());
+            program.getCountriesList());
     return programConverter.programEntityToUpdateProgramResponse(updatedProgram);
   }
 

@@ -59,10 +59,6 @@ public class ProgramSpecificationBuilder extends AbstractSpecificationBuilder<Pr
       root.fetch(ProgramEntity.Fields.programCountries, LEFT)
           .fetch(ProgramCountry.Fields.country, LEFT);
     }
-    if (fetchRegions) {
-      root.fetch(ProgramEntity.Fields.programRegions, LEFT)
-          .fetch(ProgramRegion.Fields.region, LEFT);
-    }
     return root;
   }
 }
