@@ -32,11 +32,13 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.dto.DataCenterDTO;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.*;
@@ -343,5 +345,12 @@ public class ProgramServiceFacade {
   private UserDetails convertPendingInviteToUserDetail(JoinProgramInviteEntity invite) {
     return programConverter.joinProgramInviteToUserDetails(
         invite, egoService.isUserDacoApproved(invite.getUserEmail()));
+  }
+
+  public List<DataCenterDTO> listDataCenters() {
+    val dataCenterEntities = programService.listDataCenters();
+    return dataCenterEntities.stream()
+        .map(s -> programConverter.dataCenterToDataCenterEntity(s))
+        .collect(Collectors.toList());
   }
 }

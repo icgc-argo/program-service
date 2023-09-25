@@ -63,6 +63,7 @@ public class ProgramService {
   /** Dependencies */
   private final ProgramRepository programRepository;
 
+  private final DataCenterRepository dataCenterRepository;
   private final CancerRepository cancerRepository;
   private final PrimarySiteRepository primarySiteRepository;
   private final InstitutionRepository institutionRepository;
@@ -79,6 +80,7 @@ public class ProgramService {
   @Autowired
   public ProgramService(
       @NonNull ProgramRepository programRepository,
+      @NonNull DataCenterRepository dataCenterRepository,
       @NonNull CancerRepository cancerRepository,
       @NonNull PrimarySiteRepository primarySiteRepository,
       @NonNull ProgramConverter programConverter,
@@ -92,6 +94,7 @@ public class ProgramService {
       @NonNull ProgramCountryRepository programCountryRepository,
       @NonNull ValidatorFactory validatorFactory) {
     this.programRepository = programRepository;
+    this.dataCenterRepository = dataCenterRepository;
     this.cancerRepository = cancerRepository;
     this.primarySiteRepository = primarySiteRepository;
     this.programConverter = programConverter;
@@ -391,6 +394,11 @@ public class ProgramService {
                 .setFetchCountries(true)
                 .listAll(true));
     return List.copyOf(programs);
+  }
+
+  public List<DataCenterEntity> listDataCenters() {
+    val dataCenters = dataCenterRepository.findAll();
+    return List.copyOf(dataCenters);
   }
 
   public List<String> getAllProgramNames() {
