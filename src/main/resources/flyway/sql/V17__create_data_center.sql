@@ -16,8 +16,7 @@ CREATE TABLE data_center
 );
 
 INSERT INTO data_center (id, name, short_name, organization, email, ui_url, gateway_url, analysis_song_code, analysis_song_url, analysis_score_url, submission_song_code, submission_song_url, submission_score_url) VALUES
-(uuid_generate_v4(), 'DataCenter1', 'DC1', '', 'abc@example.com', 'https://example.com/', 'https://example.com/', 'ABC', 'https://example.com/', 'https://example.com/', 'XYZ', 'https://example.com/', 'https://example.com/');
-
+    (uuid_generate_v4(), 'DataCenter1', 'DC1', '', 'abc@example.com', 'https://example.com', 'https://example.com', 'ABC', 'https://example.com', 'https://example.com', 'XYZ', 'https://example.com', 'https://example.com');
 ALTER TABLE program
 ADD COLUMN data_center_id UUID NULL,
 ADD CONSTRAINT program_data_center_fkey FOREIGN KEY(data_center_id) REFERENCES data_center(id);
