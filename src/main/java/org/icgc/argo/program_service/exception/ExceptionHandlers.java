@@ -7,7 +7,6 @@ import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.exceptions.UnauthorizedException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -49,5 +48,20 @@ public class ExceptionHandlers {
             "error", UNAUTHORIZED.getReasonPhrase()),
         new HttpHeaders(),
         UNAUTHORIZED);
+  }
+
+  @ExceptionHandler(NotFoundException.class)
+  public ResponseEntity<Object> handleNotFoundException(
+          HttpServletRequest req, NotFoundException ex) {
+    val message = ex.getMessage();
+    log.error(message);
+    return new ResponseEntity<Object>(
+            Map.of(
+                    "message", ex.getMessage(),
+                    "timestamp", new Date(),
+                    "path", req.getServletPath(),
+                    "error", NOT_FOUND.getReasonPhrase()),
+            new HttpHeaders(),
+            NOT_FOUND);
   }
 }
