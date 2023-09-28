@@ -56,17 +56,16 @@ message Program {
   google.protobuf.StringValue short_name = 1;
   google.protobuf.StringValue description = 2;
   google.protobuf.StringValue name = 3;
-  google.protobuf.StringValue data_center_id = 4;
-  MembershipTypeValue membership_type = 5;
-  google.protobuf.Int32Value commitment_donors = 6;
-  google.protobuf.Int32Value submitted_donors = 7;
-  google.protobuf.Int32Value genomic_donors = 8;
-  google.protobuf.StringValue website = 9;
-  repeated string cancer_types = 10;
-  repeated string primary_sites = 11;
-  repeated string institutions = 12;
-  repeated string countries = 13;
-  repeated string regions = 14;
+  MembershipTypeValue membership_type = 4;
+  google.protobuf.Int32Value commitment_donors = 5;
+  google.protobuf.Int32Value submitted_donors = 6;
+  google.protobuf.Int32Value genomic_donors = 7;
+  google.protobuf.StringValue website = 8;
+  repeated string cancer_types = 12;
+  repeated string primary_sites = 13;
+  repeated string institutions = 14;
+  repeated string countries = 15;
+  repeated string regions = 16;
 }
 
 message Cancer {
