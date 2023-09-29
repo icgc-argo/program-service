@@ -72,7 +72,6 @@ public class ProgramService {
   private final ProgramCancerRepository programCancerRepository;
   private final ProgramPrimarySiteRepository programPrimarySiteRepository;
   private final ProgramInstitutionRepository programInstitutionRepository;
-  private final ProgramRegionRepository programRegionRepository;
   private final ProgramCountryRepository programCountryRepository;
   private final ValidatorFactory validatorFactory;
 
@@ -88,7 +87,6 @@ public class ProgramService {
       @NonNull RegionRepository regionRepository,
       @NonNull CountryRepository countryRepository,
       @NonNull ProgramInstitutionRepository programInstitutionRepository,
-      @NonNull ProgramRegionRepository programRegionRepository,
       @NonNull ProgramCountryRepository programCountryRepository,
       @NonNull ValidatorFactory validatorFactory) {
     this.programRepository = programRepository;
@@ -101,7 +99,6 @@ public class ProgramService {
     this.regionRepository = regionRepository;
     this.countryRepository = countryRepository;
     this.programInstitutionRepository = programInstitutionRepository;
-    this.programRegionRepository = programRegionRepository;
     this.programCountryRepository = programCountryRepository;
     this.validatorFactory = validatorFactory;
   }
@@ -220,7 +217,7 @@ public class ProgramService {
         || countries.isEmpty()) {
       throw Status.INVALID_ARGUMENT
           .augmentDescription(
-              "Cannot update program. Cancer, primary site, institution, country, and region cannot be empty.")
+              "Cannot update program. Cancer, primary site, institution, country cannot be empty.")
           .asRuntimeException();
     }
 
@@ -450,11 +447,5 @@ public class ProgramService {
       ProgramEntity program, Set<CountryEntity> countries) {
     val id = program.getId();
     return c -> c.getProgram().getId().equals(id) && countries.contains(c.getCountry());
-  }
-
-  private static Predicate<ProgramRegion> programRegionPredicate(
-      ProgramEntity program, Set<RegionEntity> regions) {
-    val id = program.getId();
-    return r -> r.getProgram().getId().equals(id) && regions.contains(r.getRegion());
   }
 }

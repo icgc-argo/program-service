@@ -119,7 +119,6 @@ class ValidationServiceTest {
   private Program goodProgram() {
     return Program.newBuilder()
         .setCommitmentDonors(Int32Value.of(1000))
-        .setDataCenterId(StringValue.of(UUID.randomUUID().toString()))
         .setGenomicDonors(Int32Value.of(0))
         .setMembershipType(
             MembershipTypeValue.newBuilder().setValueValue(MembershipType.ASSOCIATE_VALUE).build())

@@ -85,7 +85,7 @@ public interface ProgramConverter {
   @Mapping(target = "primarySitesList", ignore = true)
   @Mapping(target = "institutionsList", ignore = true)
   @Mapping(target = "countriesList", ignore = true)
-  @Mapping(target = "mergeDataCenterId", ignore = true)
+  @Mapping(target = "regionsList", ignore = true)
   Program programEntityToProgram(ProgramEntity entity);
 
   @Mapping(target = "clearField", ignore = true)

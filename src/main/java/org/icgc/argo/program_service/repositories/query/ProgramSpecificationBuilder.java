@@ -39,7 +39,6 @@ public class ProgramSpecificationBuilder extends AbstractSpecificationBuilder<Pr
   private boolean fetchPrimarySites;
   private boolean fetchInstitutions;
   private boolean fetchCountries;
-  private boolean fetchRegions;
 
   @Override
   protected Root<ProgramEntity> setupFetchStrategy(Root<ProgramEntity> root) {
