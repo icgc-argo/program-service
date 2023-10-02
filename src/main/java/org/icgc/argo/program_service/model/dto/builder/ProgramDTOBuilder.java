@@ -20,8 +20,6 @@ public class ProgramDTOBuilder {
     programDTO.setWebsite(programEntity.getWebsite());
     programDTO.setShortName(programEntity.getShortName());
     programDTO.setDescription(programEntity.getDescription());
-    programDTO.setProcessingRegions(
-        regionDTOBuilder.convertEntityToDTO(programEntity.getProgramRegions()));
     programDTO.setProgramCancers(
         canerDtoBuilder.convertEntityToDTO(programEntity.getProgramCancers()));
     programDTO.setProgramCountries(

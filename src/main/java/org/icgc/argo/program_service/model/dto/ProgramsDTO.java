@@ -24,8 +24,6 @@ public class ProgramsDTO {
 
   private List<String> countries;
 
-  private List<String> regions;
-
   private List<String> cancerTypes;
 
   private List<String> primarySites;

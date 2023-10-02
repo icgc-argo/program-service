@@ -142,10 +142,6 @@ public class ValidationService {
       errors.add("Must include at least one primarySite");
     }
 
-    if (program.getRegionsList().isEmpty()) {
-      errors.add("Must include at least one region");
-    }
-
     if (program.getCountriesList().isEmpty()) {
       errors.add("Must include at least one country");
     }
@@ -159,10 +155,6 @@ public class ValidationService {
         invalidChoices(
             "Invalid primarySite '%s'",
             validPrimarySites(), new TreeSet<>((program.getPrimarySitesList()))));
-
-    errors.addAll(
-        invalidChoices(
-            "Invalid region '%s'", validRegions(), new TreeSet<>(program.getRegionsList())));
 
     errors.addAll(
         invalidChoices(
@@ -188,9 +180,5 @@ public class ValidationService {
 
   public Set<String> validCountries() {
     return mapToSet(programService.listCountries(), CountryEntity::getName);
-  }
-
-  public Set<String> validRegions() {
-    return mapToSet(programService.listRegions(), RegionEntity::getName);
   }
 }

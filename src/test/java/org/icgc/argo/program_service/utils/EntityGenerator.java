@@ -99,7 +99,6 @@ public class EntityGenerator {
         .setMembershipType(MembershipTypeValue.newBuilder().setValue(membershipType).build())
         .setWebsite(stringValue("http://site.org"))
         .addInstitutions("Ontario Institute for Cancer Research")
-        .addRegions("Canada")
         .setName(stringValue(RandomString.make(15)))
         .setCommitmentDonors(int32Value(234))
         .addCountries("Canada")
