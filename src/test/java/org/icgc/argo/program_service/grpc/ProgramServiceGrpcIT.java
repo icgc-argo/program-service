@@ -35,7 +35,6 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -139,7 +138,6 @@ public class ProgramServiceGrpcIT {
             .setShortName(shortName)
             .setMembershipType(membershipTypeValue(ASSOCIATE))
             .setWebsite(stringValue("http://site.org"))
-            .setDataCenterId(StringValue.of(UUID.randomUUID().toString()))
             .addInstitutions("Ontario Institute for Cancer Research")
             .setName(stringValue(RandomString.make(15)))
             .setCommitmentDonors(int32Value(234))
@@ -213,7 +211,6 @@ public class ProgramServiceGrpcIT {
         Program.newBuilder()
             .setShortName(name)
             .setMembershipType(membershipTypeValue(ASSOCIATE))
-            .setDataCenterId(StringValue.of(UUID.randomUUID().toString()))
             .setWebsite(stringValue("http://site.org"))
             .addInstitutions("Ontario Institute for Cancer Research")
             .setName(stringValue(RandomString.make(15)))
@@ -360,7 +357,6 @@ public class ProgramServiceGrpcIT {
             .setShortName(name)
             .setMembershipType(membershipTypeValue(ASSOCIATE))
             .setWebsite(stringValue("http://site.org"))
-            .setDataCenterId(StringValue.of(UUID.randomUUID().toString()))
             .addInstitutions("Ontario Institute for Cancer Research")
             .setName(stringValue(RandomString.make(15)))
             .setCommitmentDonors(int32Value(234))
