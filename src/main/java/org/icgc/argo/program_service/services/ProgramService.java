@@ -62,7 +62,6 @@ public class ProgramService {
 
   /** Dependencies */
   private final ProgramRepository programRepository;
-
   private final DataCenterRepository dataCenterRepository;
   private final CancerRepository cancerRepository;
   private final PrimarySiteRepository primarySiteRepository;
@@ -223,7 +222,7 @@ public class ProgramService {
         || countries.isEmpty()) {
       throw Status.INVALID_ARGUMENT
           .augmentDescription(
-              "Cannot update program. Cancer, primary site, institution, country, and region cannot be empty.")
+              "Cannot update program. Cancer, primary site, institution, country cannot be empty.")
           .asRuntimeException();
     }
 
@@ -465,4 +464,5 @@ public class ProgramService {
     val id = program.getId();
     return r -> r.getProgram().getId().equals(id) && regions.contains(r.getRegion());
   }
+
 }
