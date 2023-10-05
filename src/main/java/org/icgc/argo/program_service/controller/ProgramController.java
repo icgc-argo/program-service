@@ -87,28 +87,28 @@ public class ProgramController {
   }
 
   @GetMapping(value = "/{shortName}")
-  public ResponseEntity<GetProgramResponseDTO> getProgram(
-      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+  public ResponseEntity<ProgramDetailsDTO> getProgram(
+          @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
-      @PathVariable(value = "shortName", required = true) String shortName)
-      throws IOException {
-    GetProgramResponseDTO getProgramResponseDTO = null;
+          @PathVariable(value = "shortName", required = true) String shortName)
+          throws IOException {
+    ProgramDetailsDTO programDetailsDTO = null;
     try {
       authorizationService.requireProgramUser(shortName, authorization);
       GetProgramRequest request =
-          GetProgramRequest.newBuilder().setShortName(StringValue.of(shortName)).build();
+              GetProgramRequest.newBuilder().setShortName(StringValue.of(shortName)).build();
       GetProgramResponse response = serviceFacade.getProgram(request);
-      getProgramResponseDTO = grpc2JsonConverter.prepareGetProgramResponse(response);
+      programDetailsDTO = grpc2JsonConverter.prepareGetProgramResponse(response);
     } catch (StatusRuntimeException exception) {
       if (exception.getStatus().getCode().name().equalsIgnoreCase(HttpStatus.NOT_FOUND.name()))
         log.error("Exception thrown in getProgram: {}", exception.getMessage());
       return new ResponseEntity(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
-    return new ResponseEntity(getProgramResponseDTO, HttpStatus.OK);
+    return new ResponseEntity(programDetailsDTO, HttpStatus.OK);
   }
 
   @PostMapping(value = "/activate")
-  public ResponseEntity<GetProgramResponseDTO> activateProgram(
+  public ResponseEntity<ProgramDetailsDTO> activateProgram(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestBody ActivateProgramRequestDTO activateProgramRequestDTO) {
@@ -130,7 +130,7 @@ public class ProgramController {
   }
 
   @GetMapping
-  public ResponseEntity<List<ProgramsResponseDTO>> listPrograms(
+  public ResponseEntity<List<ProgramDetailsDTO>> listPrograms(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
     val listProgramsResponse =

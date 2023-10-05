@@ -9,6 +9,8 @@ import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.icgc.argo.program_service.model.dto.*;
@@ -96,19 +98,19 @@ public class Grpc2JsonConverter {
     return updateProgramResponseDTO;
   }
 
-  public GetProgramResponseDTO prepareGetProgramResponse(GetProgramResponse response) {
+  public ProgramDetailsDTO prepareGetProgramResponse(GetProgramResponse response) {
 
-    GetProgramResponseDTO getProgramResponseDTO = new GetProgramResponseDTO();
+    ProgramDetailsDTO programDetailsDTO = new ProgramDetailsDTO();
     try {
-      String responseJson = JsonFormat.printer().print(response);
+      String responseJson = JsonFormat.printer().print(response.getProgram());
       objectMapper =
-          JsonMapper.builder()
-              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
-              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-              .build();
+              JsonMapper.builder()
+                      .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+                      .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+                      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                      .build();
 
-      getProgramResponseDTO = objectMapper.readValue(responseJson, GetProgramResponseDTO.class);
+      programDetailsDTO = objectMapper.readValue(responseJson, ProgramDetailsDTO.class);
 
     } catch (JsonMappingException e) {
       e.printStackTrace();
@@ -117,10 +119,10 @@ public class Grpc2JsonConverter {
     } catch (InvalidProtocolBufferException e) {
       e.printStackTrace();
     }
-    return getProgramResponseDTO;
+    return programDetailsDTO;
   }
 
-  public ProgramsResponseDTO prepareListProgramsResponse(ListProgramsResponse response) {
+  public List<ProgramDetailsDTO> prepareListProgramsResponse(ListProgramsResponse response) {
 
     ProgramsResponseDTO programsResponseDTO = new ProgramsResponseDTO();
     try {
@@ -141,7 +143,7 @@ public class Grpc2JsonConverter {
     } catch (InvalidProtocolBufferException e) {
       e.printStackTrace();
     }
-    return programsResponseDTO;
+    return programsResponseDTO.getPrograms();
   }
 
   public InviteUserResponseDTO prepareInviteUserResponse(InviteUserResponse response) {
