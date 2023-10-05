@@ -39,6 +39,7 @@ import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.dto.DataCenterDTO;
+import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.*;
@@ -357,5 +358,10 @@ public class ProgramServiceFacade {
     return dataCenterEntities.stream()
         .map(s -> programConverter.dataCenterToDataCenterEntity(s))
         .collect(Collectors.toList());
+  }
+
+  public DataCenterDTO createDataCenter(DataCenterRequestDTO dataCenterRequestDTO) {
+    val dataCenterEntity = programService.createDataCenter(dataCenterRequestDTO);
+    return programConverter.dataCenterToDataCenterEntity(dataCenterEntity);
   }
 }

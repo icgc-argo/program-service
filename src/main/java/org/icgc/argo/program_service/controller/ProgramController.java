@@ -338,4 +338,14 @@ public class ProgramController {
     return new ResponseEntity(
         grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
   }
+
+  @PostMapping(value = "/datacenters")
+  public ResponseEntity<DataCenterDTO> createDataCenter(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody DataCenterRequestDTO dataCenterRequestDTO) {
+    authorizationService.requireDCCAdmin(authorization);
+    val dataCenterEntity = serviceFacade.createDataCenter(dataCenterRequestDTO);
+    return new ResponseEntity(dataCenterEntity, HttpStatus.OK);
+  }
 }

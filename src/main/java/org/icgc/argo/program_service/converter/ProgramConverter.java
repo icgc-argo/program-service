@@ -30,6 +30,7 @@ import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import org.icgc.argo.program_service.model.dto.DataCenterDTO;
+import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -59,6 +60,10 @@ public interface ProgramConverter {
   ProgramEntity programToProgramEntity(Program p);
 
   DataCenterDTO dataCenterToDataCenterEntity(DataCenterEntity p);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "programEntities", ignore = true)
+  DataCenterEntity dataCenterToDataCenterEntity(DataCenterRequestDTO p);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "shortName", ignore = true)

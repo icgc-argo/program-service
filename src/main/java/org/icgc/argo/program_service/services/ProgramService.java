@@ -43,6 +43,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.join.*;
@@ -409,6 +410,12 @@ public class ProgramService {
   public List<DataCenterEntity> listDataCenters() {
     val dataCenters = dataCenterRepository.findAll();
     return List.copyOf(dataCenters);
+  }
+
+  public DataCenterEntity createDataCenter(DataCenterRequestDTO dataCenterRequestDTO) {
+    val dataCenterEntity = programConverter.dataCenterToDataCenterEntity(dataCenterRequestDTO);
+    val d = dataCenterRepository.save(dataCenterEntity);
+    return d;
   }
 
   public List<String> getAllProgramNames() {
