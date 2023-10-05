@@ -36,6 +36,7 @@ public interface ProgramRepository
   @Query("select distinct p.shortName from ProgramEntity p where p.active =true")
   List<String> getActivePrograms();
 
-  @Query("SELECT P FROM ProgramEntity AS P INNER JOIN DataCenterEntity AS D ON P.dataCenterId=D.id WHERE D.shortName=:shortName AND P.active = false")
+  @Query(
+      "SELECT P FROM ProgramEntity AS P INNER JOIN DataCenterEntity AS D ON P.dataCenterId=D.id WHERE D.shortName=:shortName AND P.active = false")
   List<ProgramEntity> getActiveProgramsForDataCenter(@Param("shortName") String shortName);
 }

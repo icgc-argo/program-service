@@ -20,6 +20,12 @@ public class ProgramsDTO {
 
   private String website;
 
+  private int commitmentDonors;
+
+  private int submittedDonors;
+
+  private int genomicDonors;
+
   private List<String> institutions;
 
   private List<String> countries;

@@ -133,8 +133,7 @@ public class ProgramService {
   }
 
   private List<ProgramEntity> listProgramsByDataCenterName(@NonNull String name) {
-    val search =
-            programRepository.getActiveProgramsForDataCenter(name);
+    val search = programRepository.getActiveProgramsForDataCenter(name);
 
     if (search.isEmpty()) {
       throw new NotFoundException("Programs for DataCenter '" + name + "' not found");
@@ -237,7 +236,7 @@ public class ProgramService {
         || countries.isEmpty()) {
       throw Status.INVALID_ARGUMENT
           .augmentDescription(
-              "Cannot update program. Cancer, primary site, institution, country, and region cannot be empty.")
+              "Cannot update program. Cancer, primary site, institution, country cannot be empty.")
           .asRuntimeException();
     }
 
