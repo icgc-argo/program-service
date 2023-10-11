@@ -364,4 +364,12 @@ public class ProgramServiceFacade {
     val dataCenterEntity = programService.createDataCenter(dataCenterRequestDTO);
     return programConverter.dataCenterToDataCenterEntity(dataCenterEntity);
   }
+  @Transactional
+  public DataCenterDTO updateDataCenter(
+          String dataCenterShortName, DataCenterRequestDTO dataCenterRequestDTO) {
+    val updatingDataCenter = programConverter.dataCenterToDataCenterEntity(dataCenterRequestDTO);
+    val dataCenterToUpdate = programService.findDataCenterByShortName(dataCenterShortName);
+    val dataCenterEntity = programService.updateDataCenter(dataCenterToUpdate, updatingDataCenter);
+    return programConverter.dataCenterToDataCenterEntity(dataCenterEntity);
+  }
 }

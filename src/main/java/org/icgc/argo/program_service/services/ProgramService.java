@@ -49,6 +49,7 @@ import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
+import org.icgc.argo.program_service.repositories.query.DataCenterSpecificationBuilder;
 import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -417,7 +418,24 @@ public class ProgramService {
     val d = dataCenterRepository.save(dataCenterEntity);
     return d;
   }
+  public DataCenterEntity updateDataCenter(
+          @NonNull DataCenterEntity dataCenterToUpdate, @NonNull DataCenterEntity updatingDataCenter) {
+    programConverter.updateDataCenter(updatingDataCenter, dataCenterToUpdate);
+    dataCenterRepository.save(dataCenterToUpdate);
+    return dataCenterToUpdate;
+  }
 
+  public DataCenterEntity findDataCenterByShortName(@NonNull String name) {
+    val search =
+            dataCenterRepository.findOne(new DataCenterSpecificationBuilder().buildByShortName(name));
+
+    if (search.isEmpty()) {
+      throw Status.NOT_FOUND
+              .withDescription("DataCenter '" + name + "' not found")
+              .asRuntimeException();
+    }
+    return search.get();
+  }
   public List<String> getAllProgramNames() {
     val programNames = programRepository.getActivePrograms();
     return programNames;

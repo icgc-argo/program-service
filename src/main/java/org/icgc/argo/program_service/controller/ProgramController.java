@@ -348,4 +348,15 @@ public class ProgramController {
     val dataCenterEntity = serviceFacade.createDataCenter(dataCenterRequestDTO);
     return new ResponseEntity(dataCenterEntity, HttpStatus.OK);
   }
+  @PatchMapping(value = "/datacenters/{datacenter_short_name}")
+  public ResponseEntity<DataCenterDTO> updateDataCenter(
+          @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+          @PathVariable(value = "datacenter_short_name", required = true) String dataCenterShortName,
+          @RequestBody DataCenterRequestDTO dataCenterRequestDTO) {
+    authorizationService.requireDCCAdmin(authorization);
+    val dataCenterEntity =
+            serviceFacade.updateDataCenter(dataCenterShortName, dataCenterRequestDTO);
+    return new ResponseEntity(dataCenterEntity, HttpStatus.OK);
+  }
 }
