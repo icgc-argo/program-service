@@ -39,6 +39,7 @@ import javax.validation.constraints.Email;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
+import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -71,6 +72,7 @@ import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
 @Transactional
 class ProgramServiceImplTest {
   ProgramConverter programConverter = ProgramConverter.INSTANCE;
+  DataCenterConverter dataCenterConverter = DataCenterConverter.INSTANCE;
   ProgramService programService = mock(ProgramService.class);
   InvitationService invitationService = mock(InvitationService.class);
   EgoService egoService = mock(EgoService.class);
@@ -82,6 +84,7 @@ class ProgramServiceImplTest {
           egoService,
           invitationService,
           programConverter,
+          dataCenterConverter,
           CommonConverter.INSTANCE,
           validationService);
   ProgramServiceImpl programServiceImpl =
@@ -528,6 +531,7 @@ class ProgramServiceImplTest {
             egoService,
             invitationService,
             programConverter,
+            dataCenterConverter,
             CommonConverter.INSTANCE,
             validationService);
     return new ProgramServiceImpl(CommonConverter.INSTANCE, authorizationService, newFacade);

@@ -319,12 +319,4 @@ public class ProgramController {
     }
     return new ResponseEntity(addInstitutionsResponseDTO, HttpStatus.OK);
   }
-
-  @GetMapping(value = "/dataCenter")
-  public ResponseEntity<List<DataCenterDTO>> listDataCenters(
-      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
-          final String authorization) {
-    val dataCenterEntities = serviceFacade.listDataCenters();
-    return new ResponseEntity(dataCenterEntities, HttpStatus.OK);
-  }
 }
