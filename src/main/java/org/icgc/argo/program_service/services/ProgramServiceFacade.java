@@ -115,6 +115,11 @@ public class ProgramServiceFacade {
     return GetProgramResponse.newBuilder().setProgram(programDetails).build();
   }
 
+  public ListProgramsResponse listProgramsByDataCenter(String shortName) {
+    val programEntities = programService.listProgramsByDataCenter(shortName);
+    return programConverter.programEntitiesToListProgramsResponse(programEntities);
+  }
+
   @Transactional
   public UpdateProgramResponse updateProgram(UpdateProgramRequest request) {
     val program = request.getProgram();

@@ -27,6 +27,7 @@ import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ProgramRepository
     extends JpaRepository<ProgramEntity, UUID>, JpaSpecificationExecutor<ProgramEntity> {
@@ -34,4 +35,8 @@ public interface ProgramRepository
 
   @Query("select distinct p.shortName from ProgramEntity p where p.active =true")
   List<String> getActivePrograms();
+
+  @Query(
+      "SELECT P FROM ProgramEntity AS P INNER JOIN DataCenterEntity AS D ON P.dataCenterId=D.id WHERE D.shortName=:shortName AND P.active = false")
+  List<ProgramEntity> getActiveProgramsForDataCenter(@Param("shortName") String shortName);
 }

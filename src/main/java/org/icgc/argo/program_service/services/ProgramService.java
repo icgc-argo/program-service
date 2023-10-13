@@ -131,8 +131,21 @@ public class ProgramService {
     return search.get();
   }
 
+  private List<ProgramEntity> listProgramsByDataCenterName(@NonNull String name) {
+    val search = programRepository.getActiveProgramsForDataCenter(name);
+
+    if (search.isEmpty()) {
+      throw new NotFoundException("Programs for DataCenter '" + name + "' not found");
+    }
+    return search;
+  }
+
   public ProgramEntity getProgram(@NonNull String name) {
     return getProgram(name, false);
+  }
+
+  public List<ProgramEntity> listProgramsByDataCenter(@NonNull String name) {
+    return listProgramsByDataCenterName(name);
   }
 
   public ProgramEntity getProgram(@NonNull String name, boolean allowInactive) {
