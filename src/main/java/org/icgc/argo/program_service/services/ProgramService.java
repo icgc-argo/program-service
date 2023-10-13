@@ -62,7 +62,7 @@ public class ProgramService {
 
   /** Dependencies */
   private final ProgramRepository programRepository;
-
+  private final DataCenterRepository dataCenterRepository;
   private final CancerRepository cancerRepository;
   private final PrimarySiteRepository primarySiteRepository;
   private final InstitutionRepository institutionRepository;
@@ -72,12 +72,14 @@ public class ProgramService {
   private final ProgramCancerRepository programCancerRepository;
   private final ProgramPrimarySiteRepository programPrimarySiteRepository;
   private final ProgramInstitutionRepository programInstitutionRepository;
+  private final ProgramRegionRepository programRegionRepository;
   private final ProgramCountryRepository programCountryRepository;
   private final ValidatorFactory validatorFactory;
 
   @Autowired
   public ProgramService(
       @NonNull ProgramRepository programRepository,
+      @NonNull DataCenterRepository dataCenterRepository,
       @NonNull CancerRepository cancerRepository,
       @NonNull PrimarySiteRepository primarySiteRepository,
       @NonNull ProgramConverter programConverter,
@@ -87,9 +89,11 @@ public class ProgramService {
       @NonNull RegionRepository regionRepository,
       @NonNull CountryRepository countryRepository,
       @NonNull ProgramInstitutionRepository programInstitutionRepository,
+      @NonNull ProgramRegionRepository programRegionRepository,
       @NonNull ProgramCountryRepository programCountryRepository,
       @NonNull ValidatorFactory validatorFactory) {
     this.programRepository = programRepository;
+    this.dataCenterRepository = dataCenterRepository;
     this.cancerRepository = cancerRepository;
     this.primarySiteRepository = primarySiteRepository;
     this.programConverter = programConverter;
@@ -99,6 +103,7 @@ public class ProgramService {
     this.regionRepository = regionRepository;
     this.countryRepository = countryRepository;
     this.programInstitutionRepository = programInstitutionRepository;
+    this.programRegionRepository = programRegionRepository;
     this.programCountryRepository = programCountryRepository;
     this.validatorFactory = validatorFactory;
   }
@@ -390,6 +395,11 @@ public class ProgramService {
     return List.copyOf(programs);
   }
 
+  public List<DataCenterEntity> listDataCenters() {
+    val dataCenters = dataCenterRepository.findAll();
+    return List.copyOf(dataCenters);
+  }
+
   public List<String> getAllProgramNames() {
     val programNames = programRepository.getActivePrograms();
     return programNames;
@@ -448,4 +458,11 @@ public class ProgramService {
     val id = program.getId();
     return c -> c.getProgram().getId().equals(id) && countries.contains(c.getCountry());
   }
+
+  private static Predicate<ProgramRegion> programRegionPredicate(
+      ProgramEntity program, Set<RegionEntity> regions) {
+    val id = program.getId();
+    return r -> r.getProgram().getId().equals(id) && regions.contains(r.getRegion());
+  }
+
 }

@@ -50,6 +50,7 @@ import java.util.logging.Logger;
 import lombok.AllArgsConstructor;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
+import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.grpc.interceptor.ExceptionInterceptor;
@@ -113,6 +114,7 @@ public class ProgramServiceAuthorizationTest {
         .thenReturn(Optional.of(invite1()));
 
     val programConverter = ProgramConverter.INSTANCE;
+    val dataCenterConverter = DataCenterConverter.INSTANCE;
     val commonConverter = CommonConverter.INSTANCE;
 
     val egoSecurity = new EgoSecurity(publicKey);
@@ -149,6 +151,7 @@ public class ProgramServiceAuthorizationTest {
             mockEgoService,
             invitationService,
             programConverter,
+            dataCenterConverter,
             commonConverter,
             v);
 

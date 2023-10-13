@@ -30,8 +30,6 @@ import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.*;
-import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.mapstruct.AfterMapping;

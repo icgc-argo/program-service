@@ -181,4 +181,9 @@ public class ValidationService {
   public Set<String> validCountries() {
     return mapToSet(programService.listCountries(), CountryEntity::getName);
   }
+
+  public Set<String> validRegions() {
+    return mapToSet(programService.listRegions(), RegionEntity::getName);
+  }
+
 }
