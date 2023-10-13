@@ -29,8 +29,6 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
-import org.icgc.argo.program_service.model.dto.DataCenterDTO;
-import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
@@ -57,18 +55,6 @@ public interface ProgramConverter {
   @Mapping(target = "dataCenterId", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
 
-  DataCenterDTO dataCenterToDataCenterEntity(DataCenterEntity p);
-
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "programEntities", ignore = true)
-  DataCenterEntity dataCenterToDataCenterEntity(DataCenterRequestDTO p);
-
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "programEntities", ignore = true)
-  @Mapping(target = "shortName", ignore = true)
-  @Mapping(target = "submissionSongCode", ignore = true)
-  void updateDataCenter(
-          DataCenterEntity updatingDataCenter, @MappingTarget DataCenterEntity dataCenterToUpdate);
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "shortName", ignore = true)
   @Mapping(target = "createdAt", ignore = true)

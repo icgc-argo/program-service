@@ -238,9 +238,7 @@ public class ProgramController {
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "invite_id", required = true) String inviteId) {
-    val invitation =
-        serviceFacade.getInvitationById(
-                UUID.fromString(inviteId));
+    val invitation = serviceFacade.getInvitationById(UUID.fromString(inviteId));
     GetJoinProgramInviteResponseDTO getJoinProgramInviteResponseDTO =
         new GetJoinProgramInviteResponseDTO();
     getJoinProgramInviteResponseDTO.setInvitation(
@@ -318,45 +316,5 @@ public class ProgramController {
       return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
     return new ResponseEntity(addInstitutionsResponseDTO, HttpStatus.OK);
-  }
-
-  @GetMapping(value = "/datacenters")
-  public ResponseEntity<List<DataCenterDTO>> listDataCenters(
-      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
-          final String authorization) {
-    val dataCenterEntities = serviceFacade.listDataCenters();
-    return new ResponseEntity(dataCenterEntities, HttpStatus.OK);
-  }
-
-  @GetMapping(value = "/datacenters/{datacenter_short_name}/programs")
-  public ResponseEntity<ProgramsResponseDTO> listDataCenterPrograms(
-      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
-          final String authorization,
-      @PathVariable(value = "datacenter_short_name", required = true) String dataCenterShortName) {
-    authorizationService.requireDCCAdmin(authorization);
-    val listProgramsResponse = serviceFacade.listProgramsByDataCenter(dataCenterShortName);
-    return new ResponseEntity(
-        grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
-  }
-
-  @PostMapping(value = "/datacenters")
-  public ResponseEntity<DataCenterDTO> createDataCenter(
-      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
-          final String authorization,
-      @RequestBody DataCenterRequestDTO dataCenterRequestDTO) {
-    authorizationService.requireDCCAdmin(authorization);
-    val dataCenterEntity = serviceFacade.createDataCenter(dataCenterRequestDTO);
-    return new ResponseEntity(dataCenterEntity, HttpStatus.OK);
-  }
-  @PatchMapping(value = "/datacenters/{datacenter_short_name}")
-  public ResponseEntity<DataCenterDTO> updateDataCenter(
-          @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
-          final String authorization,
-          @PathVariable(value = "datacenter_short_name", required = true) String dataCenterShortName,
-          @RequestBody DataCenterRequestDTO dataCenterRequestDTO) {
-    authorizationService.requireDCCAdmin(authorization);
-    val dataCenterEntity =
-            serviceFacade.updateDataCenter(dataCenterShortName, dataCenterRequestDTO);
-    return new ResponseEntity(dataCenterEntity, HttpStatus.OK);
   }
 }

@@ -51,16 +51,16 @@ public class ExceptionHandlers {
 
   @ExceptionHandler(NotFoundException.class)
   public ResponseEntity<Object> handleNotFoundException(
-          HttpServletRequest req, NotFoundException ex) {
+      HttpServletRequest req, NotFoundException ex) {
     val message = ex.getMessage();
     log.error(message);
     return new ResponseEntity<Object>(
-            Map.of(
-                    "message", ex.getMessage(),
-                    "timestamp", new Date(),
-                    "path", req.getServletPath(),
-                    "error", NOT_FOUND.getReasonPhrase()),
-            new HttpHeaders(),
-            NOT_FOUND);
+        Map.of(
+            "message", ex.getMessage(),
+            "timestamp", new Date(),
+            "path", req.getServletPath(),
+            "error", NOT_FOUND.getReasonPhrase()),
+        new HttpHeaders(),
+        NOT_FOUND);
   }
 }

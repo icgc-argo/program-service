@@ -37,6 +37,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
+import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.dto.DataCenterDTO;
 import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
@@ -58,6 +59,7 @@ public class ProgramServiceFacade {
   private final EgoService egoService;
   private final InvitationService invitationService;
   private final ProgramConverter programConverter;
+  private final DataCenterConverter dataCenterConverter;
   private final CommonConverter commonConverter;
   private final ValidationService validationService;
 
@@ -70,12 +72,14 @@ public class ProgramServiceFacade {
       @NonNull EgoService egoService,
       @NonNull InvitationService invitationService,
       @NonNull ProgramConverter programConverter,
+      @NonNull DataCenterConverter dataCenterConverter,
       @NonNull CommonConverter commonConverter,
       @NonNull ValidationService validationService) {
     this.programService = programService;
     this.egoService = egoService;
     this.invitationService = invitationService;
     this.programConverter = programConverter;
+    this.dataCenterConverter = dataCenterConverter;
     this.commonConverter = commonConverter;
     this.validationService = validationService;
   }
@@ -356,20 +360,21 @@ public class ProgramServiceFacade {
   public List<DataCenterDTO> listDataCenters() {
     val dataCenterEntities = programService.listDataCenters();
     return dataCenterEntities.stream()
-        .map(s -> programConverter.dataCenterToDataCenterEntity(s))
+        .map(s -> dataCenterConverter.dataCenterToDataCenterEntity(s))
         .collect(Collectors.toList());
   }
 
   public DataCenterDTO createDataCenter(DataCenterRequestDTO dataCenterRequestDTO) {
     val dataCenterEntity = programService.createDataCenter(dataCenterRequestDTO);
-    return programConverter.dataCenterToDataCenterEntity(dataCenterEntity);
+    return dataCenterConverter.dataCenterToDataCenterEntity(dataCenterEntity);
   }
+
   @Transactional
   public DataCenterDTO updateDataCenter(
-          String dataCenterShortName, DataCenterRequestDTO dataCenterRequestDTO) {
-    val updatingDataCenter = programConverter.dataCenterToDataCenterEntity(dataCenterRequestDTO);
+      String dataCenterShortName, DataCenterRequestDTO dataCenterRequestDTO) {
+    val updatingDataCenter = dataCenterConverter.dataCenterToDataCenterEntity(dataCenterRequestDTO);
     val dataCenterToUpdate = programService.findDataCenterByShortName(dataCenterShortName);
     val dataCenterEntity = programService.updateDataCenter(dataCenterToUpdate, updatingDataCenter);
-    return programConverter.dataCenterToDataCenterEntity(dataCenterEntity);
+    return dataCenterConverter.dataCenterToDataCenterEntity(dataCenterEntity);
   }
 }
