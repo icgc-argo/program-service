@@ -73,6 +73,7 @@ public class ProgramService {
   private final ProgramCancerRepository programCancerRepository;
   private final ProgramPrimarySiteRepository programPrimarySiteRepository;
   private final ProgramInstitutionRepository programInstitutionRepository;
+  private final ProgramRegionRepository programRegionRepository;
   private final ProgramCountryRepository programCountryRepository;
   private final ValidatorFactory validatorFactory;
 
@@ -89,6 +90,7 @@ public class ProgramService {
       @NonNull RegionRepository regionRepository,
       @NonNull CountryRepository countryRepository,
       @NonNull ProgramInstitutionRepository programInstitutionRepository,
+      @NonNull ProgramRegionRepository programRegionRepository,
       @NonNull ProgramCountryRepository programCountryRepository,
       @NonNull ValidatorFactory validatorFactory) {
     this.programRepository = programRepository;
@@ -102,6 +104,7 @@ public class ProgramService {
     this.regionRepository = regionRepository;
     this.countryRepository = countryRepository;
     this.programInstitutionRepository = programInstitutionRepository;
+    this.programRegionRepository = programRegionRepository;
     this.programCountryRepository = programCountryRepository;
     this.validatorFactory = validatorFactory;
   }

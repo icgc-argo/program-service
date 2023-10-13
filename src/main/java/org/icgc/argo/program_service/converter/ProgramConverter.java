@@ -29,10 +29,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
-import org.icgc.argo.program_service.model.dto.DataCenterDTO;
 import org.icgc.argo.program_service.model.entity.*;
-import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.mapstruct.AfterMapping;
@@ -57,8 +54,6 @@ public interface ProgramConverter {
   @Mapping(target = "legacyShortName", ignore = true)
   @Mapping(target = "dataCenterId", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
-
-  DataCenterDTO dataCenterToDataCenterEntity(DataCenterEntity p);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "shortName", ignore = true)

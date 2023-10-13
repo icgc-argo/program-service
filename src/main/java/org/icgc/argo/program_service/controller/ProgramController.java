@@ -319,23 +319,4 @@ public class ProgramController {
     }
     return new ResponseEntity(addInstitutionsResponseDTO, HttpStatus.OK);
   }
-
-  @GetMapping(value = "/datacenters")
-  public ResponseEntity<List<DataCenterDTO>> listDataCenters(
-      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
-          final String authorization) {
-    val dataCenterEntities = serviceFacade.listDataCenters();
-    return new ResponseEntity(dataCenterEntities, HttpStatus.OK);
-  }
-
-  @GetMapping(value = "/datacenters/{datacenter_short_name}/programs")
-  public ResponseEntity<ProgramsResponseDTO> listDataCenterPrograms(
-      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
-          final String authorization,
-      @PathVariable(value = "datacenter_short_name", required = true) String dataCenterShortName) {
-    authorizationService.requireDCCAdmin(authorization);
-    val listProgramsResponse = serviceFacade.listProgramsByDataCenter(dataCenterShortName);
-    return new ResponseEntity(
-        grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
-  }
 }
