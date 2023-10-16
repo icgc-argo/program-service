@@ -64,7 +64,6 @@ public class ProgramService {
 
   /** Dependencies */
   private final ProgramRepository programRepository;
-
   private final DataCenterRepository dataCenterRepository;
   private final CancerRepository cancerRepository;
   private final PrimarySiteRepository primarySiteRepository;
@@ -489,4 +488,5 @@ public class ProgramService {
     val id = program.getId();
     return r -> r.getProgram().getId().equals(id) && regions.contains(r.getRegion());
   }
+
 }
