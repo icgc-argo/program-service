@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.model.exceptions.BadRequestException;
 import org.icgc.argo.program_service.model.exceptions.ForbiddenException;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.exceptions.UnauthorizedException;
@@ -62,5 +63,20 @@ public class ExceptionHandlers {
             "error", NOT_FOUND.getReasonPhrase()),
         new HttpHeaders(),
         NOT_FOUND);
+  }
+
+  @ExceptionHandler(BadRequestException.class)
+  public ResponseEntity<Object> handleForbiddenException(
+      HttpServletRequest req, BadRequestException ex) {
+    val message = ex.getMessage();
+    log.error(message);
+    return new ResponseEntity<Object>(
+        Map.of(
+            "message", ex.getMessage(),
+            "timestamp", new Date(),
+            "path", req.getServletPath(),
+            "error", BAD_REQUEST.getReasonPhrase()),
+        new HttpHeaders(),
+        BAD_REQUEST);
   }
 }

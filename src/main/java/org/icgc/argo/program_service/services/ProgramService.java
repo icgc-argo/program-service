@@ -36,6 +36,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.validation.ValidatorFactory;
@@ -46,6 +47,7 @@ import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.*;
+import org.icgc.argo.program_service.model.exceptions.BadRequestException;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.Program;
@@ -159,15 +161,24 @@ public class ProgramService {
   }
 
   public ProgramEntity createWithSideEffect(
-      @NonNull Program program, Consumer<ProgramEntity> consumer) {
-    val programEntity = createProgram(program);
+      @NonNull Program program, Consumer<ProgramEntity> consumer, UUID dataCenterId) {
+    val programEntity = createProgram(program, dataCenterId);
     consumer.accept(programEntity);
     return programEntity;
   }
 
-  public ProgramEntity createProgram(@NonNull Program program)
+  public ProgramEntity createProgram(@NonNull Program program, UUID dataCenterId)
       throws DataIntegrityViolationException {
     val programEntity = programConverter.programToProgramEntity(program);
+
+    if (dataCenterId != null) {
+      val dataCenterEntity = dataCenterRepository.findById(dataCenterId);
+      if (!dataCenterEntity.isEmpty()) {
+        programEntity.setDataCenterId(dataCenterId);
+      } else {
+        throw new BadRequestException("DataCenterId '" + dataCenterId + "' not found");
+      }
+    }
 
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
