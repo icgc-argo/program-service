@@ -38,9 +38,9 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.DataCenterConverter;
+import org.icgc.argo.program_service.converter.Grpc2JsonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.model.dto.DataCenterDTO;
-import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
+import org.icgc.argo.program_service.model.dto.*;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.*;
@@ -59,6 +59,7 @@ public class ProgramServiceFacade {
   private final EgoService egoService;
   private final InvitationService invitationService;
   private final ProgramConverter programConverter;
+  private final Grpc2JsonConverter grpc2JsonConverter;
   private final DataCenterConverter dataCenterConverter;
   private final CommonConverter commonConverter;
   private final ValidationService validationService;
@@ -72,6 +73,7 @@ public class ProgramServiceFacade {
       @NonNull EgoService egoService,
       @NonNull InvitationService invitationService,
       @NonNull ProgramConverter programConverter,
+      @NonNull Grpc2JsonConverter grpc2JsonConverter,
       @NonNull DataCenterConverter dataCenterConverter,
       @NonNull CommonConverter commonConverter,
       @NonNull ValidationService validationService) {
@@ -79,6 +81,7 @@ public class ProgramServiceFacade {
     this.egoService = egoService;
     this.invitationService = invitationService;
     this.programConverter = programConverter;
+    this.grpc2JsonConverter = grpc2JsonConverter;
     this.dataCenterConverter = dataCenterConverter;
     this.commonConverter = commonConverter;
     this.validationService = validationService;
@@ -126,12 +129,12 @@ public class ProgramServiceFacade {
     // TODO: Refactor this, having a transactional side effect is no longer needed thanks to the
     // facade
     val programEntity =
-            programService.createWithSideEffect(
-                    program,
-                    (ProgramEntity pe) -> {
-                      initializeProgramInEgo(pe, admins);
-                    },
-                    dataCenterId);
+        programService.createWithSideEffect(
+            program,
+            (ProgramEntity pe) -> {
+              initializeProgramInEgo(pe, admins);
+            },
+            dataCenterId);
     log.debug("Created {}", programEntity.getShortName());
     return programConverter.programEntityToCreateProgramResponse(programEntity);
   }
@@ -143,9 +146,19 @@ public class ProgramServiceFacade {
     return GetProgramResponse.newBuilder().setProgram(programDetails).build();
   }
 
-  public ListProgramsResponse listProgramsByDataCenter(String shortName) {
+  public ProgramDetailsDTO getProgramWithDataCenterDetails(GetProgramRequest request) {
+    val shortName = request.getShortName().getValue();
+    val programEntity = programService.getProgram(shortName);
+    return mapDataCenterDetails(programEntity);
+  }
+
+  public ProgramsResponseDTO listProgramsByDataCenter(String shortName) {
     val programEntities = programService.listProgramsByDataCenter(shortName);
-    return programConverter.programEntitiesToListProgramsResponse(programEntities);
+    val programs =
+        programEntities.stream().map(e -> mapDataCenterDetails(e)).collect(Collectors.toList());
+    ProgramsResponseDTO programsResponseDTO = new ProgramsResponseDTO();
+    programsResponseDTO.setPrograms(programs);
+    return programsResponseDTO;
   }
 
   @Transactional
@@ -228,6 +241,33 @@ public class ProgramServiceFacade {
             .filter(predicate)
             .collect(toList());
     return programConverter.programEntitiesToListProgramsResponse(programEntities);
+  }
+
+  public List<ProgramDetailsDTO> listProgramsWithDataCenterDetails(
+      Predicate<ProgramEntity> predicate) {
+    val programEntities =
+        programService.listPrograms().stream()
+            // Only show active programs
+            .filter(p -> p.getActive().booleanValue())
+            .filter(predicate)
+            .collect(toList());
+    val programs =
+        programEntities.stream().map(e -> mapDataCenterDetails(e)).collect(Collectors.toList());
+    return programs;
+  }
+
+  public ProgramDetailsDTO mapDataCenterDetails(ProgramEntity programEntity) {
+    val programDetails = programConverter.programEntityToProgramDetails(programEntity);
+    val programDetailsDTO = grpc2JsonConverter.prepareGetProgramResponse(programDetails);
+    val dataCenterEntity = programService.getDataCenterDetails(programEntity.getDataCenterId());
+    val dataCenterDetailsDTO = new DataCenterDetailsDTO();
+    dataCenterDetailsDTO.setId(String.valueOf(dataCenterEntity.getId()));
+    dataCenterDetailsDTO.setName(dataCenterEntity.getName());
+    dataCenterDetailsDTO.setShortName(dataCenterEntity.getShortName());
+    dataCenterDetailsDTO.setGatewayUrl(dataCenterEntity.getGatewayUrl());
+    dataCenterDetailsDTO.setUiUrl(dataCenterEntity.getUiUrl());
+    programDetailsDTO.getProgram().setDataCenter(dataCenterDetailsDTO);
+    return programDetailsDTO;
   }
 
   public ListUsersResponse listUsers(String programShortName) {

@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.DataCenterConverter;
+import org.icgc.argo.program_service.converter.Grpc2JsonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
@@ -76,6 +77,7 @@ class ProgramServiceImplTest {
   ProgramService programService = mock(ProgramService.class);
   InvitationService invitationService = mock(InvitationService.class);
   EgoService egoService = mock(EgoService.class);
+  Grpc2JsonConverter grpc2JsonConvertor = mock(Grpc2JsonConverter.class);
   AuthorizationService authorizationService = mock(AuthorizationService.class);
   ValidationService validationService = mock(ValidationService.class);
   ProgramServiceFacade facade =
@@ -84,6 +86,7 @@ class ProgramServiceImplTest {
           egoService,
           invitationService,
           programConverter,
+          grpc2JsonConvertor,
           dataCenterConverter,
           CommonConverter.INSTANCE,
           validationService);
@@ -514,6 +517,7 @@ class ProgramServiceImplTest {
       Map<String, JoinProgramInviteEntity> egoInvitations) {
     ProgramService programService = mock(ProgramService.class);
     InvitationService invitationService = mock(InvitationService.class);
+    Grpc2JsonConverter grpc2JsonConvertor = mock(Grpc2JsonConverter.class);
     EgoService egoService = mock(EgoService.class);
     AuthorizationService authorizationService = mock(AuthorizationService.class);
     ValidationService validationService = mock(ValidationService.class);
@@ -531,6 +535,7 @@ class ProgramServiceImplTest {
             egoService,
             invitationService,
             programConverter,
+            grpc2JsonConvertor,
             dataCenterConverter,
             CommonConverter.INSTANCE,
             validationService);

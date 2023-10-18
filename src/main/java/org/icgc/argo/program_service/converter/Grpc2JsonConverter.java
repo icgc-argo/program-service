@@ -121,6 +121,30 @@ public class Grpc2JsonConverter {
     return programDetailsDTO;
   }
 
+  public ProgramDetailsDTO prepareGetProgramResponse(ProgramDetails programDetails) {
+
+    ProgramDetailsDTO programDetailsDTO = new ProgramDetailsDTO();
+    try {
+      String responseJson = JsonFormat.printer().print(programDetails);
+      objectMapper =
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
+
+      programDetailsDTO = objectMapper.readValue(responseJson, ProgramDetailsDTO.class);
+
+    } catch (JsonMappingException e) {
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+    return programDetailsDTO;
+  }
+
   public List<ProgramDetailsDTO> prepareListProgramsResponse(ListProgramsResponse response) {
 
     ProgramsResponseDTO programsResponseDTO = new ProgramsResponseDTO();

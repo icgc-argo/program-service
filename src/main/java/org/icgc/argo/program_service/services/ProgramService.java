@@ -67,6 +67,7 @@ public class ProgramService {
 
   /** Dependencies */
   private final ProgramRepository programRepository;
+
   private final DataCenterRepository dataCenterRepository;
   private final CancerRepository cancerRepository;
   private final PrimarySiteRepository primarySiteRepository;
@@ -430,6 +431,11 @@ public class ProgramService {
     return List.copyOf(dataCenters);
   }
 
+  public DataCenterEntity getDataCenterDetails(UUID dataCenterId) {
+    val dataCenterEntity = dataCenterRepository.findById(dataCenterId);
+    return dataCenterEntity.get();
+  }
+
   public DataCenterEntity createDataCenter(DataCenterRequestDTO dataCenterRequestDTO) {
     val dataCenterEntity = dataCenterConverter.dataCenterToDataCenterEntity(dataCenterRequestDTO);
     val d = dataCenterRepository.save(dataCenterEntity);
@@ -519,5 +525,4 @@ public class ProgramService {
     val id = program.getId();
     return r -> r.getProgram().getId().equals(id) && regions.contains(r.getRegion());
   }
-
 }

@@ -33,4 +33,6 @@ public class ProgramsDTO {
   private List<String> cancerTypes;
 
   private List<String> primarySites;
+
+  private DataCenterDetailsDTO dataCenter;
 }
