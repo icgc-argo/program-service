@@ -42,7 +42,9 @@ import javax.validation.ValidatorFactory;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.join.*;
@@ -69,6 +71,7 @@ public class ProgramService {
   private final RegionRepository regionRepository;
   private final CountryRepository countryRepository;
   private final ProgramConverter programConverter;
+  private final DataCenterConverter dataCenterConverter;
   private final ProgramCancerRepository programCancerRepository;
   private final ProgramPrimarySiteRepository programPrimarySiteRepository;
   private final ProgramInstitutionRepository programInstitutionRepository;
@@ -83,6 +86,7 @@ public class ProgramService {
       @NonNull CancerRepository cancerRepository,
       @NonNull PrimarySiteRepository primarySiteRepository,
       @NonNull ProgramConverter programConverter,
+      @NonNull DataCenterConverter dataCenterConverter,
       @NonNull ProgramCancerRepository programCancerRepository,
       @NonNull ProgramPrimarySiteRepository programPrimarySiteRepository,
       @NonNull InstitutionRepository institutionRepository,
@@ -97,6 +101,7 @@ public class ProgramService {
     this.cancerRepository = cancerRepository;
     this.primarySiteRepository = primarySiteRepository;
     this.programConverter = programConverter;
+    this.dataCenterConverter = dataCenterConverter;
     this.programCancerRepository = programCancerRepository;
     this.programPrimarySiteRepository = programPrimarySiteRepository;
     this.institutionRepository = institutionRepository;
@@ -411,6 +416,12 @@ public class ProgramService {
   public List<DataCenterEntity> listDataCenters() {
     val dataCenters = dataCenterRepository.findAll();
     return List.copyOf(dataCenters);
+  }
+
+  public DataCenterEntity createDataCenter(DataCenterRequestDTO dataCenterRequestDTO) {
+    val dataCenterEntity = dataCenterConverter.dataCenterToDataCenterEntity(dataCenterRequestDTO);
+    val d = dataCenterRepository.save(dataCenterEntity);
+    return d;
   }
 
   public List<String> getAllProgramNames() {

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.Grpc2JsonConverter;
 import org.icgc.argo.program_service.model.dto.DataCenterDTO;
+import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.dto.ProgramsResponseDTO;
 import org.icgc.argo.program_service.services.ProgramServiceFacade;
 import org.icgc.argo.program_service.services.auth.RestAuthorizationService;
@@ -13,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.PathVariable;
 
 @Slf4j
 @RestController
@@ -30,15 +30,25 @@ public class DataCenterController {
     val dataCenterEntities = serviceFacade.listDataCenters();
     return new ResponseEntity(dataCenterEntities, HttpStatus.OK);
   }
-  
- @GetMapping(value = "/datacenters/{datacenter_short_name}/programs")
+
+  @GetMapping(value = "/datacenters/{datacenter_short_name}/programs")
   public ResponseEntity<ProgramsResponseDTO> listDataCenterPrograms(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
-      final String authorization,
+          final String authorization,
       @PathVariable(value = "datacenter_short_name", required = true) String dataCenterShortName) {
     authorizationService.requireDCCAdmin(authorization);
     val listProgramsResponse = serviceFacade.listProgramsByDataCenter(dataCenterShortName);
     return new ResponseEntity(
         grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
+  }
+
+  @PostMapping(value = "/datacenters")
+  public ResponseEntity<DataCenterDTO> createDataCenter(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody DataCenterRequestDTO dataCenterRequestDTO) {
+    authorizationService.requireDCCAdmin(authorization);
+    val dataCenterEntity = serviceFacade.createDataCenter(dataCenterRequestDTO);
+    return new ResponseEntity(dataCenterEntity, HttpStatus.OK);
   }
 }
