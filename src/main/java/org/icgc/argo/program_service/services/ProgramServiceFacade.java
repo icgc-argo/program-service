@@ -380,7 +380,8 @@ public class ProgramServiceFacade {
   @Transactional
   public DataCenterDTO updateDataCenter(
       String dataCenterShortName, UpdateDataCenterRequestDTO dataCenterRequestDTO) {
-    val updatingDataCenter = dataCenterConverter.dataCenterToUpdateDataCenterEntity(dataCenterRequestDTO);
+    val updatingDataCenter =
+        dataCenterConverter.dataCenterToUpdateDataCenterEntity(dataCenterRequestDTO);
     val dataCenterToUpdate = programService.findDataCenterByShortName(dataCenterShortName);
     val dataCenterEntity = programService.updateDataCenter(dataCenterToUpdate, updatingDataCenter);
     return dataCenterConverter.dataCenterToDataCenterEntity(dataCenterEntity);

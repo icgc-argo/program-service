@@ -52,5 +52,4 @@ public interface DataCenterConverter {
   @Mapping(target = "submissionSongCode", ignore = true)
   void updateDataCenter(
       DataCenterEntity updatingDataCenter, @MappingTarget DataCenterEntity dataCenterToUpdate);
-
 }

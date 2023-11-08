@@ -20,12 +20,11 @@
 
 package org.icgc.argo.program_service.model.dto;
 
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
@@ -33,28 +32,17 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 public class DataCenterRequestDTO {
 
-  @NotNull
-  private String shortName;
-  @NotNull
-  private String name;
+  @NotNull private String shortName;
+  @NotNull private String name;
 
   private String organization;
-  @NotNull
-  private String email;
-  @NotNull
-  private String uiUrl;
-  @NotNull
-  private String gatewayUrl;
-  @NotNull
-  private String analysisSongCode;
-  @NotNull
-  private String analysisSongUrl;
-  @NotNull
-  private String analysisScoreUrl;
-  @NotNull
-  private String submissionSongCode;
-  @NotNull
-  private String submissionSongUrl;
-  @NotNull
-  private String submissionScoreUrl;
+  @NotNull private String email;
+  @NotNull private String uiUrl;
+  @NotNull private String gatewayUrl;
+  @NotNull private String analysisSongCode;
+  @NotNull private String analysisSongUrl;
+  @NotNull private String analysisScoreUrl;
+  @NotNull private String submissionSongCode;
+  @NotNull private String submissionSongUrl;
+  @NotNull private String submissionScoreUrl;
 }
