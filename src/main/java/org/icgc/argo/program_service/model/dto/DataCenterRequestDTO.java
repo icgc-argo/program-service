@@ -20,6 +20,7 @@
 
 package org.icgc.argo.program_service.model.dto;
 
+
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,6 +32,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DataCenterRequestDTO {
+
 
   @NotNull private String shortName;
   @NotNull private String name;

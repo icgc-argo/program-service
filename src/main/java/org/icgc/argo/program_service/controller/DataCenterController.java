@@ -33,6 +33,7 @@ public class DataCenterController {
   }
 
   @GetMapping(value = "/{datacenter_short_name}/programs")
+
   public ResponseEntity<ProgramsResponseDTO> listDataCenterPrograms(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
