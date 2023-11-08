@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of the GNU Affero General Public License v3.0.
  * You should have received a copy of the GNU Affero General Public License along with
@@ -22,9 +22,11 @@ package org.icgc.argo.program_service.converter;
 
 import org.icgc.argo.program_service.model.dto.DataCenterDTO;
 import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
+import org.icgc.argo.program_service.model.dto.UpdateDataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.DataCenterEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(
     config = ConverterConfig.class,
@@ -37,4 +39,17 @@ public interface DataCenterConverter {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "programEntities", ignore = true)
   DataCenterEntity dataCenterToDataCenterEntity(DataCenterRequestDTO p);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "programEntities", ignore = true)
+  @Mapping(target = "shortName", ignore = true)
+  @Mapping(target = "submissionSongCode", ignore = true)
+  DataCenterEntity dataCenterToUpdateDataCenterEntity(UpdateDataCenterRequestDTO p);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "programEntities", ignore = true)
+  @Mapping(target = "shortName", ignore = true)
+  @Mapping(target = "submissionSongCode", ignore = true)
+  void updateDataCenter(
+      DataCenterEntity updatingDataCenter, @MappingTarget DataCenterEntity dataCenterToUpdate);
 }

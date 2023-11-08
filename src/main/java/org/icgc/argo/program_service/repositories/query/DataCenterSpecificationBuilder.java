@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of the GNU Affero General Public License v3.0.
  * You should have received a copy of the GNU Affero General Public License along with
@@ -18,33 +18,23 @@
  *
  */
 
-package org.icgc.argo.program_service.model.dto;
+package org.icgc.argo.program_service.repositories.query;
 
+import java.util.UUID;
+import javax.persistence.criteria.Root;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import org.icgc.argo.program_service.model.entity.DataCenterEntity;
 
-import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+@Setter
+@Accessors(chain = true)
+@EqualsAndHashCode(callSuper = true)
+public class DataCenterSpecificationBuilder
+    extends AbstractSpecificationBuilder<DataCenterEntity, UUID> {
 
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class DataCenterRequestDTO {
-
-
-  @NotNull private String shortName;
-  @NotNull private String name;
-
-  private String organization;
-  @NotNull private String email;
-  @NotNull private String uiUrl;
-  @NotNull private String gatewayUrl;
-  @NotNull private String analysisSongCode;
-  @NotNull private String analysisSongUrl;
-  @NotNull private String analysisScoreUrl;
-  @NotNull private String submissionSongCode;
-  @NotNull private String submissionSongUrl;
-  @NotNull private String submissionScoreUrl;
+  @Override
+  protected Root<DataCenterEntity> setupFetchStrategy(Root<DataCenterEntity> root) {
+    return root;
+  }
 }
