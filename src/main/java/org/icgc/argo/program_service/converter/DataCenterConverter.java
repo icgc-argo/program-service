@@ -22,6 +22,7 @@ package org.icgc.argo.program_service.converter;
 
 import org.icgc.argo.program_service.model.dto.DataCenterDTO;
 import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
+import org.icgc.argo.program_service.model.dto.UpdateDataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.DataCenterEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -38,6 +39,12 @@ public interface DataCenterConverter {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "programEntities", ignore = true)
   DataCenterEntity dataCenterToDataCenterEntity(DataCenterRequestDTO p);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "programEntities", ignore = true)
+  @Mapping(target = "shortName", ignore = true)
+  @Mapping(target = "submissionSongCode", ignore = true)
+  DataCenterEntity dataCenterToUpdateDataCenterEntity(UpdateDataCenterRequestDTO p);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "programEntities", ignore = true)

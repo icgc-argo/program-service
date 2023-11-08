@@ -41,6 +41,7 @@ import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.dto.DataCenterDTO;
 import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
+import org.icgc.argo.program_service.model.dto.UpdateDataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.model.exceptions.BadRequestException;
@@ -378,8 +379,8 @@ public class ProgramServiceFacade {
 
   @Transactional
   public DataCenterDTO updateDataCenter(
-      String dataCenterShortName, DataCenterRequestDTO dataCenterRequestDTO) {
-    val updatingDataCenter = dataCenterConverter.dataCenterToDataCenterEntity(dataCenterRequestDTO);
+      String dataCenterShortName, UpdateDataCenterRequestDTO dataCenterRequestDTO) {
+    val updatingDataCenter = dataCenterConverter.dataCenterToUpdateDataCenterEntity(dataCenterRequestDTO);
     val dataCenterToUpdate = programService.findDataCenterByShortName(dataCenterShortName);
     val dataCenterEntity = programService.updateDataCenter(dataCenterToUpdate, updatingDataCenter);
     return dataCenterConverter.dataCenterToDataCenterEntity(dataCenterEntity);
