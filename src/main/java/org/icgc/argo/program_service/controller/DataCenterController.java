@@ -31,7 +31,7 @@ public class DataCenterController {
     return new ResponseEntity(dataCenterEntities, HttpStatus.OK);
   }
 
-  @GetMapping(value = "/datacenters/{datacenter_short_name}/programs")
+  @GetMapping(value = "/{datacenter_short_name}/programs")
   public ResponseEntity<ProgramsResponseDTO> listDataCenterPrograms(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
@@ -42,7 +42,7 @@ public class DataCenterController {
         grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
   }
 
-  @PostMapping(value = "/datacenters")
+  @PostMapping
   public ResponseEntity<DataCenterDTO> createDataCenter(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
@@ -52,7 +52,7 @@ public class DataCenterController {
     return new ResponseEntity(dataCenterEntity, HttpStatus.OK);
   }
 
-  @PatchMapping(value = "/datacenters/{datacenter_short_name}")
+  @PatchMapping(value = "/{datacenter_short_name}")
   public ResponseEntity<DataCenterDTO> updateDataCenter(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
