@@ -43,6 +43,7 @@ import org.icgc.argo.program_service.model.dto.DataCenterDTO;
 import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.model.exceptions.BadRequestException;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -364,7 +365,13 @@ public class ProgramServiceFacade {
         .collect(Collectors.toList());
   }
 
+  @Transactional
   public DataCenterDTO createDataCenter(DataCenterRequestDTO dataCenterRequestDTO) {
+    val errors = validationService.validateCreateDataCenterRequest(dataCenterRequestDTO);
+    if (errors.size() != 0) {
+      throw new BadRequestException(
+          format("Cannot create datacenter: DataCenter errors are [%s]", join(errors, ",")));
+    }
     val dataCenterEntity = programService.createDataCenter(dataCenterRequestDTO);
     return dataCenterConverter.dataCenterToDataCenterEntity(dataCenterEntity);
   }
