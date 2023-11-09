@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of the GNU Affero General Public License v3.0.
  * You should have received a copy of the GNU Affero General Public License along with
@@ -442,6 +442,7 @@ public class ProgramService {
     return d;
   }
 
+
   public DataCenterEntity updateDataCenter(
       @NonNull DataCenterEntity dataCenterToUpdate, @NonNull DataCenterEntity updatingDataCenter) {
     dataCenterConverter.updateDataCenter(updatingDataCenter, dataCenterToUpdate);
@@ -461,6 +462,7 @@ public class ProgramService {
     return search.get();
   }
 
+  
   public List<String> getAllProgramNames() {
     val programNames = programRepository.getActivePrograms();
     return programNames;
@@ -525,5 +527,4 @@ public class ProgramService {
     val id = program.getId();
     return r -> r.getProgram().getId().equals(id) && regions.contains(r.getRegion());
   }
-
 }
