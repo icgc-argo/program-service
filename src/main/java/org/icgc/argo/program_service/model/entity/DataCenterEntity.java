@@ -116,9 +116,9 @@ public class DataCenterEntity implements NameableEntity<UUID> {
       cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
       orphanRemoval = true)
-  private Set<ProgramEntity> programEntites = new TreeSet<>();
+  private Set<ProgramEntity> programEntities = new TreeSet<>();
 
   public List<String> listPrograms() {
-    return mapToList(getProgramEntites(), i -> i.getName());
+    return mapToList(getProgramEntities(), i -> i.getName());
   }
 }

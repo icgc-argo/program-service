@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of the GNU Affero General Public License v3.0.
  * You should have received a copy of the GNU Affero General Public License along with
@@ -42,12 +42,15 @@ import javax.validation.ValidatorFactory;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
+import org.icgc.argo.program_service.repositories.query.DataCenterSpecificationBuilder;
 import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -62,43 +65,51 @@ public class ProgramService {
 
   /** Dependencies */
   private final ProgramRepository programRepository;
-
+  private final DataCenterRepository dataCenterRepository;
   private final CancerRepository cancerRepository;
   private final PrimarySiteRepository primarySiteRepository;
   private final InstitutionRepository institutionRepository;
   private final RegionRepository regionRepository;
   private final CountryRepository countryRepository;
   private final ProgramConverter programConverter;
+  private final DataCenterConverter dataCenterConverter;
   private final ProgramCancerRepository programCancerRepository;
   private final ProgramPrimarySiteRepository programPrimarySiteRepository;
   private final ProgramInstitutionRepository programInstitutionRepository;
+  private final ProgramRegionRepository programRegionRepository;
   private final ProgramCountryRepository programCountryRepository;
   private final ValidatorFactory validatorFactory;
 
   @Autowired
   public ProgramService(
       @NonNull ProgramRepository programRepository,
+      @NonNull DataCenterRepository dataCenterRepository,
       @NonNull CancerRepository cancerRepository,
       @NonNull PrimarySiteRepository primarySiteRepository,
       @NonNull ProgramConverter programConverter,
+      @NonNull DataCenterConverter dataCenterConverter,
       @NonNull ProgramCancerRepository programCancerRepository,
       @NonNull ProgramPrimarySiteRepository programPrimarySiteRepository,
       @NonNull InstitutionRepository institutionRepository,
       @NonNull RegionRepository regionRepository,
       @NonNull CountryRepository countryRepository,
       @NonNull ProgramInstitutionRepository programInstitutionRepository,
+      @NonNull ProgramRegionRepository programRegionRepository,
       @NonNull ProgramCountryRepository programCountryRepository,
       @NonNull ValidatorFactory validatorFactory) {
     this.programRepository = programRepository;
+    this.dataCenterRepository = dataCenterRepository;
     this.cancerRepository = cancerRepository;
     this.primarySiteRepository = primarySiteRepository;
     this.programConverter = programConverter;
+    this.dataCenterConverter = dataCenterConverter;
     this.programCancerRepository = programCancerRepository;
     this.programPrimarySiteRepository = programPrimarySiteRepository;
     this.institutionRepository = institutionRepository;
     this.regionRepository = regionRepository;
     this.countryRepository = countryRepository;
     this.programInstitutionRepository = programInstitutionRepository;
+    this.programRegionRepository = programRegionRepository;
     this.programCountryRepository = programCountryRepository;
     this.validatorFactory = validatorFactory;
   }
@@ -126,8 +137,21 @@ public class ProgramService {
     return search.get();
   }
 
+  private List<ProgramEntity> listProgramsByDataCenterName(@NonNull String name) {
+    val search = programRepository.getActiveProgramsForDataCenter(name);
+
+    if (search.isEmpty()) {
+      throw new NotFoundException("Programs for DataCenter '" + name + "' not found");
+    }
+    return search;
+  }
+
   public ProgramEntity getProgram(@NonNull String name) {
     return getProgram(name, false);
+  }
+
+  public List<ProgramEntity> listProgramsByDataCenter(@NonNull String name) {
+    return listProgramsByDataCenterName(name);
   }
 
   public ProgramEntity getProgram(@NonNull String name, boolean allowInactive) {
@@ -390,6 +414,38 @@ public class ProgramService {
     return List.copyOf(programs);
   }
 
+  public List<DataCenterEntity> listDataCenters() {
+    val dataCenters = dataCenterRepository.findAll();
+    return List.copyOf(dataCenters);
+  }
+
+  public DataCenterEntity createDataCenter(DataCenterRequestDTO dataCenterRequestDTO) {
+    val dataCenterEntity = dataCenterConverter.dataCenterToDataCenterEntity(dataCenterRequestDTO);
+    val d = dataCenterRepository.save(dataCenterEntity);
+    return d;
+  }
+
+
+  public DataCenterEntity updateDataCenter(
+      @NonNull DataCenterEntity dataCenterToUpdate, @NonNull DataCenterEntity updatingDataCenter) {
+    dataCenterConverter.updateDataCenter(updatingDataCenter, dataCenterToUpdate);
+    dataCenterRepository.save(dataCenterToUpdate);
+    return dataCenterToUpdate;
+  }
+
+  public DataCenterEntity findDataCenterByShortName(@NonNull String name) {
+    val search =
+        dataCenterRepository.findOne(new DataCenterSpecificationBuilder().buildByShortName(name));
+
+    if (search.isEmpty()) {
+      throw Status.NOT_FOUND
+          .withDescription("DataCenter '" + name + "' not found")
+          .asRuntimeException();
+    }
+    return search.get();
+  }
+
+  
   public List<String> getAllProgramNames() {
     val programNames = programRepository.getActivePrograms();
     return programNames;
@@ -447,5 +503,11 @@ public class ProgramService {
       ProgramEntity program, Set<CountryEntity> countries) {
     val id = program.getId();
     return c -> c.getProgram().getId().equals(id) && countries.contains(c.getCountry());
+  }
+
+  private static Predicate<ProgramRegion> programRegionPredicate(
+      ProgramEntity program, Set<RegionEntity> regions) {
+    val id = program.getId();
+    return r -> r.getProgram().getId().equals(id) && regions.contains(r.getRegion());
   }
 }

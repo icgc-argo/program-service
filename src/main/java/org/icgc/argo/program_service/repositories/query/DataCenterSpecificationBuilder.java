@@ -18,25 +18,23 @@
  *
  */
 
-package org.icgc.argo.program_service.repositories;
+package org.icgc.argo.program_service.repositories.query;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import javax.persistence.criteria.Root;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import org.icgc.argo.program_service.model.entity.DataCenterEntity;
 
-public interface ProgramRepository
-    extends JpaRepository<ProgramEntity, UUID>, JpaSpecificationExecutor<ProgramEntity> {
-  Optional<ProgramEntity> findByShortName(String name);
+@Setter
+@Accessors(chain = true)
+@EqualsAndHashCode(callSuper = true)
+public class DataCenterSpecificationBuilder
+    extends AbstractSpecificationBuilder<DataCenterEntity, UUID> {
 
-  @Query("select distinct p.shortName from ProgramEntity p where p.active =true")
-  List<String> getActivePrograms();
-
-  @Query(
-      "SELECT P FROM ProgramEntity AS P INNER JOIN DataCenterEntity AS D ON P.dataCenterId=D.id WHERE D.shortName=:shortName AND P.active = false")
-  List<ProgramEntity> getActiveProgramsForDataCenter(@Param("shortName") String shortName);
+  @Override
+  protected Root<DataCenterEntity> setupFetchStrategy(Root<DataCenterEntity> root) {
+    return root;
+  }
 }

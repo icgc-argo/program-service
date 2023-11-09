@@ -7,7 +7,9 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.model.exceptions.BadRequestException;
 import org.icgc.argo.program_service.model.exceptions.ForbiddenException;
+import org.icgc.argo.program_service.model.exceptions.NotFoundException;
 import org.icgc.argo.program_service.model.exceptions.UnauthorizedException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -46,5 +48,35 @@ public class ExceptionHandlers {
             "error", UNAUTHORIZED.getReasonPhrase()),
         new HttpHeaders(),
         UNAUTHORIZED);
+  }
+
+  @ExceptionHandler(NotFoundException.class)
+  public ResponseEntity<Object> handleNotFoundException(
+      HttpServletRequest req, NotFoundException ex) {
+    val message = ex.getMessage();
+    log.error(message);
+    return new ResponseEntity<Object>(
+        Map.of(
+            "message", ex.getMessage(),
+            "timestamp", new Date(),
+            "path", req.getServletPath(),
+            "error", NOT_FOUND.getReasonPhrase()),
+        new HttpHeaders(),
+        NOT_FOUND);
+  }
+
+  @ExceptionHandler(BadRequestException.class)
+  public ResponseEntity<Object> handleBadRequestException(
+      HttpServletRequest req, BadRequestException ex) {
+    val message = ex.getMessage();
+    log.error(message);
+    return new ResponseEntity<Object>(
+        Map.of(
+            "message", ex.getMessage(),
+            "timestamp", new Date(),
+            "path", req.getServletPath(),
+            "error", BAD_REQUEST.getReasonPhrase()),
+        new HttpHeaders(),
+        BAD_REQUEST);
   }
 }

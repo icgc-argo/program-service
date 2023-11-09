@@ -18,25 +18,36 @@
  *
  */
 
-package org.icgc.argo.program_service.repositories;
+package org.icgc.argo.program_service.model.dto;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public interface ProgramRepository
-    extends JpaRepository<ProgramEntity, UUID>, JpaSpecificationExecutor<ProgramEntity> {
-  Optional<ProgramEntity> findByShortName(String name);
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class UpdateDataCenterRequestDTO {
 
-  @Query("select distinct p.shortName from ProgramEntity p where p.active =true")
-  List<String> getActivePrograms();
+  private String name;
 
-  @Query(
-      "SELECT P FROM ProgramEntity AS P INNER JOIN DataCenterEntity AS D ON P.dataCenterId=D.id WHERE D.shortName=:shortName AND P.active = false")
-  List<ProgramEntity> getActiveProgramsForDataCenter(@Param("shortName") String shortName);
+  private String organization;
+
+  private String email;
+
+  private String uiUrl;
+
+  private String gatewayUrl;
+
+  private String analysisSongCode;
+
+  private String analysisSongUrl;
+
+  private String analysisScoreUrl;
+
+  private String submissionSongUrl;
+
+  private String submissionScoreUrl;
 }

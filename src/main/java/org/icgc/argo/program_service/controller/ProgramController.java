@@ -238,9 +238,7 @@ public class ProgramController {
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "invite_id", required = true) String inviteId) {
-    val invitation =
-        serviceFacade.getInvitationById(
-                UUID.fromString(inviteId));
+    val invitation = serviceFacade.getInvitationById(UUID.fromString(inviteId));
     GetJoinProgramInviteResponseDTO getJoinProgramInviteResponseDTO =
         new GetJoinProgramInviteResponseDTO();
     getJoinProgramInviteResponseDTO.setInvitation(

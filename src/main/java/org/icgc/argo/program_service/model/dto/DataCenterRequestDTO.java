@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of the GNU Affero General Public License v3.0.
  * You should have received a copy of the GNU Affero General Public License along with
@@ -18,25 +18,33 @@
  *
  */
 
-package org.icgc.argo.program_service.repositories;
+package org.icgc.argo.program_service.model.dto;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
-public interface ProgramRepository
-    extends JpaRepository<ProgramEntity, UUID>, JpaSpecificationExecutor<ProgramEntity> {
-  Optional<ProgramEntity> findByShortName(String name);
+import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-  @Query("select distinct p.shortName from ProgramEntity p where p.active =true")
-  List<String> getActivePrograms();
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class DataCenterRequestDTO {
 
-  @Query(
-      "SELECT P FROM ProgramEntity AS P INNER JOIN DataCenterEntity AS D ON P.dataCenterId=D.id WHERE D.shortName=:shortName AND P.active = false")
-  List<ProgramEntity> getActiveProgramsForDataCenter(@Param("shortName") String shortName);
+
+  @NotNull private String shortName;
+  @NotNull private String name;
+
+  private String organization;
+  @NotNull private String email;
+  @NotNull private String uiUrl;
+  @NotNull private String gatewayUrl;
+  @NotNull private String analysisSongCode;
+  @NotNull private String analysisSongUrl;
+  @NotNull private String analysisScoreUrl;
+  @NotNull private String submissionSongCode;
+  @NotNull private String submissionSongUrl;
+  @NotNull private String submissionScoreUrl;
 }
