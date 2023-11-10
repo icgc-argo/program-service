@@ -8,6 +8,7 @@ import org.icgc.argo.program_service.converter.Grpc2JsonConverter;
 import org.icgc.argo.program_service.model.dto.DataCenterDTO;
 import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.dto.ProgramsResponseDTO;
+import org.icgc.argo.program_service.model.dto.UpdateDataCenterRequestDTO;
 import org.icgc.argo.program_service.services.ProgramServiceFacade;
 import org.icgc.argo.program_service.services.auth.RestAuthorizationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,8 @@ public class DataCenterController {
     return new ResponseEntity(dataCenterEntities, HttpStatus.OK);
   }
 
-  @GetMapping(value = "/datacenters/{datacenter_short_name}/programs")
+  @GetMapping(value = "/{datacenter_short_name}/programs")
+
   public ResponseEntity<ProgramsResponseDTO> listDataCenterPrograms(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
@@ -41,7 +43,7 @@ public class DataCenterController {
         serviceFacade.listProgramsByDataCenter(dataCenterShortName), HttpStatus.OK);
   }
 
-  @PostMapping(value = "/datacenters")
+  @PostMapping
   public ResponseEntity<DataCenterDTO> createDataCenter(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
@@ -51,12 +53,12 @@ public class DataCenterController {
     return new ResponseEntity(dataCenterEntity, HttpStatus.OK);
   }
 
-  @PatchMapping(value = "/datacenters/{datacenter_short_name}")
+  @PatchMapping(value = "/{datacenter_short_name}")
   public ResponseEntity<DataCenterDTO> updateDataCenter(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "datacenter_short_name", required = true) String dataCenterShortName,
-      @RequestBody DataCenterRequestDTO dataCenterRequestDTO) {
+      @RequestBody UpdateDataCenterRequestDTO dataCenterRequestDTO) {
     authorizationService.requireDCCAdmin(authorization);
     val dataCenterEntity =
         serviceFacade.updateDataCenter(dataCenterShortName, dataCenterRequestDTO);

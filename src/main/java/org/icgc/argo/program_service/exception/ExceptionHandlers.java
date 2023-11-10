@@ -63,7 +63,7 @@ public class ExceptionHandlers {
   }
 
   @ExceptionHandler(BadRequestException.class)
-  public ResponseEntity<Object> handleForbiddenException(
+  public ResponseEntity<Object> handleBadRequestException(
       HttpServletRequest req, BadRequestException ex) {
     val message = ex.getMessage();
     log.error(message);
@@ -91,4 +91,5 @@ public class ExceptionHandlers {
         new HttpHeaders(),
         INTERNAL_SERVER_ERROR);
   }
+
 }
