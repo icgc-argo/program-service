@@ -88,15 +88,15 @@ public class ProgramController {
 
   @GetMapping(value = "/{shortName}")
   public ResponseEntity<ProgramDetailsDTO> getProgram(
-          @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
-          @PathVariable(value = "shortName", required = true) String shortName)
-          throws IOException {
+      @PathVariable(value = "shortName", required = true) String shortName)
+      throws IOException {
     ProgramDetailsDTO programDetailsDTO = null;
     try {
       authorizationService.requireProgramUser(shortName, authorization);
       GetProgramRequest request =
-              GetProgramRequest.newBuilder().setShortName(StringValue.of(shortName)).build();
+          GetProgramRequest.newBuilder().setShortName(StringValue.of(shortName)).build();
       GetProgramResponse response = serviceFacade.getProgram(request);
       programDetailsDTO = grpc2JsonConverter.prepareGetProgramResponse(response);
     } catch (StatusRuntimeException exception) {

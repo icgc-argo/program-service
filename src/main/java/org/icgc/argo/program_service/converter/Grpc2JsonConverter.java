@@ -103,11 +103,11 @@ public class Grpc2JsonConverter {
     try {
       String responseJson = JsonFormat.printer().print(response.getProgram());
       objectMapper =
-              JsonMapper.builder()
-                      .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-                      .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
-                      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                      .build();
+          JsonMapper.builder()
+              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
 
       programDetailsDTO = objectMapper.readValue(responseJson, ProgramDetailsDTO.class);
 
