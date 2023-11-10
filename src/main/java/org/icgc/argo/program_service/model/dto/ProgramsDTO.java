@@ -26,6 +26,8 @@ public class ProgramsDTO {
 
   private int genomicDonors;
 
+  private String membershipType;
+
   private List<String> institutions;
 
   private List<String> countries;

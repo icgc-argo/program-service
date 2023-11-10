@@ -13,6 +13,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.icgc.argo.program_service.model.dto.*;
+import org.icgc.argo.program_service.model.exceptions.ProgramRuntimeException;
 import org.icgc.argo.program_service.proto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -33,8 +34,8 @@ public class Grpc2JsonConverter {
         | InvocationTargetException
         | NoSuchMethodException
         | SecurityException e) {
-      e.printStackTrace();
-      return null;
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     JsonFormat.parser().ignoringUnknownFields().merge(json, builder);
     return (T) builder.build();
@@ -45,7 +46,7 @@ public class Grpc2JsonConverter {
       return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
     } catch (Exception e) {
       log.error(ExceptionUtils.getStackTrace(e));
-      return null;
+      throw new ProgramRuntimeException(e.getMessage());
     }
   }
 
@@ -63,12 +64,9 @@ public class Grpc2JsonConverter {
       createProgramResponseDTO =
           objectMapper.readValue(responseJson, CreateProgramResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return createProgramResponseDTO;
   }
@@ -87,12 +85,9 @@ public class Grpc2JsonConverter {
       updateProgramResponseDTO =
           objectMapper.readValue(responseJson, UpdateProgramResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return updateProgramResponseDTO;
   }
@@ -111,12 +106,9 @@ public class Grpc2JsonConverter {
 
       programDetailsDTO = objectMapper.readValue(responseJson, ProgramDetailsDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return programDetailsDTO;
   }
@@ -124,24 +116,31 @@ public class Grpc2JsonConverter {
   public ProgramDetailsDTO prepareGetProgramResponse(ProgramDetails programDetails) {
 
     ProgramDetailsDTO programDetailsDTO = new ProgramDetailsDTO();
-    try {
-      String responseJson = JsonFormat.printer().print(programDetails);
-      objectMapper =
-          JsonMapper.builder()
-              .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-              .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
-              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-              .build();
-
-      programDetailsDTO = objectMapper.readValue(responseJson, ProgramDetailsDTO.class);
-
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
-    }
+    ProgramsDTO programsDTO = new ProgramsDTO();
+    programsDTO.setCancerTypes(programDetails.getProgram().getCancerTypesList());
+    programsDTO.setCountries(programDetails.getProgram().getCountriesList());
+    programsDTO.setCommitmentDonors(programDetails.getProgram().getCommitmentDonors().getValue());
+    programsDTO.setDescription(programDetails.getProgram().getDescription().getValue());
+    programsDTO.setGenomicDonors(programDetails.getProgram().getGenomicDonors().getValue());
+    programsDTO.setInstitutions(programDetails.getProgram().getInstitutionsList());
+    programsDTO.setCountries(programDetails.getProgram().getCountriesList());
+    programsDTO.setName(programDetails.getProgram().getName().getValue());
+    programsDTO.setMembershipType(
+        programDetails.getProgram().getMembershipType().getValue().toString());
+    programsDTO.setPrimarySites(programDetails.getProgram().getPrimarySitesList());
+    programsDTO.setShortName(programDetails.getProgram().getShortName().getValue());
+    programsDTO.setSubmittedDonors(programDetails.getProgram().getSubmittedDonors().getValue());
+    programsDTO.setWebsite(programDetails.getProgram().getWebsite().getValue());
+    programDetailsDTO.setProgram(programsDTO);
+    LegacyDetailsDTO legacyDetailsDTO = new LegacyDetailsDTO();
+    legacyDetailsDTO.setLegacyShortName(programDetails.getLegacy().getLegacyShortName().getValue());
+    programDetailsDTO.setLegacy(legacyDetailsDTO);
+    MetadataDTO metadataDTO = new MetadataDTO();
+    metadataDTO.setCreatedAt(
+        String.valueOf(programDetails.getMetadata().getCreatedAt().getSeconds()));
+    metadataDTO.setUpdatedAt(
+        String.valueOf(programDetails.getMetadata().getUpdatedAt().getSeconds()));
+    programDetailsDTO.setMetadata(metadataDTO);
     return programDetailsDTO;
   }
 
@@ -159,12 +158,9 @@ public class Grpc2JsonConverter {
 
       programsResponseDTO = objectMapper.readValue(responseJson, ProgramsResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return programsResponseDTO.getPrograms();
   }
@@ -183,12 +179,9 @@ public class Grpc2JsonConverter {
 
       inviteUserResponseDTO = objectMapper.readValue(responseJson, InviteUserResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return inviteUserResponseDTO;
   }
@@ -207,12 +200,9 @@ public class Grpc2JsonConverter {
 
       joinProgramResponseDTO = objectMapper.readValue(responseJson, JoinProgramResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return joinProgramResponseDTO;
   }
@@ -231,12 +221,9 @@ public class Grpc2JsonConverter {
 
       listUsersResponseDTO = objectMapper.readValue(responseJson, ListUsersResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return listUsersResponseDTO;
   }
@@ -255,12 +242,9 @@ public class Grpc2JsonConverter {
 
       removeUserResponseDTO = objectMapper.readValue(responseJson, RemoveUserResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return removeUserResponseDTO;
   }
@@ -279,12 +263,9 @@ public class Grpc2JsonConverter {
 
       joinProgramInviteDTO = objectMapper.readValue(responseJson, JoinProgramInviteDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return joinProgramInviteDTO;
   }
@@ -303,12 +284,9 @@ public class Grpc2JsonConverter {
 
       listCancersResponseDTO = objectMapper.readValue(responseJson, ListCancersResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return listCancersResponseDTO;
   }
@@ -329,12 +307,9 @@ public class Grpc2JsonConverter {
       listPrimarySitesResponseDTO =
           objectMapper.readValue(responseJson, ListPrimarySitesResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return listPrimarySitesResponseDTO;
   }
@@ -354,12 +329,9 @@ public class Grpc2JsonConverter {
       listCountriesResponseDTO =
           objectMapper.readValue(responseJson, ListCountriesResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return listCountriesResponseDTO;
   }
@@ -378,12 +350,9 @@ public class Grpc2JsonConverter {
 
       listRegionsResponseDTO = objectMapper.readValue(responseJson, ListRegionsResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return listRegionsResponseDTO;
   }
@@ -404,12 +373,9 @@ public class Grpc2JsonConverter {
       listInstitutionsResponseDTO =
           objectMapper.readValue(responseJson, ListInstitutionsResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return listInstitutionsResponseDTO;
   }
@@ -430,12 +396,9 @@ public class Grpc2JsonConverter {
       addInstitutionsResponseDTO =
           objectMapper.readValue(responseJson, AddInstitutionsResponseDTO.class);
 
-    } catch (JsonMappingException e) {
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException | InvalidProtocolBufferException e) {
+      log.error(ExceptionUtils.getStackTrace(e));
+      throw new ProgramRuntimeException(e.getMessage());
     }
     return addInstitutionsResponseDTO;
   }
