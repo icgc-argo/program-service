@@ -1,6 +1,5 @@
 /*
-
- * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of the GNU Affero General Public License v3.0.
  * You should have received a copy of the GNU Affero General Public License along with
@@ -23,16 +22,16 @@ package org.icgc.argo.program_service.model.exceptions;
 
 import lombok.NonNull;
 
-public class ProgramRuntimeException extends RuntimeException {
+public class RecordNotFoundException extends RuntimeException {
 
-  public ProgramRuntimeException(@NonNull String message) {
+  public RecordNotFoundException(@NonNull String message) {
     super(message);
   }
-  
+
   public static void checkNotFound(
       boolean expression, @NonNull String message, @NonNull Object... args) {
     if (!expression) {
-      throw new ProgramRuntimeException(String.format(message, args));
+      throw new RecordNotFoundException(String.format(message, args));
     }
   }
 }

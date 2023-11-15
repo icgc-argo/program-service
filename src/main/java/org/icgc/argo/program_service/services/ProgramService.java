@@ -40,15 +40,19 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.validation.ValidatorFactory;
+
+import io.netty.util.internal.StringUtil;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang.StringUtils;
 import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.model.exceptions.BadRequestException;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
+import org.icgc.argo.program_service.model.exceptions.RecordNotFoundException;
 import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
@@ -180,7 +184,6 @@ public class ProgramService {
         throw new BadRequestException("DataCenterId '" + dataCenterId + "' not found");
       }
     }
-
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
