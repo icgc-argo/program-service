@@ -188,7 +188,6 @@ public class ProgramService {
     val p = programRepository.save(programEntity);
     val cancers = cancerRepository.findAllByNameIn(program.getCancerTypesList());
     val primarySites = primarySiteRepository.findAllByNameIn(program.getPrimarySitesList());
-    val regions = regionRepository.findAllByNameIn(program.getRegionsList());
     val countries = countryRepository.findAllByNameIn(program.getCountriesList());
     List<InstitutionEntity> institutions =
             institutionRepository.findAllByNameIn(program.getInstitutionsList());
