@@ -22,9 +22,9 @@ package org.icgc.argo.program_service.model.exceptions;
 
 import lombok.NonNull;
 
-public class BadRequestException extends RuntimeException {
+public class ProgramRuntimeException extends RuntimeException {
 
-  public BadRequestException(@NonNull String message) {
+  public ProgramRuntimeException(@NonNull String message) {
     super(message);
   }
 
@@ -32,7 +32,7 @@ public class BadRequestException extends RuntimeException {
   public static void checkNotFound(
       boolean expression, @NonNull String message, @NonNull Object... args) {
     if (!expression) {
-      throw new BadRequestException(String.format(message, args));
+      throw new ProgramRuntimeException(String.format(message, args));
     }
   }
 }

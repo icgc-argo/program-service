@@ -43,7 +43,8 @@ public class ProgramController {
         grpc2JsonConverter.fromJson(
             grpc2JsonConverter.getJsonFromObject(createProgramRequestDTO),
             CreateProgramRequest.class);
-    CreateProgramResponse response = serviceFacade.createProgram(request);
+    CreateProgramResponse response =
+        serviceFacade.createProgram(request, createProgramRequestDTO.getDataCenterId());
     return new ResponseEntity(
         grpc2JsonConverter.prepareCreateProgramResponse(response), HttpStatus.CREATED);
   }

@@ -36,17 +36,23 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.validation.ValidatorFactory;
+
+import io.netty.util.internal.StringUtil;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang.StringUtils;
 import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.*;
+import org.icgc.argo.program_service.model.exceptions.BadRequestException;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
+import org.icgc.argo.program_service.model.exceptions.RecordNotFoundException;
 import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
@@ -159,16 +165,63 @@ public class ProgramService {
   }
 
   public ProgramEntity createWithSideEffect(
-      @NonNull Program program, Consumer<ProgramEntity> consumer) {
+          @NonNull Program program, Consumer<ProgramEntity> consumer) {
     val programEntity = createProgram(program);
     consumer.accept(programEntity);
     return programEntity;
   }
 
+  public ProgramEntity createWithSideEffect(
+          @NonNull Program program, Consumer<ProgramEntity> consumer, UUID dataCenterId) {
+    val programEntity = createProgram(program, dataCenterId);
+    consumer.accept(programEntity);
+    return programEntity;
+  }
   public ProgramEntity createProgram(@NonNull Program program)
+          throws DataIntegrityViolationException {
+    val programEntity = programConverter.programToProgramEntity(program);
+
+    val now = LocalDateTime.now(ZoneId.of("UTC"));
+    programEntity.setCreatedAt(now);
+    programEntity.setUpdatedAt(now);
+
+    val p = programRepository.save(programEntity);
+    val cancers = cancerRepository.findAllByNameIn(program.getCancerTypesList());
+    val primarySites = primarySiteRepository.findAllByNameIn(program.getPrimarySitesList());
+    val countries = countryRepository.findAllByNameIn(program.getCountriesList());
+    List<InstitutionEntity> institutions =
+            institutionRepository.findAllByNameIn(program.getInstitutionsList());
+    if (institutions.size() != program.getInstitutionsList().size()) {
+      institutions = filterAndAddInstitutions(program.getInstitutionsList());
+    }
+
+    List<ProgramCancer> programCancers = mapToList(cancers, x -> createProgramCancer(p, x).get());
+    List<ProgramPrimarySite> programPrimarySites =
+            mapToList(primarySites, x -> createProgramPrimarySite(p, x).get());
+    List<ProgramInstitution> programInstitutions =
+            mapToList(institutions, x -> createProgramInstitution(p, x).get());
+    List<ProgramCountry> programCountries =
+            mapToList(countries, x -> createProgramCountry(p, x).get());
+
+    programCancerRepository.saveAll(programCancers);
+    programPrimarySiteRepository.saveAll(programPrimarySites);
+    programInstitutionRepository.saveAll(programInstitutions);
+    programCountryRepository.saveAll(programCountries);
+
+    return programEntity;
+  }
+  public ProgramEntity createProgram(@NonNull Program program, UUID dataCenterId)
       throws DataIntegrityViolationException {
     val programEntity = programConverter.programToProgramEntity(program);
 
+    if (dataCenterId == null) {
+      throw new BadRequestException("DataCenterId cannot be null or empty");
+    }
+    val dataCenterEntity = dataCenterRepository.findById(dataCenterId);
+    if (dataCenterEntity.isEmpty()) {
+      throw new RecordNotFoundException("DataCenterId '" + dataCenterId + "' not found");
+    }
+    programEntity.setDataCenterId(dataCenterId);
     val now = LocalDateTime.now(ZoneId.of("UTC"));
     programEntity.setCreatedAt(now);
     programEntity.setUpdatedAt(now);
