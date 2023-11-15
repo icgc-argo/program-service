@@ -106,8 +106,7 @@ public class ProgramServiceFacade {
             program,
             (ProgramEntity pe) -> {
               initializeProgramInEgo(pe, admins);
-            },
-            null);
+            });
     log.debug("Created {}", programEntity.getShortName());
     return programConverter.programEntityToCreateProgramResponse(programEntity);
   }
