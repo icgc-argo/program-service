@@ -108,34 +108,7 @@ public class ProgramServiceFacade {
             program,
             (ProgramEntity pe) -> {
               initializeProgramInEgo(pe, admins);
-            },
-            null);
-    log.debug("Created {}", programEntity.getShortName());
-    return programConverter.programEntityToCreateProgramResponse(programEntity);
-  }
-
-  @Transactional
-  public CreateProgramResponse createProgram(CreateProgramRequest request, UUID dataCenterId) {
-    val errors = validationService.validateCreateProgramRequest(request);
-    if (errors.size() != 0) {
-      throw Status.INVALID_ARGUMENT
-          .augmentDescription(
-              format("Cannot create program: Program errors are [%s]", join(errors, ",")))
-          .asRuntimeException();
-    }
-
-    val program = request.getProgram();
-    val admins = request.getAdminsList();
-
-    // TODO: Refactor this, having a transactional side effect is no longer needed thanks to the
-    // facade
-    val programEntity =
-        programService.createWithSideEffect(
-            program,
-            (ProgramEntity pe) -> {
-              initializeProgramInEgo(pe, admins);
-            },
-            dataCenterId);
+            });
     log.debug("Created {}", programEntity.getShortName());
     return programConverter.programEntityToCreateProgramResponse(programEntity);
   }

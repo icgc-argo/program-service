@@ -77,6 +77,21 @@ public class ExceptionHandlers {
         BAD_REQUEST);
   }
 
+  @ExceptionHandler(RecordNotFoundException.class)
+  public ResponseEntity<Object> handleRecordNotFoundException(
+      HttpServletRequest req, RecordNotFoundException ex) {
+    val message = ex.getMessage();
+    log.error(message);
+    return new ResponseEntity<Object>(
+        Map.of(
+            "message", ex.getMessage(),
+            "timestamp", new Date(),
+            "path", req.getServletPath(),
+            "error", BAD_REQUEST.getReasonPhrase()),
+        new HttpHeaders(),
+        BAD_REQUEST);
+  }
+
   @ExceptionHandler(ProgramRuntimeException.class)
   public ResponseEntity<Object> handleProgramRuntimeException(
       HttpServletRequest req, ProgramRuntimeException ex) {
