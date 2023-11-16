@@ -28,7 +28,6 @@ public class BadRequestException extends RuntimeException {
     super(message);
   }
 
-
   public static void checkNotFound(
       boolean expression, @NonNull String message, @NonNull Object... args) {
     if (!expression) {

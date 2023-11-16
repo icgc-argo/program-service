@@ -98,8 +98,7 @@ public class ProgramController {
       authorizationService.requireProgramUser(shortName, authorization);
       GetProgramRequest request =
           GetProgramRequest.newBuilder().setShortName(StringValue.of(shortName)).build();
-      GetProgramResponse response = serviceFacade.getProgram(request);
-      programDetailsDTO = grpc2JsonConverter.prepareGetProgramResponse(response);
+      programDetailsDTO = serviceFacade.getProgramWithDataCenterDetails(request);
     } catch (StatusRuntimeException exception) {
       if (exception.getStatus().getCode().name().equalsIgnoreCase(HttpStatus.NOT_FOUND.name()))
         log.error("Exception thrown in getProgram: {}", exception.getMessage());
@@ -134,11 +133,10 @@ public class ProgramController {
   public ResponseEntity<List<ProgramDetailsDTO>> listPrograms(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
-    val listProgramsResponse =
-        serviceFacade.listPrograms(
-            p -> authorizationService.canRead(p.getShortName(), authorization));
     return new ResponseEntity(
-        grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
+        serviceFacade.listProgramsWithDataCenterDetails(
+            p -> authorizationService.canRead(p.getShortName(), authorization)),
+        HttpStatus.OK);
   }
 
   @PostMapping(value = "/users")

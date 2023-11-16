@@ -1,6 +1,6 @@
 /*
-
  * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
+
  *
  * This program and the accompanying materials are made available under the terms of the GNU Affero General Public License v3.0.
  * You should have received a copy of the GNU Affero General Public License along with
@@ -19,20 +19,26 @@
  *
  */
 
-package org.icgc.argo.program_service.model.exceptions;
+package org.icgc.argo.program_service.model.dto;
 
-import lombok.NonNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public class ProgramRuntimeException extends RuntimeException {
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class DataCenterDetailsDTO {
 
-  public ProgramRuntimeException(@NonNull String message) {
-    super(message);
-  }
-  
-  public static void checkNotFound(
-      boolean expression, @NonNull String message, @NonNull Object... args) {
-    if (!expression) {
-      throw new ProgramRuntimeException(String.format(message, args));
-    }
-  }
+  private String id;
+
+  private String shortName;
+
+  private String name;
+
+  private String uiUrl;
+
+  private String gatewayUrl;
 }

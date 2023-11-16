@@ -38,9 +38,8 @@ public class DataCenterController {
           final String authorization,
       @PathVariable(value = "datacenter_short_name", required = true) String dataCenterShortName) {
     authorizationService.requireDCCAdmin(authorization);
-    val listProgramsResponse = serviceFacade.listProgramsByDataCenter(dataCenterShortName);
     return new ResponseEntity(
-        grpc2JsonConverter.prepareListProgramsResponse(listProgramsResponse), HttpStatus.OK);
+        serviceFacade.listProgramsByDataCenter(dataCenterShortName), HttpStatus.OK);
   }
 
   @PostMapping

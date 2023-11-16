@@ -51,6 +51,7 @@ import lombok.AllArgsConstructor;
 import lombok.val;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.DataCenterConverter;
+import org.icgc.argo.program_service.converter.Grpc2JsonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.grpc.interceptor.EgoAuthInterceptor;
 import org.icgc.argo.program_service.grpc.interceptor.ExceptionInterceptor;
@@ -119,6 +120,8 @@ public class ProgramServiceAuthorizationTest {
 
     val egoSecurity = new EgoSecurity(publicKey);
 
+    val grpc2JsonConverter = mock(Grpc2JsonConverter.class);
+
     val mockEgoService = mock(EgoService.class);
 
     val adminGroupId = UUID.randomUUID();
@@ -151,6 +154,7 @@ public class ProgramServiceAuthorizationTest {
             mockEgoService,
             invitationService,
             programConverter,
+            grpc2JsonConverter,
             dataCenterConverter,
             commonConverter,
             v);
