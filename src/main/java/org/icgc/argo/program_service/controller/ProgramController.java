@@ -234,7 +234,7 @@ public class ProgramController {
 
   @GetMapping(value = "/joinProgramInvite/{invite_id}")
   public ResponseEntity<GetJoinProgramInviteResponseDTO> getJoinProgramInvite(
-      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = false)
           final String authorization,
       @PathVariable(value = "invite_id", required = true) String inviteId) {
     val invitation = serviceFacade.getInvitationById(UUID.fromString(inviteId));
