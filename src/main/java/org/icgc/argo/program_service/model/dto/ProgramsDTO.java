@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.icgc.argo.program_service.proto.MembershipType;
 
 @Data
 @NoArgsConstructor
@@ -26,7 +27,7 @@ public class ProgramsDTO {
 
   private int genomicDonors;
 
-  private String membershipType;
+  private MembershipType membershipType;
 
   private List<String> institutions;
 

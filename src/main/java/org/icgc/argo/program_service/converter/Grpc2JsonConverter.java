@@ -125,8 +125,7 @@ public class Grpc2JsonConverter {
     programsDTO.setInstitutions(programDetails.getProgram().getInstitutionsList());
     programsDTO.setCountries(programDetails.getProgram().getCountriesList());
     programsDTO.setName(programDetails.getProgram().getName().getValue());
-    programsDTO.setMembershipType(
-        programDetails.getProgram().getMembershipType().getValue().toString());
+    programsDTO.setMembershipType(programDetails.getProgram().getMembershipType().getValue());
     programsDTO.setPrimarySites(programDetails.getProgram().getPrimarySitesList());
     programsDTO.setShortName(programDetails.getProgram().getShortName().getValue());
     programsDTO.setSubmittedDonors(programDetails.getProgram().getSubmittedDonors().getValue());
