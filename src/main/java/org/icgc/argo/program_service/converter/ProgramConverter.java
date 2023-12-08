@@ -30,8 +30,6 @@ import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import org.icgc.argo.program_service.model.entity.*;
-import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
-import org.icgc.argo.program_service.model.entity.ProgramEntity;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
 import org.mapstruct.AfterMapping;
@@ -52,9 +50,9 @@ public interface ProgramConverter {
   @Mapping(target = "programPrimarySites", ignore = true)
   @Mapping(target = "programInstitutions", ignore = true)
   @Mapping(target = "programCountries", ignore = true)
-  @Mapping(target = "programRegions", ignore = true)
   @Mapping(target = "active", constant = "true")
   @Mapping(target = "legacyShortName", ignore = true)
+  @Mapping(target = "dataCenterId", ignore = true)
   ProgramEntity programToProgramEntity(Program p);
 
   @Mapping(target = "id", ignore = true)
@@ -65,7 +63,6 @@ public interface ProgramConverter {
   @Mapping(target = "programPrimarySites", ignore = true)
   @Mapping(target = "programInstitutions", ignore = true)
   @Mapping(target = "programCountries", ignore = true)
-  @Mapping(target = "programRegions", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
   @Mapping(target = "clearField", ignore = true)
@@ -146,8 +143,7 @@ public interface ProgramConverter {
         .addAllCancerTypes(entity.listCancerTypes())
         .addAllPrimarySites(entity.listPrimarySites())
         .addAllInstitutions(entity.listInstitutions())
-        .addAllCountries(entity.listCountries())
-        .addAllRegions(entity.listRegions());
+        .addAllCountries(entity.listCountries());
   }
 
   @Mapping(target = "mergeFrom", ignore = true)

@@ -20,11 +20,15 @@ public class ProgramDTO {
 
   private String website;
 
+  private int commitmentDonors;
+
+  private int submittedDonors;
+
+  private int genomicDonors;
+
   private Set<InstitutionDTO> programInstitutions;
 
   private Set<CountryDTO> programCountries;
-
-  private Set<RegionDTO> processingRegions;
 
   private Set<CancerDTO> programCancers;
 

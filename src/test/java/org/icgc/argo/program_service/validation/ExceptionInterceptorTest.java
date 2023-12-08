@@ -30,7 +30,6 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.HashSet;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;

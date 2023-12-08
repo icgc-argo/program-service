@@ -139,7 +139,6 @@ public class ProgramServiceGrpcIT {
             .setMembershipType(membershipTypeValue(ASSOCIATE))
             .setWebsite(stringValue("http://site.org"))
             .addInstitutions("Ontario Institute for Cancer Research")
-            .addRegions("Canada")
             .setName(stringValue(RandomString.make(15)))
             .setCommitmentDonors(int32Value(234))
             .addCountries("Canada")
@@ -214,7 +213,6 @@ public class ProgramServiceGrpcIT {
             .setMembershipType(membershipTypeValue(ASSOCIATE))
             .setWebsite(stringValue("http://site.org"))
             .addInstitutions("Ontario Institute for Cancer Research")
-            .addRegions("Canada")
             .setName(stringValue(RandomString.make(15)))
             .setCommitmentDonors(int32Value(234))
             .addCountries("Canada")
@@ -248,7 +246,6 @@ public class ProgramServiceGrpcIT {
     val inviteUserResponse = stub.inviteUser(inviteUserRequest);
     assertFalse(isEmpty(inviteUserResponse.getInviteId().getValue()));
   }
-
 
   String randomProgramName() {
     return randomAlphabetic(7).toUpperCase() + "-CA";
@@ -361,7 +358,6 @@ public class ProgramServiceGrpcIT {
             .setMembershipType(membershipTypeValue(ASSOCIATE))
             .setWebsite(stringValue("http://site.org"))
             .addInstitutions("Ontario Institute for Cancer Research")
-            .addRegions("Canada")
             .setName(stringValue(RandomString.make(15)))
             .setCommitmentDonors(int32Value(234))
             .addCountries("Canada")

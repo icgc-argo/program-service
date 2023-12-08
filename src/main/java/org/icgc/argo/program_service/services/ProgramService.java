@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of the GNU Affero General Public License v3.0.
  * You should have received a copy of the GNU Affero General Public License along with
@@ -26,7 +26,6 @@ import static org.icgc.argo.program_service.model.join.ProgramCancer.createProgr
 import static org.icgc.argo.program_service.model.join.ProgramCountry.createProgramCountry;
 import static org.icgc.argo.program_service.model.join.ProgramInstitution.createProgramInstitution;
 import static org.icgc.argo.program_service.model.join.ProgramPrimarySite.createProgramPrimarySite;
-import static org.icgc.argo.program_service.model.join.ProgramRegion.createProgramRegion;
 import static org.icgc.argo.program_service.utils.CollectionUtils.*;
 import static org.icgc.argo.program_service.utils.CollectionUtils.mapToSet;
 import static org.icgc.argo.program_service.utils.EntityService.*;
@@ -37,18 +36,24 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.validation.ValidatorFactory;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.*;
+import org.icgc.argo.program_service.model.exceptions.BadRequestException;
 import org.icgc.argo.program_service.model.exceptions.NotFoundException;
+import org.icgc.argo.program_service.model.exceptions.RecordNotFoundException;
 import org.icgc.argo.program_service.model.join.*;
 import org.icgc.argo.program_service.proto.Program;
 import org.icgc.argo.program_service.repositories.*;
+import org.icgc.argo.program_service.repositories.query.DataCenterSpecificationBuilder;
 import org.icgc.argo.program_service.repositories.query.ProgramSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -64,12 +69,14 @@ public class ProgramService {
   /** Dependencies */
   private final ProgramRepository programRepository;
 
+  private final DataCenterRepository dataCenterRepository;
   private final CancerRepository cancerRepository;
   private final PrimarySiteRepository primarySiteRepository;
   private final InstitutionRepository institutionRepository;
   private final RegionRepository regionRepository;
   private final CountryRepository countryRepository;
   private final ProgramConverter programConverter;
+  private final DataCenterConverter dataCenterConverter;
   private final ProgramCancerRepository programCancerRepository;
   private final ProgramPrimarySiteRepository programPrimarySiteRepository;
   private final ProgramInstitutionRepository programInstitutionRepository;
@@ -80,9 +87,11 @@ public class ProgramService {
   @Autowired
   public ProgramService(
       @NonNull ProgramRepository programRepository,
+      @NonNull DataCenterRepository dataCenterRepository,
       @NonNull CancerRepository cancerRepository,
       @NonNull PrimarySiteRepository primarySiteRepository,
       @NonNull ProgramConverter programConverter,
+      @NonNull DataCenterConverter dataCenterConverter,
       @NonNull ProgramCancerRepository programCancerRepository,
       @NonNull ProgramPrimarySiteRepository programPrimarySiteRepository,
       @NonNull InstitutionRepository institutionRepository,
@@ -93,9 +102,11 @@ public class ProgramService {
       @NonNull ProgramCountryRepository programCountryRepository,
       @NonNull ValidatorFactory validatorFactory) {
     this.programRepository = programRepository;
+    this.dataCenterRepository = dataCenterRepository;
     this.cancerRepository = cancerRepository;
     this.primarySiteRepository = primarySiteRepository;
     this.programConverter = programConverter;
+    this.dataCenterConverter = dataCenterConverter;
     this.programCancerRepository = programCancerRepository;
     this.programPrimarySiteRepository = programPrimarySiteRepository;
     this.institutionRepository = institutionRepository;
@@ -115,7 +126,6 @@ public class ProgramService {
                 .setFetchPrimarySites(true)
                 .setFetchInstitutions(true)
                 .setFetchCountries(true)
-                .setFetchRegions(true)
                 .buildByShortName(name));
 
     if (search.isEmpty()) {
@@ -131,8 +141,21 @@ public class ProgramService {
     return search.get();
   }
 
+  private List<ProgramEntity> listProgramsByDataCenterName(@NonNull String name) {
+    val search = programRepository.getActiveProgramsForDataCenter(name);
+
+    if (search.isEmpty()) {
+      throw new NotFoundException("Programs for DataCenter '" + name + "' not found");
+    }
+    return search;
+  }
+
   public ProgramEntity getProgram(@NonNull String name) {
     return getProgram(name, false);
+  }
+
+  public List<ProgramEntity> listProgramsByDataCenter(@NonNull String name) {
+    return listProgramsByDataCenterName(name);
   }
 
   public ProgramEntity getProgram(@NonNull String name, boolean allowInactive) {
@@ -142,6 +165,13 @@ public class ProgramService {
   public ProgramEntity createWithSideEffect(
       @NonNull Program program, Consumer<ProgramEntity> consumer) {
     val programEntity = createProgram(program);
+    consumer.accept(programEntity);
+    return programEntity;
+  }
+
+  public ProgramEntity createWithSideEffect(
+      @NonNull Program program, Consumer<ProgramEntity> consumer, UUID dataCenterId) {
+    val programEntity = createProgram(program, dataCenterId);
     consumer.accept(programEntity);
     return programEntity;
   }
@@ -157,7 +187,48 @@ public class ProgramService {
     val p = programRepository.save(programEntity);
     val cancers = cancerRepository.findAllByNameIn(program.getCancerTypesList());
     val primarySites = primarySiteRepository.findAllByNameIn(program.getPrimarySitesList());
-    val regions = regionRepository.findAllByNameIn(program.getRegionsList());
+    val countries = countryRepository.findAllByNameIn(program.getCountriesList());
+    List<InstitutionEntity> institutions =
+        institutionRepository.findAllByNameIn(program.getInstitutionsList());
+    if (institutions.size() != program.getInstitutionsList().size()) {
+      institutions = filterAndAddInstitutions(program.getInstitutionsList());
+    }
+
+    List<ProgramCancer> programCancers = mapToList(cancers, x -> createProgramCancer(p, x).get());
+    List<ProgramPrimarySite> programPrimarySites =
+        mapToList(primarySites, x -> createProgramPrimarySite(p, x).get());
+    List<ProgramInstitution> programInstitutions =
+        mapToList(institutions, x -> createProgramInstitution(p, x).get());
+    List<ProgramCountry> programCountries =
+        mapToList(countries, x -> createProgramCountry(p, x).get());
+
+    programCancerRepository.saveAll(programCancers);
+    programPrimarySiteRepository.saveAll(programPrimarySites);
+    programInstitutionRepository.saveAll(programInstitutions);
+    programCountryRepository.saveAll(programCountries);
+
+    return programEntity;
+  }
+
+  public ProgramEntity createProgram(@NonNull Program program, UUID dataCenterId)
+      throws DataIntegrityViolationException {
+    val programEntity = programConverter.programToProgramEntity(program);
+
+    if (dataCenterId == null) {
+      throw new BadRequestException("DataCenterId cannot be null or empty");
+    }
+    val dataCenterEntity = dataCenterRepository.findById(dataCenterId);
+    if (dataCenterEntity.isEmpty()) {
+      throw new RecordNotFoundException("DataCenterId '" + dataCenterId + "' not found");
+    }
+    programEntity.setDataCenterId(dataCenterId);
+    val now = LocalDateTime.now(ZoneId.of("UTC"));
+    programEntity.setCreatedAt(now);
+    programEntity.setUpdatedAt(now);
+
+    val p = programRepository.save(programEntity);
+    val cancers = cancerRepository.findAllByNameIn(program.getCancerTypesList());
+    val primarySites = primarySiteRepository.findAllByNameIn(program.getPrimarySitesList());
     val countries = countryRepository.findAllByNameIn(program.getCountriesList());
 
     // Add new institutions if we must
@@ -172,14 +243,12 @@ public class ProgramService {
         mapToList(primarySites, x -> createProgramPrimarySite(p, x).get());
     List<ProgramInstitution> programInstitutions =
         mapToList(institutions, x -> createProgramInstitution(p, x).get());
-    List<ProgramRegion> programRegions = mapToList(regions, x -> createProgramRegion(p, x).get());
     List<ProgramCountry> programCountries =
         mapToList(countries, x -> createProgramCountry(p, x).get());
 
     programCancerRepository.saveAll(programCancers);
     programPrimarySiteRepository.saveAll(programPrimarySites);
     programInstitutionRepository.saveAll(programInstitutions);
-    programRegionRepository.saveAll(programRegions);
     programCountryRepository.saveAll(programCountries);
 
     return programEntity;
@@ -217,17 +286,15 @@ public class ProgramService {
       @NonNull List<String> cancers,
       @NonNull List<String> primarySites,
       @NonNull List<String> institutions,
-      @NonNull List<String> countries,
-      @NonNull List<String> regions)
+      @NonNull List<String> countries)
       throws NotFoundException {
     if (cancers.isEmpty()
         || primarySites.isEmpty()
         || institutions.isEmpty()
-        || countries.isEmpty()
-        || regions.isEmpty()) {
+        || countries.isEmpty()) {
       throw Status.INVALID_ARGUMENT
           .augmentDescription(
-              "Cannot update program. Cancer, primary site, institution, country, and region cannot be empty.")
+              "Cannot update program. Cancer, primary site, institution, country cannot be empty.")
           .asRuntimeException();
     }
 
@@ -236,7 +303,6 @@ public class ProgramService {
     processPrimarySites(programToUpdate, primarySites);
     processInstitutions(programToUpdate, institutions);
     processCountries(programToUpdate, countries);
-    processRegions(programToUpdate, regions);
 
     // update program info
     programConverter.updateProgram(updatingProgram, programToUpdate);
@@ -357,25 +423,6 @@ public class ProgramService {
     programCountryRepository.saveAll(toAdd);
   }
 
-  private void processRegions(@NonNull ProgramEntity programToUpdate, @NonNull List<String> names) {
-    val regionEntities = checkExistenceByName(RegionEntity.class, regionRepository, names);
-    val currentRegions = mapToSet(programToUpdate.getProgramRegions(), ProgramRegion::getRegion);
-
-    val toDelete =
-        currentRegions.stream().filter(r -> !regionEntities.contains(r)).collect(toSet());
-    val toAdd =
-        regionEntities.stream()
-            .filter(r -> !currentRegions.contains(r))
-            .map(r -> createProgramRegion(programToUpdate, r))
-            .map(Optional::get)
-            .collect(toSet());
-
-    programToUpdate.getProgramRegions().removeIf(programRegionPredicate(programToUpdate, toDelete));
-    currentRegions.forEach(
-        r -> r.getProgramRegions().removeIf(programRegionPredicate(programToUpdate, toDelete)));
-    programRegionRepository.saveAll(toAdd);
-  }
-
   /**
    * Compares the user provided list against the list stored in the system. Throws an exception if
    * it determines that the users provided a collection that cannot be found by the system.
@@ -416,10 +463,46 @@ public class ProgramService {
                 .setFetchPrimarySites(true)
                 .setFetchInstitutions(true)
                 .setFetchCountries(true)
-                .setFetchRegions(true)
                 .listAll(true));
     return List.copyOf(programs);
   }
+
+  public List<DataCenterEntity> listDataCenters() {
+    val dataCenters = dataCenterRepository.findAll();
+    return List.copyOf(dataCenters);
+  }
+
+  public DataCenterEntity getDataCenterDetails(UUID dataCenterId) {
+    val dataCenterEntity = dataCenterRepository.findById(dataCenterId);
+    return dataCenterEntity.get();
+  }
+
+  public DataCenterEntity createDataCenter(DataCenterRequestDTO dataCenterRequestDTO) {
+    val dataCenterEntity = dataCenterConverter.dataCenterToDataCenterEntity(dataCenterRequestDTO);
+    val d = dataCenterRepository.save(dataCenterEntity);
+    return d;
+  }
+
+
+  public DataCenterEntity updateDataCenter(
+      @NonNull DataCenterEntity dataCenterToUpdate, @NonNull DataCenterEntity updatingDataCenter) {
+    dataCenterConverter.updateDataCenter(updatingDataCenter, dataCenterToUpdate);
+    dataCenterRepository.save(dataCenterToUpdate);
+    return dataCenterToUpdate;
+  }
+
+  public DataCenterEntity findDataCenterByShortName(@NonNull String name) {
+    val search =
+        dataCenterRepository.findOne(new DataCenterSpecificationBuilder().buildByShortName(name));
+
+    if (search.isEmpty()) {
+      throw Status.NOT_FOUND
+          .withDescription("DataCenter '" + name + "' not found")
+          .asRuntimeException();
+    }
+    return search.get();
+  }
+
 
   public List<String> getAllProgramNames() {
     val programNames = programRepository.getActivePrograms();

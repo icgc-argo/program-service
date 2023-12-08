@@ -38,6 +38,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.ProgramConverterImpl;
+import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.proto.CreateProgramRequest;
 import org.icgc.argo.program_service.proto.Program;
@@ -84,6 +85,35 @@ public class ValidationService {
       }
     }
 
+    return errors;
+  }
+
+  public List<String> validateCreateDataCenterRequest(DataCenterRequestDTO dataCenterRequestDTO) {
+    List<String> errors = new ArrayList<>();
+
+    if (dataCenterRequestDTO.getShortName() == null) {
+      errors.add("DataCenter shortname cannot be null");
+    } else if (dataCenterRequestDTO.getName() == null) {
+      errors.add("DataCenter name cannot be null");
+    } else if (dataCenterRequestDTO.getEmail() == null) {
+      errors.add("DataCenter email cannot be null");
+    } else if (dataCenterRequestDTO.getUiUrl() == null) {
+      errors.add("DataCenter uiUrl cannot be null");
+    } else if (dataCenterRequestDTO.getGatewayUrl() == null) {
+      errors.add("DataCenter gatewayUrl cannot be null");
+    } else if (dataCenterRequestDTO.getAnalysisScoreUrl() == null) {
+      errors.add("DataCenter analysisScoreURl cannot be null");
+    } else if (dataCenterRequestDTO.getAnalysisSongUrl() == null) {
+      errors.add("DataCenter analysisSongUrl cannot be null");
+    } else if (dataCenterRequestDTO.getAnalysisSongCode() == null) {
+      errors.add("DataCenter analysisSongCode cannot be null");
+    } else if (dataCenterRequestDTO.getSubmissionScoreUrl() == null) {
+      errors.add("DataCenter submissionScoreUrl cannot be null");
+    } else if (dataCenterRequestDTO.getSubmissionSongCode() == null) {
+      errors.add("DataCenter submissionSongCode cannot be null");
+    } else if (dataCenterRequestDTO.getSubmissionSongUrl() == null) {
+      errors.add("DataCenter submissionSongUrl cannot be null");
+    }
     return errors;
   }
 
@@ -142,10 +172,6 @@ public class ValidationService {
       errors.add("Must include at least one primarySite");
     }
 
-    if (program.getRegionsList().isEmpty()) {
-      errors.add("Must include at least one region");
-    }
-
     if (program.getCountriesList().isEmpty()) {
       errors.add("Must include at least one country");
     }
@@ -159,10 +185,6 @@ public class ValidationService {
         invalidChoices(
             "Invalid primarySite '%s'",
             validPrimarySites(), new TreeSet<>((program.getPrimarySitesList()))));
-
-    errors.addAll(
-        invalidChoices(
-            "Invalid region '%s'", validRegions(), new TreeSet<>(program.getRegionsList())));
 
     errors.addAll(
         invalidChoices(
@@ -193,4 +215,5 @@ public class ValidationService {
   public Set<String> validRegions() {
     return mapToSet(programService.listRegions(), RegionEntity::getName);
   }
+
 }
