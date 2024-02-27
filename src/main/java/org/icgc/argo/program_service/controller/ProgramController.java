@@ -75,11 +75,9 @@ public class ProgramController {
     UpdateProgramResponse response;
     try {
       request =
-          grpc2JsonConverter.fromJson(
-              grpc2JsonConverter.getJsonFromObject(updateProgramRequestDTO),
-              UpdateProgramRequest.class);
+              grpc2JsonConverter.prepareUpdateProgramRequest(updateProgramRequestDTO);
       response = serviceFacade.updateProgram(request);
-    } catch (NotFoundException | NoSuchElementException | IOException e) {
+    } catch (NotFoundException | NoSuchElementException e) {
       log.error("Exception thrown in updateProgram: {}", e.getMessage());
       return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }

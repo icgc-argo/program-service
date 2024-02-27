@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.protobuf.AbstractMessage.Builder;
+import com.google.protobuf.Int32Value;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
+import com.google.protobuf.StringValue;
 import com.google.protobuf.util.JsonFormat;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -15,6 +17,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.icgc.argo.program_service.model.dto.*;
 import org.icgc.argo.program_service.model.exceptions.ProgramRuntimeException;
 import org.icgc.argo.program_service.proto.*;
+import org.icgc.argo.program_service.proto.Program;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -49,7 +52,30 @@ public class Grpc2JsonConverter {
       throw new ProgramRuntimeException(e.getMessage());
     }
   }
+  public UpdateProgramRequest prepareUpdateProgramRequest (UpdateProgramRequestDTO updateProgramRequestDTO) {
 
+    Program program = Program.newBuilder()
+            .addAllCancerTypes(updateProgramRequestDTO.getProgram().getCancerTypes())
+            .setCommitmentDonors(Int32Value.of(updateProgramRequestDTO.getProgram().getCommitmentDonors()))
+            .addAllCountries(updateProgramRequestDTO.getProgram().getCountries())
+            .setDescription(StringValue.of(updateProgramRequestDTO.getProgram().getDescription()))
+            .setGenomicDonors(Int32Value.of(updateProgramRequestDTO.getProgram().getGenomicDonors()))
+            .addAllInstitutions(updateProgramRequestDTO.getProgram().getInstitutions())
+            .setName(StringValue.of(updateProgramRequestDTO.getProgram().getName()))
+            .addAllPrimarySites(updateProgramRequestDTO.getProgram().getPrimarySites())
+            .setMembershipType(MembershipTypeValue.newBuilder().setValue(updateProgramRequestDTO.getProgram().getMembershipType()))
+            .setShortName(StringValue.of(updateProgramRequestDTO.getProgram().getShortName()))
+            .setSubmittedDonors(Int32Value.of(updateProgramRequestDTO.getProgram().getSubmittedDonors()))
+            .setWebsite(StringValue.of(updateProgramRequestDTO.getProgram().getWebsite()))
+            .build();
+
+    UpdateProgramRequest updateProgramRequest =
+            UpdateProgramRequest.newBuilder()
+                    .setProgram(program)
+                    .build();
+
+    return updateProgramRequest;
+  }
   public CreateProgramResponseDTO prepareCreateProgramResponse(CreateProgramResponse response) {
 
     CreateProgramResponseDTO createProgramResponseDTO = new CreateProgramResponseDTO();
