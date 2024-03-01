@@ -63,6 +63,7 @@ public interface ProgramConverter {
   @Mapping(target = "programPrimarySites", ignore = true)
   @Mapping(target = "programInstitutions", ignore = true)
   @Mapping(target = "programCountries", ignore = true)
+  @Mapping(target = "dataCenterId", ignore = true)
   void updateProgram(ProgramEntity updatingProgram, @MappingTarget ProgramEntity programToUpdate);
 
   @Mapping(target = "clearField", ignore = true)

@@ -12,7 +12,7 @@ spring:
     username: postgres
     password: password
   mail:
-    host: mailhog.qa.argo.cancercollaboratory.org
+    host: mailhog.argo-qa.cumulus.genomeinformatics.org
     port: 40001
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -32,7 +32,7 @@ retry:
     multiplier: 2.0
 
 app:
-  egoUrl: "https://ego.qa.argo.cancercollaboratory.org/api"
+  egoUrl: https://ego.argo-qa.cumulus.genomeinformatics.org/api
   egoClientId: "program-service"
   egoClientSecret: "qa-program-service"
   grpcEnabled: true

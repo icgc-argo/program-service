@@ -173,10 +173,31 @@ public class ProgramServiceFacade {
         programService.updateProgram(
             programToUpdate,
             updatingProgram,
+            null,
             program.getCancerTypesList(),
             program.getPrimarySitesList(),
             program.getInstitutionsList(),
             program.getCountriesList());
+    return programConverter.programEntityToUpdateProgramResponse(updatedProgram);
+  }
+
+  @Transactional
+  public UpdateProgramResponse updateProgramWithDataCenter (UpdateProgramRequest request, DataCenterDetailsDTO dataCenterDetailsDTO) {
+    val program = request.getProgram();
+    val updatingProgram = programConverter.programToProgramEntity(program);
+    val programToUpdate = programService.getProgram(updatingProgram.getShortName(), false);
+
+    updateMembershipPermission(programToUpdate, updatingProgram);
+
+    val updatedProgram =
+            programService.updateProgram(
+                    programToUpdate,
+                    updatingProgram,
+                    dataCenterDetailsDTO,
+                    program.getCancerTypesList(),
+                    program.getPrimarySitesList(),
+                    program.getInstitutionsList(),
+                    program.getCountriesList());
     return programConverter.programEntityToUpdateProgramResponse(updatedProgram);
   }
 

@@ -40,11 +40,14 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.validation.ValidatorFactory;
+import javax.validation.constraints.NotNull;
+
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
+import org.icgc.argo.program_service.model.dto.DataCenterDetailsDTO;
 import org.icgc.argo.program_service.model.dto.DataCenterRequestDTO;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.model.exceptions.BadRequestException;
@@ -283,6 +286,7 @@ public class ProgramService {
   public ProgramEntity updateProgram(
       @NonNull ProgramEntity programToUpdate,
       @NonNull ProgramEntity updatingProgram,
+      @NotNull DataCenterDetailsDTO dataCenterDetailsDTO,
       @NonNull List<String> cancers,
       @NonNull List<String> primarySites,
       @NonNull List<String> institutions,
@@ -296,6 +300,15 @@ public class ProgramService {
           .augmentDescription(
               "Cannot update program. Cancer, primary site, institution, country cannot be empty.")
           .asRuntimeException();
+    }
+
+    if (dataCenterDetailsDTO != null && !dataCenterDetailsDTO.getId().isEmpty()) {
+      val dataCenterEntity = dataCenterRepository.findById(UUID.fromString(dataCenterDetailsDTO.getId()));
+      if (dataCenterEntity.isEmpty()) {
+        throw new RecordNotFoundException("DataCenterId '" + dataCenterDetailsDTO.getId() + "' not found");
+      }
+      programToUpdate.setDataCenterId(UUID.fromString(dataCenterDetailsDTO.getId()));
+      processDataCenter(dataCenterDetailsDTO, dataCenterEntity.get());
     }
 
     // update associations
@@ -489,6 +502,15 @@ public class ProgramService {
     dataCenterConverter.updateDataCenter(updatingDataCenter, dataCenterToUpdate);
     dataCenterRepository.save(dataCenterToUpdate);
     return dataCenterToUpdate;
+  }
+
+  public void processDataCenter (
+          @NonNull DataCenterDetailsDTO dataCenterDetailsDTO, @NotNull DataCenterEntity updatingDataCenter) {
+    updatingDataCenter.setShortName(dataCenterDetailsDTO.getShortName());
+    updatingDataCenter.setName(dataCenterDetailsDTO.getName());
+    updatingDataCenter.setUiUrl(dataCenterDetailsDTO.getUiUrl());
+    updatingDataCenter.setGatewayUrl(dataCenterDetailsDTO.getGatewayUrl());
+    dataCenterRepository.save(updatingDataCenter);
   }
 
   public DataCenterEntity findDataCenterByShortName(@NonNull String name) {

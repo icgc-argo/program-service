@@ -76,7 +76,7 @@ public class ProgramController {
     try {
       request =
               grpc2JsonConverter.prepareUpdateProgramRequest(updateProgramRequestDTO);
-      response = serviceFacade.updateProgram(request);
+      response = serviceFacade.updateProgramWithDataCenter(request, updateProgramRequestDTO.getProgram().getDataCenter());
     } catch (NotFoundException | NoSuchElementException e) {
       log.error("Exception thrown in updateProgram: {}", e.getMessage());
       return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
