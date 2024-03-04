@@ -182,10 +182,9 @@ public class ProgramServiceFacade {
   }
 
   @Transactional
-  public UpdateProgramResponse updateProgramWithDataCenter (UpdateProgramRequest request, DataCenterDetailsDTO dataCenterDetailsDTO) {
-    val program = request.getProgram();
-    val updatingProgram = programConverter.programToProgramEntity(program);
-    val programToUpdate = programService.getProgram(updatingProgram.getShortName(), false);
+  public UpdateProgramResponse updateProgramWithDataCenter (UpdateProgramRequestDTO request)  {
+    val updatingProgram = programConverter.programsDTOToProgramEntity(request.getProgram());
+    val programToUpdate = programService.getProgram(request.getProgram().getShortName(), false);
 
     updateMembershipPermission(programToUpdate, updatingProgram);
 
@@ -193,11 +192,11 @@ public class ProgramServiceFacade {
             programService.updateProgram(
                     programToUpdate,
                     updatingProgram,
-                    dataCenterDetailsDTO,
-                    program.getCancerTypesList(),
-                    program.getPrimarySitesList(),
-                    program.getInstitutionsList(),
-                    program.getCountriesList());
+                    request.getProgram().getDataCenter(),
+                    request.getProgram().getCancerTypes(),
+                    request.getProgram().getPrimarySites(),
+                    request.getProgram().getInstitutions(),
+                    request.getProgram().getCountries());
     return programConverter.programEntityToUpdateProgramResponse(updatedProgram);
   }
 

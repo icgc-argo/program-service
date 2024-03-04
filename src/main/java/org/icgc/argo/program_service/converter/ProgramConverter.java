@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
+import org.icgc.argo.program_service.model.dto.ProgramsDTO;
 import org.icgc.argo.program_service.model.entity.*;
 import org.icgc.argo.program_service.proto.*;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoUser;
@@ -42,6 +43,22 @@ import org.mapstruct.MappingTarget;
     uses = {CommonConverter.class})
 public interface ProgramConverter {
   ProgramConverter INSTANCE = new ProgramConverterImpl(CommonConverter.INSTANCE);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "programCancers", ignore = true)
+  @Mapping(target = "programPrimarySites", ignore = true)
+  @Mapping(target = "programInstitutions", ignore = true)
+  @Mapping(target = "programCountries", ignore = true)
+  @Mapping(target = "active", constant = "true")
+  @Mapping(target = "legacyShortName", ignore = true)
+  @Mapping(target = "dataCenterId", expression = "java(mapStringToUUID(p.getDataCenter().getId()))", ignore = false)
+  ProgramEntity programsDTOToProgramEntity(ProgramsDTO p);
+
+  default UUID mapStringToUUID (String id){
+    return UUID.fromString(id);
+  }
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)

@@ -3,10 +3,6 @@ package org.icgc.argo.program_service.controller;
 import com.google.protobuf.StringValue;
 import io.grpc.StatusRuntimeException;
 import io.swagger.v3.oas.annotations.Parameter;
-import java.io.IOException;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -23,6 +19,10 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.io.IOException;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -71,12 +71,9 @@ public class ProgramController {
           final String authorization,
       @RequestBody UpdateProgramRequestDTO updateProgramRequestDTO) {
     authorizationService.requireDCCAdmin(authorization);
-    UpdateProgramRequest request;
     UpdateProgramResponse response;
     try {
-      request =
-              grpc2JsonConverter.prepareUpdateProgramRequest(updateProgramRequestDTO);
-      response = serviceFacade.updateProgramWithDataCenter(request, updateProgramRequestDTO.getProgram().getDataCenter());
+      response = serviceFacade.updateProgramWithDataCenter(updateProgramRequestDTO);
     } catch (NotFoundException | NoSuchElementException e) {
       log.error("Exception thrown in updateProgram: {}", e.getMessage());
       return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
