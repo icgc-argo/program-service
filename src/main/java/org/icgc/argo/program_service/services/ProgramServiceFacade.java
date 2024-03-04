@@ -182,7 +182,7 @@ public class ProgramServiceFacade {
   }
 
   @Transactional
-  public UpdateProgramResponse updateProgramWithDataCenter (UpdateProgramRequestDTO request)  {
+  public UpdateProgramResponse updateProgramWithDataCenter (UpdateProgramRequestDTO request) {
     val updatingProgram = programConverter.programsDTOToProgramEntity(request.getProgram());
     val programToUpdate = programService.getProgram(request.getProgram().getShortName(), false);
 
