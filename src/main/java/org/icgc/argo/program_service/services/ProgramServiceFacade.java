@@ -173,7 +173,6 @@ public class ProgramServiceFacade {
         programService.updateProgram(
             programToUpdate,
             updatingProgram,
-            null,
             program.getCancerTypesList(),
             program.getPrimarySitesList(),
             program.getInstitutionsList(),

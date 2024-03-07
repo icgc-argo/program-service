@@ -286,7 +286,6 @@ public class ProgramService {
   public ProgramEntity updateProgram(
       @NonNull ProgramEntity programToUpdate,
       @NonNull ProgramEntity updatingProgram,
-      @NotNull DataCenterDetailsDTO dataCenterDetailsDTO,
       @NonNull List<String> cancers,
       @NonNull List<String> primarySites,
       @NonNull List<String> institutions,
@@ -301,11 +300,45 @@ public class ProgramService {
               "Cannot update program. Cancer, primary site, institution, country cannot be empty.")
           .asRuntimeException();
     }
+    // update associations
+    processCancers(programToUpdate, cancers);
+    processPrimarySites(programToUpdate, primarySites);
+    processInstitutions(programToUpdate, institutions);
+    processCountries(programToUpdate, countries);
 
-    if (dataCenterDetailsDTO != null && !dataCenterDetailsDTO.getId().isEmpty()) {
-      val dataCenterEntity = dataCenterRepository.findById(UUID.fromString(dataCenterDetailsDTO.getId()));
+    // update program info
+    programConverter.updateProgram(updatingProgram, programToUpdate);
+    programRepository.save(programToUpdate);
+    return programToUpdate;
+  }
+
+  public ProgramEntity updateProgram(
+          @NonNull ProgramEntity programToUpdate,
+          @NonNull ProgramEntity updatingProgram,
+          @NonNull DataCenterDetailsDTO dataCenterDetailsDTO,
+          @NonNull List<String> cancers,
+          @NonNull List<String> primarySites,
+          @NonNull List<String> institutions,
+          @NonNull List<String> countries)
+          throws NotFoundException {
+    if (cancers.isEmpty()
+            || primarySites.isEmpty()
+            || institutions.isEmpty()
+            || countries.isEmpty()) {
+      throw Status.INVALID_ARGUMENT
+              .augmentDescription(
+                      "Cannot update program. Cancer, primary site, institution, country cannot be empty.")
+              .asRuntimeException();
+    }
+
+    if (dataCenterDetailsDTO != null
+            && dataCenterDetailsDTO.getId() != null
+            && !dataCenterDetailsDTO.getId().isEmpty()) {
+      val dataCenterEntity =
+              dataCenterRepository.findById(UUID.fromString(dataCenterDetailsDTO.getId()));
       if (dataCenterEntity.isEmpty()) {
-        throw new RecordNotFoundException("DataCenterId '" + dataCenterDetailsDTO.getId() + "' not found");
+        throw new RecordNotFoundException(
+                "DataCenterId '" + dataCenterDetailsDTO.getId() + "' not found");
       }
       programToUpdate.setDataCenterId(UUID.fromString(dataCenterDetailsDTO.getId()));
       processDataCenter(dataCenterDetailsDTO, dataCenterEntity.get());
@@ -505,7 +538,8 @@ public class ProgramService {
   }
 
   public void processDataCenter (
-          @NonNull DataCenterDetailsDTO dataCenterDetailsDTO, @NotNull DataCenterEntity updatingDataCenter) {
+          @NonNull DataCenterDetailsDTO dataCenterDetailsDTO,
+          @NonNull DataCenterEntity updatingDataCenter) {
     updatingDataCenter.setShortName(dataCenterDetailsDTO.getShortName());
     updatingDataCenter.setName(dataCenterDetailsDTO.getName());
     updatingDataCenter.setUiUrl(dataCenterDetailsDTO.getUiUrl());
