@@ -1,0 +1,1 @@
+ALTER TABLE program ALTER COLUMN data_center_id SET NOT NULL;
