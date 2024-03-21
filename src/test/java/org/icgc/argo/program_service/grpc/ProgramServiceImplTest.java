@@ -20,6 +20,8 @@
 
 package org.icgc.argo.program_service.grpc;
 
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static java.lang.String.format;
 import static org.apache.commons.lang.math.RandomUtils.nextInt;
 import static org.icgc.argo.program_service.proto.MembershipType.ASSOCIATE;
 import static org.icgc.argo.program_service.proto.MembershipType.FULL;
@@ -28,11 +30,14 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.protobuf.BoolValue;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import javax.validation.constraints.Email;
@@ -44,34 +49,42 @@ import org.icgc.argo.program_service.converter.Grpc2JsonConverter;
 import org.icgc.argo.program_service.converter.ProgramConverter;
 import org.icgc.argo.program_service.model.entity.JoinProgramInviteEntity;
 import org.icgc.argo.program_service.model.entity.ProgramEntity;
+import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.proto.*;
+import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
 import org.icgc.argo.program_service.services.InvitationService;
 import org.icgc.argo.program_service.services.ProgramService;
 import org.icgc.argo.program_service.services.ProgramServiceFacade;
 import org.icgc.argo.program_service.services.ValidationService;
 import org.icgc.argo.program_service.services.auth.AuthorizationService;
+import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoGroup;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoPolicy;
 import org.icgc.argo.program_service.utils.EntityGenerator;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
-@ActiveProfiles("test")
 @Transactional
 class ProgramServiceImplTest {
   ProgramConverter programConverter = ProgramConverter.INSTANCE;
@@ -82,6 +95,34 @@ class ProgramServiceImplTest {
   Grpc2JsonConverter grpc2JsonConvertor = mock(Grpc2JsonConverter.class);
   AuthorizationService authorizationService = mock(AuthorizationService.class);
   ValidationService validationService = mock(ValidationService.class);
+
+  private EgoRESTClient client;
+
+  @Autowired private RetryTemplate lenientRetryTemplate;
+
+  @Autowired private RetryTemplate retryTemplate;
+
+  @Autowired ProgramConverter converter;
+
+  @Autowired
+  JoinProgramInviteRepository inviteRepository;
+
+  @Autowired
+  AppProperties appProperties;
+
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(options().dynamicPort());
+
+  @Rule public ExpectedException exceptionRule = ExpectedException.none();
+
+  private static final String TEST_EMAIL = "test_user@example.com";
+  private static final UUID TEST_ID = UUID.fromString("f0cfd733-3f41-46a7-b400-c1774dac4b21");
+  private static final UUID ADMIN_GROUP_ID =
+          UUID.fromString("09d93820-500e-4027-95ec-fdb5ce6986ce");
+  private static final UUID SUBMITTER_GROUP_ID =
+          UUID.fromString("64541e68-c6c6-469d-9dcf-9aa260ef17ea");
+  private static final String SHORT_NAME = "TEST-CA";
+  private static final String BASE_PATH = "src/test/resources/__files/";
   ProgramServiceFacade facade =
       new ProgramServiceFacade(
           programService,
@@ -99,6 +140,25 @@ class ProgramServiceImplTest {
 
   private static final String FULL_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-FULL";
   private static final String ASSOCIATE_MEMBERSHIP_POLICY = "PROGRAMMEMBERSHIP-ASSOCIATE";
+
+  @Before
+  public void setUp() {
+    val egoUrl = format("http://localhost:%s", wireMockRule.port());
+    val egoClientId = "program-service";
+    val egoClientSecret = "qa-program-service";
+
+    val testTemplate =
+            new RestTemplateBuilder()
+                    .basicAuthentication(egoClientId, egoClientSecret)
+                    .setConnectTimeout(Duration.ofSeconds(15))
+                    .build();
+    testTemplate.setUriTemplateHandler(new DefaultUriBuilderFactory(egoUrl));
+
+    client =
+            new EgoRESTClient(
+                    lenientRetryTemplate, retryTemplate, testTemplate, CommonConverter.INSTANCE);
+    egoService = new EgoService(converter, client, inviteRepository, appProperties);
+  }
 
   @Test
   void test_update_full_program_to_associate() {
