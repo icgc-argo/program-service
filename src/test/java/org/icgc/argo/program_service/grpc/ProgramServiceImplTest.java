@@ -62,6 +62,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
@@ -70,6 +71,7 @@ import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
+@ActiveProfiles("test")
 @Transactional
 class ProgramServiceImplTest {
   ProgramConverter programConverter = ProgramConverter.INSTANCE;
