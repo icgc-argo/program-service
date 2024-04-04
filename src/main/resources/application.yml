@@ -88,11 +88,11 @@ spring.mail:
   host: localhost
   port: 10300
 
-spring.datasource:
-  driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-  url: jdbc:tc:postgresql:9.5.13://localhost:5432/program_db?TC_INITFUNCTION=org.icgc.argo.program_service.test.FlywayInit::initTestContainers
-  username: postgres
-  password:
+#spring.datasource:
+#  driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+#  url: jdbc:tc:postgresql:9.5.13://localhost:5432/program_db?TC_INITFUNCTION=org.icgc.argo.program_service.test.FlywayInit::initTestContainers
+#  username: postgres
+#  password:
 
 app:
   grpcPort: 50052
