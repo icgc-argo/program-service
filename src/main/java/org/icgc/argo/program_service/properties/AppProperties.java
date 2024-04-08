@@ -121,6 +121,7 @@ public class AppProperties {
   }
 
   @Bean
+  @Profile("!test")
   public RSAPublicKey egoPublicKey(EgoClient egoClient) {
     return egoClient.getPublicKey();
   }
