@@ -103,11 +103,12 @@ message MembershipTypeValue {
 }
 
 enum UserRole {
-  COLLABORATOR = 0;
+  DEFAULT = 0;
   ADMIN = 1;
   CURATOR = 2;
   SUBMITTER = 3;
   BANNED = 4;
+  COLLABORATOR = 5;
 }
 
 message UserRoleValue {
