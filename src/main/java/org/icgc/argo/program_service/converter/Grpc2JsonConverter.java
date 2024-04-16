@@ -49,7 +49,6 @@ public class Grpc2JsonConverter {
       throw new ProgramRuntimeException(e.getMessage());
     }
   }
-
   public CreateProgramResponseDTO prepareCreateProgramResponse(CreateProgramResponse response) {
 
     CreateProgramResponseDTO createProgramResponseDTO = new CreateProgramResponseDTO();
