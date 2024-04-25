@@ -116,6 +116,9 @@ public class ProgramServiceFacade {
   @Transactional
   public CreateProgramResponse createProgram(CreateProgramRequest request, UUID dataCenterId) {
     val errors = validationService.validateCreateProgramRequest(request);
+    if (dataCenterId == null || dataCenterId.toString().isEmpty()) {
+      throw new BadRequestException("Data Center Id cannot be null or empty");
+    }
     if (errors.size() != 0) {
       throw Status.INVALID_ARGUMENT
           .augmentDescription(
