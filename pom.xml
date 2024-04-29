@@ -42,7 +42,7 @@
 		<!-- Dependency Versions -->
 		<java.version>11</java.version>
 		<mapstruct.version>1.3.0.Final</mapstruct.version>
-		<lombok.version>1.18.8</lombok.version>
+		<lombok.version>1.18.24</lombok.version>
 		<postgres.version>42.2.5</postgres.version>
 		<flyway.version>5.2.4</flyway.version>
 		<javax.validation.version>2.0.1.Final</javax.validation.version>
@@ -50,7 +50,7 @@
 		<jackson.version>2.13.2</jackson.version>
 		<jwt.version>3.8.0</jwt.version>
 		<aspectj.version>1.9.2</aspectj.version>
-		<grpc.version>1.20.0</grpc.version>
+		<grpc.version>1.52.1</grpc.version>
 		<javax.mail.version>1.6.2</javax.mail.version>
 		<testcontainers.version>1.12.5</testcontainers.version>
 		<junit.jupiter.version>5.7.1</junit.jupiter.version>
@@ -67,7 +67,7 @@
 		<plugin.protobuf.version>0.6.1</plugin.protobuf.version>
 		<plugin.kr.motd.version>1.6.1</plugin.kr.motd.version>
 		<plugin.failsafe.version>2.22.1</plugin.failsafe.version>
-		<plugin.protoc.version>3.6.1</plugin.protoc.version>
+		<plugin.protoc.version>3.21.12</plugin.protoc.version>
 	</properties>
 
 	<dependencies>
@@ -401,14 +401,14 @@
 					<target>${java.version}</target>
 					<annotationProcessorPaths>
 						<path>
-							<groupId>org.mapstruct</groupId>
-							<artifactId>mapstruct-processor</artifactId>
-							<version>${mapstruct.version}</version>
-						</path>
-						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
 							<version>${lombok.version}</version>
+						</path>
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${mapstruct.version}</version>
 						</path>
 						<path>
 							<groupId>org.springframework.boot</groupId>
