@@ -164,6 +164,8 @@ public class EgoService {
         return "READ";
       case BANNED:
         return "DENY";
+      case DEFAULT:
+        return "DENY";
       default:
         throw new IllegalArgumentException("Invalid role " + role.toString());
     }
@@ -178,6 +180,8 @@ public class EgoService {
       case COLLABORATOR:
         return "READ";
       case BANNED:
+        return "DENY";
+      case DEFAULT:
         return "DENY";
       default:
         throw new IllegalArgumentException("Invalid role " + role.toString());
@@ -241,6 +245,8 @@ public class EgoService {
       currentRole = ADMIN;
     } else if (groupName.contains(UserRole.BANNED.toString())) {
       currentRole = UserRole.BANNED;
+    } else if (groupName.contains(UserRole.DEFAULT.toString())) {
+      currentRole = UserRole.DEFAULT;
     } else {
       log.error("Unrecognized role {}.", currentRole.toString());
       throw new IllegalArgumentException("Unrecognized role!");
