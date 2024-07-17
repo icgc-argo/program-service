@@ -40,8 +40,6 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.validation.ValidatorFactory;
-import javax.validation.constraints.NotNull;
-
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -166,50 +164,9 @@ public class ProgramService {
   }
 
   public ProgramEntity createWithSideEffect(
-      @NonNull Program program, Consumer<ProgramEntity> consumer) {
-    val programEntity = createProgram(program);
-    consumer.accept(programEntity);
-    return programEntity;
-  }
-
-  public ProgramEntity createWithSideEffect(
       @NonNull Program program, Consumer<ProgramEntity> consumer, UUID dataCenterId) {
     val programEntity = createProgram(program, dataCenterId);
     consumer.accept(programEntity);
-    return programEntity;
-  }
-
-  public ProgramEntity createProgram(@NonNull Program program)
-      throws DataIntegrityViolationException {
-    val programEntity = programConverter.programToProgramEntity(program);
-
-    val now = LocalDateTime.now(ZoneId.of("UTC"));
-    programEntity.setCreatedAt(now);
-    programEntity.setUpdatedAt(now);
-
-    val p = programRepository.save(programEntity);
-    val cancers = cancerRepository.findAllByNameIn(program.getCancerTypesList());
-    val primarySites = primarySiteRepository.findAllByNameIn(program.getPrimarySitesList());
-    val countries = countryRepository.findAllByNameIn(program.getCountriesList());
-    List<InstitutionEntity> institutions =
-        institutionRepository.findAllByNameIn(program.getInstitutionsList());
-    if (institutions.size() != program.getInstitutionsList().size()) {
-      institutions = filterAndAddInstitutions(program.getInstitutionsList());
-    }
-
-    List<ProgramCancer> programCancers = mapToList(cancers, x -> createProgramCancer(p, x).get());
-    List<ProgramPrimarySite> programPrimarySites =
-        mapToList(primarySites, x -> createProgramPrimarySite(p, x).get());
-    List<ProgramInstitution> programInstitutions =
-        mapToList(institutions, x -> createProgramInstitution(p, x).get());
-    List<ProgramCountry> programCountries =
-        mapToList(countries, x -> createProgramCountry(p, x).get());
-
-    programCancerRepository.saveAll(programCancers);
-    programPrimarySiteRepository.saveAll(programPrimarySites);
-    programInstitutionRepository.saveAll(programInstitutions);
-    programCountryRepository.saveAll(programCountries);
-
     return programEntity;
   }
 
@@ -313,32 +270,32 @@ public class ProgramService {
   }
 
   public ProgramEntity updateProgram(
-          @NonNull ProgramEntity programToUpdate,
-          @NonNull ProgramEntity updatingProgram,
-          @NonNull DataCenterDetailsDTO dataCenterDetailsDTO,
-          @NonNull List<String> cancers,
-          @NonNull List<String> primarySites,
-          @NonNull List<String> institutions,
-          @NonNull List<String> countries)
-          throws NotFoundException {
+      @NonNull ProgramEntity programToUpdate,
+      @NonNull ProgramEntity updatingProgram,
+      @NonNull DataCenterDetailsDTO dataCenterDetailsDTO,
+      @NonNull List<String> cancers,
+      @NonNull List<String> primarySites,
+      @NonNull List<String> institutions,
+      @NonNull List<String> countries)
+      throws NotFoundException {
     if (cancers.isEmpty()
-            || primarySites.isEmpty()
-            || institutions.isEmpty()
-            || countries.isEmpty()) {
+        || primarySites.isEmpty()
+        || institutions.isEmpty()
+        || countries.isEmpty()) {
       throw Status.INVALID_ARGUMENT
-              .augmentDescription(
-                      "Cannot update program. Cancer, primary site, institution, country cannot be empty.")
-              .asRuntimeException();
+          .augmentDescription(
+              "Cannot update program. Cancer, primary site, institution, country cannot be empty.")
+          .asRuntimeException();
     }
 
     if (dataCenterDetailsDTO != null
-            && dataCenterDetailsDTO.getId() != null
-            && !dataCenterDetailsDTO.getId().isEmpty()) {
+        && dataCenterDetailsDTO.getId() != null
+        && !dataCenterDetailsDTO.getId().isEmpty()) {
       val dataCenterEntity =
-              dataCenterRepository.findById(UUID.fromString(dataCenterDetailsDTO.getId()));
+          dataCenterRepository.findById(UUID.fromString(dataCenterDetailsDTO.getId()));
       if (dataCenterEntity.isEmpty()) {
         throw new RecordNotFoundException(
-                "DataCenterId '" + dataCenterDetailsDTO.getId() + "' not found");
+            "DataCenterId '" + dataCenterDetailsDTO.getId() + "' not found");
       }
       programToUpdate.setDataCenterId(UUID.fromString(dataCenterDetailsDTO.getId()));
       processDataCenter(dataCenterDetailsDTO, dataCenterEntity.get());
@@ -419,7 +376,8 @@ public class ProgramService {
 
   private void processInstitutions(
       @NonNull ProgramEntity programToUpdate, @NonNull List<String> institutionNames) {
-    // convert institution names to institution entities and add missing institutions to repo
+    // convert institution names to institution entities and add missing
+    // institutions to repo
     val updatedInstitutionEntities = filterAndAddInstitutions(institutionNames);
     val currentInstitutionEntities =
         mapToSet(programToUpdate.getProgramInstitutions(), ProgramInstitution::getInstitution);
@@ -529,7 +487,6 @@ public class ProgramService {
     return d;
   }
 
-
   public DataCenterEntity updateDataCenter(
       @NonNull DataCenterEntity dataCenterToUpdate, @NonNull DataCenterEntity updatingDataCenter) {
     dataCenterConverter.updateDataCenter(updatingDataCenter, dataCenterToUpdate);
@@ -537,9 +494,9 @@ public class ProgramService {
     return dataCenterToUpdate;
   }
 
-  public void processDataCenter (
-          @NonNull DataCenterDetailsDTO dataCenterDetailsDTO,
-          @NonNull DataCenterEntity updatingDataCenter) {
+  public void processDataCenter(
+      @NonNull DataCenterDetailsDTO dataCenterDetailsDTO,
+      @NonNull DataCenterEntity updatingDataCenter) {
     updatingDataCenter.setShortName(dataCenterDetailsDTO.getShortName());
     updatingDataCenter.setName(dataCenterDetailsDTO.getName());
     updatingDataCenter.setUiUrl(dataCenterDetailsDTO.getUiUrl());
@@ -558,7 +515,6 @@ public class ProgramService {
     }
     return search.get();
   }
-
 
   public List<String> getAllProgramNames() {
     val programNames = programRepository.getActivePrograms();

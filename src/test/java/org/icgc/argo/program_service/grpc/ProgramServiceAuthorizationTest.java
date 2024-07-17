@@ -139,8 +139,8 @@ public class ProgramServiceAuthorizationTest {
         .thenReturn(EgoPolicy.builder().id(associatePolicyId).build());
 
     val programService = mock(ProgramService.class);
-    when(programService.createProgram(any())).thenReturn(entity());
-    when(programService.createWithSideEffect(any(), any())).thenReturn(entity());
+    when(programService.createProgram(any(), any())).thenReturn(entity());
+    when(programService.createWithSideEffect(any(), any(), any())).thenReturn(entity());
     when(programService.getProgram(programName().getValue())).thenReturn(entity());
     when(programService.getProgram(programName().getValue(), false)).thenReturn(entity());
     when(programService.listPrograms()).thenReturn(List.of(entity(), entity2(), entity3()));
@@ -167,7 +167,8 @@ public class ProgramServiceAuthorizationTest {
     val authInterceptor = new EgoAuthInterceptor(egoSecurity);
     val exceptionInterceptor = new ExceptionInterceptor();
 
-    // Create a server, add service, start, and register for automatic graceful shutdown.
+    // Create a server, add service, start, and register for automatic graceful
+    // shutdown.
     grpcCleanup.register(
         InProcessServerBuilder.forName(serverName)
             .directExecutor()
@@ -205,7 +206,7 @@ public class ProgramServiceAuthorizationTest {
             EndpointTest.of("listUser", () -> client.listUsers(listUsersRequest())),
             EndpointTest.of("removeUser", () -> client.removeUser(removeUserRequest())),
             EndpointTest.of(
-                "getProgram", () -> client.getProgram(getProgramRequest())), // 8  Program User
+                "getProgram", () -> client.getProgram(getProgramRequest())), // 8 Program User
             EndpointTest.of(
                 "listProgram",
                 () -> client.listPrograms(Empty.getDefaultInstance())), // 9-10 Public
@@ -230,7 +231,8 @@ public class ProgramServiceAuthorizationTest {
 
   @Test
   void noAuthentication() throws Exception {
-    // no authentication token (should fail for all calls with status UNAUTHENTICATED)
+    // no authentication token (should fail for all calls with status
+    // UNAUTHENTICATED)
     val c = getClient();
 
     val tests = runTests("NoAuthentication", c);
@@ -251,7 +253,8 @@ public class ProgramServiceAuthorizationTest {
 
   @Test
   void invalid() throws Exception {
-    // invalid (non-parseable) token (should fail all calls with status UNAUTHORIZED)
+    // invalid (non-parseable) token (should fail all calls with status
+    // UNAUTHORIZED)
     val c = getClient();
     val client = addAuthHeader(c, invalidToken());
 
@@ -314,7 +317,8 @@ public class ProgramServiceAuthorizationTest {
 
   @Test
   void dccAdmin() throws Exception {
-    // DCCAdmin should let us to do anything except join an invitation with the wrong email address.
+    // DCCAdmin should let us to do anything except join an invitation with the
+    // wrong email address.
     val c = getClient();
     val client = addAuthHeader(c, tokenDCCAdmin());
 
@@ -614,7 +618,8 @@ class Signer {
   public String getToken(
       String email, boolean isExpired, boolean isEgoAdmin, String... permissions) {
     val issued = Date.from(Instant.now());
-    // our jwt expires in one hour -- our test should take much less than that to run
+    // our jwt expires in one hour -- our test should take much less than that to
+    // run
     Date expires;
     if (isExpired) {
       expires = Date.from(Instant.now().minusSeconds(1));
@@ -668,9 +673,11 @@ class EndpointTest implements Runnable {
   }
 
   public void run() {
-    // Stop GRPC from logging the exception that we're about to catch. We do our own handling; we
+    // Stop GRPC from logging the exception that we're about to catch. We do our own
+    // handling; we
     // don't need it
-    // screaming irrelevant error messages at level SEVERE when our tests are actually working fine!
+    // screaming irrelevant error messages at level SEVERE when our tests are
+    // actually working fine!
     Logger.getLogger("io.grpc").setLevel(Level.OFF);
     try {
       code.run();

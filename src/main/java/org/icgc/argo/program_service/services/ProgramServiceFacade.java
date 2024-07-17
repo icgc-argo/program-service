@@ -89,31 +89,6 @@ public class ProgramServiceFacade {
   }
 
   @Transactional
-  public CreateProgramResponse createProgram(CreateProgramRequest request) {
-    val errors = validationService.validateCreateProgramRequest(request);
-    if (errors.size() != 0) {
-      throw Status.INVALID_ARGUMENT
-          .augmentDescription(
-              format("Cannot create program: Program errors are [%s]", join(errors, ",")))
-          .asRuntimeException();
-    }
-
-    val program = request.getProgram();
-    val admins = request.getAdminsList();
-
-    // TODO: Refactor this, having a transactional side effect is no longer needed thanks to the
-    // facade
-    val programEntity =
-        programService.createWithSideEffect(
-            program,
-            (ProgramEntity pe) -> {
-              initializeProgramInEgo(pe, admins);
-            });
-    log.debug("Created {}", programEntity.getShortName());
-    return programConverter.programEntityToCreateProgramResponse(programEntity);
-  }
-
-  @Transactional
   public CreateProgramResponse createProgram(CreateProgramRequest request, UUID dataCenterId) {
     val errors = validationService.validateCreateProgramRequest(request);
     if (dataCenterId == null || dataCenterId.toString().isEmpty()) {
@@ -129,15 +104,16 @@ public class ProgramServiceFacade {
     val program = request.getProgram();
     val admins = request.getAdminsList();
 
-    // TODO: Refactor this, having a transactional side effect is no longer needed thanks to the
+    // TODO: Refactor this, having a transactional side effect is no longer needed
+    // thanks to the
     // facade
     val programEntity =
-            programService.createWithSideEffect(
-                    program,
-                    (ProgramEntity pe) -> {
-                      initializeProgramInEgo(pe, admins);
-                    },
-                    dataCenterId);
+        programService.createWithSideEffect(
+            program,
+            (ProgramEntity pe) -> {
+              initializeProgramInEgo(pe, admins);
+            },
+            dataCenterId);
     log.debug("Created {}", programEntity.getShortName());
     return programConverter.programEntityToCreateProgramResponse(programEntity);
   }
@@ -184,21 +160,21 @@ public class ProgramServiceFacade {
   }
 
   @Transactional
-  public UpdateProgramResponse updateProgramWithDataCenter (UpdateProgramRequestDTO request) {
+  public UpdateProgramResponse updateProgramWithDataCenter(UpdateProgramRequestDTO request) {
     val updatingProgram = programConverter.programsDTOToProgramEntity(request.getProgram());
     val programToUpdate = programService.getProgram(request.getProgram().getShortName(), false);
 
     updateMembershipPermission(programToUpdate, updatingProgram);
 
     val updatedProgram =
-            programService.updateProgram(
-                    programToUpdate,
-                    updatingProgram,
-                    request.getProgram().getDataCenter(),
-                    request.getProgram().getCancerTypes(),
-                    request.getProgram().getPrimarySites(),
-                    request.getProgram().getInstitutions(),
-                    request.getProgram().getCountries());
+        programService.updateProgram(
+            programToUpdate,
+            updatingProgram,
+            request.getProgram().getDataCenter(),
+            request.getProgram().getCancerTypes(),
+            request.getProgram().getPrimarySites(),
+            request.getProgram().getInstitutions(),
+            request.getProgram().getCountries());
     return programConverter.programEntityToUpdateProgramResponse(updatedProgram);
   }
 
@@ -293,7 +269,8 @@ public class ProgramServiceFacade {
   }
 
   public ListUsersResponse listUsers(String programShortName) {
-    // Fetching the program first will throw an error if it is not active or doesnt exist
+    // Fetching the program first will throw an error if it is not active or doesnt
+    // exist
     // stopping the ego requests for a program that was never initialized
     programService.getProgram(programShortName);
     val users = egoService.getUsersInProgram(programShortName);
@@ -424,7 +401,8 @@ public class ProgramServiceFacade {
         egoService.setUpMembershipPermissions(shortName, MembershipType.FULL);
 
       } else if (updatingProgram.getMembershipType().equals(MembershipType.ASSOCIATE)) {
-        // delete existing full membership permission from admin group and submitter group
+        // delete existing full membership permission from admin group and submitter
+        // group
         egoService.deleteGroupPermission(fullPolicyId, adminGroupId);
         egoService.deleteGroupPermission(fullPolicyId, submitterGroupId);
 

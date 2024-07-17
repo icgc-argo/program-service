@@ -67,9 +67,11 @@ public class ProgramServiceImpl extends ProgramServiceGrpc.ProgramServiceImplBas
 
   @Override
   public void createProgram(
-      CreateProgramRequest request, StreamObserver<CreateProgramResponse> responseObserver) {
+      CreateProgramRequest request,
+      StreamObserver<CreateProgramResponse> responseObserver,
+      UUID dataCenterId) {
     authorizationService.requireDCCAdmin();
-    val response = serviceFacade.createProgram(request);
+    val response = serviceFacade.createProgram(request, dataCenterId);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }

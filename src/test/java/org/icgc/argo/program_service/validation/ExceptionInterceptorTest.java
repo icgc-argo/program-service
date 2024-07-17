@@ -74,7 +74,8 @@ public class ExceptionInterceptorTest {
           @Override
           public void createProgram(
               CreateProgramRequest request,
-              StreamObserver<CreateProgramResponse> responseObserver) {
+              StreamObserver<CreateProgramResponse> responseObserver,
+              UUID dataCenterId) {
             throw new Error("Everything is wrong!");
           }
         };
@@ -219,7 +220,8 @@ public class ExceptionInterceptorTest {
 
   private ProgramServiceGrpc.ProgramServiceBlockingStub setupTest(BindableService service)
       throws IOException {
-    // Create a server, add service, start, and register for automatic graceful shutdown.
+    // Create a server, add service, start, and register for automatic graceful
+    // shutdown.
     grpcCleanup.register(
         InProcessServerBuilder.forName(serverName)
             .directExecutor()
