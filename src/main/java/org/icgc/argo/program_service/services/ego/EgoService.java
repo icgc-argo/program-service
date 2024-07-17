@@ -225,7 +225,6 @@ public class EgoService {
 
   public EgoGroup getProgramEgoGroup(String programShortName, UserRole role) {
     if (UserRole.DEFAULT.equals(role)) {
-    // Log a message and return null or throw an exception to skip the DEFAULT role
     log.info("Skipping DEFAULT role for program {}", programShortName);
     throw new NotFoundException(format("Ego group for DEFAULT role in program '%s' should not be fetched.", programShortName));
   }
@@ -280,7 +279,7 @@ public class EgoService {
     for (val role : roles()) {
       if (UserRole.DEFAULT.equals(role)) {
         log.info("Skipping users fetch for DEFAULT role in program {}", programShortName);
-        continue; // Skip the DEFAULT role
+        continue;
       }
       EgoGroup group;
       try {
