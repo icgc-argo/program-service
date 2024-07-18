@@ -8,7 +8,7 @@ spring:
     enabled: false
     locations: "classpath:flyway/sql"
   datasource:
-    url: jdbc:postgresql://localhost:5432/program_db
+    url: jdbc:postgresql://localhost:9432/program_db
     username: postgres
     password: password
   mail:

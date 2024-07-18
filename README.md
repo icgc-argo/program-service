@@ -59,6 +59,9 @@ To publish, you need to have a [NPMJS](https://www.npmjs.com) account and be a m
 Run postgres at port 5432
 
 ```sh
+make dev-start
+```
+```sh
 docker run --name postgres -d -p 5432:5432 postgres
 ```
 
