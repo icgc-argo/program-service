@@ -3,6 +3,9 @@ package org.icgc.argo.program_service.controller;
 import com.google.protobuf.StringValue;
 import io.grpc.StatusRuntimeException;
 import io.swagger.v3.oas.annotations.Parameter;
+import java.io.IOException;
+import java.util.List;
+import java.util.NoSuchElementException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -19,10 +22,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.io.IOException;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+
 
 @Slf4j
 @RestController
@@ -225,20 +225,6 @@ public class ProgramController {
       log.error("Exception throw in joinProgram: {}", e.getMessage());
       throw new NotFoundException("User not found");
     }
-  }
-
-  @GetMapping(value = "/joinProgramInvite/{invite_id}")
-  public ResponseEntity<GetJoinProgramInviteResponseDTO> getJoinProgramInvite(
-      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = false)
-          final String authorization,
-      @PathVariable(value = "invite_id", required = true) String inviteId) {
-    val invitation = serviceFacade.getInvitationById(UUID.fromString(inviteId));
-    GetJoinProgramInviteResponseDTO getJoinProgramInviteResponseDTO =
-        new GetJoinProgramInviteResponseDTO();
-    getJoinProgramInviteResponseDTO.setInvitation(
-        grpc2JsonConverter.prepareGetJoinProgramInviteResponse(invitation));
-    return new ResponseEntity<GetJoinProgramInviteResponseDTO>(
-        getJoinProgramInviteResponseDTO, HttpStatus.OK);
   }
 
   @GetMapping(value = "/cancers")
