@@ -74,14 +74,10 @@ public class ProgramController {
     UpdateProgramRequest request;
     UpdateProgramResponse response;
     try {
-      request =
-          grpc2JsonConverter.fromJson(
-              grpc2JsonConverter.getJsonFromObject(updateProgramRequestDTO),
-              UpdateProgramRequest.class);
-      response = serviceFacade.updateProgram(request);
-    } catch (NotFoundException | NoSuchElementException | IOException e) {
-      log.error("Exception thrown in updateProgram: {}", e.getMessage());
-      return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+        response = serviceFacade.updateProgramWithDataCenter(updateProgramRequestDTO);
+    } catch (NotFoundException | NoSuchElementException e) {
+        log.error("Exception thrown in updateProgram: {}", e.getMessage());
+        return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
     return new ResponseEntity(
         grpc2JsonConverter.prepareUpdateProgramResponse(response), HttpStatus.OK);
