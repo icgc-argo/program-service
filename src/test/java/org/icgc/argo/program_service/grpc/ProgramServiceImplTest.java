@@ -38,6 +38,7 @@ import java.util.*;
 import javax.validation.constraints.Email;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang.RandomStringUtils;
 import org.icgc.argo.program_service.converter.CommonConverter;
 import org.icgc.argo.program_service.converter.DataCenterConverter;
 import org.icgc.argo.program_service.converter.Grpc2JsonConverter;
@@ -65,7 +66,6 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.shaded.org.apache.commons.lang.RandomStringUtils;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
