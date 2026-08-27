@@ -230,13 +230,7 @@
 			<artifactId>guava</artifactId>
 			<version>${guava.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>io.grpc</groupId>
-			<artifactId>grpc-testing</artifactId>
-			<version>${grpc.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
+<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
 			<version>${protobuf.version}</version>
@@ -347,6 +341,11 @@
 						<goals>
 							<goal>start</goal>
 						</goals>
+						<configuration>
+							<profiles>
+								<profile>test</profile>
+							</profiles>
+						</configuration>
 					</execution>
 					<execution>
 						<id>post-integration-test</id>
