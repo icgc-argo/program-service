@@ -106,5 +106,4 @@ public class ExceptionHandlers {
         new HttpHeaders(),
         INTERNAL_SERVER_ERROR);
   }
-
 }

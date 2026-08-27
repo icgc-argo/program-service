@@ -132,12 +132,12 @@ public class ProgramServiceFacade {
     // TODO: Refactor this, having a transactional side effect is no longer needed thanks to the
     // facade
     val programEntity =
-            programService.createWithSideEffect(
-                    program,
-                    (ProgramEntity pe) -> {
-                      initializeProgramInEgo(pe, admins);
-                    },
-                    dataCenterId);
+        programService.createWithSideEffect(
+            program,
+            (ProgramEntity pe) -> {
+              initializeProgramInEgo(pe, admins);
+            },
+            dataCenterId);
     log.debug("Created {}", programEntity.getShortName());
     return programConverter.programEntityToCreateProgramResponse(programEntity);
   }
@@ -184,21 +184,21 @@ public class ProgramServiceFacade {
   }
 
   @Transactional
-  public UpdateProgramResponse updateProgramWithDataCenter (UpdateProgramRequestDTO request) {
+  public UpdateProgramResponse updateProgramWithDataCenter(UpdateProgramRequestDTO request) {
     val updatingProgram = programConverter.programsDTOToProgramEntity(request.getProgram());
     val programToUpdate = programService.getProgram(request.getProgram().getShortName(), false);
 
     updateMembershipPermission(programToUpdate, updatingProgram);
 
     val updatedProgram =
-            programService.updateProgram(
-                    programToUpdate,
-                    updatingProgram,
-                    request.getProgram().getDataCenter(),
-                    request.getProgram().getCancerTypes(),
-                    request.getProgram().getPrimarySites(),
-                    request.getProgram().getInstitutions(),
-                    request.getProgram().getCountries());
+        programService.updateProgram(
+            programToUpdate,
+            updatingProgram,
+            request.getProgram().getDataCenter(),
+            request.getProgram().getCancerTypes(),
+            request.getProgram().getPrimarySites(),
+            request.getProgram().getInstitutions(),
+            request.getProgram().getCountries());
     return programConverter.programEntityToUpdateProgramResponse(updatedProgram);
   }
 

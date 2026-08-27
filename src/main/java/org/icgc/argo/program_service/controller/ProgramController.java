@@ -74,10 +74,10 @@ public class ProgramController {
     UpdateProgramRequest request;
     UpdateProgramResponse response;
     try {
-        response = serviceFacade.updateProgramWithDataCenter(updateProgramRequestDTO);
+      response = serviceFacade.updateProgramWithDataCenter(updateProgramRequestDTO);
     } catch (NotFoundException | NoSuchElementException e) {
-        log.error("Exception thrown in updateProgram: {}", e.getMessage());
-        return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+      log.error("Exception thrown in updateProgram: {}", e.getMessage());
+      return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
     return new ResponseEntity(
         grpc2JsonConverter.prepareUpdateProgramResponse(response), HttpStatus.OK);
@@ -230,7 +230,6 @@ public class ProgramController {
 
   @GetMapping(value = "/joinProgramInvite/{invite_id}")
   public ResponseEntity<GetJoinProgramInviteResponseDTO> getJoinProgramInvite(
-
       @PathVariable(value = "invite_id", required = true) String inviteId) {
     val invitation = serviceFacade.getInvitationById(UUID.fromString(inviteId));
     GetJoinProgramInviteResponseDTO getJoinProgramInviteResponseDTO =
