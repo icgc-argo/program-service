@@ -27,11 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.argo.program_service.converter.ProgramConverter;
-import org.icgc.argo.program_service.properties.AppProperties;
 import org.icgc.argo.program_service.proto.UserRole;
-import org.icgc.argo.program_service.repositories.JoinProgramInviteRepository;
-import org.icgc.argo.program_service.repositories.ProgramRepository;
 import org.icgc.argo.program_service.services.ego.EgoRESTClient;
 import org.icgc.argo.program_service.services.ego.EgoService;
 import org.icgc.argo.program_service.services.ego.model.entity.EgoPermission;
@@ -41,6 +37,13 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.lifecycle.Startables;
 
 @Slf4j
 @SpringBootTest
@@ -48,31 +51,54 @@ import org.springframework.test.context.ActiveProfiles;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ProgramServiceIT {
 
-  EgoService egoService;
+  static Network egoNetwork = Network.newNetwork();
+
+  static PostgreSQLContainer<?> egoPostgres =
+      new PostgreSQLContainer<>("postgres:18")
+          .withNetwork(egoNetwork)
+          .withNetworkAliases("ego-postgres")
+          .withDatabaseName("ego")
+          .withUsername("postgres")
+          .withPassword("password");
+
+  @SuppressWarnings("resource")
+  static GenericContainer<?> ego =
+      new GenericContainer<>("overture/ego:5.4.0")
+          .withNetwork(egoNetwork)
+          .withExposedPorts(8080)
+          .withEnv("SERVER_PORT", "8080")
+          .withEnv(
+              "SPRING_DATASOURCE_URL",
+              "jdbc:postgresql://ego-postgres:5432/ego?stringtype=unspecified")
+          .withEnv("SPRING_DATASOURCE_USERNAME", "postgres")
+          .withEnv("SPRING_DATASOURCE_PASSWORD", "password")
+          .withEnv("SPRING_FLYWAY_ENABLED", "true")
+          .withEnv("SPRING_FLYWAY_LOCATIONS", "classpath:flyway/sql,classpath:db/migration")
+          .withEnv("SPRING_PROFILES", "demo,auth")
+          .dependsOn(egoPostgres)
+          .waitingFor(Wait.forHttp("/actuator/health").forStatusCode(200));
+
+  static {
+    Startables.deepStart(egoPostgres, ego).join();
+  }
+
+  @DynamicPropertySource
+  static void egoProperties(DynamicPropertyRegistry registry) {
+    registry.add("app.egoUrl", () -> "http://localhost:" + ego.getMappedPort(8080));
+  }
 
   @Autowired EgoRESTClient client;
 
-  @Autowired ProgramConverter converter;
-
-  @Autowired JoinProgramInviteRepository inviteRepository;
-
-  @Autowired AppProperties appProperties;
-
-  @Autowired ProgramService programService;
-
-  @Autowired ProgramRepository programRepository;
+  @Autowired EgoService egoService;
 
   private static final String name = "TEST-X-CA";
 
   @BeforeAll
   void setUp() {
-    System.err.printf("Setting up...\n");
-    egoService = new EgoService(converter, client, inviteRepository, appProperties);
-
     try {
       egoService.cleanUpProgram(name);
-    } catch (Throwable t) {
-      System.err.printf("Caught throwable with message: %s", t.getMessage());
+    } catch (Throwable throwable) {
+      log.warn("cleanUpProgram on setUp threw: {}", throwable.getMessage());
     }
   }
 
@@ -92,22 +118,22 @@ class ProgramServiceIT {
   }
 
   void verifyRole(UserRole role, String shortName) {
-    System.err.println("verifying role" + role);
-    val name = format("PROGRAM-%s-%s", shortName, role.toString());
-    val group = client.getGroupByName(name);
+    log.info("Verifying role {}", role);
+    val groupName = format("PROGRAM-%s-%s", shortName, role.toString());
+    val group = client.getGroupByName(groupName);
     assertTrue(group.isPresent());
 
     val permissions = client.getGroupPermissions(group.get().getId());
     assertEquals(2, permissions.length);
 
     assertTrue(
-        Arrays.asList(permissions).stream()
+        Arrays.stream(permissions)
             .anyMatch(
                 permission ->
                     permissionsMatch(permission, "PROGRAM-" + shortName, getProgramMask(role))));
 
     assertTrue(
-        Arrays.asList(permissions).stream()
+        Arrays.stream(permissions)
             .anyMatch(
                 permission ->
                     permissionsMatch(permission, "PROGRAMDATA-" + shortName, getDataMask(role))));
@@ -115,11 +141,8 @@ class ProgramServiceIT {
 
   private boolean permissionsMatch(
       EgoPermission permission, String policyName, String accessLevel) {
-    if (permission.getAccessLevel().equals(accessLevel)
-        && permission.getPolicy().getName().equals(policyName)) {
-      return true;
-    }
-    return false;
+    return permission.getAccessLevel().equals(accessLevel)
+        && permission.getPolicy().getName().equals(policyName);
   }
 
   public void test_removeProgram(String name) {
