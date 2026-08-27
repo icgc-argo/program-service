@@ -53,10 +53,13 @@ public interface ProgramConverter {
   @Mapping(target = "programCountries", ignore = true)
   @Mapping(target = "active", constant = "true")
   @Mapping(target = "legacyShortName", ignore = true)
-  @Mapping(target = "dataCenterId", expression = "java(mapStringToUUID(p.getDataCenter().getId()))", ignore = false)
+  @Mapping(
+      target = "dataCenterId",
+      expression = "java(mapStringToUUID(p.getDataCenter().getId()))",
+      ignore = false)
   ProgramEntity programsDTOToProgramEntity(ProgramsDTO p);
 
-  default UUID mapStringToUUID (String id){
+  default UUID mapStringToUUID(String id) {
     return UUID.fromString(id);
   }
 
