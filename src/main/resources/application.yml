@@ -93,6 +93,7 @@ spring.mail:
   host: localhost
 
 app:
+  grpcEnabled: false
   grpcPort: 50052
 
 ---
