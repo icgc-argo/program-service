@@ -56,7 +56,7 @@ services:
     ports:
       - "9025:8025"
   postgres:
-    image: postgres:9.5
+    image: postgres:18
     environment:
       - POSTGRES_DB=program_db
       - POSTGRES_PASSWORD=password
@@ -66,7 +66,7 @@ services:
       - "9432:5432"
   ego-api:
     restart: always
-    image: "overture/ego:latest"
+    image: "overture/ego:5.4.0"
     environment:
       SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://ego-postgres:5432/ego?stringtype=unspecified
@@ -80,11 +80,10 @@ services:
       - "8080"
     ports:
       - "9082:8080"
-    command: java -jar /srv/ego/install/ego.jar
     depends_on:
       - ego-postgres
   ego-postgres:
-    image: postgres:9.5
+    image: postgres:18
     environment:
       - POSTGRES_DB=ego
       - POSTGRES_PASSWORD=password

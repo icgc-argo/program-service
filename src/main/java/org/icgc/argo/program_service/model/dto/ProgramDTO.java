@@ -33,4 +33,6 @@ public class ProgramDTO {
   private Set<CancerDTO> programCancers;
 
   private Set<PrimarySiteDTO> programPrimarySites;
+
+  private DataCenterDetailsDTO dataCenter;
 }
