@@ -38,8 +38,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.client.RestTemplate;
-import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
@@ -57,19 +58,19 @@ class MailServiceIT {
 
   @Mock ProgramEntity mockProgramEntity;
 
-  // host ports used in test container
-  static int MAILHOG_HTTP_PORT = 10200;
-  static int MAILHOG_MAIL_PORT = 10300;
-
   @Container
-  static GenericContainer mailhogContainer =
-      new FixedHostPortGenericContainer("mailhog/mailhog:v1.0.0")
-          .withFixedExposedPort(MAILHOG_HTTP_PORT, 8025) // http port used in test
-          .withFixedExposedPort(MAILHOG_MAIL_PORT, 1025) // mail port used by application
-          .waitingFor(
-              Wait.forHttp("/")); // Define wait condition during startup, checks lowest host port
+  static GenericContainer<?> mailhogContainer =
+      new GenericContainer<>("mailhog/mailhog:v1.0.0")
+          .withExposedPorts(8025, 1025)
+          .waitingFor(Wait.forHttp("/").forPort(8025));
 
-  String mailHogRootUrl = "http://" + mailhogContainer.getIpAddress() + ":" + MAILHOG_HTTP_PORT;
+  @DynamicPropertySource
+  static void mailProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.mail.port", () -> mailhogContainer.getMappedPort(1025));
+  }
+
+  String mailHogRootUrl =
+      "http://" + mailhogContainer.getHost() + ":" + mailhogContainer.getMappedPort(8025);
 
   RestTemplate restTemplate = new RestTemplate();
 

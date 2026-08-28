@@ -91,7 +91,6 @@ spring:
 
 spring.mail:
   host: localhost
-  port: 10300
 
 app:
   grpcPort: 50052
