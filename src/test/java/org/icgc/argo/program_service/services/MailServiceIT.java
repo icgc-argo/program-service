@@ -74,6 +74,7 @@ class MailServiceIT {
 
   @DynamicPropertySource
   static void mailProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.mail.host", mailhogContainer::getHost);
     registry.add("spring.mail.port", () -> mailhogContainer.getMappedPort(1025));
   }
 

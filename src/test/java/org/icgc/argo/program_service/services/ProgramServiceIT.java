@@ -84,7 +84,7 @@ class ProgramServiceIT {
 
   @DynamicPropertySource
   static void egoProperties(DynamicPropertyRegistry registry) {
-    registry.add("app.egoUrl", () -> "http://localhost:" + ego.getMappedPort(8080));
+    registry.add("app.egoUrl", () -> "http://" + ego.getHost() + ":" + ego.getMappedPort(8080));
   }
 
   @Autowired EgoRESTClient client;
