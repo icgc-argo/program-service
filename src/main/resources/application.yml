@@ -1,5 +1,5 @@
 server:
-  port : 8083
+  port: 8083
 
 spring:
   application:
@@ -20,7 +20,6 @@ spring:
 retry:
   # Connection retries in case of connection failure
   connection:
-
     # Max number of retries
     max-retries: 5
 
@@ -67,6 +66,7 @@ logging:
 
 management.endpoints.web.exposure.include: "*"
 
+
 # Hibernate SQL Debugging
 # spring.jpa.properties.hibernate.format_sql: true
 # logging.level.org.hibernate.SQL: DEBUG
@@ -94,7 +94,6 @@ spring.mail:
 
 app:
   grpcEnabled: false
-  grpcPort: 50052
 
 ---
 ###############################################################################

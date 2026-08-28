@@ -40,17 +40,22 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ComponentScan(lazyInit = true)
-@Testcontainers
+@TestPropertySource(
+    properties = {
+      "spring.datasource.url=jdbc:tc:postgresql:18://localhost:5432/program_db",
+      "spring.datasource.driver-class-name=org.testcontainers.jdbc.ContainerDatabaseDriver",
+      "spring.flyway.enabled=true",
+      "spring.flyway.locations=classpath:flyway/sql"
+    })
 class MailServiceIT {
   @Autowired MailService mailService;
 
@@ -58,21 +63,25 @@ class MailServiceIT {
 
   @Mock ProgramEntity mockProgramEntity;
 
-  @Container
   static GenericContainer<?> mailhogContainer =
       new GenericContainer<>("mailhog/mailhog:v1.0.0")
           .withExposedPorts(8025, 1025)
           .waitingFor(Wait.forHttp("/").forPort(8025));
+
+  static {
+    mailhogContainer.start();
+  }
 
   @DynamicPropertySource
   static void mailProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.mail.port", () -> mailhogContainer.getMappedPort(1025));
   }
 
-  String mailHogRootUrl =
-      "http://" + mailhogContainer.getHost() + ":" + mailhogContainer.getMappedPort(8025);
-
   RestTemplate restTemplate = new RestTemplate();
+
+  String mailHogRootUrl() {
+    return "http://" + mailhogContainer.getHost() + ":" + mailhogContainer.getMappedPort(8025);
+  }
 
   @Test
   void sendInviteEmail() {
@@ -90,7 +99,8 @@ class MailServiceIT {
     mailService.sendInviteEmail(invite);
     val messages =
         restTemplate.getForObject(
-            mailHogRootUrl + "/api/v2/search?kind=containing&query=" + randomEmail, JsonNode.class);
+            mailHogRootUrl() + "/api/v2/search?kind=containing&query=" + randomEmail,
+            JsonNode.class);
     assertTrue(messages.at("/total").asInt() > 0);
     assertEquals("noreply", messages.at("/items/0/From/Mailbox").asText());
     assertEquals("icgc-argo.org", messages.at("/items/0/From/Domain").asText());
