@@ -89,9 +89,6 @@ spring:
     username: postgres
     password:
 
-spring.mail:
-  host: localhost
-
 app:
   grpcEnabled: false
 
