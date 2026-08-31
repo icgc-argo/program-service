@@ -215,5 +215,4 @@ public class ValidationService {
   public Set<String> validRegions() {
     return mapToSet(programService.listRegions(), RegionEntity::getName);
   }
-
 }

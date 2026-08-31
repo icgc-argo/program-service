@@ -225,9 +225,12 @@ public class EgoService {
 
   public EgoGroup getProgramEgoGroup(String programShortName, UserRole role) {
     if (UserRole.DEFAULT.equals(role)) {
-    log.info("Skipping DEFAULT role for program {}", programShortName);
-    throw new NotFoundException(format("Ego group for DEFAULT role in program '%s' should not be fetched.", programShortName));
-  }
+      log.info("Skipping DEFAULT role for program {}", programShortName);
+      throw new NotFoundException(
+          format(
+              "Ego group for DEFAULT role in program '%s' should not be fetched.",
+              programShortName));
+    }
     val name = groupName(programShortName, role);
     val g = egoClient.getGroupByName(name);
     return g.orElseThrow(

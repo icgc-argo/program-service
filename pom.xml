@@ -30,7 +30,7 @@
 	</parent>
 	<groupId>ca.on.oicr.icgc.argo</groupId>
 	<artifactId>program-service</artifactId>
-	<version>1.17.5</version>
+	<version>1.18.0</version>
 	<name>program-service</name>
 	<description>Argo Program Service</description>
 
@@ -52,7 +52,7 @@
 		<aspectj.version>1.9.2</aspectj.version>
 		<grpc.version>1.20.0</grpc.version>
 		<javax.mail.version>1.6.2</javax.mail.version>
-		<testcontainers.version>1.12.5</testcontainers.version>
+		<testcontainers.version>1.21.4</testcontainers.version>
 		<junit.jupiter.version>5.7.1</junit.jupiter.version>
 		<junit.vintage.version>5.7.1</junit.vintage.version>
 		<junit.common.version>1.8.2</junit.common.version>
@@ -68,6 +68,8 @@
 		<plugin.kr.motd.version>1.6.1</plugin.kr.motd.version>
 		<plugin.failsafe.version>2.22.1</plugin.failsafe.version>
 		<plugin.protoc.version>3.6.1</plugin.protoc.version>
+		<plugin.grpc.version>${grpc.version}</plugin.grpc.version>
+		<protobuf.version>3.7.1</protobuf.version>
 	</properties>
 
 	<dependencies>
@@ -228,11 +230,15 @@
 			<artifactId>guava</artifactId>
 			<version>${guava.version}</version>
 		</dependency>
+<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+			<version>${protobuf.version}</version>
+		</dependency>
 		<dependency>
-			<groupId>io.grpc</groupId>
-			<artifactId>grpc-testing</artifactId>
-			<version>${grpc.version}</version>
-			<scope>test</scope>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java-util</artifactId>
+			<version>${protobuf.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -335,6 +341,11 @@
 						<goals>
 							<goal>start</goal>
 						</goals>
+						<configuration>
+							<profiles>
+								<profile>test</profile>
+							</profiles>
+						</configuration>
 					</execution>
 					<execution>
 						<id>post-integration-test</id>
@@ -381,7 +392,7 @@
 					<protocArtifact>com.google.protobuf:protoc:${plugin.protoc.version}:exe:${os.detected.classifier}</protocArtifact>
 					<protoSourceRoot>${basedir}/src/main/proto</protoSourceRoot>
 					<pluginId>grpc-java</pluginId>
-					<pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+					<pluginArtifact>io.grpc:protoc-gen-grpc-java:${plugin.grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
 				</configuration>
 				<executions>
 					<execution>
@@ -429,4 +440,22 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>osx-aarch_64</id>
+			<activation>
+				<os>
+					<arch>aarch64</arch>
+					<family>mac</family>
+				</os>
+			</activation>
+			<properties>
+				<plugin.protoc.version>3.21.12</plugin.protoc.version>
+				<grpc.version>1.43.0</grpc.version>
+				<plugin.grpc.version>1.43.0</plugin.grpc.version>
+				<protobuf.version>3.21.12</protobuf.version>
+			</properties>
+		</profile>
+	</profiles>
 </project>

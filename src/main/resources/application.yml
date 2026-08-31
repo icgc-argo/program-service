@@ -1,5 +1,5 @@
 server:
-  port : 8083
+  port: 8083
 
 spring:
   application:
@@ -20,7 +20,6 @@ spring:
 retry:
   # Connection retries in case of connection failure
   connection:
-
     # Max number of retries
     max-retries: 5
 
@@ -67,6 +66,7 @@ logging:
 
 management.endpoints.web.exposure.include: "*"
 
+
 # Hibernate SQL Debugging
 # spring.jpa.properties.hibernate.format_sql: true
 # logging.level.org.hibernate.SQL: DEBUG
@@ -83,13 +83,14 @@ spring:
   config:
     activate:
       on-profile: test
-
-spring.mail:
-  host: localhost
-  port: 10300
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:postgresql:18://localhost:5432/program_db?TC_INITFUNCTION=org.icgc.argo.program_service.test.FlywayInit::initTestContainers
+    username: postgres
+    password:
 
 app:
-  grpcPort: 50052
+  grpcEnabled: false
 
 ---
 ###############################################################################
